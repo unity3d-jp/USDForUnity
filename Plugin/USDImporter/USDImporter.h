@@ -14,3 +14,7 @@
 #else
     #define usdiExport
 #endif
+
+class usdiContext;
+
+usdiContext* usdiOpen(const char *path);

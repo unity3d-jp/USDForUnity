@@ -14,9 +14,12 @@
 *.tlog
 *.db
 *.opendb
+*.cmake
 
 *.exe
 *.dll
+*.so
+Makefile
 
 _out/
 _tmp/
@@ -27,5 +30,7 @@ Build/
 Hidden/
 Hidden.meta
 obj/
+CMakeFiles/
+CMakeCache.txt
 OpenSubdivForUnity/*.sln
 OpenSubdivForUnity/*.csproj
