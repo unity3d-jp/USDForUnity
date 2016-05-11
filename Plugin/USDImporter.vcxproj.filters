@@ -12,12 +12,33 @@
     <ClInclude Include="USDImporter\pch.h">
       <Filter>USDImporter</Filter>
     </ClInclude>
+    <ClInclude Include="USDImporter\usdiXform.h">
+      <Filter>USDImporter</Filter>
+    </ClInclude>
+    <ClInclude Include="USDImporter\usdiPolyMesh.h">
+      <Filter>USDImporter</Filter>
+    </ClInclude>
+    <ClInclude Include="USDImporter\usdiContext.h">
+      <Filter>USDImporter</Filter>
+    </ClInclude>
+    <ClInclude Include="USDImporter\usdiInternal.h">
+      <Filter>USDImporter</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="USDImporter\pch.cpp">
       <Filter>USDImporter</Filter>
     </ClCompile>
     <ClCompile Include="USDImporter\USDImporter.cpp">
+      <Filter>USDImporter</Filter>
+    </ClCompile>
+    <ClCompile Include="USDImporter\usdiPolyMesh.cpp">
+      <Filter>USDImporter</Filter>
+    </ClCompile>
+    <ClCompile Include="USDImporter\usdiXform.cpp">
+      <Filter>USDImporter</Filter>
+    </ClCompile>
+    <ClCompile Include="USDImporter\usdiContext.cpp">
       <Filter>USDImporter</Filter>
     </ClCompile>
   </ItemGroup>

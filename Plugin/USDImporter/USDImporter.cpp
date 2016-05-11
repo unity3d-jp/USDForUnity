@@ -1,32 +1,12 @@
 #include "pch.h"
-#include "USDImporter.h"
+#include "usdiInternal.h"
+#include "usdiContext.h"
 
 
-class usdiContext
+
+usdi::Context* usdiOpen(const char *path)
 {
-public:
-    bool open(const char *path);
-
-private:
-    UsdStageRefPtr m_stage;
-    double m_start_time = 0.0;
-    double m_end_time = 0.0;
-};
-
-bool usdiContext::open(const char *path)
-{
-    m_stage = UsdStage::Open(path);
-    if (m_stage == UsdStageRefPtr()) {
-        return false;
-    }
-
-    m_start_time = m_stage->GetStartTimeCode();
-    m_end_time = m_stage->GetEndTimeCode();
-}
-
-usdiContext* usdiOpen(const char *path)
-{
-    auto* ret = new usdiContext();
+    auto* ret = new usdi::Context();
     if (!ret->open(path)) {
         delete ret;
         return nullptr;

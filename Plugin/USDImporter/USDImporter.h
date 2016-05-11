@@ -15,6 +15,15 @@
     #define usdiExport
 #endif
 
-class usdiContext;
+namespace usdi {
 
-usdiContext* usdiOpen(const char *path);
+class Context;
+
+class Schema;
+class Xform;
+class Camera;
+class PolyMesh;
+
+} // namespace usdi
+
+usdi::Context* usdiOpen(const char *path);

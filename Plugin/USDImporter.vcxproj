@@ -12,14 +12,21 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="USDImporter\pch.h" />
+    <ClInclude Include="USDImporter\usdiContext.h" />
+    <ClInclude Include="USDImporter\usdiInternal.h" />
     <ClInclude Include="USDImporter\USDImporter.h" />
+    <ClInclude Include="USDImporter\usdiPolyMesh.h" />
+    <ClInclude Include="USDImporter\usdiXform.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="USDImporter\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Master|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="USDImporter\usdiContext.cpp" />
     <ClCompile Include="USDImporter\USDImporter.cpp" />
+    <ClCompile Include="USDImporter\usdiPolyMesh.cpp" />
+    <ClCompile Include="USDImporter\usdiXform.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{08361722-5520-47AC-A0C2-31E8A062B73F}</ProjectGuid>
@@ -46,7 +53,7 @@
     <IntDir>$(SolutionDir)_tmp\$(ProjectName)_$(Platform)_$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Master|x64'">
-    <IncludePath>$(SolutionDir);$(SolutionDir)External\usd-vfx2015\include;$(SolutionDir)External\usd\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)External\usd-vfx2015\include;$(SolutionDir)External\usd-vfx2015\include\python2.7;$(SolutionDir)External\usd-vfx2015\packages\openexr-2.2.0\include\OpenEXR;$(SolutionDir)External\usd\include;$(IncludePath)</IncludePath>
     <LibraryPath>External\libs\x86_64;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)_out\$(ProjectName)_$(Platform)_$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)_tmp\$(ProjectName)_$(Platform)_$(Configuration)\</IntDir>
