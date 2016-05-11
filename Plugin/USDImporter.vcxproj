@@ -16,6 +16,7 @@
     <ClInclude Include="USDImporter\usdiInternal.h" />
     <ClInclude Include="USDImporter\USDImporter.h" />
     <ClInclude Include="USDImporter\usdiPolyMesh.h" />
+    <ClInclude Include="USDImporter\usdiSchema.h" />
     <ClInclude Include="USDImporter\usdiXform.h" />
   </ItemGroup>
   <ItemGroup>
@@ -26,6 +27,7 @@
     <ClCompile Include="USDImporter\usdiContext.cpp" />
     <ClCompile Include="USDImporter\USDImporter.cpp" />
     <ClCompile Include="USDImporter\usdiPolyMesh.cpp" />
+    <ClCompile Include="USDImporter\usdiSchema.cpp" />
     <ClCompile Include="USDImporter\usdiXform.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

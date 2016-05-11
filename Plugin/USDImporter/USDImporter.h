@@ -24,6 +24,11 @@ class Xform;
 class Camera;
 class PolyMesh;
 
+class Sample;
+class XformSample;
+class CameraSample;
+class PolyMeshSample;
+
 } // namespace usdi
 
 usdi::Context* usdiOpen(const char *path);

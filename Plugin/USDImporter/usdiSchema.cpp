@@ -4,7 +4,8 @@
 
 namespace usdi {
 
-Schema::Schema()
+Schema::Schema(Schema *parent)
+    : m_parent(parent)
 {
 }
 
