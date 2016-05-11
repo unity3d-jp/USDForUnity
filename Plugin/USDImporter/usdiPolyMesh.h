@@ -3,13 +3,6 @@
 namespace usdi {
 
 
-enum class TopologyVariance
-{
-    Constant, // both vertices and topologies are constant
-    Homogenous, // vertices are not constant (= animated). topologies are constant.
-    Heterogenous, // both vertices and topologies are not constant
-};
-
 class PolyMeshSample : public Sample
 {
 public:
@@ -30,7 +23,7 @@ typedef Schema super;
 public:
     PolyMesh(Schema *parent, const UsdGeomMesh& mesh);
 
-    PolyMeshSample* readSample(UsdTimeCode t);
+    PolyMeshSample* getSample(Time t);
 
 private:
     const UsdGeomMesh& m_mesh;

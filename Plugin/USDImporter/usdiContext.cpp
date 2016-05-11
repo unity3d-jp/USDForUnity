@@ -20,7 +20,8 @@ Context::~Context()
 
 void Context::unload()
 {
-
+    m_stage = UsdStageRefPtr();
+    m_schemas.clear();
 }
 
 
@@ -51,6 +52,16 @@ bool Context::open(const char *path)
     for (std::map<std::string, std::string>::iterator it = m_variants.begin(); it != m_variants.end(); ++it) {
         root_prim.GetVariantSet(it->first).SetVariantSelection(it->second);
     }
+}
+
+Schema* Context::getRootNode()
+{
+    return m_schemas.empty() ? nullptr : m_schemas.front().get();
+}
+
+Schema* Context::createNode(UsdPrim up)
+{
+    return nullptr;
 }
 
 } // namespace usdi

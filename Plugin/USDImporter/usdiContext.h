@@ -11,10 +11,14 @@ public:
 
     bool open(const char *path);
 
+    Schema* getRootNode();
+
 private:
     typedef std::map<std::string, std::string> Variants;
     typedef std::unique_ptr<Schema> SchemaPtr;
     typedef std::vector<SchemaPtr> Schemas;
+
+    Schema* createNode(UsdPrim up);
 
     UsdStageRefPtr m_stage;
     Schemas m_schemas;

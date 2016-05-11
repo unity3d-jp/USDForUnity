@@ -26,8 +26,9 @@ PolyMesh::PolyMesh(Schema *parent, const UsdGeomMesh& mesh)
     }
 }
 
-PolyMeshSample* PolyMesh::readSample(UsdTimeCode t)
+PolyMeshSample* PolyMesh::getSample(Time t_)
 {
+    auto t = (const UsdTimeCode&)t_.time;
     auto* ret = new PolyMeshSample(this);
     m_mesh.GetPointsAttr().Get(&ret->m_points, t);
     m_mesh.GetNormalsAttr().Get(&ret->m_normals, t);

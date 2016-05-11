@@ -29,6 +29,93 @@ class XformSample;
 class CameraSample;
 class PolyMeshSample;
 
+
+typedef unsigned int uint32;
+
+struct float2
+{
+    float x, y;
+
+    float2() {}
+    float2(float _x, float _y) : x(_x), y(_y) {}
+};
+
+struct float3
+{
+    float x, y, z;
+
+    float3() {}
+    float3(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {}
+};
+
+struct float4
+{
+    float x, y, z, w;
+
+    float4() {}
+    float4(float _x, float _y, float _z, float _w) : x(_x), y(_y), w(_w) {}
+};
+
+
+enum class TopologyVariance
+{
+    Constant, // both vertices and topologies are constant
+    Homogenous, // vertices are not constant (= animated). topologies are constant.
+    Heterogenous, // both vertices and topologies are not constant
+};
+
+struct Time
+{
+    double time;
+    uint32 index;
+};
+
+struct XformData
+{
+    float3 position;
+    float4 rotation;
+    float3 scale;
+};
+
+struct CameraData
+{
+};
+
+struct PolyMeshData
+{
+    // these pointers can be null (just be ignored). otherwise:
+    // if you pass to usdiPolyMeshSampleCopyData(), pointers must point valid memory block to store data.
+    float3  *points;
+    float3  *normals;
+    int     *face_vertex_counts;
+    int     *face_vertex_indices;
+
+    uint32  num_points;
+    uint32  num_face_vertex_counts;
+    uint32  num_face_vertex_indices;
+};
+
 } // namespace usdi
 
-usdi::Context* usdiOpen(const char *path);
+extern "C" {
+
+usdiExport usdi::Context*           usdiOpen(const char *path);
+
+usdiExport usdi::Schema*            usdiGetRoot(usdi::Context *ctx);
+usdiExport int                      usdiGetNumChildren(usdi::Schema *schema);
+usdiExport usdi::Schema*            usdiGetChild(usdi::Schema *schema, int i);
+
+usdiExport usdi::Xform*             usdiAsXform(usdi::Schema *schema);
+usdiExport usdi::XformSample*       usdiXformGetSample(usdi::Xform *xf, usdi::Time t);
+usdiExport void                     usdiXformGetData(usdi::XformSample *sample, usdi::XformData *data);
+
+usdiExport usdi::Camera*            usdiAsCamera(usdi::Schema *schema);
+usdiExport usdi::CameraSample*      usdiCameraGetSample(usdi::Camera *cam, usdi::Time t);
+usdiExport void                     usdiCameraGetData(usdi::CameraSample *sample, usdi::CameraData *data);
+
+usdiExport usdi::PolyMesh*          usdiAsPolyMesh(usdi::Schema *schema);
+usdiExport usdi::PolyMeshSample*    usdiPolyMeshGetSample(usdi::PolyMesh *mesh, usdi::Time t);
+usdiExport void                     usdiPolyMeshSampleCopyData(usdi::PolyMeshSample *sample, usdi::PolyMeshData *data);
+
+} // extern "C"
+
