@@ -14,7 +14,7 @@ Context::Context()
 
 Context::~Context()
 {
-    unload();
+    initialize();
 }
 
 bool Context::valid() const
@@ -22,39 +22,43 @@ bool Context::valid() const
     return m_stage;
 }
 
-void Context::unload()
+void Context::initialize()
 {
     m_stage = UsdStageRefPtr();
     m_schemas.clear();
+
+    m_id_seed = 0;
+    m_start_time = 0.0;
+    m_end_time = 0.0;
 }
 
 void Context::create(const char *identifier)
 {
-    unload();
+    initialize();
 
     m_stage = UsdStage::CreateNew(identifier);
 }
 
 
-void Context::constructTreeRecursive(Schema *parent, UsdPrim prim)
+void Context::createNodeRecursive(Schema *parent, UsdPrim prim)
 {
     Schema *node = createNode(parent, prim);
     if (node) {
         m_schemas.emplace_back(node);
+    }
 
-        auto children = prim.GetChildren();
-        for (auto c : children) {
-            constructTreeRecursive(node, c);
-        }
+    auto children = prim.GetChildren();
+    for (auto c : children) {
+        createNodeRecursive(node, c);
     }
 }
 
 Schema* Context::createNode(Schema *parent, UsdPrim prim)
 {
+    Schema *ret = nullptr;
+
     UsdGeomMesh mesh(prim);
     UsdGeomXform xf(prim);
-
-    Schema *ret = nullptr;
     if (mesh) {
         ret = new Mesh(this, parent, mesh);
     }
@@ -62,12 +66,15 @@ Schema* Context::createNode(Schema *parent, UsdPrim prim)
         ret = new Xform(this, parent, xf);
     }
 
+    if (ret) {
+        ret->setID(++m_id_seed);
+    }
     return ret;
 }
 
 bool Context::open(const char *path)
 {
-    unload();
+    initialize();
 
     m_stage = UsdStage::Open(path);
     if (m_stage == UsdStageRefPtr()) {
@@ -84,7 +91,7 @@ bool Context::open(const char *path)
 
     // Check if prim exists.  Exit if not
     if (!root_prim.IsValid()) {
-        unload();
+        initialize();
         return false;
     }
 
@@ -93,11 +100,12 @@ bool Context::open(const char *path)
         root_prim.GetVariantSet(it->first).SetVariantSelection(it->second);
     }
 
-    constructTreeRecursive(nullptr, root_prim);
+    createNodeRecursive(nullptr, root_prim);
 }
 
 bool Context::write(const char *path)
 {
+    m_stage->Export(path);
     // todo
     return false;
 }

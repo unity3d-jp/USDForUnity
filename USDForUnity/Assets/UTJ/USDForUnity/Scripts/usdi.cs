@@ -99,6 +99,7 @@ namespace UTJ
         [DllImport ("usdi")] public static extern void          usdiGetExportConfig(Context ctx, ref ExportConfig conf);
         [DllImport ("usdi")] public static extern Schema        usdiGetRoot(Context ctx);
 
+        [DllImport ("usdi")] public static extern int           usdiGetID(Schema schema);
         [DllImport ("usdi")] public static extern IntPtr        usdiGetPath(Schema schema);
         [DllImport ("usdi")] public static extern IntPtr        usdiGetName(Schema schema);
         [DllImport ("usdi")] public static extern SchemaType    usdiGetType(Schema schema);

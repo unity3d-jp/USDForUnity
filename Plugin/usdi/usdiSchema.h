@@ -11,6 +11,7 @@ public:
     const ImportConfig& getImportConfig() const;
     const ExportConfig& getExportConfig() const;
 
+    int                 getID() const;
     Schema*             getParent();
     size_t              getNumChildren();
     Schema*             getChild(int i);
@@ -22,7 +23,7 @@ public:
     virtual SchemaType  getType() const;
 
 public:
-    void setContext(Context *ctx);
+    void setID(int id);
     void addChild(Schema *child);
 
 private:
@@ -30,6 +31,7 @@ private:
     Context     *m_ctx;
     Schema      *m_parent;
     Children    m_children;
+    int         m_id = 0;
 };
 
 } // namespace usdi

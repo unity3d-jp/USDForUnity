@@ -9,7 +9,7 @@ public:
     virtual ~Context();
 
     bool                valid() const;
-    void                unload();
+    void                initialize();
     void                create(const char *identifier);
     bool                open(const char *path);
     bool                write(const char *path);
@@ -22,7 +22,7 @@ public:
     Schema*             getRootNode();
 
 private:
-    void    constructTreeRecursive(Schema *parent, UsdPrim prim);
+    void    createNodeRecursive(Schema *parent, UsdPrim prim);
     Schema* createNode(Schema *parent, UsdPrim prim);
 
 private:
@@ -38,6 +38,7 @@ private:
     ImportConfig    m_import_config;
     ExportConfig    m_export_config;
 
+    int             m_id_seed = 0;
     double          m_start_time = 0.0;
     double          m_end_time = 0.0;
 };

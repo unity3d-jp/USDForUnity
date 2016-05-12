@@ -117,6 +117,7 @@ usdiExport void             usdiSetExportConfig(usdi::Context *ctx, const usdi::
 usdiExport void             usdiGetExportConfig(usdi::Context *ctx, usdi::ExportConfig *conf);
 usdiExport usdi::Schema*    usdiGetRoot(usdi::Context *ctx);
 
+usdiExport int              usdiGetID(usdi::Schema *schema);
 usdiExport const char*      usdiGetPath(usdi::Schema *schema);
 usdiExport const char*      usdiGetName(usdi::Schema *schema);
 usdiExport usdi::SchemaType usdiGetType(usdi::Schema *schema);

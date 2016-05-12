@@ -61,6 +61,12 @@ usdiExport usdi::Schema* usdiGetRoot(usdi::Context *ctx)
 }
 
 
+usdiExport int usdiGetID(usdi::Schema *schema)
+{
+    if (!schema) { return 0; }
+    return schema->getID();
+}
+
 usdiExport const char* usdiGetPath(usdi::Schema *schema)
 {
     if (!schema) { return nullptr; }

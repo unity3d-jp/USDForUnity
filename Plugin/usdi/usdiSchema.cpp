@@ -28,6 +28,11 @@ const ExportConfig& Schema::getExportConfig() const
     return m_ctx->getExportConfig();
 }
 
+int Schema::getID() const
+{
+    return m_id;
+}
+
 Schema* Schema::getParent()
 {
     return m_parent;
@@ -64,9 +69,9 @@ SchemaType Schema::getType() const
     return SchemaType::Unknown;
 }
 
-void Schema::setContext(Context *ctx)
+void Schema::setID(int id)
 {
-    m_ctx = ctx;
+    m_id = id;
 }
 
 void Schema::addChild(Schema *child)
