@@ -7,6 +7,8 @@ namespace UTJ
     public class usdiStream : MonoBehaviour
     {
         public string m_path;
+        public bool m_swapHandedness = true;
+
         usdi.Context m_usdi;
         List<usdiElement> m_elements;
 

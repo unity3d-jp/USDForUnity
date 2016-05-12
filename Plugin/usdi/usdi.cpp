@@ -10,7 +10,7 @@ extern "C" {
 
 usdiExport usdi::Context* usdiOpen(const char *path)
 {
-    auto* ret = new usdi::Context();
+    auto *ret = new usdi::Context();
     if (!ret->open(path)) {
         delete ret;
         return nullptr;
@@ -19,14 +19,21 @@ usdiExport usdi::Context* usdiOpen(const char *path)
     return ret;
 }
 
-usdiExport usdi::Context* usdiCreateContext()
+usdiExport usdi::Context* usdiCreateContext(const char *identifier)
 {
-    return new usdi::Context();
+    auto *ret = new usdi::Context();
+    ret->create(identifier);
+    return ret;
 }
 
 usdiExport void usdiDestroyContext(usdi::Context *ctx)
 {
     delete ctx;
+}
+
+usdiExport bool usdiWrite(usdi::Context *ctx, const char *path)
+{
+    return ctx->write(path);
 }
 
 usdiExport void usdiSetImportConfig(usdi::Context *ctx, const usdi::ImportConfig *conf)

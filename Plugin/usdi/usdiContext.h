@@ -7,22 +7,25 @@ class Context
 public:
     Context();
     virtual ~Context();
-    void unload();
+
+    bool                valid() const;
+    void                unload();
+    void                create(const char *identifier);
+    bool                open(const char *path);
+    bool                write(const char *path);
 
     const ImportConfig& getImportConfig() const;
-    void                setImportConfig(const ImportConfig& v) const;
+    void                setImportConfig(const ImportConfig& v);
     const ExportConfig& getExportConfig() const;
-    void                setExportConfig(const ExportConfig& v) const;
-    Schema* getRootNode();
+    void                setExportConfig(const ExportConfig& v);
 
-    bool open(const char *path);
-    bool write(const char *path);
+    Schema*             getRootNode();
 
-protected:
+private:
     void    constructTreeRecursive(Schema *parent, UsdPrim prim);
     Schema* createNode(Schema *parent, UsdPrim prim);
 
-protected:
+private:
     typedef std::map<std::string, std::string> Variants;
     typedef std::unique_ptr<Schema> SchemaPtr;
     typedef std::vector<SchemaPtr> Schemas;

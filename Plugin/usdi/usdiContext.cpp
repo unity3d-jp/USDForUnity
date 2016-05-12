@@ -7,18 +7,34 @@
 
 namespace usdi {
 
+
 Context::Context()
-{}
+{
+}
 
 Context::~Context()
 {
     unload();
 }
 
-Schema* Context::getRootNode()
+bool Context::valid() const
 {
-    return m_schemas.empty() ? nullptr : m_schemas.front().get();
+    return m_stage;
 }
+
+void Context::unload()
+{
+    m_stage = UsdStageRefPtr();
+    m_schemas.clear();
+}
+
+void Context::create(const char *identifier)
+{
+    unload();
+
+    m_stage = UsdStage::CreateNew(identifier);
+}
+
 
 void Context::constructTreeRecursive(Schema *parent, UsdPrim prim)
 {
@@ -47,12 +63,6 @@ Schema* Context::createNode(Schema *parent, UsdPrim prim)
     }
 
     return ret;
-}
-
-void Context::unload()
-{
-    m_stage = UsdStageRefPtr();
-    m_schemas.clear();
 }
 
 bool Context::open(const char *path)
@@ -90,6 +100,17 @@ bool Context::write(const char *path)
 {
     // todo
     return false;
+}
+
+const ImportConfig& Context::getImportConfig() const                { return m_import_config; }
+void                Context::setImportConfig(const ImportConfig& v) { m_import_config = v; }
+const ExportConfig& Context::getExportConfig() const                { return m_export_config; }
+void                Context::setExportConfig(const ExportConfig& v) { m_export_config = v; }
+
+
+Schema* Context::getRootNode()
+{
+    return m_schemas.empty() ? nullptr : m_schemas.front().get();
 }
 
 } // namespace usdi

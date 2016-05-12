@@ -152,8 +152,28 @@ void Mesh::readSample(MeshData& dst, Time t)
 
 void Mesh::writeSample(const MeshData& src, Time t)
 {
+    const auto& conf = getExportConfig();
+
     MeshSample sample;
-    sample.points.assign((GfVec3f*)src.points, (GfVec3f*)src.points + src.num_points);
+
+    if (src.points) {
+        sample.points.assign((GfVec3f*)src.points, (GfVec3f*)src.points + src.num_points);
+        if (conf.swap_handedness) {
+            for (auto& v : sample.points) {
+                v[0] *= -1.0f;
+            }
+        }
+    }
+
+    if (src.normals) {
+        sample.normals.assign((GfVec3f*)src.normals, (GfVec3f*)src.normals + src.num_points);
+        if (conf.swap_handedness) {
+            for (auto& v : sample.normals) {
+                v[0] *= -1.0f;
+            }
+        }
+    }
+
     if (src.face_vertex_indices) {
         sample.face_vertex_indices.assign(src.face_vertex_indices, src.face_vertex_indices + src.num_face_vertex_indices);
     }
