@@ -7,51 +7,25 @@
 namespace usdi {
 
 
-
-MeshSample::MeshSample(Mesh *parent)
-    : m_parent(parent)
+MeshSample::MeshSample()
 {
 }
-
-void MeshSample::readData(MeshData& dst)
+void MeshSample::read(UsdGeomMesh& mesh, Time t_)
 {
-    dst.num_points = m_points.size();
-    dst.num_face_vertex_counts = m_face_vertex_counts.size();
-    dst.num_face_vertex_indices = m_face_vertex_indices.size();
-    if (dst.points) {
-        memcpy(dst.points, &m_points[0], sizeof(float3) * dst.num_points);
-    }
-    if (dst.normals) {
-        memcpy(dst.normals, &m_normals[0], sizeof(float3) * dst.num_points);
-    }
-    if (dst.face_vertex_counts) {
-        memcpy(dst.face_vertex_counts, &m_face_vertex_counts[0], sizeof(int) * dst.num_face_vertex_counts);
-    }
-    if (dst.face_vertex_indices) {
-        memcpy(dst.face_vertex_indices, &m_face_vertex_indices[0], sizeof(int) * dst.num_face_vertex_indices);
-    }
+    auto t = (const UsdTimeCode&)t_;
+    mesh.GetPointsAttr().Get(&points, t);
+    mesh.GetNormalsAttr().Get(&normals, t);
+    mesh.GetFaceVertexCountsAttr().Get(&face_vertex_counts, t);
+    mesh.GetFaceVertexIndicesAttr().Get(&face_vertex_indices, t);
 }
 
-void MeshSample::writeData(const MeshData& src)
+void MeshSample::write(UsdGeomMesh& mesh, Time t_)
 {
-    if (!src.points) {
-        usdiLog("src.points is null");
-        return;
-    }
-
-    m_points.assign((GfVec3f*)src.points, (GfVec3f*)src.points + src.num_points);
-    if (src.face_vertex_indices) {
-        m_face_vertex_indices.assign(src.face_vertex_indices, src.face_vertex_indices + src.num_face_vertex_indices);
-    }
-
-    if (src.face_vertex_counts) {
-        m_face_vertex_counts.assign(src.face_vertex_counts, src.face_vertex_counts + src.num_face_vertex_counts);
-    }
-    else {
-        // assume all faces are triangles
-        size_t ntriangles = src.num_face_vertex_indices / 3;
-        m_face_vertex_counts.assign(ntriangles, 3);
-    }
+    auto t = (const UsdTimeCode&)t_;
+    mesh.GetPointsAttr().Set(points, t);
+    mesh.GetNormalsAttr().Set(normals, t);
+    mesh.GetFaceVertexCountsAttr().Set(face_vertex_counts, t);
+    mesh.GetFaceVertexIndicesAttr().Set(face_vertex_indices, t);
 }
 
 
@@ -60,7 +34,7 @@ Mesh::Mesh(Schema *parent, const UsdGeomMesh& mesh)
     , m_mesh(mesh)
     , m_topology_variance(TopologyVariance::Constant)
 {
-    usdiLog("");
+    usdiLog("constructed\n");
 
     if (m_mesh.GetFaceVertexCountsAttr().ValueMightBeTimeVarying()) {
         m_topology_variance = TopologyVariance::Homogenous;
@@ -70,20 +44,57 @@ Mesh::Mesh(Schema *parent, const UsdGeomMesh& mesh)
     }
 }
 
+Mesh::~Mesh()
+{
+    usdiLog("destructed\n");
+}
+
 UsdGeomMesh& Mesh::getUSDType()
 {
     return m_mesh;
 }
 
-MeshSample* Mesh::getSample(Time t_)
+
+void Mesh::readSample(Time t, MeshData& dst)
 {
-    auto t = (const UsdTimeCode&)t_.time;
-    auto* ret = new MeshSample(this);
-    m_mesh.GetPointsAttr().Get(&ret->m_points, t);
-    m_mesh.GetNormalsAttr().Get(&ret->m_normals, t);
-    m_mesh.GetFaceVertexCountsAttr().Get(&ret->m_face_vertex_counts, t);
-    m_mesh.GetFaceVertexIndicesAttr().Get(&ret->m_face_vertex_indices, t);
-    return ret;
+    MeshSample sample;
+    sample.read(m_mesh, t);
+
+    dst.num_points = sample.points.size();
+    dst.num_face_vertex_counts = sample.face_vertex_counts.size();
+    dst.num_face_vertex_indices = sample.face_vertex_indices.size();
+    if (dst.points) {
+        memcpy(dst.points, &sample.points[0], sizeof(float3) * dst.num_points);
+    }
+    if (dst.normals) {
+        memcpy(dst.normals, &sample.normals[0], sizeof(float3) * dst.num_points);
+    }
+    if (dst.face_vertex_counts) {
+        memcpy(dst.face_vertex_counts, &sample.face_vertex_counts[0], sizeof(int) * dst.num_face_vertex_counts);
+    }
+    if (dst.face_vertex_indices) {
+        memcpy(dst.face_vertex_indices, &sample.face_vertex_indices[0], sizeof(int) * dst.num_face_vertex_indices);
+    }
+}
+
+void Mesh::writeSample(Time t, const MeshData& src)
+{
+    MeshSample sample;
+    sample.points.assign((GfVec3f*)src.points, (GfVec3f*)src.points + src.num_points);
+    if (src.face_vertex_indices) {
+        sample.face_vertex_indices.assign(src.face_vertex_indices, src.face_vertex_indices + src.num_face_vertex_indices);
+    }
+
+    if (src.face_vertex_counts) {
+        sample.face_vertex_counts.assign(src.face_vertex_counts, src.face_vertex_counts + src.num_face_vertex_counts);
+    }
+    else {
+        // assume all faces are triangles
+        size_t ntriangles = src.num_face_vertex_indices / 3;
+        sample.face_vertex_counts.assign(ntriangles, 3);
+    }
+
+    sample.write(m_mesh, t);
 }
 
 } // namespace usdi

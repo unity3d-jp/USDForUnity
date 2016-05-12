@@ -5,17 +5,17 @@
 
 namespace usdi {
 
-XformSample::XformSample(Xform *xf)
-    : m_xf()
-{
-}
-
 
 Xform::Xform(Schema *parent, const UsdGeomXformable& xf)
     : super(parent)
     , m_xf(xf)
 {
-    usdiLog("");
+    usdiLog("constructed\n");
+}
+
+Xform::~Xform()
+{
+    usdiLog("destructed\n");
 }
 
 UsdGeomXformable& Xform::getUSDType()
@@ -23,10 +23,14 @@ UsdGeomXformable& Xform::getUSDType()
     return m_xf;
 }
 
-XformSample* Xform::getSample(Time t_)
+void Xform::readSample(Time t, XformData& dst)
 {
-    auto t = (const UsdTimeCode&)t_.time;
-    return new XformSample(this);
+
+}
+
+void Xform::writeSample(Time t, const XformData& src)
+{
+
 }
 
 } // namespace usdi

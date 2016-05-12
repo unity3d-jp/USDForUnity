@@ -49,7 +49,7 @@ bool ImportContext::open(const char *path)
     }
 
     // Set the variants on the usdRootPrim
-    for (std::map<std::string, std::string>::iterator it = m_variants.begin(); it != m_variants.end(); ++it) {
+    for (auto it = m_variants.begin(); it != m_variants.end(); ++it) {
         root_prim.GetVariantSet(it->first).SetVariantSelection(it->second);
     }
 

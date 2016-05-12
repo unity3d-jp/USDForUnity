@@ -2,13 +2,9 @@
 
 namespace usdi {
 
-class XformSample : public Sample
+class XformSample
 {
 public:
-    XformSample(Xform *xf);
-
-public:
-    Xform *m_xf;
 };
 
 
@@ -17,10 +13,12 @@ class Xform : public Schema
 typedef Schema super;
 public:
     Xform(Schema *parent, const UsdGeomXformable& xf);
+    ~Xform() override;
 
     UsdGeomXformable&   getUSDType() override;
 
-    XformSample*        getSample(Time t);
+    void                readSample(Time t, XformData& dst);
+    void                writeSample(Time t, const XformData& src);
 
 private:
     UsdGeomXformable    m_xf;

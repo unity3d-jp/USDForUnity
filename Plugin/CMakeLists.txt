@@ -51,3 +51,7 @@ SET( IMPORTER_SOURCE_FILES
     ${IMPORTER_CXX_FILES} ${IMPORTER_H_FILES}
 )
 ADD_LIBRARY( USDImporter ${IMPORTER_SOURCE_FILES} )
+
+
+LINK_DIRECTORIES(/opt/pixar/usd/lib /opt/pixar/usd-vfx2015)
+TARGET_LINK_LIBRARIES(USDImporter usd usdGeom usdUtils boost_python-mt)

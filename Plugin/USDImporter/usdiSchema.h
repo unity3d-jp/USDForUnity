@@ -2,12 +2,6 @@
 
 namespace usdi {
 
-class Sample
-{
-
-};
-
-
 class Schema
 {
 public:

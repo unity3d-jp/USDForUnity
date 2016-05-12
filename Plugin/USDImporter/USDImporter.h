@@ -24,11 +24,6 @@ class Xform;
 class Camera;
 class Mesh;
 
-class Sample;
-class XformSample;
-class CameraSample;
-class MeshSample;
-
 
 typedef unsigned int uint32;
 
@@ -67,7 +62,6 @@ enum class TopologyVariance
 struct Time
 {
     double time;
-    uint32 index;
 };
 
 struct XformData
@@ -83,8 +77,8 @@ struct CameraData
 
 struct MeshData
 {
-    // these pointers can be null (just be ignored). otherwise:
-    // if you pass to usdiPolyMeshSampleCopyData(), pointers must point valid memory block to store data.
+    // these pointers can be null (in this case, just be ignored).
+    // otherwise, if you pass to usdiMeshSampleReadData(), pointers must point valid memory block to store data.
     float3  *points;
     float3  *normals;
     int     *face_vertex_counts;
@@ -106,16 +100,16 @@ usdiExport int                      usdiGetNumChildren(usdi::Schema *schema);
 usdiExport usdi::Schema*            usdiGetChild(usdi::Schema *schema, int i);
 
 usdiExport usdi::Xform*             usdiAsXform(usdi::Schema *schema);
-usdiExport usdi::XformSample*       usdiXformGetSample(usdi::Xform *xf, usdi::Time t);
-usdiExport void                     usdiXformGetData(usdi::XformSample *sample, usdi::XformData *data);
+usdiExport void                     usdiXformReadData(usdi::Xform *xf, usdi::Time t, usdi::XformData *dst);
+usdiExport void                     usdiXformWriteData(usdi::Xform *xf, usdi::Time t, const usdi::XformData *src);
 
 usdiExport usdi::Camera*            usdiAsCamera(usdi::Schema *schema);
-usdiExport usdi::CameraSample*      usdiCameraGetSample(usdi::Camera *cam, usdi::Time t);
-usdiExport void                     usdiCameraGetData(usdi::CameraSample *sample, usdi::CameraData *data);
+usdiExport void                     usdiCameraReadSample(usdi::Camera *cam, usdi::CameraData *dst);
+usdiExport void                     usdiCameraWriteSample(usdi::Camera *cam, const usdi::CameraData *src);
 
 usdiExport usdi::Mesh*              usdiAsMesh(usdi::Schema *schema);
-usdiExport usdi::MeshSample*        usdiMeshGetSample(usdi::Mesh *mesh, usdi::Time t);
-usdiExport void                     usdiMeshSampleCopyData(usdi::MeshSample *sample, usdi::MeshData *data);
+usdiExport void                     usdiMeshReadSample(usdi::Mesh *mesh, usdi::Time t, usdi::MeshData *dst);
+usdiExport void                     usdiMeshWriteSample(usdi::Mesh *mesh, usdi::Time t, const usdi::MeshData *src);
 
 } // extern "C"
 
