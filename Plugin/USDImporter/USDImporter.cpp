@@ -8,9 +8,9 @@
 
 extern "C" {
 
-usdiExport usdi::Context* usdiOpen(const char *path)
+usdiExport usdi::ImportContext* usdiOpen(const char *path)
 {
-    auto* ret = new usdi::Context();
+    auto* ret = new usdi::ImportContext();
     if (!ret->open(path)) {
         delete ret;
         return nullptr;
@@ -20,7 +20,7 @@ usdiExport usdi::Context* usdiOpen(const char *path)
 }
 
 
-usdiExport usdi::Schema* usdiGetRoot(usdi::Context *ctx)
+usdiExport usdi::Schema* usdiGetRoot(usdi::ImportContext *ctx)
 {
     if (!ctx) return nullptr;
 
@@ -61,19 +61,19 @@ usdiExport void usdiXformGetData(usdi::XformSample *sample, usdi::XformData *dat
 
 
 
-usdiExport usdi::PolyMesh* usdiAsPolyMesh(usdi::Schema *schema)
+usdiExport usdi::Mesh* usdiAsMesh(usdi::Schema *schema)
 {
     if (!schema) return nullptr;
-    return dynamic_cast<usdi::PolyMesh*>(schema);
+    return dynamic_cast<usdi::Mesh*>(schema);
 }
 
-usdiExport usdi::PolyMeshSample* usdiPolyMeshGetSample(usdi::PolyMesh *mesh, usdi::Time t)
+usdiExport usdi::MeshSample* usdiMeshGetSample(usdi::Mesh *mesh, usdi::Time t)
 {
     if (!mesh) return nullptr;
 
 }
 
-usdiExport void usdiPolyMeshSampleCopyData(usdi::PolyMeshSample *sample, usdi::PolyMeshData *data)
+usdiExport void usdiMeshSampleCopyData(usdi::MeshSample *sample, usdi::MeshData *data)
 {
     if (!sample) return;
 

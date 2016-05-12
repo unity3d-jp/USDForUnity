@@ -7,6 +7,7 @@
 #include <mutex>
 #include <functional>
 #include <atomic>
+#include <cstdarg>
 
 #ifdef _MSC_VER
     #define and     &&

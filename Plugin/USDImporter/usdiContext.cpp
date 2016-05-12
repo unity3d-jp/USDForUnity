@@ -9,23 +9,23 @@ namespace usdi {
 
 
 
-Context::Context()
+ImportContext::ImportContext()
 {
 }
 
-Context::~Context()
+ImportContext::~ImportContext()
 {
     unload();
 }
 
-void Context::unload()
+void ImportContext::unload()
 {
     m_stage = UsdStageRefPtr();
     m_schemas.clear();
 }
 
 
-bool Context::open(const char *path)
+bool ImportContext::open(const char *path)
 {
     unload();
 
@@ -52,15 +52,38 @@ bool Context::open(const char *path)
     for (std::map<std::string, std::string>::iterator it = m_variants.begin(); it != m_variants.end(); ++it) {
         root_prim.GetVariantSet(it->first).SetVariantSelection(it->second);
     }
+
+    constructTreeRecursive(nullptr, root_prim);
 }
 
-Schema* Context::getRootNode()
+Schema* ImportContext::getRootNode()
 {
     return m_schemas.empty() ? nullptr : m_schemas.front().get();
 }
 
-Schema* Context::createNode(UsdPrim up)
+void ImportContext::constructTreeRecursive(Schema *parent, UsdPrim prim)
 {
+    Schema *node = createNode(parent, prim);
+    if (node) {
+        m_schemas.emplace_back(node);
+
+        auto children = prim.GetChildren();
+        for (auto c : children) {
+            constructTreeRecursive(node, c);
+        }
+    }
+}
+
+Schema* ImportContext::createNode(Schema *parent, UsdPrim prim)
+{
+    UsdGeomMesh mesh(prim);
+    UsdGeomXform xf(prim);
+    if (mesh) {
+        return new Mesh(parent, mesh);
+    }
+    else if (xf) {
+        return new Xform(parent, xf);
+    }
     return nullptr;
 }
 

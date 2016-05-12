@@ -15,6 +15,12 @@ Xform::Xform(Schema *parent, const UsdGeomXformable& xf)
     : super(parent)
     , m_xf(xf)
 {
+    usdiLog("");
+}
+
+UsdGeomXformable& Xform::getUSDType()
+{
+    return m_xf;
 }
 
 XformSample* Xform::getSample(Time t_)

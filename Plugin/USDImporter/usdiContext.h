@@ -2,11 +2,11 @@
 
 namespace usdi {
 
-class Context
+class ImportContext
 {
 public:
-    Context();
-    ~Context();
+    ImportContext();
+    ~ImportContext();
     void unload();
 
     bool open(const char *path);
@@ -18,7 +18,8 @@ private:
     typedef std::unique_ptr<Schema> SchemaPtr;
     typedef std::vector<SchemaPtr> Schemas;
 
-    Schema* createNode(UsdPrim up);
+    void    constructTreeRecursive(Schema *parent, UsdPrim prim);
+    Schema* createNode(Schema *parent, UsdPrim prim);
 
     UsdStageRefPtr m_stage;
     Schemas m_schemas;

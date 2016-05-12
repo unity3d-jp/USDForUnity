@@ -17,7 +17,7 @@
 
 namespace usde {
 
-class Context;
+class ExportContext;
 
 class Schema;
 class Xform;

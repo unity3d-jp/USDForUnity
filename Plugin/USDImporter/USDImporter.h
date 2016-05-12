@@ -17,17 +17,17 @@
 
 namespace usdi {
 
-class Context;
+class ImportContext;
 
 class Schema;
 class Xform;
 class Camera;
-class PolyMesh;
+class Mesh;
 
 class Sample;
 class XformSample;
 class CameraSample;
-class PolyMeshSample;
+class MeshSample;
 
 
 typedef unsigned int uint32;
@@ -81,7 +81,7 @@ struct CameraData
 {
 };
 
-struct PolyMeshData
+struct MeshData
 {
     // these pointers can be null (just be ignored). otherwise:
     // if you pass to usdiPolyMeshSampleCopyData(), pointers must point valid memory block to store data.
@@ -99,9 +99,9 @@ struct PolyMeshData
 
 extern "C" {
 
-usdiExport usdi::Context*           usdiOpen(const char *path);
+usdiExport usdi::ImportContext*     usdiOpen(const char *path);
 
-usdiExport usdi::Schema*            usdiGetRoot(usdi::Context *ctx);
+usdiExport usdi::Schema*            usdiGetRoot(usdi::ImportContext *ctx);
 usdiExport int                      usdiGetNumChildren(usdi::Schema *schema);
 usdiExport usdi::Schema*            usdiGetChild(usdi::Schema *schema, int i);
 
@@ -113,9 +113,9 @@ usdiExport usdi::Camera*            usdiAsCamera(usdi::Schema *schema);
 usdiExport usdi::CameraSample*      usdiCameraGetSample(usdi::Camera *cam, usdi::Time t);
 usdiExport void                     usdiCameraGetData(usdi::CameraSample *sample, usdi::CameraData *data);
 
-usdiExport usdi::PolyMesh*          usdiAsPolyMesh(usdi::Schema *schema);
-usdiExport usdi::PolyMeshSample*    usdiPolyMeshGetSample(usdi::PolyMesh *mesh, usdi::Time t);
-usdiExport void                     usdiPolyMeshSampleCopyData(usdi::PolyMeshSample *sample, usdi::PolyMeshData *data);
+usdiExport usdi::Mesh*              usdiAsMesh(usdi::Schema *schema);
+usdiExport usdi::MeshSample*        usdiMeshGetSample(usdi::Mesh *mesh, usdi::Time t);
+usdiExport void                     usdiMeshSampleCopyData(usdi::MeshSample *sample, usdi::MeshData *data);
 
 } // extern "C"
 

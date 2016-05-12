@@ -14,8 +14,14 @@ public:
     Schema(Schema *parent);
     virtual ~Schema();
 
-    size_t getNumChildren();
-    Schema* getChild(int i);
+    Schema*             getParent();
+    size_t              getNumChildren();
+    Schema*             getChild(int i);
+
+    const char*         getPath();
+    const char*         getName();
+    UsdPrim             getUSDPrim();
+    virtual UsdTyped&   getUSDType() = 0;
 
 public:
     void addChild(Schema *child);

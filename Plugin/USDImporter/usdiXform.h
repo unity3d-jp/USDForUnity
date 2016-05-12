@@ -18,10 +18,12 @@ typedef Schema super;
 public:
     Xform(Schema *parent, const UsdGeomXformable& xf);
 
-    XformSample* getSample(Time t);
+    UsdGeomXformable&   getUSDType() override;
+
+    XformSample*        getSample(Time t);
 
 private:
-    const UsdGeomXformable& m_xf;
+    UsdGeomXformable    m_xf;
 };
 
 } // namespace usdi

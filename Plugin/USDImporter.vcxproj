@@ -25,6 +25,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Master|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="USDImporter\usdiContext.cpp" />
+    <ClCompile Include="USDImporter\usdiInternal.cpp" />
     <ClCompile Include="USDImporter\USDImporter.cpp" />
     <ClCompile Include="USDImporter\usdiPolyMesh.cpp" />
     <ClCompile Include="USDImporter\usdiSchema.cpp" />

@@ -3,13 +3,16 @@
 namespace usdi {
 
 
-class PolyMeshSample : public Sample
+class MeshSample : public Sample
 {
 public:
-    PolyMeshSample(PolyMesh *parent);
+    MeshSample(Mesh *parent);
+
+    void readData(MeshData& dst);
+    void writeData(const MeshData& src);
 
 public:
-    PolyMesh        *m_parent;
+    Mesh            *m_parent;
     VtArray<GfVec3f> m_points;
     VtArray<GfVec3f> m_normals;
     VtArray<int>     m_face_vertex_counts;
@@ -17,17 +20,19 @@ public:
 };
 
 
-class PolyMesh : public Schema
+class Mesh : public Xform
 {
-typedef Schema super;
+typedef Xform super;
 public:
-    PolyMesh(Schema *parent, const UsdGeomMesh& mesh);
+    Mesh(Schema *parent, const UsdGeomMesh& mesh);
 
-    PolyMeshSample* getSample(Time t);
+    UsdGeomMesh&    getUSDType() override;
+
+    MeshSample*     getSample(Time t);
 
 private:
-    const UsdGeomMesh& m_mesh;
-    TopologyVariance m_topology_variance;
+    UsdGeomMesh         m_mesh;
+    TopologyVariance    m_topology_variance;
 };
 
 } // namespace usdi
