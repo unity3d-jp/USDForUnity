@@ -27,7 +27,7 @@ class Camera;
 class Mesh;
 
 
-typedef unsigned int uint32;
+typedef unsigned int uint;
 struct float2 { float x, y; };
 struct float3 { float x, y, z; };
 struct float4 { float x, y, z, w; };
@@ -68,11 +68,13 @@ struct ImportConfig
 
 struct ExportConfig
 {
+    bool ascii;
     bool swap_handedness;
     bool swap_faces;
 
     ExportConfig()
-        : swap_handedness(true)
+        : ascii(false)
+        , swap_handedness(true)
         , swap_faces(false)
     {}
 };
@@ -98,10 +100,10 @@ struct MeshData
     int     *face_vertex_indices;
     int     *face_vertex_indices_triangulated;
 
-    uint32  num_points;
-    uint32  num_face_vertex_counts;
-    uint32  num_face_vertex_indices;
-    uint32  num_face_vertex_indices_triangulated;
+    uint    num_points;
+    uint    num_face_vertex_counts;
+    uint    num_face_vertex_indices;
+    uint    num_face_vertex_indices_triangulated;
 };
 
 } // namespace usdi

@@ -21,7 +21,7 @@ class Mesh : public Xform
 {
 typedef Xform super;
 public:
-    Mesh(Schema *parent, const UsdGeomMesh& mesh);
+    Mesh(Context *ctx, Schema *parent, const UsdGeomMesh& mesh);
     ~Mesh() override;
 
     UsdGeomMesh&    getUSDType() override;

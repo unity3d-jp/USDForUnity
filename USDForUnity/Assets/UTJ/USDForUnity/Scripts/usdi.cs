@@ -57,6 +57,7 @@ namespace UTJ
 
         public struct ExportConfig
         {
+            Bool ascii;
             Bool swap_handedness;
             Bool swap_faces;
         };

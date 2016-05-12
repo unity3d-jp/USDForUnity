@@ -40,14 +40,10 @@ Schema* Context::createNode(Schema *parent, UsdPrim prim)
 
     Schema *ret = nullptr;
     if (mesh) {
-        ret = new Mesh(parent, mesh);
+        ret = new Mesh(this, parent, mesh);
     }
     else if (xf) {
-        ret = new Xform(parent, xf);
-    }
-
-    if (ret) {
-        ret->setContext(this);
+        ret = new Xform(this, parent, xf);
     }
 
     return ret;

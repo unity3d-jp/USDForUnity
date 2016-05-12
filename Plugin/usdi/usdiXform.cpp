@@ -6,16 +6,16 @@
 namespace usdi {
 
 
-Xform::Xform(Schema *parent, const UsdGeomXformable& xf)
-    : super(parent)
+Xform::Xform(Context *ctx, Schema *parent, const UsdGeomXformable& xf)
+    : super(ctx, parent)
     , m_xf(xf)
 {
-    usdiLog("constructed\n");
+    usdiLog("constructed %s\n", getPath());
 }
 
 Xform::~Xform()
 {
-    usdiLog("destructed\n");
+    usdiLog("destructed %s\n", getPath());
 }
 
 UsdGeomXformable& Xform::getUSDType()

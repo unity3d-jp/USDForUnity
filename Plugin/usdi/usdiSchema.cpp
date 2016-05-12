@@ -1,11 +1,13 @@
 #include "pch.h"
 #include "usdiInternal.h"
+#include "usdiContext.h"
 #include "usdiSchema.h"
 
 namespace usdi {
 
-Schema::Schema(Schema *parent)
-    : m_parent(parent)
+Schema::Schema(Context *ctx, Schema *parent)
+    : m_ctx(ctx)
+    , m_parent(parent)
 {
     if (m_parent) {
         m_parent->addChild(this);
@@ -16,7 +18,17 @@ Schema::~Schema()
 {
 }
 
-usdi::Schema* Schema::getParent()
+const ImportConfig& Schema::getImportConfig() const
+{
+    return m_ctx->getImportConfig();
+}
+
+const ExportConfig& Schema::getExportConfig() const
+{
+    return m_ctx->getExportConfig();
+}
+
+Schema* Schema::getParent()
 {
     return m_parent;
 }

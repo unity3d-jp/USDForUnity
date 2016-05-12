@@ -5,8 +5,11 @@ namespace usdi {
 class Schema
 {
 public:
-    Schema(Schema *parent);
+    Schema(Context *ctx, Schema *parent);
     virtual ~Schema();
+
+    const ImportConfig& getImportConfig() const;
+    const ExportConfig& getExportConfig() const;
 
     Schema*             getParent();
     size_t              getNumChildren();
