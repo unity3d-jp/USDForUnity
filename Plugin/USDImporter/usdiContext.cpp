@@ -7,25 +7,59 @@
 
 namespace usdi {
 
+Context::Context()
+{}
 
-
-ImportContext::ImportContext()
-{
-}
-
-ImportContext::~ImportContext()
+Context::~Context()
 {
     unload();
 }
 
-void ImportContext::unload()
+Schema* Context::getRootNode()
+{
+    return m_schemas.empty() ? nullptr : m_schemas.front().get();
+}
+
+void Context::constructTreeRecursive(Schema *parent, UsdPrim prim)
+{
+    Schema *node = createNode(parent, prim);
+    if (node) {
+        m_schemas.emplace_back(node);
+
+        auto children = prim.GetChildren();
+        for (auto c : children) {
+            constructTreeRecursive(node, c);
+        }
+    }
+}
+
+Schema* Context::createNode(Schema *parent, UsdPrim prim)
+{
+    UsdGeomMesh mesh(prim);
+    UsdGeomXform xf(prim);
+
+    Schema *ret = nullptr;
+    if (mesh) {
+        ret = new Mesh(parent, mesh);
+    }
+    else if (xf) {
+        ret = new Xform(parent, xf);
+    }
+
+    if (ret) {
+        ret->setContext(this);
+    }
+
+    return ret;
+}
+
+void Context::unload()
 {
     m_stage = UsdStageRefPtr();
     m_schemas.clear();
 }
 
-
-bool ImportContext::open(const char *path)
+bool Context::open(const char *path)
 {
     unload();
 
@@ -56,35 +90,14 @@ bool ImportContext::open(const char *path)
     constructTreeRecursive(nullptr, root_prim);
 }
 
-Schema* ImportContext::getRootNode()
+
+
+ImportContext::ImportContext()
 {
-    return m_schemas.empty() ? nullptr : m_schemas.front().get();
 }
 
-void ImportContext::constructTreeRecursive(Schema *parent, UsdPrim prim)
+ImportContext::~ImportContext()
 {
-    Schema *node = createNode(parent, prim);
-    if (node) {
-        m_schemas.emplace_back(node);
-
-        auto children = prim.GetChildren();
-        for (auto c : children) {
-            constructTreeRecursive(node, c);
-        }
-    }
-}
-
-Schema* ImportContext::createNode(Schema *parent, UsdPrim prim)
-{
-    UsdGeomMesh mesh(prim);
-    UsdGeomXform xf(prim);
-    if (mesh) {
-        return new Mesh(parent, mesh);
-    }
-    else if (xf) {
-        return new Xform(parent, xf);
-    }
-    return nullptr;
 }
 
 } // namespace usdi

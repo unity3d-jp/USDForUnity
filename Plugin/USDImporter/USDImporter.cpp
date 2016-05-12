@@ -24,6 +24,22 @@ usdiExport void usdiDestroyImportContext(usdi::ImportContext *ctx)
     delete ctx;
 }
 
+usdiExport void usdiSetImportConfig(usdi::Context *ctx, const usdi::ImportConfig *conf)
+{
+    ctx->setImportConfig(*conf);
+}
+usdiExport void usdiGetImportConfig(usdi::Context *ctx, usdi::ImportConfig *conf)
+{
+    *conf = ctx->getImportConfig();
+}
+usdiExport void usdiSetExportConfig(usdi::Context *ctx, const usdi::ExportConfig *conf)
+{
+    ctx->setExportConfig(*conf);
+}
+usdiExport void usdiGetExportConfig(usdi::Context *ctx, usdi::ExportConfig *conf)
+{
+    *conf = ctx->getExportConfig();
+}
 
 usdiExport usdi::Schema* usdiGetRoot(usdi::ImportContext *ctx)
 {

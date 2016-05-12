@@ -3,8 +3,9 @@ using UnityEngine;
 namespace UTJ
 {
 
-    public class usdiElement : MonoBehaviour
+    public abstract class usdiElement : MonoBehaviour
     {
+        public abstract void usdiUpdate();
     }
 
 }

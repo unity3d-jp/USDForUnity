@@ -52,6 +52,11 @@ SchemaType Schema::getType() const
     return SchemaType::Unknown;
 }
 
+void Schema::setContext(Context *ctx)
+{
+    m_ctx = ctx;
+}
+
 void Schema::addChild(Schema *child)
 {
     m_children.push_back(child);

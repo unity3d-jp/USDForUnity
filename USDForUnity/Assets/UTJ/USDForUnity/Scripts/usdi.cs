@@ -8,12 +8,12 @@ using UnityEngine;
 
 namespace UTJ
 {
-    static class usdi
+    public static class usdi
     {
-        public struct ImportContext
+        public struct Context
         {
             public System.IntPtr ptr;
-            public static implicit operator bool(ImportContext v) { return v.ptr != IntPtr.Zero; }
+            public static implicit operator bool(Context v) { return v.ptr != IntPtr.Zero; }
         }
 
         public struct ExportContext
@@ -54,6 +54,19 @@ namespace UTJ
             Mesh,
         }
 
+        public struct ImportConfig
+        {
+            Bool triangulate;
+            Bool swap_handedness;
+            Bool swap_faces;
+        };
+
+        public struct ExportConfig
+        {
+            Bool swap_handedness;
+            Bool swap_faces;
+        };
+
         public struct XformData
         {
             public Vector3     position;
@@ -71,16 +84,22 @@ namespace UTJ
             public IntPtr  normals;
             public IntPtr  face_vertex_counts;
             public IntPtr  face_vertex_indices;
+            public IntPtr  face_vertex_indices_triangulated;
 
             public uint    num_points;
             public uint    num_face_vertex_counts;
             public uint    num_face_vertex_indices;
+            public uint    num_face_vertex_indices_triangulated;
         }
 
 
-        [DllImport ("usdi")] public static extern ImportContext usdiCreateImportContext(string path);
-        [DllImport ("usdi")] public static extern void          usdiDestroyImportContext(ImportContext ctx);
-        [DllImport ("usdi")] public static extern Schema        usdiGetRoot(ImportContext ctx);
+        [DllImport ("usdi")] public static extern Context       usdiCreateImportContext(string path);
+        [DllImport ("usdi")] public static extern void          usdiDestroyImportContext(Context ctx);
+        [DllImport ("usdi")] public static extern void          usdiSetImportConfig(Context ctx, ref ImportConfig conf);
+        [DllImport ("usdi")] public static extern void          usdiGetImportConfig(Context ctx, ref ImportConfig conf);
+        [DllImport ("usdi")] public static extern void          usdiSetExportConfig(Context ctx, ref ExportConfig conf);
+        [DllImport ("usdi")] public static extern void          usdiGetExportConfig(Context ctx, ref ExportConfig conf);
+        [DllImport ("usdi")] public static extern Schema        usdiGetRoot(Context ctx);
 
         [DllImport ("usdi")] public static extern IntPtr        usdiGetPath(Schema schema);
         [DllImport ("usdi")] public static extern IntPtr        usdiGetName(Schema schema);

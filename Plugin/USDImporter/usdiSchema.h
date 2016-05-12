@@ -19,11 +19,14 @@ public:
     virtual SchemaType  getType() const;
 
 public:
+    void setContext(Context *ctx);
     void addChild(Schema *child);
 
 private:
-    Schema *m_parent;
-    std::vector<Schema*> m_children;
+    typedef std::vector<Schema*> Children;
+    Context     *m_ctx;
+    Schema      *m_parent;
+    Children    m_children;
 };
 
 } // namespace usdi

@@ -2,32 +2,56 @@
 
 namespace usdi {
 
-class ImportContext
+class Context
 {
 public:
-    ImportContext();
-    ~ImportContext();
+    Context();
+    virtual ~Context();
     void unload();
+
+    const ImportConfig& getImportConfig() const;
+    void                setImportConfig(const ImportConfig& v) const;
+    const ExportConfig& getExportConfig() const;
+    void                setExportConfig(const ExportConfig& v) const;
+    Schema* getRootNode();
 
     bool open(const char *path);
 
-    Schema* getRootNode();
+protected:
+    void    constructTreeRecursive(Schema *parent, UsdPrim prim);
+    Schema* createNode(Schema *parent, UsdPrim prim);
 
-private:
+protected:
     typedef std::map<std::string, std::string> Variants;
     typedef std::unique_ptr<Schema> SchemaPtr;
     typedef std::vector<SchemaPtr> Schemas;
 
-    void    constructTreeRecursive(Schema *parent, UsdPrim prim);
-    Schema* createNode(Schema *parent, UsdPrim prim);
+    UsdStageRefPtr  m_stage;
+    Schemas         m_schemas;
+    std::string     m_prim_root;
+    Variants        m_variants;
 
-    UsdStageRefPtr m_stage;
-    Schemas m_schemas;
-    double m_start_time = 0.0;
-    double m_end_time = 0.0;
+    ImportConfig    m_import_config;
+    ExportConfig    m_export_config;
 
-    std::string m_prim_root;
-    Variants m_variants;
+    double          m_start_time = 0.0;
+    double          m_end_time = 0.0;
+};
+
+
+class ImportContext : public Context
+{
+public:
+    ImportContext();
+    ~ImportContext() override;
+
+private:
+};
+
+
+class ExportContext : public Context
+{
+public:
 };
 
 } // namespace usdi

@@ -17,7 +17,9 @@
 
 namespace usdi {
 
+class Context;
 class ImportContext;
+class ExportContext;
 
 class Schema;
 class Xform;
@@ -71,6 +73,30 @@ struct Time
     double time;
 };
 
+struct ImportConfig
+{
+    bool triangulate;
+    bool swap_handedness;
+    bool swap_faces;
+
+    ImportConfig()
+        : triangulate(true)
+        , swap_handedness(true)
+        , swap_faces(false)
+    {}
+};
+
+struct ExportConfig
+{
+    bool swap_handedness;
+    bool swap_faces;
+
+    ExportConfig()
+        : swap_handedness(true)
+        , swap_faces(false)
+    {}
+};
+
 struct XformData
 {
     float3 position;
@@ -90,10 +116,12 @@ struct MeshData
     float3  *normals;
     int     *face_vertex_counts;
     int     *face_vertex_indices;
+    int     *face_vertex_indices_triangulated;
 
     uint32  num_points;
     uint32  num_face_vertex_counts;
     uint32  num_face_vertex_indices;
+    uint32  num_face_vertex_indices_triangulated;
 };
 
 } // namespace usdi
@@ -102,6 +130,10 @@ extern "C" {
 
 usdiExport usdi::ImportContext*     usdiCreateImportContext(const char *path);
 usdiExport void                     usdiDestroyImportContext(usdi::ImportContext *ctx);
+usdiExport void                     usdiSetImportConfig(usdi::Context *ctx, const usdi::ImportConfig *conf);
+usdiExport void                     usdiGetImportConfig(usdi::Context *ctx, usdi::ImportConfig *conf);
+usdiExport void                     usdiSetExportConfig(usdi::Context *ctx, const usdi::ExportConfig *conf);
+usdiExport void                     usdiGetExportConfig(usdi::Context *ctx, usdi::ExportConfig *conf);
 usdiExport usdi::Schema*            usdiGetRoot(usdi::ImportContext *ctx);
 
 usdiExport const char*              usdiGetPath(usdi::Schema *schema);
