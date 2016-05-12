@@ -100,16 +100,16 @@ usdiExport int                      usdiGetNumChildren(usdi::Schema *schema);
 usdiExport usdi::Schema*            usdiGetChild(usdi::Schema *schema, int i);
 
 usdiExport usdi::Xform*             usdiAsXform(usdi::Schema *schema);
-usdiExport void                     usdiXformReadData(usdi::Xform *xf, usdi::Time t, usdi::XformData *dst);
-usdiExport void                     usdiXformWriteData(usdi::Xform *xf, usdi::Time t, const usdi::XformData *src);
+usdiExport void                     usdiXformReadSample(usdi::Xform *xf, usdi::XformData *dst, usdi::Time t);
+usdiExport void                     usdiXformWriteSample(usdi::Xform *xf, const usdi::XformData *src, usdi::Time t);
 
 usdiExport usdi::Camera*            usdiAsCamera(usdi::Schema *schema);
-usdiExport void                     usdiCameraReadSample(usdi::Camera *cam, usdi::CameraData *dst);
-usdiExport void                     usdiCameraWriteSample(usdi::Camera *cam, const usdi::CameraData *src);
+usdiExport void                     usdiCameraReadSample(usdi::Camera *cam, usdi::CameraData *dst, usdi::Time t);
+usdiExport void                     usdiCameraWriteSample(usdi::Camera *cam, const usdi::CameraData *src, usdi::Time t);
 
 usdiExport usdi::Mesh*              usdiAsMesh(usdi::Schema *schema);
-usdiExport void                     usdiMeshReadSample(usdi::Mesh *mesh, usdi::Time t, usdi::MeshData *dst);
-usdiExport void                     usdiMeshWriteSample(usdi::Mesh *mesh, usdi::Time t, const usdi::MeshData *src);
+usdiExport void                     usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t);
+usdiExport void                     usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t);
 
 } // extern "C"
 

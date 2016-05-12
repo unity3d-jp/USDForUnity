@@ -17,11 +17,15 @@ public:
 
     UsdGeomXformable&   getUSDType() override;
 
-    void                readSample(Time t, XformData& dst);
-    void                writeSample(Time t, const XformData& src);
+    void                readSample(XformData& dst, Time t);
+    void                writeSample(const XformData& src, Time t);
 
 private:
+    typedef std::vector<UsdGeomXformOp> UsdGeomXformOps;
+
     UsdGeomXformable    m_xf;
+    UsdGeomXformOps     m_read_ops;
+    UsdGeomXformOps     m_write_ops;
 };
 
 } // namespace usdi

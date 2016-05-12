@@ -55,7 +55,7 @@ UsdGeomMesh& Mesh::getUSDType()
 }
 
 
-void Mesh::readSample(Time t, MeshData& dst)
+void Mesh::readSample(MeshData& dst, Time t)
 {
     MeshSample sample;
     sample.read(m_mesh, t);
@@ -77,7 +77,7 @@ void Mesh::readSample(Time t, MeshData& dst)
     }
 }
 
-void Mesh::writeSample(Time t, const MeshData& src)
+void Mesh::writeSample(const MeshData& src, Time t)
 {
     MeshSample sample;
     sample.points.assign((GfVec3f*)src.points, (GfVec3f*)src.points + src.num_points);

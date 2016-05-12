@@ -26,8 +26,8 @@ public:
 
     UsdGeomMesh&    getUSDType() override;
 
-    void            readSample(Time t, MeshData& dst);
-    void            writeSample(Time t, const MeshData& src);
+    void            readSample(MeshData& dst, Time t);
+    void            writeSample(const MeshData& src, Time t);
 
 private:
     typedef MeshSample Sample;

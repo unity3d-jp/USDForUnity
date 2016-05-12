@@ -32,5 +32,5 @@ Hidden.meta
 obj/
 CMakeFiles/
 CMakeCache.txt
-OpenSubdivForUnity/*.sln
-OpenSubdivForUnity/*.csproj
+USDForUnity/*.sln
+USDForUnity/*.csproj
