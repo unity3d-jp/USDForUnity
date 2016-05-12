@@ -16,12 +16,6 @@ namespace UTJ
             public static implicit operator bool(Context v) { return v.ptr != IntPtr.Zero; }
         }
 
-        public struct ExportContext
-        {
-            public System.IntPtr ptr;
-            public static implicit operator bool(ExportContext v) { return v.ptr != IntPtr.Zero; }
-        }
-
         public struct Schema
         {
             public System.IntPtr ptr;
@@ -93,8 +87,10 @@ namespace UTJ
         }
 
 
-        [DllImport ("usdi")] public static extern Context       usdiCreateImportContext(string path);
-        [DllImport ("usdi")] public static extern void          usdiDestroyImportContext(Context ctx);
+        [DllImport ("usdi")] public static extern Context       usdiOpen(string path);
+        [DllImport ("usdi")] public static extern Context       usdiCreateContext();
+        [DllImport ("usdi")] public static extern void          usdiDestroyContext(Context ctx);
+
         [DllImport ("usdi")] public static extern void          usdiSetImportConfig(Context ctx, ref ImportConfig conf);
         [DllImport ("usdi")] public static extern void          usdiGetImportConfig(Context ctx, ref ImportConfig conf);
         [DllImport ("usdi")] public static extern void          usdiSetExportConfig(Context ctx, ref ExportConfig conf);

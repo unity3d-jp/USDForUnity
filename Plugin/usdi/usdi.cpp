@@ -8,9 +8,9 @@
 
 extern "C" {
 
-usdiExport usdi::ImportContext* usdiCreateImportContext(const char *path)
+usdiExport usdi::Context* usdiOpen(const char *path)
 {
-    auto* ret = new usdi::ImportContext();
+    auto* ret = new usdi::Context();
     if (!ret->open(path)) {
         delete ret;
         return nullptr;
@@ -19,7 +19,12 @@ usdiExport usdi::ImportContext* usdiCreateImportContext(const char *path)
     return ret;
 }
 
-usdiExport void usdiDestroyImportContext(usdi::ImportContext *ctx)
+usdiExport usdi::Context* usdiCreateContext()
+{
+    return new usdi::Context();
+}
+
+usdiExport void usdiDestroyContext(usdi::Context *ctx)
 {
     delete ctx;
 }
@@ -41,7 +46,7 @@ usdiExport void usdiGetExportConfig(usdi::Context *ctx, usdi::ExportConfig *conf
     *conf = ctx->getExportConfig();
 }
 
-usdiExport usdi::Schema* usdiGetRoot(usdi::ImportContext *ctx)
+usdiExport usdi::Schema* usdiGetRoot(usdi::Context *ctx)
 {
     if (!ctx) return nullptr;
 

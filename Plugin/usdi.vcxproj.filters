@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="usdi">
+      <UniqueIdentifier>{5f7013fc-c08e-4f4b-8f68-d2c2bb5345e8}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="usdi\usdi.h">
+      <Filter>usdi</Filter>
+    </ClInclude>
+    <ClInclude Include="usdi\pch.h">
+      <Filter>usdi</Filter>
+    </ClInclude>
+    <ClInclude Include="usdi\usdiXform.h">
+      <Filter>usdi</Filter>
+    </ClInclude>
+    <ClInclude Include="usdi\usdiContext.h">
+      <Filter>usdi</Filter>
+    </ClInclude>
+    <ClInclude Include="usdi\usdiInternal.h">
+      <Filter>usdi</Filter>
+    </ClInclude>
+    <ClInclude Include="usdi\usdiSchema.h">
+      <Filter>usdi</Filter>
+    </ClInclude>
+    <ClInclude Include="usdi\usdiMesh.h">
+      <Filter>usdi</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="usdi\pch.cpp">
+      <Filter>usdi</Filter>
+    </ClCompile>
+    <ClCompile Include="usdi\usdi.cpp">
+      <Filter>usdi</Filter>
+    </ClCompile>
+    <ClCompile Include="usdi\usdiXform.cpp">
+      <Filter>usdi</Filter>
+    </ClCompile>
+    <ClCompile Include="usdi\usdiContext.cpp">
+      <Filter>usdi</Filter>
+    </ClCompile>
+    <ClCompile Include="usdi\usdiSchema.cpp">
+      <Filter>usdi</Filter>
+    </ClCompile>
+    <ClCompile Include="usdi\usdiMesh.cpp">
+      <Filter>usdi</Filter>
+    </ClCompile>
+    <ClCompile Include="usdi\usdiInternal.cpp">
+      <Filter>usdi</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

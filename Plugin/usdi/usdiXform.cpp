@@ -31,9 +31,9 @@ SchemaType Xform::getType() const
 void Xform::readSample(XformData& dst, Time t_)
 {
     auto t = (const UsdTimeCode&)t_;
-    dst.position = float3(0.0f, 0.0f, 0.0f);
-    dst.rotation = float4(0.0f, 0.0f, 0.0f, 1.0f);
-    dst.scale = float3(1.0f, 1.0f, 1.0f);
+    dst.position = { 0.0f, 0.0f, 0.0f };
+    dst.rotation = { 0.0f, 0.0f, 0.0f, 1.0f };
+    dst.scale = { 1.0f, 1.0f, 1.0f };
 
     if (m_read_ops.empty()) {
         bool reset_stack = false;

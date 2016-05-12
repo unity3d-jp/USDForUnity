@@ -1,5 +1,5 @@
 #pragma once
-#include "USDImporter.h"
+#include "usdi.h"
 
 #define usdiLog(...) usdi::LogImpl(__FUNCTION__,  __VA_ARGS__)
 

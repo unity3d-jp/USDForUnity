@@ -28,30 +28,10 @@ class Mesh;
 
 
 typedef unsigned int uint32;
+struct float2 { float x, y; };
+struct float3 { float x, y, z; };
+struct float4 { float x, y, z, w; };
 
-struct float2
-{
-    float x, y;
-
-    float2() {}
-    float2(float _x, float _y) : x(_x), y(_y) {}
-};
-
-struct float3
-{
-    float x, y, z;
-
-    float3() {}
-    float3(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {}
-};
-
-struct float4
-{
-    float x, y, z, w;
-
-    float4() {}
-    float4(float _x, float _y, float _z, float _w) : x(_x), y(_y), w(_w) {}
-};
 
 enum class SchemaType
 {
@@ -128,13 +108,14 @@ struct MeshData
 
 extern "C" {
 
-usdiExport usdi::ImportContext*     usdiCreateImportContext(const char *path);
-usdiExport void                     usdiDestroyImportContext(usdi::ImportContext *ctx);
+usdiExport usdi::Context*           usdiOpen(const char *path);
+usdiExport usdi::Context*           usdiCreateContext();
+usdiExport void                     usdiDestroyContext(usdi::Context *ctx);
 usdiExport void                     usdiSetImportConfig(usdi::Context *ctx, const usdi::ImportConfig *conf);
 usdiExport void                     usdiGetImportConfig(usdi::Context *ctx, usdi::ImportConfig *conf);
 usdiExport void                     usdiSetExportConfig(usdi::Context *ctx, const usdi::ExportConfig *conf);
 usdiExport void                     usdiGetExportConfig(usdi::Context *ctx, usdi::ExportConfig *conf);
-usdiExport usdi::Schema*            usdiGetRoot(usdi::ImportContext *ctx);
+usdiExport usdi::Schema*            usdiGetRoot(usdi::Context *ctx);
 
 usdiExport const char*              usdiGetPath(usdi::Schema *schema);
 usdiExport const char*              usdiGetName(usdi::Schema *schema);

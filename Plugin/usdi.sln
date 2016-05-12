@@ -3,9 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "USDImporter", "USDImporter.vcxproj", "{08361722-5520-47AC-A0C2-31E8A062B73F}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "USDExporter", "USDExporter.vcxproj", "{08999E56-B8BF-4674-88C6-D5E9CB0575FC}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "usdi", "usdi.vcxproj", "{08361722-5520-47AC-A0C2-31E8A062B73F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +15,6 @@ Global
 		{08361722-5520-47AC-A0C2-31E8A062B73F}.Debug|x64.Build.0 = Debug|x64
 		{08361722-5520-47AC-A0C2-31E8A062B73F}.Master|x64.ActiveCfg = Master|x64
 		{08361722-5520-47AC-A0C2-31E8A062B73F}.Master|x64.Build.0 = Master|x64
-		{08999E56-B8BF-4674-88C6-D5E9CB0575FC}.Debug|x64.ActiveCfg = Debug|x64
-		{08999E56-B8BF-4674-88C6-D5E9CB0575FC}.Debug|x64.Build.0 = Debug|x64
-		{08999E56-B8BF-4674-88C6-D5E9CB0575FC}.Master|x64.ActiveCfg = Master|x64
-		{08999E56-B8BF-4674-88C6-D5E9CB0575FC}.Master|x64.Build.0 = Master|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

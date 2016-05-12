@@ -90,14 +90,10 @@ bool Context::open(const char *path)
     constructTreeRecursive(nullptr, root_prim);
 }
 
-
-
-ImportContext::ImportContext()
+bool Context::write(const char *path)
 {
-}
-
-ImportContext::~ImportContext()
-{
+    // todo
+    return false;
 }
 
 } // namespace usdi

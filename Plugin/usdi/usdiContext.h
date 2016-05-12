@@ -16,6 +16,7 @@ public:
     Schema* getRootNode();
 
     bool open(const char *path);
+    bool write(const char *path);
 
 protected:
     void    constructTreeRecursive(Schema *parent, UsdPrim prim);
@@ -36,22 +37,6 @@ protected:
 
     double          m_start_time = 0.0;
     double          m_end_time = 0.0;
-};
-
-
-class ImportContext : public Context
-{
-public:
-    ImportContext();
-    ~ImportContext() override;
-
-private:
-};
-
-
-class ExportContext : public Context
-{
-public:
 };
 
 } // namespace usdi
