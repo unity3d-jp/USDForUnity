@@ -16,6 +16,7 @@ public:
     ~Xform() override;
 
     UsdGeomXformable&   getUSDType() override;
+    SchemaType          getType() const override;
 
     void                readSample(XformData& dst, Time t);
     void                writeSample(const XformData& src, Time t);

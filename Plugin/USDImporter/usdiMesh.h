@@ -25,6 +25,7 @@ public:
     ~Mesh() override;
 
     UsdGeomMesh&    getUSDType() override;
+    SchemaType      getType() const override;
 
     void            readSample(MeshData& dst, Time t);
     void            writeSample(const MeshData& src, Time t);

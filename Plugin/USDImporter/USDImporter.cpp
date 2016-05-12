@@ -2,13 +2,13 @@
 #include "usdiInternal.h"
 #include "usdiSchema.h"
 #include "usdiXform.h"
-#include "usdiPolyMesh.h"
+#include "usdiMesh.h"
 #include "usdiContext.h"
 
 
 extern "C" {
 
-usdiExport usdi::ImportContext* usdiOpen(const char *path)
+usdiExport usdi::ImportContext* usdiCreateImportContext(const char *path)
 {
     auto* ret = new usdi::ImportContext();
     if (!ret->open(path)) {
@@ -19,12 +19,42 @@ usdiExport usdi::ImportContext* usdiOpen(const char *path)
     return ret;
 }
 
+usdiExport void usdiDestroyImportContext(usdi::ImportContext *ctx)
+{
+    delete ctx;
+}
+
 
 usdiExport usdi::Schema* usdiGetRoot(usdi::ImportContext *ctx)
 {
     if (!ctx) return nullptr;
 
     return ctx->getRootNode();
+}
+
+
+usdiExport const char* usdiGetPath(usdi::Schema *schema)
+{
+    if (!schema) { return nullptr; }
+    return schema->getPath();
+}
+
+usdiExport const char* usdiGetName(usdi::Schema *schema)
+{
+    if (!schema) { return nullptr; }
+    return schema->getName();
+}
+
+usdiExport usdi::SchemaType usdiGetType(usdi::Schema *schema)
+{
+    if (!schema) { return usdi::SchemaType::Unknown; }
+    return schema->getType();
+}
+
+usdiExport usdi::Schema* usdiGetParent(usdi::Schema *schema)
+{
+    if (!schema) { return nullptr; }
+    return schema->getParent();
 }
 
 usdiExport int usdiGetNumChildren(usdi::Schema *schema)

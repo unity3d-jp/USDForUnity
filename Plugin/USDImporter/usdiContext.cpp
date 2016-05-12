@@ -2,7 +2,7 @@
 #include "usdiInternal.h"
 #include "usdiSchema.h"
 #include "usdiXform.h"
-#include "usdiPolyMesh.h"
+#include "usdiMesh.h"
 #include "usdiContext.h"
 
 namespace usdi {

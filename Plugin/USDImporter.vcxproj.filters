@@ -15,9 +15,6 @@
     <ClInclude Include="USDImporter\usdiXform.h">
       <Filter>USDImporter</Filter>
     </ClInclude>
-    <ClInclude Include="USDImporter\usdiPolyMesh.h">
-      <Filter>USDImporter</Filter>
-    </ClInclude>
     <ClInclude Include="USDImporter\usdiContext.h">
       <Filter>USDImporter</Filter>
     </ClInclude>
@@ -25,6 +22,9 @@
       <Filter>USDImporter</Filter>
     </ClInclude>
     <ClInclude Include="USDImporter\usdiSchema.h">
+      <Filter>USDImporter</Filter>
+    </ClInclude>
+    <ClInclude Include="USDImporter\usdiMesh.h">
       <Filter>USDImporter</Filter>
     </ClInclude>
   </ItemGroup>
@@ -35,9 +35,6 @@
     <ClCompile Include="USDImporter\USDImporter.cpp">
       <Filter>USDImporter</Filter>
     </ClCompile>
-    <ClCompile Include="USDImporter\usdiPolyMesh.cpp">
-      <Filter>USDImporter</Filter>
-    </ClCompile>
     <ClCompile Include="USDImporter\usdiXform.cpp">
       <Filter>USDImporter</Filter>
     </ClCompile>
@@ -45,6 +42,10 @@
       <Filter>USDImporter</Filter>
     </ClCompile>
     <ClCompile Include="USDImporter\usdiSchema.cpp">
+      <Filter>USDImporter</Filter>
+    </ClCompile>
+    <ClCompile Include="USDImporter\usdiInternal.cpp" />
+    <ClCompile Include="USDImporter\usdiMesh.cpp">
       <Filter>USDImporter</Filter>
     </ClCompile>
   </ItemGroup>

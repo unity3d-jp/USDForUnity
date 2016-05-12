@@ -16,6 +16,7 @@ public:
     const char*         getName();
     UsdPrim             getUSDPrim();
     virtual UsdTyped&   getUSDType() = 0;
+    virtual SchemaType  getType() const;
 
 public:
     void addChild(Schema *child);

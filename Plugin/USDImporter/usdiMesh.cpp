@@ -2,7 +2,7 @@
 #include "usdiInternal.h"
 #include "usdiSchema.h"
 #include "usdiXform.h"
-#include "usdiPolyMesh.h"
+#include "usdiMesh.h"
 
 namespace usdi {
 
@@ -54,6 +54,10 @@ UsdGeomMesh& Mesh::getUSDType()
     return m_mesh;
 }
 
+SchemaType Mesh::getType() const
+{
+    return SchemaType::Mesh;
+}
 
 void Mesh::readSample(MeshData& dst, Time t)
 {

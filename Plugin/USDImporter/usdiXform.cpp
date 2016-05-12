@@ -23,6 +23,11 @@ UsdGeomXformable& Xform::getUSDType()
     return m_xf;
 }
 
+SchemaType Xform::getType() const
+{
+    return SchemaType::Xform;
+}
+
 void Xform::readSample(XformData& dst, Time t_)
 {
     auto t = (const UsdTimeCode&)t_;

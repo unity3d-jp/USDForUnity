@@ -47,6 +47,11 @@ UsdPrim Schema::getUSDPrim()
     return getUSDType().GetPrim();
 }
 
+SchemaType Schema::getType() const
+{
+    return SchemaType::Unknown;
+}
+
 void Schema::addChild(Schema *child)
 {
     m_children.push_back(child);
