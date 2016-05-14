@@ -78,6 +78,7 @@ bool Context::open(const char *path)
 
     m_stage = UsdStage::Open(path);
     if (m_stage == UsdStageRefPtr()) {
+        usdiLog("failed to load %s\n", path);
         return false;
     }
 
@@ -91,6 +92,7 @@ bool Context::open(const char *path)
 
     // Check if prim exists.  Exit if not
     if (!root_prim.IsValid()) {
+        usdiLog("root prim is not valid\n");
         initialize();
         return false;
     }

@@ -68,7 +68,11 @@ namespace UTJ
         void Start()
         {
             m_usdi = usdi.usdiOpen(m_path);
-            if(m_usdi)
+            if(!m_usdi)
+            {
+                Debug.Log("failed to load " + m_path);
+            }
+            else
             {
                 usdiCreateNodeRecursive(GetComponent<Transform>(), usdi.usdiGetRoot(m_usdi));
             }

@@ -1,48 +1,45 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
-PROJECT(USDPlugins)
+PROJECT(usdi)
 
-OPTION (BUILD_SHARED_LIBS "Build Shared Libraries" ON)
-OPTION (USE_EXTERNALS "Use Externals (Add externals/alembic etc to include & library path)" ON)
+SET(CMAKE_BUILD_TYPE Release)
 
-IF(MSVC)
-    SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /MT")
-    SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MT")
-ELSE()
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g --std=c++11 -Wno-deprecated")
-ENDIF()
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g --std=c++11 -Wno-deprecated")
+SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-rpath,/opt/pixar/usd/lib:/opt/pixar/usd-vfx2015/lib")
 
-SET( INCLUDES
+SET(INCLUDES
+    ${INCLUDES}
     .
+    /opt/pixar/usd/include
+    /opt/pixar/usd-vfx2015/include
+    /opt/pixar/usd-vfx2015/include/python2.7
+    /opt/pixar/usd-vfx2015/packages/openexr-2.2.0/include/OpenEXR
 )
-IF(USE_EXTERNALS)
-    SET (INCLUDES
-        ${INCLUDES}
-        /opt/pixar/usd/include
-        /opt/pixar/usd-vfx2015/include
-        /opt/pixar/usd-vfx2015/include/python2.7
-        /opt/pixar/usd-vfx2015/packages/openexr-2.2.0/include/OpenEXR
-    )
-ENDIF()
 INCLUDE_DIRECTORIES(${INCLUDES})
 
-IF(USE_EXTERNALS)
-    LINK_DIRECTORIES (
-        /opt/pixar/usd/lib
-        /opt/pixar/usd-vfx2015/lib
-    )
-ENDIF()
+LINK_DIRECTORIES (
+    /opt/pixar/usd/lib
+    /opt/pixar/usd-vfx2015/lib
+)
 
 ADD_DEFINITIONS(-DBUILD_OPTLEVEL_OPT -DBUILD_COMPONENT_SRC_PREFIX="USDPlugins")
 
 FILE(GLOB USDI_CXX_FILES usdi/*.cpp)
 FILE(GLOB USDI_H_FILES usdi/*.h)
 
+FILE(GLOB TEST_CXX_FILES Test/*.cpp)
+FILE(GLOB TEST_H_FILES Test/*.h)
+
 
 SET( USDI_SOURCE_FILES
     ${USDI_CXX_FILES} ${USDI_H_FILES}
 )
-ADD_LIBRARY( usdi ${USDI_SOURCE_FILES} )
-
-
-LINK_DIRECTORIES(/opt/pixar/usd/lib /opt/pixar/usd-vfx2015)
+ADD_LIBRARY( usdi SHARED ${USDI_SOURCE_FILES} )
 TARGET_LINK_LIBRARIES(usdi usd usdGeom usdUtils boost_python-mt)
+
+
+SET( TEST_SOURCE_FILES
+    ${TEST_CXX_FILES} ${TEST_H_FILES}
+)
+ADD_EXECUTABLE( usdi_test ${TEST_SOURCE_FILES} )
+ADD_DEPENDENCIES( usdi_test usdi )
+TARGET_LINK_LIBRARIES(usdi_test usdi)
