@@ -15,7 +15,8 @@ namespace UTJ
         usdi.MeshData   m_meshData;
 
         Mesh        m_umesh;
-        Vector3[]   m_points;
+        Vector3[]   m_positions;
+        Vector3[]   m_velocities;
         Vector3[]   m_normals;
         int[]       m_indices;
 
@@ -98,17 +99,17 @@ namespace UTJ
             {
                 usdi.usdiMeshReadSample(m_mesh, ref m_meshData, time);
 
-                m_points = new Vector3[m_meshData.num_points];
+                m_positions = new Vector3[m_meshData.num_points];
                 m_normals = new Vector3[m_meshData.num_points];
                 m_indices = new int[m_meshData.num_indices_triangulated];
 
-                m_meshData.points = Marshal.UnsafeAddrOfPinnedArrayElement(m_points, 0);
+                m_meshData.points = Marshal.UnsafeAddrOfPinnedArrayElement(m_positions, 0);
                 m_meshData.normals = Marshal.UnsafeAddrOfPinnedArrayElement(m_normals, 0);
                 m_meshData.indices_triangulated = Marshal.UnsafeAddrOfPinnedArrayElement(m_indices, 0);
             }
 
             usdi.usdiMeshReadSample(m_mesh, ref m_meshData, time);
-            m_umesh.vertices = m_points;
+            m_umesh.vertices = m_positions;
             m_umesh.normals = m_normals;
             m_umesh.SetIndices(m_indices, MeshTopology.Triangles, 0);
         }

@@ -20,6 +20,15 @@ namespace UTJ
             usdiElement elem = null;
 
             {
+                var points = usdi.usdiAsPoints(schema);
+                if (points)
+                {
+                    go = new GameObject();
+                    elem = go.AddComponent<usdiPoints>();
+                }
+            }
+            if (go == null)
+            {
                 var mesh = usdi.usdiAsMesh(schema);
                 if(mesh)
                 {
@@ -27,7 +36,17 @@ namespace UTJ
                     elem = go.AddComponent<usdiMesh>();
                 }
             }
-            if(go == null) {
+            if (go == null)
+            {
+                var cam = usdi.usdiAsCamera(schema);
+                if (cam)
+                {
+                    go = new GameObject();
+                    elem = go.AddComponent<usdiCamera>();
+                }
+            }
+            if (go == null)
+            {
                 var xf = usdi.usdiAsXform(schema);
                 if (xf)
                 {
@@ -38,7 +57,7 @@ namespace UTJ
 
             if(go != null)
             {
-                go.GetComponent<Transform>().parent = parent;
+                go.GetComponent<Transform>().SetParent(parent);
                 elem.usdiInitialize(schema);
             }
 

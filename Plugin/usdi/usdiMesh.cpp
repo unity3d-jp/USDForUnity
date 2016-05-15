@@ -56,30 +56,6 @@ static inline void TriangulateIndices(int *triangulated, const CountArray &count
 
 
 
-MeshSample::MeshSample()
-{
-}
-
-bool MeshSample::read(UsdGeomMesh& mesh, Time t_)
-{
-    auto t = (const UsdTimeCode&)t_;
-    bool ret = mesh.GetPointsAttr().Get(&points, t);
-    mesh.GetNormalsAttr().Get(&normals, t);
-    mesh.GetFaceVertexCountsAttr().Get(&counts, t);
-    mesh.GetFaceVertexIndicesAttr().Get(&indices, t);
-    return ret;
-}
-
-bool MeshSample::write(UsdGeomMesh& mesh, Time t_)
-{
-    auto t = (const UsdTimeCode&)t_;
-    bool ret = mesh.GetPointsAttr().Set(points, t);
-    mesh.GetNormalsAttr().Set(normals, t);
-    mesh.GetFaceVertexCountsAttr().Set(counts, t);
-    mesh.GetFaceVertexIndicesAttr().Set(indices, t);
-    return ret;
-}
-
 
 Mesh::Mesh(Context *ctx, Schema *parent, const UsdGeomMesh& mesh)
     : super(ctx, parent, UsdGeomXformable(mesh))
@@ -117,14 +93,18 @@ void Mesh::getSummary(MeshSummary& dst) const
     // todo
 }
 
-bool Mesh::readSample(MeshData& dst, Time t)
+bool Mesh::readSample(MeshData& dst, Time t_)
 {
+    auto t = (const UsdTimeCode&)t_;
     const auto& conf = getImportConfig();
 
     MeshSample sample;
-    if (!sample.read(m_mesh, t)) {
-        return false;
-    }
+    m_mesh.GetPointsAttr().Get(&sample.points, t);
+    m_mesh.GetVelocitiesAttr().Get(&sample.velocities, t);
+    m_mesh.GetNormalsAttr().Get(&sample.normals, t);
+    m_mesh.GetFaceVertexCountsAttr().Get(&sample.counts, t);
+    m_mesh.GetFaceVertexIndicesAttr().Get(&sample.indices, t);
+
 
     dst.num_points = sample.points.size();
     dst.num_counts = sample.counts.size();
@@ -134,6 +114,14 @@ bool Mesh::readSample(MeshData& dst, Time t)
         if (conf.swap_handedness) {
             for (uint i = 0; i < dst.num_points; ++i) {
                 dst.points[i].x *= -1.0f;
+            }
+        }
+    }
+    if (dst.velocities) {
+        memcpy(dst.velocities, &sample.velocities[0], sizeof(float3) * dst.num_points);
+        if (conf.swap_handedness) {
+            for (uint i = 0; i < dst.num_points; ++i) {
+                dst.velocities[i].x *= -1.0f;
             }
         }
     }
@@ -159,11 +147,12 @@ bool Mesh::readSample(MeshData& dst, Time t)
         }
     }
 
-    return true;
+    return dst.num_points > 0;
 }
 
-bool Mesh::writeSample(const MeshData& src, Time t)
+bool Mesh::writeSample(const MeshData& src, Time t_)
 {
+    auto t = (const UsdTimeCode&)t_;
     const auto& conf = getExportConfig();
 
     MeshSample sample;
@@ -172,6 +161,15 @@ bool Mesh::writeSample(const MeshData& src, Time t)
         sample.points.assign((GfVec3f*)src.points, (GfVec3f*)src.points + src.num_points);
         if (conf.swap_handedness) {
             for (auto& v : sample.points) {
+                v[0] *= -1.0f;
+            }
+        }
+    }
+
+    if (src.velocities) {
+        sample.points.assign((GfVec3f*)src.velocities, (GfVec3f*)src.velocities + src.num_points);
+        if (conf.swap_handedness) {
+            for (auto& v : sample.velocities) {
                 v[0] *= -1.0f;
             }
         }
@@ -199,7 +197,13 @@ bool Mesh::writeSample(const MeshData& src, Time t)
         sample.counts.assign(ntriangles, 3);
     }
 
-    return sample.write(m_mesh, t);
+
+    bool  ret = m_mesh.GetPointsAttr().Set(sample.points, t);
+    m_mesh.GetVelocitiesAttr().Set(sample.velocities, t);
+    m_mesh.GetNormalsAttr().Set(sample.normals, t);
+    m_mesh.GetFaceVertexCountsAttr().Set(sample.counts, t);
+    m_mesh.GetFaceVertexIndicesAttr().Set(sample.indices, t);
+    return ret;
 }
 
 } // namespace usdi

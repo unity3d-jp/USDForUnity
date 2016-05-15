@@ -27,6 +27,12 @@
     <ClInclude Include="usdi\usdiMesh.h">
       <Filter>usdi</Filter>
     </ClInclude>
+    <ClInclude Include="usdi\usdiCamera.h">
+      <Filter>usdi</Filter>
+    </ClInclude>
+    <ClInclude Include="usdi\usdiPoints.h">
+      <Filter>usdi</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="usdi\pch.cpp">
@@ -48,6 +54,12 @@
       <Filter>usdi</Filter>
     </ClCompile>
     <ClCompile Include="usdi\usdiInternal.cpp">
+      <Filter>usdi</Filter>
+    </ClCompile>
+    <ClCompile Include="usdi\usdiCamera.cpp">
+      <Filter>usdi</Filter>
+    </ClCompile>
+    <ClCompile Include="usdi\usdiPoints.cpp">
       <Filter>usdi</Filter>
     </ClCompile>
   </ItemGroup>

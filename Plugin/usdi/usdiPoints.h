@@ -2,9 +2,10 @@
 
 namespace usdi {
 
-class PointsSample
+struct PointsSample
 {
-public:
+    VtArray<GfVec3f> points;
+    VtArray<GfVec3f> velocities;
 };
 
 

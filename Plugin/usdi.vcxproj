@@ -12,10 +12,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="usdi\pch.h" />
+    <ClInclude Include="usdi\usdiCamera.h" />
     <ClInclude Include="usdi\usdiContext.h" />
     <ClInclude Include="usdi\usdiInternal.h" />
     <ClInclude Include="usdi\usdiMesh.h" />
     <ClInclude Include="usdi\usdi.h" />
+    <ClInclude Include="usdi\usdiPoints.h" />
     <ClInclude Include="usdi\usdiSchema.h" />
     <ClInclude Include="usdi\usdiXform.h" />
   </ItemGroup>
@@ -24,10 +26,12 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Master|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="usdi\usdiCamera.cpp" />
     <ClCompile Include="usdi\usdiContext.cpp" />
     <ClCompile Include="usdi\usdiInternal.cpp" />
     <ClCompile Include="usdi\usdiMesh.cpp" />
     <ClCompile Include="usdi\usdi.cpp" />
+    <ClCompile Include="usdi\usdiPoints.cpp" />
     <ClCompile Include="usdi\usdiSchema.cpp" />
     <ClCompile Include="usdi\usdiXform.cpp" />
   </ItemGroup>
@@ -50,7 +54,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(ProjectDir);External\usd;External\opensubdiv;External\glew;External;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)External\usd-vfx2015\include;$(SolutionDir)External\usd-vfx2015\include\python2.7;$(SolutionDir)External\usd-vfx2015\packages\openexr-2.2.0\include\OpenEXR;$(SolutionDir)External\usd\include;$(IncludePath)</IncludePath>
     <LibraryPath>External\libs\x86_64;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)_out\$(ProjectName)_$(Platform)_$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)_tmp\$(ProjectName)_$(Platform)_$(Configuration)\</IntDir>

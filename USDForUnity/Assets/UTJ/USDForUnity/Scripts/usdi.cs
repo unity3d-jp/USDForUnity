@@ -53,6 +53,7 @@ namespace UTJ
             Xform,
             Camera,
             Mesh,
+            Points,
         }
 
         public enum TopologyVariance
@@ -94,11 +95,13 @@ namespace UTJ
 
         public struct MeshSummary
         {
-            public TopologyVariance topology_variance;
             public uint peak_num_points;
             public uint peak_num_counts;
             public uint peak_num_indices;
             public uint peak_num_indices_triangulated;
+            public TopologyVariance topology_variance;
+            public Bool has_normals;
+            public Bool has_velocities;
         };
 
         public struct MeshData
@@ -118,8 +121,9 @@ namespace UTJ
 
         public struct PointsSummary
         {
-            public TopologyVariance topology_variance;
             public uint peak_num_points;
+            public TopologyVariance topology_variance;
+            public Bool has_velocities;
         };
 
         public struct PointsData

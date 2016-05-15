@@ -92,11 +92,13 @@ struct CameraData
 
 struct MeshSummary
 {
-    TopologyVariance    topology_variance;
     uint                peak_num_points;
     uint                peak_num_counts;
     uint                peak_num_indices;
     uint                peak_num_indices_triangulated;
+    TopologyVariance    topology_variance;
+    bool                has_normals;
+    bool                has_velocities;
 };
 
 struct MeshData
@@ -119,8 +121,9 @@ struct MeshData
 
 struct PointsSummary
 {
-    TopologyVariance    topology_variance;
     uint                peak_num_points;
+    TopologyVariance    topology_variance;
+    bool                has_velocities;
 };
 
 struct PointsData

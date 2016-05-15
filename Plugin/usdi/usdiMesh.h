@@ -5,12 +5,8 @@ namespace usdi {
 
 struct MeshSample
 {
-public:
-    MeshSample();
-    bool read(UsdGeomMesh& mesh, Time t);
-    bool write(UsdGeomMesh& mesh, Time t);
-
     VtArray<GfVec3f> points;
+    VtArray<GfVec3f> velocities;
     VtArray<GfVec3f> normals;
     VtArray<int>     counts;
     VtArray<int>     indices;
