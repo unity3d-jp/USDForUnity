@@ -11,28 +11,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="usdi\pch.h" />
-    <ClInclude Include="usdi\usdiContext.h" />
-    <ClInclude Include="usdi\usdiInternal.h" />
-    <ClInclude Include="usdi\usdiMesh.h" />
-    <ClInclude Include="usdi\usdi.h" />
-    <ClInclude Include="usdi\usdiSchema.h" />
-    <ClInclude Include="usdi\usdiXform.h" />
+    <ClCompile Include="Test\Test.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="usdi\pch.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Master|x64'">Create</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="usdi\usdiContext.cpp" />
-    <ClCompile Include="usdi\usdiInternal.cpp" />
-    <ClCompile Include="usdi\usdiMesh.cpp" />
-    <ClCompile Include="usdi\usdi.cpp" />
-    <ClCompile Include="usdi\usdiSchema.cpp" />
-    <ClCompile Include="usdi\usdiXform.cpp" />
+    <ProjectReference Include="usdi.vcxproj">
+      <Project>{08361722-5520-47ac-a0c2-31e8a062b73f}</Project>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{08361722-5520-47AC-A0C2-31E8A062B73F}</ProjectGuid>
+    <ProjectGuid>{B0B40791-0679-4CFC-AF9F-CD547CCE6161}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
