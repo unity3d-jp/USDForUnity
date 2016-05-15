@@ -12,8 +12,8 @@ public:
 
     VtArray<GfVec3f> points;
     VtArray<GfVec3f> normals;
-    VtArray<int>     face_vertex_counts;
-    VtArray<int>     face_vertex_indices;
+    VtArray<int>     counts;
+    VtArray<int>     indices;
 };
 
 
@@ -27,6 +27,7 @@ public:
     UsdGeomMesh&    getUSDType() override;
     SchemaType      getType() const override;
 
+    void            getSummary(MeshSummary& dst) const;
     bool            readSample(MeshData& dst, Time t);
     bool            writeSample(const MeshData& src, Time t);
 

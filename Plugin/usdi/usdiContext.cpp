@@ -2,7 +2,9 @@
 #include "usdiInternal.h"
 #include "usdiSchema.h"
 #include "usdiXform.h"
+#include "usdiCamera.h"
 #include "usdiMesh.h"
+#include "usdiPoints.h"
 #include "usdiContext.h"
 
 namespace usdi {
@@ -62,10 +64,18 @@ Schema* Context::createNode(Schema *parent, UsdPrim prim)
 {
     Schema *ret = nullptr;
 
+    UsdGeomPoints points(prim);
     UsdGeomMesh mesh(prim);
+    UsdGeomCamera cam(prim);
     UsdGeomXform xf(prim);
-    if (mesh) {
+    if (points) {
+        ret = new Points(this, parent, points);
+    }
+    else if (mesh) {
         ret = new Mesh(this, parent, mesh);
+    }
+    else if (cam) {
+        ret = new Camera(this, parent, cam);
     }
     else if (xf) {
         ret = new Xform(this, parent, xf);
@@ -83,11 +93,9 @@ bool Context::open(const char *path)
 
     usdiLog("Context::open(): trying to open %s\n", path);
 
-    //ArGetResolver().ConfigureResolverForAsset(path);
-    //auto resolverctx = ArGetResolver().CreateDefaultContextForAsset(path);
-    //m_stage = UsdStage::Open(path, resolverctx);
-
-    m_stage = UsdStage::Open(path);
+    ArGetResolver().ConfigureResolverForAsset(path);
+    auto resolverctx = ArGetResolver().CreateDefaultContextForAsset(path);
+    m_stage = UsdStage::Open(path, resolverctx);
     if (m_stage == UsdStageRefPtr()) {
         usdiLog("Context::open(): failed to load %s\n", path);
         return false;

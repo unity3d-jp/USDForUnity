@@ -100,11 +100,11 @@ namespace UTJ
 
                 m_points = new Vector3[m_meshData.num_points];
                 m_normals = new Vector3[m_meshData.num_points];
-                m_indices = new int[m_meshData.num_face_vertex_indices_triangulated];
+                m_indices = new int[m_meshData.num_indices_triangulated];
 
                 m_meshData.points = Marshal.UnsafeAddrOfPinnedArrayElement(m_points, 0);
                 m_meshData.normals = Marshal.UnsafeAddrOfPinnedArrayElement(m_normals, 0);
-                m_meshData.face_vertex_indices_triangulated = Marshal.UnsafeAddrOfPinnedArrayElement(m_indices, 0);
+                m_meshData.indices_triangulated = Marshal.UnsafeAddrOfPinnedArrayElement(m_indices, 0);
             }
 
             usdi.usdiMeshReadSample(m_mesh, ref m_meshData, time);

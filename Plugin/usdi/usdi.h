@@ -22,6 +22,7 @@ class Schema;
 class Xform;
 class Camera;
 class Mesh;
+class Points;
 
 
 typedef unsigned int uint;
@@ -36,6 +37,7 @@ enum class SchemaType
     Xform,
     Camera,
     Mesh,
+    Points,
 };
 
 enum class TopologyVariance
@@ -87,20 +89,48 @@ struct CameraData
 {
 };
 
+
+struct MeshSummary
+{
+    TopologyVariance    topology_variance;
+    uint                peak_num_points;
+    uint                peak_num_counts;
+    uint                peak_num_indices;
+    uint                peak_num_indices_triangulated;
+};
+
 struct MeshData
 {
     // these pointers can be null (in this case, just be ignored).
     // otherwise, if you pass to usdiMeshSampleReadData(), pointers must point valid memory block to store data.
     float3  *points;
+    float3  *velocities;
     float3  *normals;
-    int     *face_vertex_counts;
-    int     *face_vertex_indices;
-    int     *face_vertex_indices_triangulated;
+    int     *counts;
+    int     *indices;
+    int     *indices_triangulated;
 
     uint    num_points;
-    uint    num_face_vertex_counts;
-    uint    num_face_vertex_indices;
-    uint    num_face_vertex_indices_triangulated;
+    uint    num_counts;
+    uint    num_indices;
+    uint    num_indices_triangulated;
+};
+
+
+struct PointsSummary
+{
+    TopologyVariance    topology_variance;
+    uint                peak_num_points;
+};
+
+struct PointsData
+{
+    // these pointers can be null (in this case, just be ignored).
+    // otherwise, if you pass to usdiMeshSampleReadData(), pointers must point valid memory block to store data.
+    float3  *points;
+    float3  *velocities;
+
+    uint    num_points;
 };
 
 } // namespace usdi
@@ -137,8 +167,15 @@ usdiExport bool             usdiCameraWriteSample(usdi::Camera *cam, const usdi:
 
 usdiExport usdi::Mesh*      usdiAsMesh(usdi::Schema *schema);
 usdiExport usdi::Mesh*      usdiCreateMesh(usdi::Schema *parent, const char *name);
+usdiExport void             usdiMeshGetSummary(usdi::Mesh *mesh, usdi::MeshSummary *dst);
 usdiExport bool             usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t);
 usdiExport bool             usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t);
+
+usdiExport usdi::Points*    usdiAsPoints(usdi::Schema *schema);
+usdiExport usdi::Points*    usdiCreatePoints(usdi::Schema *parent, const char *name);
+usdiExport void             usdiPointsGetSummary(usdi::Points *points, usdi::PointsSummary *dst);
+usdiExport bool             usdiPointsReadSample(usdi::Points *points, usdi::PointsData *dst, usdi::Time t);
+usdiExport bool             usdiPointsWriteSample(usdi::Points *points, const usdi::PointsData *src, usdi::Time t);
 
 } // extern "C"
 

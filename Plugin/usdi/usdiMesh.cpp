@@ -65,8 +65,8 @@ bool MeshSample::read(UsdGeomMesh& mesh, Time t_)
     auto t = (const UsdTimeCode&)t_;
     bool ret = mesh.GetPointsAttr().Get(&points, t);
     mesh.GetNormalsAttr().Get(&normals, t);
-    mesh.GetFaceVertexCountsAttr().Get(&face_vertex_counts, t);
-    mesh.GetFaceVertexIndicesAttr().Get(&face_vertex_indices, t);
+    mesh.GetFaceVertexCountsAttr().Get(&counts, t);
+    mesh.GetFaceVertexIndicesAttr().Get(&indices, t);
     return ret;
 }
 
@@ -75,8 +75,8 @@ bool MeshSample::write(UsdGeomMesh& mesh, Time t_)
     auto t = (const UsdTimeCode&)t_;
     bool ret = mesh.GetPointsAttr().Set(points, t);
     mesh.GetNormalsAttr().Set(normals, t);
-    mesh.GetFaceVertexCountsAttr().Set(face_vertex_counts, t);
-    mesh.GetFaceVertexIndicesAttr().Set(face_vertex_indices, t);
+    mesh.GetFaceVertexCountsAttr().Set(counts, t);
+    mesh.GetFaceVertexIndicesAttr().Set(indices, t);
     return ret;
 }
 
@@ -93,12 +93,12 @@ Mesh::Mesh(Context *ctx, Schema *parent, const UsdGeomMesh& mesh)
         m_topology_variance = TopologyVariance::Heterogenous;
     }
 
-    usdiLog("Mesh::Mesh(): %s\n", getPath());
+    usdiTrace("Mesh::Mesh(): %s\n", getPath());
 }
 
 Mesh::~Mesh()
 {
-    usdiLog("Mesh::~Mesh() %s\n", getPath());
+    usdiTrace("Mesh::~Mesh() %s\n", getPath());
 }
 
 UsdGeomMesh& Mesh::getUSDType()
@@ -111,6 +111,12 @@ SchemaType Mesh::getType() const
     return SchemaType::Mesh;
 }
 
+void Mesh::getSummary(MeshSummary& dst) const
+{
+    dst.topology_variance = m_topology_variance;
+    // todo
+}
+
 bool Mesh::readSample(MeshData& dst, Time t)
 {
     const auto& conf = getImportConfig();
@@ -121,8 +127,8 @@ bool Mesh::readSample(MeshData& dst, Time t)
     }
 
     dst.num_points = sample.points.size();
-    dst.num_face_vertex_counts = sample.face_vertex_counts.size();
-    dst.num_face_vertex_indices = sample.face_vertex_indices.size();
+    dst.num_counts = sample.counts.size();
+    dst.num_indices = sample.indices.size();
     if (dst.points) {
         memcpy(dst.points, &sample.points[0], sizeof(float3) * dst.num_points);
         if (conf.swap_handedness) {
@@ -139,17 +145,17 @@ bool Mesh::readSample(MeshData& dst, Time t)
             }
         }
     }
-    if (dst.face_vertex_counts) {
-        memcpy(dst.face_vertex_counts, &sample.face_vertex_counts[0], sizeof(int) * dst.num_face_vertex_counts);
+    if (dst.counts) {
+        memcpy(dst.counts, &sample.counts[0], sizeof(int) * dst.num_counts);
     }
-    if (dst.face_vertex_indices) {
-        memcpy(dst.face_vertex_indices, &sample.face_vertex_indices[0], sizeof(int) * dst.num_face_vertex_indices);
+    if (dst.indices) {
+        memcpy(dst.indices, &sample.indices[0], sizeof(int) * dst.num_indices);
     }
 
     if (conf.triangulate) {
-        dst.num_face_vertex_indices_triangulated = GetTriangulatedIndexCount(sample.face_vertex_counts);
-        if (dst.face_vertex_indices_triangulated) {
-            TriangulateIndices(dst.face_vertex_indices_triangulated, sample.face_vertex_counts, &sample.face_vertex_indices, conf.swap_faces);
+        dst.num_indices_triangulated = GetTriangulatedIndexCount(sample.counts);
+        if (dst.indices_triangulated) {
+            TriangulateIndices(dst.indices_triangulated, sample.counts, &sample.indices, conf.swap_faces);
         }
     }
 
@@ -180,17 +186,17 @@ bool Mesh::writeSample(const MeshData& src, Time t)
         }
     }
 
-    if (src.face_vertex_indices) {
-        sample.face_vertex_indices.assign(src.face_vertex_indices, src.face_vertex_indices + src.num_face_vertex_indices);
+    if (src.indices) {
+        sample.indices.assign(src.indices, src.indices + src.num_indices);
     }
 
-    if (src.face_vertex_counts) {
-        sample.face_vertex_counts.assign(src.face_vertex_counts, src.face_vertex_counts + src.num_face_vertex_counts);
+    if (src.counts) {
+        sample.counts.assign(src.counts, src.counts + src.num_counts);
     }
     else {
         // assume all faces are triangles
-        size_t ntriangles = src.num_face_vertex_indices / 3;
-        sample.face_vertex_counts.assign(ntriangles, 3);
+        size_t ntriangles = src.num_indices / 3;
+        sample.counts.assign(ntriangles, 3);
     }
 
     return sample.write(m_mesh, t);

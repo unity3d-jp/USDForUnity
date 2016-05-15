@@ -2,7 +2,9 @@
 #include "usdiInternal.h"
 #include "usdiSchema.h"
 #include "usdiXform.h"
+#include "usdiCamera.h"
 #include "usdiMesh.h"
+#include "usdiPoints.h"
 #include "usdiContext.h"
 
 
@@ -111,6 +113,12 @@ usdiExport usdi::Xform* usdiAsXform(usdi::Schema *schema)
     return dynamic_cast<usdi::Xform*>(schema);
 }
 
+usdiExport usdi::Xform* usdiCreateXform(usdi::Schema *parent, const char *name)
+{
+    // todo
+    return nullptr;
+}
+
 usdiExport bool usdiXformReadSample(usdi::Xform *xf, usdi::XformData *dst, usdi::Time t)
 {
     if (!xf || !dst) return false;
@@ -124,10 +132,47 @@ usdiExport bool usdiXformWriteSample(usdi::Xform *xf, const usdi::XformData *src
 }
 
 
+usdiExport usdi::Camera* usdiAsCamera(usdi::Schema *schema)
+{
+    if (!schema) return nullptr;
+    return dynamic_cast<usdi::Camera*>(schema);
+}
+
+usdiExport usdi::Camera* usdiCreateCamera(usdi::Schema *parent, const char *name)
+{
+    // todo
+    return nullptr;
+}
+
+usdiExport bool usdiCameraReadSample(usdi::Camera *cam, usdi::CameraData *dst, usdi::Time t)
+{
+    if (!cam || !dst) return false;
+    return cam->readSample(*dst, t);
+}
+
+usdiExport bool usdiCameraWriteSample(usdi::Camera *cam, const usdi::CameraData *src, usdi::Time t)
+{
+    if (!cam || !src) return false;
+    return cam->writeSample(*src, t);
+}
+
+
 usdiExport usdi::Mesh* usdiAsMesh(usdi::Schema *schema)
 {
     if (!schema) return nullptr;
     return dynamic_cast<usdi::Mesh*>(schema);
+}
+
+usdiExport usdi::Mesh* usdiCreateMesh(usdi::Schema *parent, const char *name)
+{
+    // todo
+    return nullptr;
+}
+
+usdiExport void usdiMeshGetSummary(usdi::Mesh *mesh, usdi::MeshSummary *dst)
+{
+    if (!mesh || !dst) return;
+    mesh->getSummary(*dst);
 }
 
 usdiExport bool usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t)
@@ -140,6 +185,37 @@ usdiExport bool usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src,
 {
     if (!mesh || !src) return false;
     return mesh->writeSample(*src, t);
+}
+
+
+usdiExport usdi::Points* usdiAsPoints(usdi::Schema *schema)
+{
+    if (!schema) return nullptr;
+    return dynamic_cast<usdi::Points*>(schema);
+}
+
+usdiExport usdi::Points* usdiCreatePoints(usdi::Schema *parent, const char *name)
+{
+    // todo
+    return nullptr;
+}
+
+usdiExport void usdiPointsGetSummary(usdi::Points *points, usdi::PointsSummary *dst)
+{
+    if (!points || !dst) return;
+    points->getSummary(*dst);
+}
+
+usdiExport bool usdiPointsReadSample(usdi::Points *points, usdi::PointsData *dst, usdi::Time t)
+{
+    if (!points || !dst) return false;
+    return points->readSample(*dst, t);
+}
+
+usdiExport bool usdiPointsWriteSample(usdi::Points *points, const usdi::PointsData *src, usdi::Time t)
+{
+    if (!points || !src) return false;
+    return points->writeSample(*src, t);
 }
 
 } // extern "C"

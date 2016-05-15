@@ -2,12 +2,6 @@
 
 namespace usdi {
 
-class XformSample
-{
-public:
-};
-
-
 class Xform : public Schema
 {
 typedef Schema super;

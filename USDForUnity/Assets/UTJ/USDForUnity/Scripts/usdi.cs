@@ -40,6 +40,13 @@ namespace UTJ
             public static implicit operator bool(Mesh v) { return v.ptr != IntPtr.Zero; }
         }
 
+        public struct Points
+        {
+            public System.IntPtr ptr;
+            public static implicit operator bool(Points v) { return v.ptr != IntPtr.Zero; }
+        }
+
+
         public enum SchemaType
         {
             Unknown,
@@ -47,6 +54,18 @@ namespace UTJ
             Camera,
             Mesh,
         }
+
+        public enum TopologyVariance
+        {
+            Constant, // both vertices and topologies are constant
+            Homogenous, // vertices are not constant (= animated). topologies are constant.
+            Heterogenous, // both vertices and topologies are not constant
+        };
+
+        public struct Time
+        {
+            double time;
+        };
 
         public struct ImportConfig
         {
@@ -73,18 +92,42 @@ namespace UTJ
         {
         }
 
+        public struct MeshSummary
+        {
+            public TopologyVariance topology_variance;
+            public uint peak_num_points;
+            public uint peak_num_counts;
+            public uint peak_num_indices;
+            public uint peak_num_indices_triangulated;
+        };
+
         public struct MeshData
         {
             public IntPtr  points;
+            public IntPtr  velocities;
             public IntPtr  normals;
-            public IntPtr  face_vertex_counts;
-            public IntPtr  face_vertex_indices;
-            public IntPtr  face_vertex_indices_triangulated;
+            public IntPtr  counts;
+            public IntPtr  indices;
+            public IntPtr  indices_triangulated;
 
             public uint    num_points;
-            public uint    num_face_vertex_counts;
-            public uint    num_face_vertex_indices;
-            public uint    num_face_vertex_indices_triangulated;
+            public uint    num_counts;
+            public uint    num_indices;
+            public uint    num_indices_triangulated;
+        }
+
+        public struct PointsSummary
+        {
+            public TopologyVariance topology_variance;
+            public uint peak_num_points;
+        };
+
+        public struct PointsData
+        {
+            public IntPtr points;
+            public IntPtr velocities;
+
+            public uint num_points;
         }
 
 
@@ -119,8 +162,15 @@ namespace UTJ
 
         [DllImport ("usdi")] public static extern Mesh          usdiAsMesh(Schema schema);
         [DllImport ("usdi")] public static extern Mesh          usdiCreateMesh(Schema parent, string name);
+        [DllImport ("usdi")] public static extern void          usdiMeshGetSummary(Mesh mesh, ref MeshSummary dst);
         [DllImport ("usdi")] public static extern Bool          usdiMeshReadSample(Mesh mesh, ref MeshData dst, double t);
         [DllImport ("usdi")] public static extern Bool          usdiMeshWriteSample(Mesh mesh, ref MeshData src, double t);
+        
+        [DllImport ("usdi")] public static extern Points        usdiAsPoints(Schema schema);
+        [DllImport ("usdi")] public static extern Points        usdiCreatePoints(Schema parent, string name);
+        [DllImport ("usdi")] public static extern void          usdiPointsGetSummary(Points points, ref PointsSummary dst);
+        [DllImport ("usdi")] public static extern Bool          usdiPointsReadSample(Points points, ref PointsData dst, double t);
+        [DllImport ("usdi")] public static extern Bool          usdiPointsWriteSample(Points points, ref PointsData src, double t);
 
     }
 }

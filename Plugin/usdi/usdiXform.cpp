@@ -10,12 +10,12 @@ Xform::Xform(Context *ctx, Schema *parent, const UsdGeomXformable& xf)
     : super(ctx, parent)
     , m_xf(xf)
 {
-    usdiLog("Xform::Xform(): %s\n", getPath());
+    usdiTrace("Xform::Xform(): %s\n", getPath());
 }
 
 Xform::~Xform()
 {
-    usdiLog("Xform::~Xform(): %s\n", getPath());
+    usdiTrace("Xform::~Xform(): %s\n", getPath());
 }
 
 UsdGeomXformable& Xform::getUSDType()
