@@ -91,12 +91,12 @@ Mesh::Mesh(Context *ctx, Schema *parent, const UsdGeomMesh& mesh)
         m_topology_variance = TopologyVariance::Heterogenous;
     }
 
-    usdiLog("constructed %s\n", getPath());
+    usdiLog("Mesh::Mesh(): %s\n", getPath());
 }
 
 Mesh::~Mesh()
 {
-    usdiLog("destructed %s\n", getPath());
+    usdiLog("Mesh::~Mesh() %s\n", getPath());
 }
 
 UsdGeomMesh& Mesh::getUSDType()

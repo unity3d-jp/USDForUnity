@@ -10,11 +10,13 @@ namespace usdi {
 
 Context::Context()
 {
+    usdiLog("Context::Context()\n");
 }
 
 Context::~Context()
 {
     initialize();
+    usdiLog("Context::~Context()\n");
 }
 
 bool Context::valid() const
@@ -37,11 +39,14 @@ void Context::create(const char *identifier)
     initialize();
 
     m_stage = UsdStage::CreateNew(identifier);
+    usdiLog("Context::create(): identifier %s\n", identifier);
 }
 
 
 void Context::createNodeRecursive(Schema *parent, UsdPrim prim)
 {
+    if (!prim.IsValid()) { return; }
+
     Schema *node = createNode(parent, prim);
     if (node) {
         m_schemas.emplace_back(node);
@@ -76,23 +81,27 @@ bool Context::open(const char *path)
 {
     initialize();
 
+    usdiLog("Context::open(): trying to open %s\n", path);
+
+    //ArGetResolver().ConfigureResolverForAsset(path);
+    //auto resolverctx = ArGetResolver().CreateDefaultContextForAsset(path);
+    //m_stage = UsdStage::Open(path, resolverctx);
+
     m_stage = UsdStage::Open(path);
     if (m_stage == UsdStageRefPtr()) {
-        usdiLog("failed to load %s\n", path);
+        usdiLog("Context::open(): failed to load %s\n", path);
         return false;
     }
 
     m_start_time = m_stage->GetStartTimeCode();
     m_end_time = m_stage->GetEndTimeCode();
 
-    UsdPrim root_prim = m_prim_root.empty() ? m_stage->GetDefaultPrim() : m_stage->GetPrimAtPath(SdfPath(m_prim_root));
-    if (!root_prim && !(m_prim_root.empty() || m_prim_root == "/")) {
-        root_prim = m_stage->GetPseudoRoot();
-    }
+    //UsdPrim root_prim = m_stage->GetDefaultPrim();
+    UsdPrim root_prim = m_stage->GetPseudoRoot();
 
     // Check if prim exists.  Exit if not
     if (!root_prim.IsValid()) {
-        usdiLog("root prim is not valid\n");
+        usdiLog("Context::open(): root prim is not valid\n");
         initialize();
         return false;
     }

@@ -30,3 +30,4 @@
 #include "pxr/usd/usdGeom/xformCommonAPI.h"
 #include "pxr/usd/usdGeom/mesh.h"
 #include "pxr/base/gf/transform.h"
+#include "pxr/usd/ar/resolver.h"
