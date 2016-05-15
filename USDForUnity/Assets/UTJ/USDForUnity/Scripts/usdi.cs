@@ -109,18 +109,18 @@ namespace UTJ
 
         [DllImport ("usdi")] public static extern Xform         usdiAsXform(Schema schema);
         [DllImport ("usdi")] public static extern Xform         usdiCreateXform(Schema parent, string name);
-        [DllImport ("usdi")] public static extern void          usdiXformReadSample(Xform xf, ref XformData dst, double t);
-        [DllImport ("usdi")] public static extern void          usdiXformWriteSample(Xform xf, ref XformData src, double t);
+        [DllImport ("usdi")] public static extern Bool          usdiXformReadSample(Xform xf, ref XformData dst, double t);
+        [DllImport ("usdi")] public static extern Bool          usdiXformWriteSample(Xform xf, ref XformData src, double t);
 
         [DllImport ("usdi")] public static extern Camera        usdiAsCamera(Schema schema);
         [DllImport ("usdi")] public static extern Camera        usdiCreateCamera(Schema parent, string name);
-        [DllImport ("usdi")] public static extern void          usdiCameraReadSample(Camera cam, ref CameraData dst, double t);
-        [DllImport ("usdi")] public static extern void          usdiCameraWriteSample(Camera cam, ref CameraData src, double t);
+        [DllImport ("usdi")] public static extern Bool          usdiCameraReadSample(Camera cam, ref CameraData dst, double t);
+        [DllImport ("usdi")] public static extern Bool          usdiCameraWriteSample(Camera cam, ref CameraData src, double t);
 
         [DllImport ("usdi")] public static extern Mesh          usdiAsMesh(Schema schema);
         [DllImport ("usdi")] public static extern Mesh          usdiCreateMesh(Schema parent, string name);
-        [DllImport ("usdi")] public static extern void          usdiMeshReadSample(Mesh mesh, ref MeshData dst, double t);
-        [DllImport ("usdi")] public static extern void          usdiMeshWriteSample(Mesh mesh, ref MeshData src, double t);
+        [DllImport ("usdi")] public static extern Bool          usdiMeshReadSample(Mesh mesh, ref MeshData dst, double t);
+        [DllImport ("usdi")] public static extern Bool          usdiMeshWriteSample(Mesh mesh, ref MeshData src, double t);
 
     }
 }

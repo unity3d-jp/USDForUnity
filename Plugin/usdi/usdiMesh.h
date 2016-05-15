@@ -7,8 +7,8 @@ struct MeshSample
 {
 public:
     MeshSample();
-    void read(UsdGeomMesh& mesh, Time t);
-    void write(UsdGeomMesh& mesh, Time t);
+    bool read(UsdGeomMesh& mesh, Time t);
+    bool write(UsdGeomMesh& mesh, Time t);
 
     VtArray<GfVec3f> points;
     VtArray<GfVec3f> normals;
@@ -27,8 +27,8 @@ public:
     UsdGeomMesh&    getUSDType() override;
     SchemaType      getType() const override;
 
-    void            readSample(MeshData& dst, Time t);
-    void            writeSample(const MeshData& src, Time t);
+    bool            readSample(MeshData& dst, Time t);
+    bool            writeSample(const MeshData& src, Time t);
 
 private:
     typedef MeshSample Sample;

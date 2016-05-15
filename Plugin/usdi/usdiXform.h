@@ -18,8 +18,8 @@ public:
     UsdGeomXformable&   getUSDType() override;
     SchemaType          getType() const override;
 
-    void                readSample(XformData& dst, Time t);
-    void                writeSample(const XformData& src, Time t);
+    bool                readSample(XformData& dst, Time t);
+    bool                writeSample(const XformData& src, Time t);
 
 private:
     typedef std::vector<UsdGeomXformOp> UsdGeomXformOps;

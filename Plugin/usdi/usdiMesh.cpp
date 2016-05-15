@@ -60,22 +60,24 @@ MeshSample::MeshSample()
 {
 }
 
-void MeshSample::read(UsdGeomMesh& mesh, Time t_)
+bool MeshSample::read(UsdGeomMesh& mesh, Time t_)
 {
     auto t = (const UsdTimeCode&)t_;
-    mesh.GetPointsAttr().Get(&points, t);
+    bool ret = mesh.GetPointsAttr().Get(&points, t);
     mesh.GetNormalsAttr().Get(&normals, t);
     mesh.GetFaceVertexCountsAttr().Get(&face_vertex_counts, t);
     mesh.GetFaceVertexIndicesAttr().Get(&face_vertex_indices, t);
+    return ret;
 }
 
-void MeshSample::write(UsdGeomMesh& mesh, Time t_)
+bool MeshSample::write(UsdGeomMesh& mesh, Time t_)
 {
     auto t = (const UsdTimeCode&)t_;
-    mesh.GetPointsAttr().Set(points, t);
+    bool ret = mesh.GetPointsAttr().Set(points, t);
     mesh.GetNormalsAttr().Set(normals, t);
     mesh.GetFaceVertexCountsAttr().Set(face_vertex_counts, t);
     mesh.GetFaceVertexIndicesAttr().Set(face_vertex_indices, t);
+    return ret;
 }
 
 
@@ -109,12 +111,14 @@ SchemaType Mesh::getType() const
     return SchemaType::Mesh;
 }
 
-void Mesh::readSample(MeshData& dst, Time t)
+bool Mesh::readSample(MeshData& dst, Time t)
 {
     const auto& conf = getImportConfig();
 
     MeshSample sample;
-    sample.read(m_mesh, t);
+    if (!sample.read(m_mesh, t)) {
+        return false;
+    }
 
     dst.num_points = sample.points.size();
     dst.num_face_vertex_counts = sample.face_vertex_counts.size();
@@ -148,9 +152,11 @@ void Mesh::readSample(MeshData& dst, Time t)
             TriangulateIndices(dst.face_vertex_indices_triangulated, sample.face_vertex_counts, &sample.face_vertex_indices, conf.swap_faces);
         }
     }
+
+    return true;
 }
 
-void Mesh::writeSample(const MeshData& src, Time t)
+bool Mesh::writeSample(const MeshData& src, Time t)
 {
     const auto& conf = getExportConfig();
 
@@ -187,7 +193,7 @@ void Mesh::writeSample(const MeshData& src, Time t)
         sample.face_vertex_counts.assign(ntriangles, 3);
     }
 
-    sample.write(m_mesh, t);
+    return sample.write(m_mesh, t);
 }
 
 } // namespace usdi

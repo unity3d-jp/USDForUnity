@@ -111,16 +111,16 @@ usdiExport usdi::Xform* usdiAsXform(usdi::Schema *schema)
     return dynamic_cast<usdi::Xform*>(schema);
 }
 
-usdiExport void usdiXformReadSample(usdi::Xform *xf, usdi::XformData *dst, usdi::Time t)
+usdiExport bool usdiXformReadSample(usdi::Xform *xf, usdi::XformData *dst, usdi::Time t)
 {
-    if (!xf || !dst) return;
-    xf->readSample(*dst, t);
+    if (!xf || !dst) return false;
+    return xf->readSample(*dst, t);
 }
 
-usdiExport void usdiXformWriteSample(usdi::Xform *xf, const usdi::XformData *src, usdi::Time t)
+usdiExport bool usdiXformWriteSample(usdi::Xform *xf, const usdi::XformData *src, usdi::Time t)
 {
-    if (!xf || !src) return;
-    xf->writeSample(*src, t);
+    if (!xf || !src) return false;
+    return xf->writeSample(*src, t);
 }
 
 
@@ -130,16 +130,16 @@ usdiExport usdi::Mesh* usdiAsMesh(usdi::Schema *schema)
     return dynamic_cast<usdi::Mesh*>(schema);
 }
 
-usdiExport void usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t)
+usdiExport bool usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t)
 {
-    if (!mesh || !dst) return;
-    mesh->readSample(*dst, t);
+    if (!mesh || !dst) return false;
+    return mesh->readSample(*dst, t);
 }
 
-usdiExport void usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t)
+usdiExport bool usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t)
 {
-    if (!mesh || !src) return;
-    mesh->writeSample(*src, t);
+    if (!mesh || !src) return false;
+    return mesh->writeSample(*src, t);
 }
 
 } // extern "C"

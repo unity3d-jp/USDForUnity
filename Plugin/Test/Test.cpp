@@ -5,7 +5,7 @@ void InspectRecursive(usdi::Schema *schema)
 {
     if (!schema) { return; }
 
-    printf("%s", usdiGetPath(schema));
+    printf("  %s\n", usdiGetPath(schema));
 
     int num_children = usdiGetNumChildren(schema);
     for (int i = 0; i < num_children; ++i) {
