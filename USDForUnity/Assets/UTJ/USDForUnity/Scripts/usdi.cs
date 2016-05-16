@@ -26,24 +26,28 @@ namespace UTJ
         {
             public System.IntPtr ptr;
             public static implicit operator bool(Xform v) { return v.ptr != IntPtr.Zero; }
+            public static implicit operator Schema(Xform v) { Schema r; r.ptr = v.ptr; return r; }
         }
 
         public struct Camera
         {
             public System.IntPtr ptr;
             public static implicit operator bool(Camera v) { return v.ptr != IntPtr.Zero; }
+            public static implicit operator Schema(Camera v) { Schema r; r.ptr = v.ptr; return r; }
         }
 
         public struct Mesh
         {
             public System.IntPtr ptr;
             public static implicit operator bool(Mesh v) { return v.ptr != IntPtr.Zero; }
+            public static implicit operator Schema(Mesh v) { Schema r; r.ptr = v.ptr; return r; }
         }
 
         public struct Points
         {
             public System.IntPtr ptr;
             public static implicit operator bool(Points v) { return v.ptr != IntPtr.Zero; }
+            public static implicit operator Schema(Points v) { Schema r; r.ptr = v.ptr; return r; }
         }
 
         public enum TopologyVariance
@@ -55,21 +59,47 @@ namespace UTJ
 
         public struct Time
         {
-            double time;
+            public double time;
         };
 
         public struct ImportConfig
         {
-            Bool triangulate;
-            Bool swap_handedness;
-            Bool swap_faces;
+            public Bool triangulate;
+            public Bool swap_handedness;
+            public Bool swap_faces;
+
+            public static ImportConfig default_value
+            {
+                get
+                {
+                    return new ImportConfig
+                    {
+                        triangulate = true,
+                        swap_handedness = true,
+                        swap_faces = false,
+                    };
+                }
+            }
         };
 
         public struct ExportConfig
         {
-            Bool ascii;
-            Bool swap_handedness;
-            Bool swap_faces;
+            public Bool ascii;
+            public Bool swap_handedness;
+            public Bool swap_faces;
+
+            public static ExportConfig default_value
+            {
+                get
+                {
+                    return new ExportConfig
+                    {
+                        ascii = true,
+                        swap_handedness = true,
+                        swap_faces = false,
+                    };
+                }
+            }
         };
 
         public struct XformData
@@ -122,22 +152,22 @@ namespace UTJ
 
         public struct MeshData
         {
-            public IntPtr  points;
-            public IntPtr  velocities;
-            public IntPtr  normals;
-            public IntPtr  counts;
-            public IntPtr  indices;
-            public IntPtr  indices_triangulated;
+            public IntPtr   points;
+            public IntPtr   velocities;
+            public IntPtr   normals;
+            public IntPtr   counts;
+            public IntPtr   indices;
+            public IntPtr   indices_triangulated;
 
-            public uint    num_points;
-            public uint    num_counts;
-            public uint    num_indices;
-            public uint    num_indices_triangulated;
+            public int      num_points;
+            public int      num_counts;
+            public int      num_indices;
+            public int      num_indices_triangulated;
         }
 
         public struct PointsSummary
         {
-            public uint peak_num_points;
+            public int peak_num_points;
             public TopologyVariance topology_variance;
             public Bool has_velocities;
         };
@@ -147,12 +177,12 @@ namespace UTJ
             public IntPtr points;
             public IntPtr velocities;
 
-            public uint num_points;
+            public int num_points;
         }
 
 
         [DllImport ("usdi")] public static extern Context       usdiOpen(string path);
-        [DllImport ("usdi")] public static extern Context       usdiCreateContext();
+        [DllImport ("usdi")] public static extern Context       usdiCreateContext(string identifier);
         [DllImport ("usdi")] public static extern void          usdiDestroyContext(Context ctx);
         [DllImport ("usdi")] public static extern Bool          usdiWrite(Context ctx, string path);
 
