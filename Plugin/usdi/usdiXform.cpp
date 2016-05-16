@@ -53,7 +53,7 @@ bool Xform::readSample(XformData& dst, Time t_)
         }
         case UsdGeomXformOp::TypeOrient:
         {
-            if (op.GetAs((GfVec4f*)&dst.rotation, t)) { ret = true; }
+            if (op.GetAs((GfQuatf*)&dst.rotation, t)) { ret = true; }
             break;
         }
         case UsdGeomXformOp::TypeScale:
@@ -88,7 +88,7 @@ bool Xform::writeSample(const XformData& src, Time t_)
     }
     {
         m_write_ops[0].Set((const GfVec3f&)src.position);
-        m_write_ops[1].Set((const GfVec4f&)src.rotation);
+        m_write_ops[1].Set((const GfQuatf&)src.rotation);
         m_write_ops[2].Set((const GfVec3f&)src.scale);
     }
     return true;
