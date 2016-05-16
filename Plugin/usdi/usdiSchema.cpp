@@ -56,7 +56,10 @@ void Schema::addChild(Schema *child)
 std::string Schema::makePath(const char *name)
 {
     std::string path;
-    path += m_parent ? m_parent->getPath() : "/";
+    if (m_parent) {
+        path += m_parent->getPath();
+    }
+    path += "/";
     path += name;
     return path;
 }

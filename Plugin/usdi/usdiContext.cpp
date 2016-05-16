@@ -29,6 +29,7 @@ bool Context::valid() const
 void Context::initialize()
 {
     m_stage = UsdStageRefPtr();
+    for (auto i = m_schemas.rbegin(); i != m_schemas.rend(); ++i) { i->reset(); }
     m_schemas.clear();
 
     m_id_seed = 0;

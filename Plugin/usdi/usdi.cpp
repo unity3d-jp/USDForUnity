@@ -115,8 +115,9 @@ usdiExport usdi::Xform* usdiAsXform(usdi::Schema *schema)
 
 usdiExport usdi::Xform* usdiCreateXform(usdi::Schema *parent, const char *name)
 {
-    // todo
-    return nullptr;
+    if (!parent) { usdiLog("usdiCreateXform(): parent must be set\n"); return nullptr; }
+    if (!name) { usdiLog("usdiCreateXform(): name must be set\n"); return nullptr; }
+    return new usdi::Xform(parent->getContext(), parent, name);
 }
 
 usdiExport bool usdiXformReadSample(usdi::Xform *xf, usdi::XformData *dst, usdi::Time t)
@@ -140,8 +141,9 @@ usdiExport usdi::Camera* usdiAsCamera(usdi::Schema *schema)
 
 usdiExport usdi::Camera* usdiCreateCamera(usdi::Schema *parent, const char *name)
 {
-    // todo
-    return nullptr;
+    if (!parent) { usdiLog("usdiCreateCamera(): parent must be set\n"); return nullptr; }
+    if (!name) { usdiLog("usdiCreateCamera(): name must be set\n"); return nullptr; }
+    return new usdi::Camera(parent->getContext(), parent, name);
 }
 
 usdiExport bool usdiCameraReadSample(usdi::Camera *cam, usdi::CameraData *dst, usdi::Time t)
@@ -165,8 +167,9 @@ usdiExport usdi::Mesh* usdiAsMesh(usdi::Schema *schema)
 
 usdiExport usdi::Mesh* usdiCreateMesh(usdi::Schema *parent, const char *name)
 {
-    // todo
-    return nullptr;
+    if (!parent) { usdiLog("usdiCreateMesh(): parent must be set\n"); return nullptr; }
+    if (!name) { usdiLog("usdiCreateMesh(): name must be set\n"); return nullptr; }
+    return new usdi::Mesh(parent->getContext(), parent, name);
 }
 
 usdiExport void usdiMeshGetSummary(usdi::Mesh *mesh, usdi::MeshSummary *dst)
@@ -196,7 +199,9 @@ usdiExport usdi::Points* usdiAsPoints(usdi::Schema *schema)
 
 usdiExport usdi::Points* usdiCreatePoints(usdi::Schema *parent, const char *name)
 {
-    // todo
+    if (!parent) { usdiLog("usdiCreatePoints(): parent must be set\n"); return nullptr; }
+    if (!name) { usdiLog("usdiCreatePoints(): name must be set\n"); return nullptr; }
+    return new usdi::Points(parent->getContext(), parent, name);
     return nullptr;
 }
 

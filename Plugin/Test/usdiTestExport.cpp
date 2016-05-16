@@ -7,7 +7,7 @@ void TestExport()
     auto *ctx = usdiCreateContext("hoge.usd");
     auto *root = usdiGetRoot(ctx);
 
-    auto *xf = usdiAsXform(root);
+    auto *xf = usdiCreateXform(root, "child");
     {
         usdi::XformData data;
         usdi::Time t;
