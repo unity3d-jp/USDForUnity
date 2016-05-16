@@ -11,6 +11,7 @@ public class usdiPackaging
         string[] files = new string[]
         {
 "Assets/UTJ/USDForUnity",
+"Assets/UTJ/Misc",
 "Assets/UTJ/Plugins/x86_64/usdi.so",
 "Assets/StreamingAssets/UTJ/USDForUnity",
         };

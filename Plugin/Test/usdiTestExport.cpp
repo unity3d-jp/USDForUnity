@@ -21,7 +21,7 @@ void TestExport(const char *filename)
         }
     }
 
-    auto *mesh = usdiCreateMesh(xf, "mesh");
+    auto *mesh = usdiCreateMesh(xf, "mesh++");
     {
         float3 vertices[] = {
             { -0.5f, -0.5f, 0.0f },

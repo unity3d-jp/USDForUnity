@@ -55,12 +55,23 @@ void Schema::addChild(Schema *child)
 
 std::string Schema::makePath(const char *name)
 {
+    // todo: sanitize
+ 
     std::string path;
     if (m_parent) {
         path += m_parent->getPath();
     }
     path += "/";
     path += name;
+
+    // sanitize
+    for (auto& c : path) {
+        if (!std::isalnum(c) && c !='/') {
+            c = '_';
+        }
+    }
+
+    usdiTrace("Schema::makePath(): %s\n", path.c_str());
     return path;
 }
 

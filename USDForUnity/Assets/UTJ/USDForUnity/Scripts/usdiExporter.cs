@@ -99,6 +99,10 @@ namespace UTJ
         }
     
     
+        static string CreateName(UnityEngine.Object target)
+        {
+            return target.name + "_" + target.GetInstanceID().ToString("X8");
+        }
     
         public abstract class ComponentCapturer
         {
@@ -134,7 +138,7 @@ namespace UTJ
         public class TransformCapturer : ComponentCapturer
         {
             Transform m_target;
-            bool m_inherits = false;
+            bool m_inherits = true;
             bool m_invertForward = false;
             bool m_scale = true;
 
@@ -157,7 +161,7 @@ namespace UTJ
                 : base(parent)
             {
                 m_obj = target.gameObject;
-                m_usd = usdi.usdiCreateXform(parent.usd, target.name);
+                m_usd = usdi.usdiCreateXform(parent.usd, CreateName(target));
                 m_target = target;
                 m_inherits = inherits;
             }
@@ -170,16 +174,16 @@ namespace UTJ
             }
         }
     
-        public class CameraCapturer : ComponentCapturer
+        public class CameraCapturer : TransformCapturer
         {
             Camera m_target;
             //AlembicCameraParams m_params;
     
             public CameraCapturer(ComponentCapturer parent, Camera target)
-                : base(parent)
+                : base(parent, target.GetComponent<Transform>())
             {
                 m_obj = target.gameObject;
-                m_usd = usdi.usdiCreateCamera(parent.usd, target.name);
+                m_usd = usdi.usdiCreateCamera(parent.usd, CreateName(target));
                 m_target = target;
                 //m_params = target.GetComponent<AlembicCameraParams>();
             }
@@ -187,21 +191,22 @@ namespace UTJ
             public override void Capture(double t)
             {
                 if (m_target == null) { return; }
-    
+
+                base.Capture(t);
                 CaptureCamera(usdi.usdiAsCamera(m_usd), m_target, t/*, m_params*/);
             }
         }
     
-        public class MeshCapturer : ComponentCapturer
+        public class MeshCapturer : TransformCapturer
         {
             MeshRenderer m_target;
             MeshBuffer m_mesh_buffer;
     
             public MeshCapturer(ComponentCapturer parent, MeshRenderer target)
-                : base(parent)
+                : base(parent, target.GetComponent<Transform>())
             {
                 m_obj = target.gameObject;
-                m_usd = usdi.usdiCreateMesh(parent.usd, target.name);
+                m_usd = usdi.usdiCreateMesh(parent.usd, CreateName(target));
                 m_target = target;
                 m_mesh_buffer = new MeshBuffer();
             }
@@ -209,22 +214,23 @@ namespace UTJ
             public override void Capture(double t)
             {
                 if (m_target == null) { return; }
-    
+
+                base.Capture(t);
                 CaptureMesh(usdi.usdiAsMesh(m_usd), m_target.GetComponent<MeshFilter>().sharedMesh, null, m_mesh_buffer, t);
             }
         }
     
-        public class SkinnedMeshCapturer : ComponentCapturer
+        public class SkinnedMeshCapturer : TransformCapturer
         {
             SkinnedMeshRenderer m_target;
             Mesh m_mesh;
             MeshBuffer m_mesh_buffer;
     
             public SkinnedMeshCapturer(ComponentCapturer parent, SkinnedMeshRenderer target)
-                : base(parent)
+                : base(parent, target.GetComponent<Transform>())
             {
                 m_obj = target.gameObject;
-                m_usd = usdi.usdiCreateMesh(parent.usd, target.name);
+                m_usd = usdi.usdiCreateMesh(parent.usd, CreateName(target));
                 m_target = target;
                 m_mesh_buffer = new MeshBuffer();
 
@@ -242,13 +248,15 @@ namespace UTJ
             {
                 if (m_target == null) { return; }
 
+                base.Capture(t);
+
                 if (m_mesh == null) { m_mesh = new Mesh(); }
                 m_target.BakeMesh(m_mesh);
                 CaptureMesh(usdi.usdiAsMesh(m_usd), m_mesh, m_target.GetComponent<Cloth>(), m_mesh_buffer, t);
             }
         }
     
-        public class ParticleCapturer : ComponentCapturer
+        public class ParticleCapturer : TransformCapturer
         {
             ParticleSystem m_target;
             //AbcAPI.aeProperty m_prop_rotatrions;
@@ -258,10 +266,10 @@ namespace UTJ
             Vector4[] m_buf_rotations;
     
             public ParticleCapturer(ComponentCapturer parent, ParticleSystem target)
-                : base(parent)
+                : base(parent, target.GetComponent<Transform>())
             {
                 m_obj = target.gameObject;
-                m_usd = usdi.usdiCreatePoints(parent.usd, target.name);
+                m_usd = usdi.usdiCreatePoints(parent.usd, CreateName(target));
                 m_target = target;
     
                 //m_prop_rotatrions = AbcAPI.aeNewProperty(m_usd, "rotation", AbcAPI.aePropertyType.Float4Array);
@@ -270,7 +278,9 @@ namespace UTJ
             public override void Capture(double t)
             {
                 if (m_target == null) { return; }
-    
+
+                base.Capture(t);
+
                 // create buffer
                 int count_max = m_target.maxParticles;
                 if (m_buf_particles == null)
@@ -307,12 +317,12 @@ namespace UTJ
             }
         }
     
-        public class CustomCapturerHandler : ComponentCapturer
+        public class CustomCapturerHandler : TransformCapturer
         {
             usdiCustomComponentCapturer m_target;
     
             public CustomCapturerHandler(ComponentCapturer parent, usdiCustomComponentCapturer target)
-                : base(parent)
+                : base(parent, target.GetComponent<Transform>())
             {
                 m_obj = target.gameObject;
                 m_target = target;
@@ -321,7 +331,8 @@ namespace UTJ
             public override void Capture(double t)
             {
                 if (m_target == null) { return; }
-    
+
+                base.Capture(t);
                 m_target.Capture(t);
             }
         }
@@ -489,9 +500,8 @@ namespace UTJ
             public List<CaptureNode> children = new List<CaptureNode>();
             public Type componentType;
     
-            public Transform obj;
-            public TransformCapturer transform;
-            public ComponentCapturer component;
+            public Transform trans;
+            public ComponentCapturer capturer;
         }
     
         Dictionary<Transform, CaptureNode> m_capture_node;
@@ -506,7 +516,7 @@ namespace UTJ
             if (m_capture_node.TryGetValue(node, out cn)) { return cn; }
     
             cn = new CaptureNode();
-            cn.obj = node;
+            cn.trans = node;
             m_capture_node.Add(node, cn);
     
             var parent = ConstructTree(node.parent);
@@ -524,35 +534,35 @@ namespace UTJ
     
         void SetupComponentCapturer(CaptureNode parent, CaptureNode node)
         {
-            if(m_detailedLog) Debug.Log("SetupComponentCapturer() " + node.obj.name);
+            if(m_detailedLog) Debug.Log("SetupComponentCapturer() " + node.trans.name);
             node.parent = parent;
-            node.transform = CreateComponentCapturer(parent == null ? m_root : parent.transform, node.obj);
-            node.transform.inherits = true;
-    
-            if(node.componentType == null)
+            var parent_capturer = parent == null ? m_root : parent.capturer;
+
+
+            if (node.componentType == null)
             {
-                // do nothing
+                node.capturer = CreateComponentCapturer(parent_capturer, node.trans);
             }
             else if (node.componentType == typeof(Camera))
             {
-                node.transform.invertForward = true;
-                node.component = CreateComponentCapturer(node.transform, node.obj.GetComponent<Camera>());
+                node.capturer = CreateComponentCapturer(parent_capturer, node.trans.GetComponent<Camera>());
+                (node.capturer as TransformCapturer).invertForward = true;
             }
             else if (node.componentType == typeof(MeshRenderer))
             {
-                node.component = CreateComponentCapturer(node.transform, node.obj.GetComponent<MeshRenderer>());
+                node.capturer = CreateComponentCapturer(parent_capturer, node.trans.GetComponent<MeshRenderer>());
             }
             else if (node.componentType == typeof(SkinnedMeshRenderer))
             {
-                node.component = CreateComponentCapturer(node.transform, node.obj.GetComponent<SkinnedMeshRenderer>());
+                node.capturer = CreateComponentCapturer(parent_capturer, node.trans.GetComponent<SkinnedMeshRenderer>());
             }
             else if (node.componentType == typeof(ParticleSystem))
             {
-                node.component = CreateComponentCapturer(node.transform, node.obj.GetComponent<ParticleSystem>());
+                node.capturer = CreateComponentCapturer(parent_capturer, node.trans.GetComponent<ParticleSystem>());
             }
             else if (node.componentType == typeof(usdiCustomComponentCapturer))
             {
-                node.component = CreateComponentCapturer(node.transform, node.obj.GetComponent<usdiCustomComponentCapturer>());
+                node.capturer = CreateComponentCapturer(parent_capturer, node.trans.GetComponent<usdiCustomComponentCapturer>());
             }
     
             foreach (var c in node.children)
