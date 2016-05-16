@@ -53,23 +53,22 @@ void Schema::addChild(Schema *child)
     m_children.push_back(child);
 }
 
-std::string Schema::makePath(const char *name)
+std::string Schema::makePath(const char *name_)
 {
-    // todo: sanitize
- 
+    // sanitize
+    std::string name = name_;
+    for (auto& c : name) {
+        if (!std::isalnum(c)) {
+            c = '_';
+        }
+    }
+
     std::string path;
     if (m_parent) {
         path += m_parent->getPath();
     }
     path += "/";
     path += name;
-
-    // sanitize
-    for (auto& c : path) {
-        if (!std::isalnum(c) && c !='/') {
-            c = '_';
-        }
-    }
 
     usdiTrace("Schema::makePath(): %s\n", path.c_str());
     return path;
