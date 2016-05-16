@@ -16,8 +16,7 @@ public:
     Points(Context *ctx, Schema *parent, const UsdGeomPoints& xf);
     ~Points() override;
 
-    UsdGeomPoints&      getUSDType() override;
-    SchemaType          getType() const override;
+    UsdGeomPoints&      getUSDSchema() override;
 
     void                getSummary(PointsSummary& dst) const;
     bool                readSample(PointsData& dst, Time t);

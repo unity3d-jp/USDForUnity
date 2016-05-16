@@ -20,8 +20,7 @@ public:
     Mesh(Context *ctx, Schema *parent, const UsdGeomMesh& mesh);
     ~Mesh() override;
 
-    UsdGeomMesh&    getUSDType() override;
-    SchemaType      getType() const override;
+    UsdGeomMesh&    getUSDSchema() override;
 
     void            getSummary(MeshSummary& dst) const;
     bool            readSample(MeshData& dst, Time t);

@@ -140,4 +140,6 @@ Schema* Context::getRootNode()
     return m_schemas.empty() ? nullptr : m_schemas.front().get();
 }
 
+UsdStageRefPtr Context::getUSDStage() const { return m_stage; }
+
 } // namespace usdi

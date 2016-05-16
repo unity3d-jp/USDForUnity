@@ -77,14 +77,9 @@ Mesh::~Mesh()
     usdiTrace("Mesh::~Mesh() %s\n", getPath());
 }
 
-UsdGeomMesh& Mesh::getUSDType()
+UsdGeomMesh& Mesh::getUSDSchema()
 {
     return m_mesh;
-}
-
-SchemaType Mesh::getType() const
-{
-    return SchemaType::Mesh;
 }
 
 void Mesh::getSummary(MeshSummary& dst) const

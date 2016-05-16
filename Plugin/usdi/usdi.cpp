@@ -81,10 +81,10 @@ usdiExport const char* usdiGetName(usdi::Schema *schema)
     return schema->getName();
 }
 
-usdiExport usdi::SchemaType usdiGetType(usdi::Schema *schema)
+usdiExport const char* usdiGetTypeName(usdi::Schema *schema)
 {
-    if (!schema) { return usdi::SchemaType::Unknown; }
-    return schema->getType();
+    if (!schema) { return nullptr; }
+    return schema->getTypeName();
 }
 
 usdiExport usdi::Schema* usdiGetParent(usdi::Schema *schema)

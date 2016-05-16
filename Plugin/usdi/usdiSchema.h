@@ -11,16 +11,18 @@ public:
     const ImportConfig& getImportConfig() const;
     const ExportConfig& getExportConfig() const;
 
+    Context*            getContext() const;
     int                 getID() const;
-    Schema*             getParent();
-    size_t              getNumChildren();
-    Schema*             getChild(int i);
+    Schema*             getParent() const;
+    size_t              getNumChildren() const;
+    Schema*             getChild(int i) const;
 
-    const char*         getPath();
-    const char*         getName();
-    UsdPrim             getUSDPrim();
-    virtual UsdTyped&   getUSDType() = 0;
-    virtual SchemaType  getType() const;
+    const char*         getPath() const;
+    const char*         getName() const;
+    const char*         getTypeName() const;
+    UsdPrim             getUSDPrim() const;
+    UsdTyped            getUSDSchema() const;
+    virtual UsdTyped&   getUSDSchema() = 0;
 
 public:
     void setID(int id);

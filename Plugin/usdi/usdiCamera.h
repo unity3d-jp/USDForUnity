@@ -15,8 +15,7 @@ public:
     Camera(Context *ctx, Schema *parent, const UsdGeomCamera& xf);
     ~Camera() override;
 
-    UsdGeomCamera&      getUSDType() override;
-    SchemaType          getType() const override;
+    UsdGeomCamera&      getUSDSchema() override;
 
     bool                readSample(CameraData& dst, Time t);
     bool                writeSample(const CameraData& src, Time t);

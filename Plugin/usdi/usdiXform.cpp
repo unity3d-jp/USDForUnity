@@ -18,14 +18,9 @@ Xform::~Xform()
     usdiTrace("Xform::~Xform(): %s\n", getPath());
 }
 
-UsdGeomXformable& Xform::getUSDType()
+UsdGeomXformable& Xform::getUSDSchema()
 {
     return m_xf;
-}
-
-SchemaType Xform::getType() const
-{
-    return SchemaType::Xform;
 }
 
 bool Xform::readSample(XformData& dst, Time t_)

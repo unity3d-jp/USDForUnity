@@ -9,8 +9,7 @@ public:
     Xform(Context *ctx, Schema *parent, const UsdGeomXformable& xf);
     ~Xform() override;
 
-    UsdGeomXformable&   getUSDType() override;
-    SchemaType          getType() const override;
+    UsdGeomXformable&   getUSDSchema() override;
 
     bool                readSample(XformData& dst, Time t);
     bool                writeSample(const XformData& src, Time t);

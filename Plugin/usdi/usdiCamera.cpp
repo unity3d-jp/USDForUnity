@@ -19,14 +19,9 @@ Camera::~Camera()
     usdiTrace("Camera::~Camera(): %s\n", getPath());
 }
 
-UsdGeomCamera& Camera::getUSDType()
+UsdGeomCamera& Camera::getUSDSchema()
 {
     return m_cam;
-}
-
-SchemaType Camera::getType() const
-{
-    return SchemaType::Camera;
 }
 
 bool Camera::readSample(CameraData& dst, Time t_)

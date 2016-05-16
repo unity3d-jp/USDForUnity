@@ -31,15 +31,6 @@ struct float3 { float x, y, z; };
 struct float4 { float x, y, z, w; };
 
 
-enum class SchemaType
-{
-    Unknown,
-    Xform,
-    Camera,
-    Mesh,
-    Points,
-};
-
 enum class TopologyVariance
 {
     Constant, // both vertices and topologies are constant
@@ -149,7 +140,7 @@ usdiExport usdi::Schema*    usdiGetRoot(usdi::Context *ctx);
 usdiExport int              usdiGetID(usdi::Schema *schema);
 usdiExport const char*      usdiGetPath(usdi::Schema *schema);
 usdiExport const char*      usdiGetName(usdi::Schema *schema);
-usdiExport usdi::SchemaType usdiGetType(usdi::Schema *schema);
+usdiExport const char*      usdiGetTypeName(usdi::Schema *schema);
 usdiExport usdi::Schema*    usdiGetParent(usdi::Schema *schema);
 usdiExport int              usdiGetNumChildren(usdi::Schema *schema);
 usdiExport usdi::Schema*    usdiGetChild(usdi::Schema *schema, int i);

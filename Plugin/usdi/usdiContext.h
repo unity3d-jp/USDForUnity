@@ -21,6 +21,8 @@ public:
 
     Schema*             getRootNode();
 
+    UsdStageRefPtr      getUSDStage() const;
+
 private:
     void    createNodeRecursive(Schema *parent, UsdPrim prim);
     Schema* createNode(Schema *parent, UsdPrim prim);

@@ -46,16 +46,6 @@ namespace UTJ
             public static implicit operator bool(Points v) { return v.ptr != IntPtr.Zero; }
         }
 
-
-        public enum SchemaType
-        {
-            Unknown,
-            Xform,
-            Camera,
-            Mesh,
-            Points,
-        }
-
         public enum TopologyVariance
         {
             Constant, // both vertices and topologies are constant
@@ -175,7 +165,7 @@ namespace UTJ
         [DllImport ("usdi")] public static extern int           usdiGetID(Schema schema);
         [DllImport ("usdi")] public static extern IntPtr        usdiGetPath(Schema schema);
         [DllImport ("usdi")] public static extern IntPtr        usdiGetName(Schema schema);
-        [DllImport ("usdi")] public static extern SchemaType    usdiGetType(Schema schema);
+        [DllImport ("usdi")] public static extern IntPtr        usdiGetTypeName(Schema schema);
         [DllImport ("usdi")] public static extern Schema        usdiGetParent(Schema schema);
         [DllImport ("usdi")] public static extern int           usdiGetNumChildren(Schema schema);
         [DllImport ("usdi")] public static extern Schema        usdiGetChild(Schema schema, int i);

@@ -19,14 +19,9 @@ Points::~Points()
     usdiTrace("Points::~Points(): %s\n", getPath());
 }
 
-UsdGeomPoints& Points::getUSDType()
+UsdGeomPoints& Points::getUSDSchema()
 {
     return m_points;
-}
-
-SchemaType Points::getType() const
-{
-    return SchemaType::Points;
 }
 
 void Points::getSummary(PointsSummary& dst) const
