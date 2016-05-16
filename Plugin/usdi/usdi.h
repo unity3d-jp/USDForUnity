@@ -18,11 +18,20 @@
 namespace usdi {
 
 class Context;
-class Schema;
-class Xform;
-class Camera;
-class Mesh;
-class Points;
+#ifdef usdiImpl
+    class Schema;
+    class Xform;
+    class Camera;
+    class Mesh;
+    class Points;
+#else
+    // force make convertible
+    class Schema {};
+    class Xform : public Schema  {};
+    class Camera : public Schema {};
+    class Mesh : public Schema {};
+    class Points : public Schema {};
+#endif
 
 
 typedef unsigned int uint;

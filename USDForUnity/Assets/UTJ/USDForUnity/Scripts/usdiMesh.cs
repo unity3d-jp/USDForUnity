@@ -11,10 +11,11 @@ namespace UTJ
 
     public class usdiMesh : usdiXform
     {
-        usdi.Mesh       m_mesh;
-        usdi.MeshData   m_meshData;
+        usdi.Mesh m_mesh;
+        usdi.MeshData m_meshData;
+        usdi.MeshSummary m_meshSummary;
 
-        Mesh        m_umesh;
+        Mesh m_umesh;
         Vector3[]   m_positions;
         Vector3[]   m_velocities;
         Vector3[]   m_normals;
@@ -84,8 +85,10 @@ namespace UTJ
             if (!m_mesh)
             {
                 Debug.LogWarning("schema is not Mesh!");
+                return;
             }
 
+            usdi.usdiMeshGetSummary(m_mesh, ref m_meshSummary);
             m_umesh = usdiAddMeshComponents();
         }
 
@@ -111,6 +114,11 @@ namespace UTJ
                 m_umesh.vertices = m_positions;
                 m_umesh.normals = m_normals;
                 m_umesh.SetIndices(m_indices, MeshTopology.Triangles, 0);
+
+                if(!m_meshSummary.has_normals)
+                {
+                    m_umesh.RecalculateNormals();
+                }
             }
         }
     }
