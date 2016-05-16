@@ -11,15 +11,25 @@ namespace UTJ
         public bool     m_swapHandedness = true;
         public double   m_time;
 
-        usdi.Context m_usdi;
+        usdi.Context m_ctx;
         List<usdiElement> m_elements = new List<usdiElement>();
 
 
         public static usdiElement usdiCreateNode(Transform parent, usdi.Schema schema)
         {
+            {
+                var name = usdi.S(usdi.usdiGetName(schema));
+                var child = parent.FindChild(name);
+                if (child != null)
+                {
+                    return child.GetComponent<usdiElement>();
+                }
+            }
+
             GameObject go = null;
             usdiElement elem = null;
 
+            if (go == null)
             {
                 var points = usdi.usdiAsPoints(schema);
                 if (points)
@@ -59,7 +69,7 @@ namespace UTJ
             if(go != null)
             {
                 go.GetComponent<Transform>().SetParent(parent);
-                elem.usdiInitialize(schema);
+                go.name = usdi.S(usdi.usdiGetName(schema));
             }
 
             return elem;
@@ -70,7 +80,11 @@ namespace UTJ
             if(!schema) { return; }
 
             var elem = usdiCreateNode(parent, schema);
-            if(elem != null && node_handler != null) { node_handler(elem); }
+            if (elem != null )
+            {
+                elem.usdiInitialize(schema);
+                if (node_handler != null) { node_handler(elem); }
+            }
 
             var trans = elem == null ? null : elem.GetComponent<Transform>();
             int num_children = usdi.usdiGetNumChildren(schema);
@@ -81,31 +95,56 @@ namespace UTJ
             }
         }
 
-
-        void Start()
+        public bool usdiLoad(string path)
         {
-            m_usdi = usdi.usdiOpen(m_path);
-            if(!m_usdi)
+            usdiUnload();
+            m_path = path;
+            m_ctx = usdi.usdiOpen(Application.streamingAssetsPath + "/" + m_path);
+            if (!m_ctx)
             {
-                Debug.Log("failed to load " + m_path);
+                Debug.Log("failed to load USD: " + m_path);
+                return false;
             }
             else
             {
-                usdiCreateNodeRecursive(GetComponent<Transform>(), usdi.usdiGetRoot(m_usdi),
+                usdiCreateNodeRecursive(GetComponent<Transform>(), usdi.usdiGetRoot(m_ctx),
                     (e) =>
                     {
                         m_elements.Add(e);
                     });
+                usdiUpdate(0.0);
+                return true;
             }
+        }
+
+        public void usdiUnload()
+        {
+            usdi.usdiDestroyContext(m_ctx);
+            m_ctx = default(usdi.Context);
+        }
+
+        public void usdiUpdate(double t)
+        {
+            foreach (var e in m_elements)
+            {
+                e.usdiUpdate(t);
+            }
+        }
+
+
+        void Start()
+        {
+            usdiLoad(m_path);
+        }
+
+        void OnDestroy()
+        {
+            usdiUnload();
         }
 
         void Update()
         {
-            foreach(var e in m_elements)
-            {
-                e.usdiUpdate(m_time);
-            }
-
+            usdiUpdate(m_time);
             m_time += Time.deltaTime;
         }
     }

@@ -222,5 +222,7 @@ namespace UTJ
         [DllImport ("usdi")] public static extern Bool          usdiPointsReadSample(Points points, ref PointsData dst, double t);
         [DllImport ("usdi")] public static extern Bool          usdiPointsWriteSample(Points points, ref PointsData src, double t);
 
+
+        public static string S(IntPtr cstring) { return Marshal.PtrToStringAnsi(cstring); }
     }
 }
