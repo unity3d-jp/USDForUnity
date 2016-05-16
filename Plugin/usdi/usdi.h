@@ -49,110 +49,87 @@ enum class TopologyVariance
 
 struct Time
 {
-    double time;
+    double time = 0.0;
 };
 
 struct ImportConfig
 {
-    bool triangulate;
-    bool swap_handedness;
-    bool swap_faces;
-
-    ImportConfig()
-        : triangulate(true)
-        , swap_handedness(true)
-        , swap_faces(false)
-    {}
+    bool triangulate = true;
+    bool swap_handedness = true;
+    bool swap_faces = false;
 };
 
 struct ExportConfig
 {
-    bool ascii;
-    bool swap_handedness;
-    bool swap_faces;
-
-    ExportConfig()
-        : ascii(false)
-        , swap_handedness(true)
-        , swap_faces(false)
-    {}
+    bool ascii = false;
+    bool swap_handedness = true;
+    bool swap_faces = false;
 };
 
 struct XformData
 {
-    float3 position;
-    float4 rotation; // quaternion
-    float3 scale;
+    float3 position = { 0.0f, 0.0f, 0.0f};
+    float4 rotation = { 0.0f, 0.0f, 0.0f, 1.0f }; // quaternion
+    float3 scale = { 1.0f, 1.0f, 1.0f };
 };
 
 struct CameraData
 {
-    float near_clipping_plane;
-    float far_clipping_plane;
-    float field_of_view;    // in degree. vertical one
-    float aspect_ratio;
+    float near_clipping_plane = 0.3f;
+    float far_clipping_plane = 1000.0f;
+    float field_of_view = 60.0f;        // in degree. vertical one
+    float aspect_ratio = 16.0f / 9.0f;
 
-    float focus_distance;   // in cm
-    float focal_length;     // in mm
-    float aperture;         // in mm. vertical one
-
-    inline CameraData()
-        : near_clipping_plane(0.3f)
-        , far_clipping_plane(1000.0f)
-        , field_of_view(60.0f)
-        , aspect_ratio(16.0f / 9.0f)
-        , focus_distance(5.0f)
-        , focal_length(0.0f)
-        , aperture(35.0f)
-    {
-    }
+    float focus_distance = 5.0f;        // in cm
+    float focal_length = 0.0f;          // in mm
+    float aperture = 35.0f;             // in mm. vertical one
 };
 
 
 struct MeshSummary
 {
-    uint                peak_num_points;
-    uint                peak_num_counts;
-    uint                peak_num_indices;
-    uint                peak_num_indices_triangulated;
-    TopologyVariance    topology_variance;
-    bool                has_normals;
-    bool                has_velocities;
+    uint                peak_num_points = 0;
+    uint                peak_num_counts = 0;
+    uint                peak_num_indices = 0;
+    uint                peak_num_indices_triangulated = 0;
+    TopologyVariance    topology_variance = TopologyVariance::Constant;
+    bool                has_normals = false;
+    bool                has_velocities = false;
 };
 
 struct MeshData
 {
     // these pointers can be null (in this case, just be ignored).
     // otherwise, if you pass to usdiMeshSampleReadData(), pointers must point valid memory block to store data.
-    float3  *points;
-    float3  *velocities;
-    float3  *normals;
-    int     *counts;
-    int     *indices;
-    int     *indices_triangulated;
+    float3  *points = nullptr;
+    float3  *velocities = nullptr;
+    float3  *normals = nullptr;
+    int     *counts = nullptr;
+    int     *indices = nullptr;
+    int     *indices_triangulated = nullptr;
 
-    uint    num_points;
-    uint    num_counts;
-    uint    num_indices;
-    uint    num_indices_triangulated;
+    uint    num_points = 0;
+    uint    num_counts = 0;
+    uint    num_indices = 0;
+    uint    num_indices_triangulated = 0;
 };
 
 
 struct PointsSummary
 {
-    uint                peak_num_points;
-    TopologyVariance    topology_variance;
-    bool                has_velocities;
+    uint                peak_num_points = 0;
+    TopologyVariance    topology_variance = TopologyVariance::Constant;
+    bool                has_velocities = false;
 };
 
 struct PointsData
 {
     // these pointers can be null (in this case, just be ignored).
     // otherwise, if you pass to usdiMeshSampleReadData(), pointers must point valid memory block to store data.
-    float3  *points;
-    float3  *velocities;
+    float3  *points = nullptr;
+    float3  *velocities = nullptr;
 
-    uint    num_points;
+    uint    num_points = 0;
 };
 
 } // namespace usdi

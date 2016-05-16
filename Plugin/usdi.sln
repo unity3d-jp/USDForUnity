@@ -5,7 +5,11 @@ VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "usdi", "usdi.vcxproj", "{08361722-5520-47AC-A0C2-31E8A062B73F}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test", "Test.vcxproj", "{B0B40791-0679-4CFC-AF9F-CD547CCE6161}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{E6D71B6A-A12A-4818-9933-0D43DC6A5C9F}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "usdiTestImport", "Test\usdiTestImport.vcxproj", "{B0B40791-0679-4CFC-AF9F-CD547CCE6161}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "usdiTestExport", "Test\usdiTestExport.vcxproj", "{11990C37-1C63-418F-9AB1-74076C470584}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,8 +25,16 @@ Global
 		{B0B40791-0679-4CFC-AF9F-CD547CCE6161}.Debug|x64.Build.0 = Debug|x64
 		{B0B40791-0679-4CFC-AF9F-CD547CCE6161}.Master|x64.ActiveCfg = Master|x64
 		{B0B40791-0679-4CFC-AF9F-CD547CCE6161}.Master|x64.Build.0 = Master|x64
+		{11990C37-1C63-418F-9AB1-74076C470584}.Debug|x64.ActiveCfg = Debug|x64
+		{11990C37-1C63-418F-9AB1-74076C470584}.Debug|x64.Build.0 = Debug|x64
+		{11990C37-1C63-418F-9AB1-74076C470584}.Master|x64.ActiveCfg = Master|x64
+		{11990C37-1C63-418F-9AB1-74076C470584}.Master|x64.Build.0 = Master|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B0B40791-0679-4CFC-AF9F-CD547CCE6161} = {E6D71B6A-A12A-4818-9933-0D43DC6A5C9F}
+		{11990C37-1C63-418F-9AB1-74076C470584} = {E6D71B6A-A12A-4818-9933-0D43DC6A5C9F}
 	EndGlobalSection
 EndGlobal

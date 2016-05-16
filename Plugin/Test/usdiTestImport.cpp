@@ -14,7 +14,7 @@ void InspectRecursive(usdi::Schema *schema)
     }
 }
 
-bool TestOpen(const char *path)
+bool TestImport(const char *path)
 {
     auto *ctx = usdiOpen(path);
     if (!ctx) {
@@ -34,5 +34,5 @@ int main(int argc, char *argv[])
         printf("first argument must be path to usd file\n");
         return 0;
     }
-    TestOpen(argv[1]);
+    TestImport(argv[1]);
 }

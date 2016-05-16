@@ -1,5 +1,6 @@
-using UnityEngine;
+using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace UTJ
 {
@@ -14,7 +15,7 @@ namespace UTJ
         List<usdiElement> m_elements = new List<usdiElement>();
 
 
-        usdiElement usdiCreateNode(Transform parent, usdi.Schema schema)
+        public static usdiElement usdiCreateNode(Transform parent, usdi.Schema schema)
         {
             GameObject go = null;
             usdiElement elem = null;
@@ -64,22 +65,19 @@ namespace UTJ
             return elem;
         }
 
-        void usdiCreateNodeRecursive(Transform parent, usdi.Schema schema)
+        public static void usdiCreateNodeRecursive(Transform parent, usdi.Schema schema, Action<usdiElement> node_handler)
         {
             if(!schema) { return; }
 
             var elem = usdiCreateNode(parent, schema);
-            if(elem != null)
-            {
-                m_elements.Add(elem);
-            }
-            var trans = elem != null ? elem.GetComponent<Transform>() : null;
+            if(elem != null && node_handler != null) { node_handler(elem); }
 
+            var trans = elem == null ? null : elem.GetComponent<Transform>();
             int num_children = usdi.usdiGetNumChildren(schema);
             for(int ci = 0; ci < num_children; ++ci)
             {
                 var child = usdi.usdiGetChild(schema, ci);
-                usdiCreateNodeRecursive(trans, child);
+                usdiCreateNodeRecursive(trans, child, node_handler);
             }
         }
 
@@ -93,7 +91,11 @@ namespace UTJ
             }
             else
             {
-                usdiCreateNodeRecursive(GetComponent<Transform>(), usdi.usdiGetRoot(m_usdi));
+                usdiCreateNodeRecursive(GetComponent<Transform>(), usdi.usdiGetRoot(m_usdi),
+                    (e) =>
+                    {
+                        m_elements.Add(e);
+                    });
             }
         }
 
