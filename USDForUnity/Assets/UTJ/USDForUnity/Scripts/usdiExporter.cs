@@ -157,7 +157,7 @@ namespace UTJ
                 : base(parent)
             {
                 m_obj = target.gameObject;
-                m_usd = usdi.usdiCreateXform(parent.usd, target.name + " (" + target.GetInstanceID().ToString("X8") + ")");
+                m_usd = usdi.usdiCreateXform(parent.usd, target.name);
                 m_target = target;
                 m_inherits = inherits;
             }
@@ -403,7 +403,7 @@ namespace UTJ
     
         public TransformCapturer CreateComponentCapturer(ComponentCapturer parent, Transform target)
         {
-            if (m_detailedLog) { Debug.Log("AlembicExporter: new TransformCapturer(\"" + target.name + "\""); }
+            if (m_detailedLog) { Debug.Log("usdiExporter: new TransformCapturer(\"" + target.name + "\""); }
     
             var cap = new TransformCapturer(parent, target);
             m_capturers.Add(cap);
@@ -412,7 +412,7 @@ namespace UTJ
 
         public CameraCapturer CreateComponentCapturer(ComponentCapturer parent, Camera target)
         {
-            if (m_detailedLog) { Debug.Log("AlembicExporter: new CameraCapturer(\"" + target.name + "\""); }
+            if (m_detailedLog) { Debug.Log("usdiExporter: new CameraCapturer(\"" + target.name + "\""); }
     
             var cap = new CameraCapturer(parent, target);
             m_capturers.Add(cap);
@@ -421,7 +421,7 @@ namespace UTJ
     
         public MeshCapturer CreateComponentCapturer(ComponentCapturer parent, MeshRenderer target)
         {
-            if (m_detailedLog) { Debug.Log("AlembicExporter: new MeshCapturer(\"" + target.name + "\""); }
+            if (m_detailedLog) { Debug.Log("usdiExporter: new MeshCapturer(\"" + target.name + "\""); }
     
             var cap = new MeshCapturer(parent, target);
             m_capturers.Add(cap);
@@ -430,7 +430,7 @@ namespace UTJ
     
         public SkinnedMeshCapturer CreateComponentCapturer(ComponentCapturer parent, SkinnedMeshRenderer target)
         {
-            if (m_detailedLog) { Debug.Log("AlembicExporter: new SkinnedMeshCapturer(\"" + target.name + "\""); }
+            if (m_detailedLog) { Debug.Log("usdiExporter: new SkinnedMeshCapturer(\"" + target.name + "\""); }
     
             var cap = new SkinnedMeshCapturer(parent, target);
             m_capturers.Add(cap);
@@ -439,7 +439,7 @@ namespace UTJ
     
         public ParticleCapturer CreateComponentCapturer(ComponentCapturer parent, ParticleSystem target)
         {
-            if (m_detailedLog) { Debug.Log("AlembicExporter: new ParticleCapturer(\"" + target.name + "\""); }
+            if (m_detailedLog) { Debug.Log("usdiExporter: new ParticleCapturer(\"" + target.name + "\""); }
     
             var cap = new ParticleCapturer(parent, target);
             m_capturers.Add(cap);
@@ -448,7 +448,7 @@ namespace UTJ
     
         public CustomCapturerHandler CreateComponentCapturer(ComponentCapturer parent, usdiCustomComponentCapturer target)
         {
-            if (m_detailedLog) { Debug.Log("AlembicExporter: new CustomCapturerHandler(\"" + target.name + "\""); }
+            if (m_detailedLog) { Debug.Log("usdiExporter: new CustomCapturerHandler(\"" + target.name + "\""); }
     
             target.CreateAbcObject(parent.usd);
             var cap = new CustomCapturerHandler(parent, target);
@@ -500,6 +500,7 @@ namespace UTJ
         CaptureNode ConstructTree(Transform node)
         {
             if(node == null) { return null; }
+            if (m_detailedLog) Debug.Log("ConstructTree() : " + node.name);
     
             CaptureNode cn;
             if (m_capture_node.TryGetValue(node, out cn)) { return cn; }
@@ -523,6 +524,7 @@ namespace UTJ
     
         void SetupComponentCapturer(CaptureNode parent, CaptureNode node)
         {
+            if(m_detailedLog) Debug.Log("SetupComponentCapturer() " + node.obj.name);
             node.parent = parent;
             node.transform = CreateComponentCapturer(parent == null ? m_root : parent.transform, node.obj);
             node.transform.inherits = true;
@@ -695,7 +697,7 @@ namespace UTJ
         public bool BeginCapture()
         {
             if(m_recording) {
-                Debug.Log("AlembicExporter: already started");
+                Debug.Log("usdiExporter: already started");
                 return false;
             }
     
@@ -721,7 +723,7 @@ namespace UTJ
             //m_time = m_conf.startTime;
             m_frameCount = 0;
         
-            Debug.Log("AlembicExporter: start " + m_outputPath);
+            Debug.Log("usdiExporter: start " + m_outputPath);
             return true;
         }
     
@@ -730,13 +732,14 @@ namespace UTJ
             if (!m_recording) { return; }
     
             m_capturers.Clear();
+            usdi.usdiWrite(m_ctx, m_outputPath);
             usdi.usdiDestroyContext(m_ctx); // flush archive
             m_ctx = default(usdi.Context);
             m_recording = false;
             m_time = 0.0f;
             m_frameCount = 0;
     
-            Debug.Log("AlembicExporter: end: " + m_outputPath);
+            Debug.Log("usdiExporter: end: " + m_outputPath);
         }
     
         public void OneShot()
@@ -764,7 +767,7 @@ namespace UTJ
             m_elapsed = Time.realtimeSinceStartup - begin_time;
             if (m_detailedLog)
             {
-                Debug.Log("AlembicExporter.ProcessCapture(): " + (m_elapsed * 1000.0f) + "ms");
+                Debug.Log("usdiExporter.ProcessCapture(): " + (m_elapsed * 1000.0f) + "ms");
             }
     
             if(m_maxCaptureFrame > 0 && m_frameCount >= m_maxCaptureFrame)
