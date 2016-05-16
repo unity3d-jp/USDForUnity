@@ -87,9 +87,9 @@ bool Xform::writeSample(const XformData& src, Time t_)
         m_write_ops.push_back(m_xf.AddScaleOp(UsdGeomXformOp::PrecisionFloat));
     }
     {
-        m_write_ops[0].Set((const GfVec3f&)src.position);
-        m_write_ops[1].Set((const GfQuatf&)src.rotation);
-        m_write_ops[2].Set((const GfVec3f&)src.scale);
+        m_write_ops[0].Set((const GfVec3f&)src.position, t);
+        m_write_ops[1].Set((const GfQuatf&)src.rotation, t);
+        m_write_ops[2].Set((const GfVec3f&)src.scale, t);
     }
     return true;
 }

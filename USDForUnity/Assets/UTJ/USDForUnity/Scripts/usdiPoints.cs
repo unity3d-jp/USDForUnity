@@ -25,8 +25,9 @@ namespace UTJ
         {
             if (!m_points) { return; }
 
-            usdi.usdiPointsReadSample(m_points, ref m_pointsData, time);
-            // todo
+            if(usdi.usdiPointsReadSample(m_points, ref m_pointsData, time))
+            {
+            }
         }
     }
 

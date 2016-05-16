@@ -95,10 +95,8 @@ namespace UTJ
 
             if(!m_mesh) { return; }
 
-            if(m_meshData.points == IntPtr.Zero)
+            if(m_meshData.points == IntPtr.Zero && usdi.usdiMeshReadSample(m_mesh, ref m_meshData, time))
             {
-                usdi.usdiMeshReadSample(m_mesh, ref m_meshData, time);
-
                 m_positions = new Vector3[m_meshData.num_points];
                 m_normals = new Vector3[m_meshData.num_points];
                 m_indices = new int[m_meshData.num_indices_triangulated];
@@ -108,10 +106,12 @@ namespace UTJ
                 m_meshData.indices_triangulated = Marshal.UnsafeAddrOfPinnedArrayElement(m_indices, 0);
             }
 
-            usdi.usdiMeshReadSample(m_mesh, ref m_meshData, time);
-            m_umesh.vertices = m_positions;
-            m_umesh.normals = m_normals;
-            m_umesh.SetIndices(m_indices, MeshTopology.Triangles, 0);
+            if(usdi.usdiMeshReadSample(m_mesh, ref m_meshData, time))
+            {
+                m_umesh.vertices = m_positions;
+                m_umesh.normals = m_normals;
+                m_umesh.SetIndices(m_indices, MeshTopology.Triangles, 0);
+            }
         }
     }
 

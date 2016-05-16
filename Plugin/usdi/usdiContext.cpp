@@ -121,9 +121,15 @@ bool Context::open(const char *path)
 
 bool Context::write(const char *path)
 {
-    m_stage->Export(path);
-    // todo
-    return false;
+    usdiLog("Context::write(): writing %s...\n", path);
+    bool ret = m_stage->Export(path);
+    if (ret) {
+        usdiLog("Context::write(): done\n");
+    }
+    else {
+        usdiLog("Context::write(): failed\n");
+    }
+    return ret;
 }
 
 const ImportConfig& Context::getImportConfig() const                { return m_import_config; }

@@ -25,10 +25,12 @@ namespace UTJ
         {
             if (!m_xf) { return; }
 
-            usdi.usdiXformReadSample(m_xf, ref m_xfData, time);
-            m_trans.localPosition = m_xfData.position;
-            m_trans.localRotation = m_xfData.rotation;
-            m_trans.localScale = m_xfData.scale;
+            if(usdi.usdiXformReadSample(m_xf, ref m_xfData, time))
+            {
+                m_trans.localPosition = m_xfData.position;
+                m_trans.localRotation = m_xfData.rotation;
+                m_trans.localScale = m_xfData.scale;
+            }
         }
     }
 

@@ -25,11 +25,13 @@ namespace UTJ
         {
             if (!m_camera) { return; }
 
-            usdi.usdiCameraReadSample(m_camera, ref m_cameraData, time);
-            m_ucam.nearClipPlane = m_cameraData.near_clipping_plane;
-            m_ucam.farClipPlane = m_cameraData.far_clipping_plane;
-            m_ucam.fieldOfView = m_cameraData.field_of_view;
-            m_ucam.aspect = m_cameraData.aspect_ratio;
+            if(usdi.usdiCameraReadSample(m_camera, ref m_cameraData, time))
+            {
+                m_ucam.nearClipPlane = m_cameraData.near_clipping_plane;
+                m_ucam.farClipPlane = m_cameraData.far_clipping_plane;
+                m_ucam.fieldOfView = m_cameraData.field_of_view;
+                m_ucam.aspect = m_cameraData.aspect_ratio;
+            }
         }
     }
 
