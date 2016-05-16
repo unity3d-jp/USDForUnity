@@ -14,6 +14,13 @@ Camera::Camera(Context *ctx, Schema *parent, const UsdGeomCamera& cam)
     usdiTrace("Camera::Camera(): %s\n", getPath());
 }
 
+Camera::Camera(Context *ctx, Schema *parent, const char *name)
+    : super(ctx, parent, name, "Camera")
+    , m_cam(m_prim)
+{
+    usdiTrace("Camera::Camera(): %s\n", getPath());
+}
+
 Camera::~Camera()
 {
     usdiTrace("Camera::~Camera(): %s\n", getPath());

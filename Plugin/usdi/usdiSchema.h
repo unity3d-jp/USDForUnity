@@ -5,7 +5,8 @@ namespace usdi {
 class Schema
 {
 public:
-    Schema(Context *ctx, Schema *parent);
+    Schema(Context *ctx, Schema *parent, const UsdTyped& usd_schema); // for import
+    Schema(Context *ctx, Schema *parent, const char *name, const char *type); // for export
     virtual ~Schema();
 
     const ImportConfig& getImportConfig() const;
@@ -25,15 +26,16 @@ public:
     virtual UsdTyped&   getUSDSchema() = 0;
 
 public:
-    void setID(int id);
     void addChild(Schema *child);
+    std::string makePath(const char *name);
 
-private:
+protected:
     typedef std::vector<Schema*> Children;
     Context     *m_ctx;
     Schema      *m_parent;
     Children    m_children;
     int         m_id = 0;
+    UsdPrim     m_prim;
 };
 
 } // namespace usdi

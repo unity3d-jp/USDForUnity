@@ -7,6 +7,7 @@ class Xform : public Schema
 typedef Schema super;
 public:
     Xform(Context *ctx, Schema *parent, const UsdGeomXformable& xf);
+    Xform(Context *ctx, Schema *parent, const char *name, const char *type = "Xform");
     ~Xform() override;
 
     UsdGeomXformable&   getUSDSchema() override;

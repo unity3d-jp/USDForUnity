@@ -14,6 +14,13 @@ Points::Points(Context *ctx, Schema *parent, const UsdGeomPoints& points)
     usdiTrace("Points::Points(): %s\n", getPath());
 }
 
+Points::Points(Context *ctx, Schema *parent, const char *name)
+    : super(ctx, parent, name, "Points")
+    , m_points(m_prim)
+{
+    usdiTrace("Points::Points(): %s\n", getPath());
+}
+
 Points::~Points()
 {
     usdiTrace("Points::~Points(): %s\n", getPath());

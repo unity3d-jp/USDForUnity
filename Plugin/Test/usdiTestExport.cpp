@@ -4,7 +4,9 @@
 
 void TestExport()
 {
-    // todo
+    auto *ctx = usdiCreateContext("hoge.usd");
+    usdiWrite(ctx, "hoge.usd");
+    usdiDestroyContext(ctx);
 }
 
 

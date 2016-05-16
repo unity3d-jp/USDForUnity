@@ -60,7 +60,6 @@ static inline void TriangulateIndices(int *triangulated, const CountArray &count
 Mesh::Mesh(Context *ctx, Schema *parent, const UsdGeomMesh& mesh)
     : super(ctx, parent, UsdGeomXformable(mesh))
     , m_mesh(mesh)
-    , m_topology_variance(TopologyVariance::Constant)
 {
     if (m_mesh.GetFaceVertexCountsAttr().ValueMightBeTimeVarying()) {
         m_topology_variance = TopologyVariance::Homogenous;
@@ -69,6 +68,13 @@ Mesh::Mesh(Context *ctx, Schema *parent, const UsdGeomMesh& mesh)
         m_topology_variance = TopologyVariance::Heterogenous;
     }
 
+    usdiTrace("Mesh::Mesh(): %s\n", getPath());
+}
+
+Mesh::Mesh(Context *ctx, Schema *parent, const char *name)
+    : super(ctx, parent, name, "Mesh")
+    , m_mesh(m_prim)
+{
     usdiTrace("Mesh::Mesh(): %s\n", getPath());
 }
 

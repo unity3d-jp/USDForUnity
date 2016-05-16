@@ -18,6 +18,7 @@ class Mesh : public Xform
 typedef Xform super;
 public:
     Mesh(Context *ctx, Schema *parent, const UsdGeomMesh& mesh);
+    Mesh(Context *ctx, Schema *parent, const char *name);
     ~Mesh() override;
 
     UsdGeomMesh&    getUSDSchema() override;
@@ -28,12 +29,9 @@ public:
 
 private:
     typedef MeshSample Sample;
-    typedef std::unique_ptr<Sample> SamplePtr;
-    typedef std::vector<SamplePtr> Samples;
 
     UsdGeomMesh         m_mesh;
-    Samples             m_samples;
-    TopologyVariance    m_topology_variance;
+    TopologyVariance    m_topology_variance = TopologyVariance::Constant;
 };
 
 } // namespace usdi

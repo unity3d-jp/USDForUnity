@@ -42,6 +42,8 @@ void Context::create(const char *identifier)
 
     m_stage = UsdStage::CreateNew(identifier);
     usdiLog("Context::create(): identifier %s\n", identifier);
+
+    auto root_node = new Xform(this, nullptr, "root");
 }
 
 
@@ -50,9 +52,6 @@ void Context::createNodeRecursive(Schema *parent, UsdPrim prim)
     if (!prim.IsValid()) { return; }
 
     Schema *node = createNode(parent, prim);
-    if (node) {
-        m_schemas.emplace_back(node);
-    }
 
     auto children = prim.GetChildren();
     for (auto c : children) {
@@ -81,9 +80,6 @@ Schema* Context::createNode(Schema *parent, UsdPrim prim)
         ret = new Xform(this, parent, xf);
     }
 
-    if (ret) {
-        ret->setID(++m_id_seed);
-    }
     return ret;
 }
 
@@ -141,5 +137,15 @@ Schema* Context::getRootNode()
 }
 
 UsdStageRefPtr Context::getUSDStage() const { return m_stage; }
+
+void Context::addSchema(Schema *schema)
+{
+    m_schemas.emplace_back(schema);
+}
+
+int Context::generateID()
+{
+    return ++m_id_seed;
+}
 
 } // namespace usdi
