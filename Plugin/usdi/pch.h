@@ -8,6 +8,7 @@
 #include <functional>
 #include <atomic>
 #include <cstdarg>
+#include <cmath>
 
 #ifdef _MSC_VER
     #define and     &&

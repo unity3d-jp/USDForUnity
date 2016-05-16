@@ -91,6 +91,32 @@ namespace UTJ
 
         public struct CameraData
         {
+            public float near_clipping_plane;
+            public float far_clipping_plane;
+            public float field_of_view;    // in degree. vertical one
+            public float aspect_ratio;
+
+            public float focus_distance;   // in cm
+            public float focal_length;     // in mm
+            public float aperture;         // in mm. vertical one
+
+
+            public static CameraData default_value
+            {
+                get
+                {
+                    return new CameraData
+                    {
+                        near_clipping_plane = 0.3f,
+                        far_clipping_plane = 1000.0f,
+                        field_of_view = 60.0f,
+                        aspect_ratio = 16.0f / 9.0f,
+                        focus_distance = 5.0f,
+                        focal_length = 0.0f,
+                        aperture = 35.0f,
+                    };
+                }
+            }
         }
 
         public struct MeshSummary

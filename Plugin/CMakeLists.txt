@@ -3,22 +3,25 @@ PROJECT(usdi)
 
 SET(CMAKE_BUILD_TYPE Release)
 
+SET(USD_ROOT /opt/pixar/usd)
+SET(USD_VFX_ROOT /opt/pixar/usd-vfx2015)
+
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g --std=c++11 -Wno-deprecated")
-SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-rpath,/opt/pixar/usd/lib:/opt/pixar/usd-vfx2015/lib")
+SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-rpath,${USD_ROOT}/lib:${USD_VFX_ROOT}/lib")
 
 SET(INCLUDES
     ${INCLUDES}
     .
-    /opt/pixar/usd/include
-    /opt/pixar/usd-vfx2015/include
-    /opt/pixar/usd-vfx2015/include/python2.7
-    /opt/pixar/usd-vfx2015/packages/openexr-2.2.0/include/OpenEXR
+    ${USD_ROOT}/include
+    ${USD_VFX_ROOT}/include
+    ${USD_VFX_ROOT}/include/python2.7
+    ${USD_VFX_ROOT}/packages/openexr-2.2.0/include/OpenEXR
 )
 INCLUDE_DIRECTORIES(${INCLUDES})
 
 LINK_DIRECTORIES (
-    /opt/pixar/usd/lib
-    /opt/pixar/usd-vfx2015/lib
+    ${USD_ROOT}/lib
+    ${USD_VFX_ROOT}/lib
 )
 
 ADD_DEFINITIONS(-DBUILD_OPTLEVEL_OPT -DBUILD_COMPONENT_SRC_PREFIX="USDPlugins")

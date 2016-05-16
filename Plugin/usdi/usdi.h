@@ -87,6 +87,25 @@ struct XformData
 
 struct CameraData
 {
+    float near_clipping_plane;
+    float far_clipping_plane;
+    float field_of_view;    // in degree. vertical one
+    float aspect_ratio;
+
+    float focus_distance;   // in cm
+    float focal_length;     // in mm
+    float aperture;         // in mm. vertical one
+
+    inline CameraData()
+        : near_clipping_plane(0.3f)
+        , far_clipping_plane(1000.0f)
+        , field_of_view(60.0f)
+        , aspect_ratio(16.0f / 9.0f)
+        , focus_distance(5.0f)
+        , focal_length(0.0f)
+        , aperture(35.0f)
+    {
+    }
 };
 
 
