@@ -23,6 +23,20 @@ TraceFuncImpl::~TraceFuncImpl()
     usdiTrace("%s leave\n", m_func);
 }
 
+float2 operator*(const float2& l, float r)
+{
+    return{ l.x*r, l.y*r };
+}
+
+float3 operator*(const float3& l, float r)
+{
+}
+
+float4 operator*(const float4& l, float r)
+{
+    return{ l.x*r, l.y*r, l.z*r, l.w*r };
+}
+
 float2& operator*=(float2& l, float r)
 {
     l.x *= r;

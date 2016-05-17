@@ -88,7 +88,7 @@ namespace UTJ
                 if (node_handler != null) { node_handler(elem); }
             }
 
-            var trans = elem == null ? null : elem.GetComponent<Transform>();
+            var trans = elem == null ? parent : elem.GetComponent<Transform>();
             int num_children = usdi.usdiGetNumChildren(schema);
             for(int ci = 0; ci < num_children; ++ci)
             {

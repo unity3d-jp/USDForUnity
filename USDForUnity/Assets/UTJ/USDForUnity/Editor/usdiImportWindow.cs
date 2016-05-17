@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 
@@ -37,7 +38,7 @@ namespace UTJ
         usdiStream Import()
         {
             var go = new GameObject();
-            go.name = name;
+            go.name = Path.GetFileNameWithoutExtension(m_path);
 
             var usd = go.AddComponent<usdiStream>();
             usd.m_scale = m_scale;

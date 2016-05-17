@@ -26,7 +26,7 @@ public:
     int                 generateID();
 
 private:
-    void    createNodeRecursive(Schema *parent, UsdPrim prim);
+    void    createNodeRecursive(Schema *parent, UsdPrim prim, int depth);
     Schema* createNode(Schema *parent, UsdPrim prim);
 
 private:

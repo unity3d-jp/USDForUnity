@@ -157,23 +157,23 @@ usdiExport int              usdiGetNumChildren(usdi::Schema *schema);
 usdiExport usdi::Schema*    usdiGetChild(usdi::Schema *schema, int i);
 
 usdiExport usdi::Xform*     usdiAsXform(usdi::Schema *schema);
-usdiExport usdi::Xform*     usdiCreateXform(usdi::Schema *parent, const char *name);
+usdiExport usdi::Xform*     usdiCreateXform(usdi::Context *ctx, usdi::Schema *parent, const char *name);
 usdiExport bool             usdiXformReadSample(usdi::Xform *xf, usdi::XformData *dst, usdi::Time t);
 usdiExport bool             usdiXformWriteSample(usdi::Xform *xf, const usdi::XformData *src, usdi::Time t);
 
 usdiExport usdi::Camera*    usdiAsCamera(usdi::Schema *schema);
-usdiExport usdi::Camera*    usdiCreateCamera(usdi::Schema *parent, const char *name);
+usdiExport usdi::Camera*    usdiCreateCamera(usdi::Context *ctx, usdi::Schema *parent, const char *name);
 usdiExport bool             usdiCameraReadSample(usdi::Camera *cam, usdi::CameraData *dst, usdi::Time t);
 usdiExport bool             usdiCameraWriteSample(usdi::Camera *cam, const usdi::CameraData *src, usdi::Time t);
 
 usdiExport usdi::Mesh*      usdiAsMesh(usdi::Schema *schema);
-usdiExport usdi::Mesh*      usdiCreateMesh(usdi::Schema *parent, const char *name);
+usdiExport usdi::Mesh*      usdiCreateMesh(usdi::Context *ctx, usdi::Schema *parent, const char *name);
 usdiExport void             usdiMeshGetSummary(usdi::Mesh *mesh, usdi::MeshSummary *dst);
 usdiExport bool             usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t);
 usdiExport bool             usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t);
 
 usdiExport usdi::Points*    usdiAsPoints(usdi::Schema *schema);
-usdiExport usdi::Points*    usdiCreatePoints(usdi::Schema *parent, const char *name);
+usdiExport usdi::Points*    usdiCreatePoints(usdi::Context *ctx, usdi::Schema *parent, const char *name);
 usdiExport void             usdiPointsGetSummary(usdi::Points *points, usdi::PointsSummary *dst);
 usdiExport bool             usdiPointsReadSample(usdi::Points *points, usdi::PointsData *dst, usdi::Time t);
 usdiExport bool             usdiPointsWriteSample(usdi::Points *points, const usdi::PointsData *src, usdi::Time t);

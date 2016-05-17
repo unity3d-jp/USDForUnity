@@ -33,6 +33,9 @@
     <ClInclude Include="usdi\usdiPoints.h">
       <Filter>usdi</Filter>
     </ClInclude>
+    <ClInclude Include="usdi\usdiTyped.h">
+      <Filter>usdi</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="usdi\pch.cpp">
@@ -60,6 +63,9 @@
       <Filter>usdi</Filter>
     </ClCompile>
     <ClCompile Include="usdi\usdiPoints.cpp">
+      <Filter>usdi</Filter>
+    </ClCompile>
+    <ClCompile Include="usdi\usdiTyped.cpp">
       <Filter>usdi</Filter>
     </ClCompile>
   </ItemGroup>

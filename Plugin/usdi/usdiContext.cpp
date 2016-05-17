@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "usdiInternal.h"
 #include "usdiSchema.h"
+#include "usdiUnknown.h"
 #include "usdiXform.h"
 #include "usdiCamera.h"
 #include "usdiMesh.h"
@@ -43,20 +44,17 @@ void Context::createStage(const char *identifier)
 
     m_stage = UsdStage::CreateNew(identifier);
     usdiLog("Context::create(): identifier %s\n", identifier);
-
-    auto root_node = new Xform(this, nullptr, "root");
 }
 
 
-void Context::createNodeRecursive(Schema *parent, UsdPrim prim)
+void Context::createNodeRecursive(Schema *parent, UsdPrim prim, int depth)
 {
     if (!prim.IsValid()) { return; }
 
     Schema *node = createNode(parent, prim);
-
     auto children = prim.GetChildren();
     for (auto c : children) {
-        createNodeRecursive(node, c);
+        createNodeRecursive(node, c, depth + 1);
     }
 }
 
@@ -79,6 +77,9 @@ Schema* Context::createNode(Schema *parent, UsdPrim prim)
     }
     else if (xf) {
         ret = new Xform(this, parent, xf);
+    }
+    else {
+        ret = new Unknown(this, parent, xf);
     }
 
     return ret;
@@ -120,7 +121,7 @@ bool Context::open(const char *path)
         root_prim.GetVariantSet(it->first).SetVariantSelection(it->second);
     }
 
-    createNodeRecursive(nullptr, root_prim);
+    createNodeRecursive(nullptr, root_prim, 0);
 }
 
 bool Context::write(const char *path)

@@ -203,23 +203,23 @@ namespace UTJ
         [DllImport ("usdi")] public static extern Schema        usdiGetChild(Schema schema, int i);
 
         [DllImport ("usdi")] public static extern Xform         usdiAsXform(Schema schema);
-        [DllImport ("usdi")] public static extern Xform         usdiCreateXform(Schema parent, string name);
+        [DllImport ("usdi")] public static extern Xform         usdiCreateXform(Context ctx, Schema parent, string name);
         [DllImport ("usdi")] public static extern Bool          usdiXformReadSample(Xform xf, ref XformData dst, double t);
         [DllImport ("usdi")] public static extern Bool          usdiXformWriteSample(Xform xf, ref XformData src, double t);
 
         [DllImport ("usdi")] public static extern Camera        usdiAsCamera(Schema schema);
-        [DllImport ("usdi")] public static extern Camera        usdiCreateCamera(Schema parent, string name);
+        [DllImport ("usdi")] public static extern Camera        usdiCreateCamera(Context ctx, Schema parent, string name);
         [DllImport ("usdi")] public static extern Bool          usdiCameraReadSample(Camera cam, ref CameraData dst, double t);
         [DllImport ("usdi")] public static extern Bool          usdiCameraWriteSample(Camera cam, ref CameraData src, double t);
 
         [DllImport ("usdi")] public static extern Mesh          usdiAsMesh(Schema schema);
-        [DllImport ("usdi")] public static extern Mesh          usdiCreateMesh(Schema parent, string name);
+        [DllImport ("usdi")] public static extern Mesh          usdiCreateMesh(Context ctx, Schema parent, string name);
         [DllImport ("usdi")] public static extern void          usdiMeshGetSummary(Mesh mesh, ref MeshSummary dst);
         [DllImport ("usdi")] public static extern Bool          usdiMeshReadSample(Mesh mesh, ref MeshData dst, double t);
         [DllImport ("usdi")] public static extern Bool          usdiMeshWriteSample(Mesh mesh, ref MeshData src, double t);
         
         [DllImport ("usdi")] public static extern Points        usdiAsPoints(Schema schema);
-        [DllImport ("usdi")] public static extern Points        usdiCreatePoints(Schema parent, string name);
+        [DllImport ("usdi")] public static extern Points        usdiCreatePoints(Context ctx, Schema parent, string name);
         [DllImport ("usdi")] public static extern void          usdiPointsGetSummary(Points points, ref PointsSummary dst);
         [DllImport ("usdi")] public static extern Bool          usdiPointsReadSample(Points points, ref PointsData dst, double t);
         [DllImport ("usdi")] public static extern Bool          usdiPointsWriteSample(Points points, ref PointsData src, double t);

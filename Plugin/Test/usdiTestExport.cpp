@@ -11,7 +11,7 @@ void TestExport(const char *filename)
     usdiCreateStage(ctx, filename);
     auto *root = usdiGetRoot(ctx);
 
-    auto *xf = usdiCreateXform(root, "child");
+    auto *xf = usdiCreateXform(ctx, root, "child");
     {
         usdi::XformData data;
         usdi::Time t;
@@ -22,7 +22,7 @@ void TestExport(const char *filename)
         }
     }
 
-    auto *mesh = usdiCreateMesh(xf, "mesh[](){}<>+-");
+    auto *mesh = usdiCreateMesh(ctx, xf, "mesh[](){}<>+-");
     {
         float3 vertices[] = {
             { -0.5f, -0.5f, 0.0f },
