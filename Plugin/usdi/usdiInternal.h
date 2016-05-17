@@ -25,5 +25,6 @@ struct TraceFuncImpl
 
 float2& operator*=(float2& l, float r);
 float3& operator*=(float3& l, float r);
+float4& operator*=(float4& l, float r);
 
 } // namespace usdi

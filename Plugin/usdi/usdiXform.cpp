@@ -50,11 +50,16 @@ bool Xform::readSample(XformData& dst, Time t_)
         case UsdGeomXformOp::TypeTranslate:
         {
             if (op.GetAs((GfVec3f*)&dst.position, t)) { ret = true; }
+            if (conf.swap_handedness) {
+                dst.position.x *= -1.0f;
+            }
             break;
         }
         case UsdGeomXformOp::TypeOrient:
         {
             if (op.GetAs((GfQuatf*)&dst.rotation, t)) { ret = true; }
+            const float Deg2Rad = float(M_PI) / 180.0f;
+            dst.rotation *= Deg2Rad;
             break;
         }
         case UsdGeomXformOp::TypeScale:
@@ -92,8 +97,13 @@ bool Xform::writeSample(const XformData& src_, Time t_)
         XformData src = src_;
         if (conf.swap_handedness) {
             src.position.x *= -1.0f;
-            src.rotation = { -src.rotation.x, -src.rotation.z, src.rotation.y, -src.rotation.w };
+            src.rotation = { -src.rotation.x, src.rotation.y, src.rotation.z, -src.rotation.w };
         }
+        {
+            const float Rad2Deg = 180.0f / float(M_PI);
+            src.rotation *= Rad2Deg;
+        }
+
         m_write_ops[0].Set((const GfVec3f&)src.position, t);
         m_write_ops[1].Set((const GfQuatf&)src.rotation, t);
         m_write_ops[2].Set((const GfVec3f&)src.scale, t);

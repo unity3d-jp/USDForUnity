@@ -44,7 +44,7 @@ bool Camera::readSample(CameraData& dst, Time t_)
     }
 
     {
-        static float Rad2Deg = 180.0f / float(M_PI);
+        const float Rad2Deg = 180.0f / float(M_PI);
         float focal_length;
         float focus_distance;
         float vertical_aperture;

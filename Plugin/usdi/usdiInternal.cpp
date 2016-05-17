@@ -38,4 +38,13 @@ float3& operator*=(float3& l, float r)
     return l;
 }
 
+float4& operator*=(float4& l, float r)
+{
+    l.x *= r;
+    l.y *= r;
+    l.z *= r;
+    l.w *= r;
+    return l;
+}
+
 } // namespace usdi
