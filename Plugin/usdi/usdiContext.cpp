@@ -29,6 +29,9 @@ bool Context::valid() const
 
 void Context::initialize()
 {
+    if (m_stage) {
+        m_stage->Close();
+    }
     m_stage = UsdStageRefPtr();
     for (auto i = m_schemas.rbegin(); i != m_schemas.rend(); ++i) { i->reset(); }
     m_schemas.clear();
