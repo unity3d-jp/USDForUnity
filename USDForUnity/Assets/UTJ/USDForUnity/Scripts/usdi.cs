@@ -182,10 +182,10 @@ namespace UTJ
             public int num_points;
         }
 
-
-        [DllImport ("usdi")] public static extern Context       usdiOpen(string path);
-        [DllImport ("usdi")] public static extern Context       usdiCreateContext(string identifier);
+        [DllImport ("usdi")] public static extern Context       usdiCreateContext();
         [DllImport ("usdi")] public static extern void          usdiDestroyContext(Context ctx);
+        [DllImport ("usdi")] public static extern Bool          usdiOpen(Context ctx, string path);
+        [DllImport ("usdi")] public static extern void          usdiCreateStage(Context ctx, string identifier);
         [DllImport ("usdi")] public static extern Bool          usdiWrite(Context ctx, string path);
 
         [DllImport ("usdi")] public static extern void          usdiSetImportConfig(Context ctx, ref ImportConfig conf);

@@ -10,7 +10,7 @@ public:
 
     bool                valid() const;
     void                initialize();
-    void                create(const char *identifier);
+    void                createStage(const char *identifier);
     bool                open(const char *path);
     bool                write(const char *path);
 

@@ -8,7 +8,9 @@ namespace UTJ
     public class usdiStream : MonoBehaviour
     {
         public string   m_path;
+        public float    m_scale = 1.0f;
         public bool     m_swapHandedness = true;
+        public bool     m_swapFaces = true;
         public double   m_time;
 
         usdi.Context m_ctx;
@@ -82,7 +84,7 @@ namespace UTJ
             var elem = usdiCreateNode(parent, schema);
             if (elem != null )
             {
-                elem.usdiInitialize(schema);
+                elem.usdiOnLoad(schema);
                 if (node_handler != null) { node_handler(elem); }
             }
 
@@ -95,14 +97,27 @@ namespace UTJ
             }
         }
 
+        public void usdiApplyImportConfig()
+        {
+            usdi.ImportConfig conf;
+            conf.scale = m_scale;
+            conf.triangulate = true;
+            conf.swap_handedness = m_swapHandedness;
+            conf.swap_faces = m_swapFaces;
+            usdi.usdiSetImportConfig(m_ctx, ref conf);
+        }
+
         public bool usdiLoad(string path)
         {
             usdiUnload();
+
             m_path = path;
-            m_ctx = usdi.usdiOpen(Application.streamingAssetsPath + "/" + m_path);
-            if (!m_ctx)
+            m_ctx = usdi.usdiCreateContext();
+            usdiApplyImportConfig();
+            if (!usdi.usdiOpen(m_ctx, Application.streamingAssetsPath + "/" + m_path))
             {
                 Debug.Log("failed to load USD: " + m_path);
+                usdi.usdiDestroyContext(m_ctx);
                 return false;
             }
             else
@@ -119,12 +134,20 @@ namespace UTJ
 
         public void usdiUnload()
         {
-            usdi.usdiDestroyContext(m_ctx);
-            m_ctx = default(usdi.Context);
+            if(m_ctx)
+            {
+                foreach (var e in m_elements)
+                {
+                    e.usdiOnUnload();
+                }
+                usdi.usdiDestroyContext(m_ctx);
+                m_ctx = default(usdi.Context);
+            }
         }
 
         public void usdiUpdate(double t)
         {
+            usdiApplyImportConfig();
             foreach (var e in m_elements)
             {
                 e.usdiUpdate(t);
@@ -138,6 +161,11 @@ namespace UTJ
         }
 
         void OnDestroy()
+        {
+            usdiUnload();
+        }
+
+        void OnApplicationQuit()
         {
             usdiUnload();
         }

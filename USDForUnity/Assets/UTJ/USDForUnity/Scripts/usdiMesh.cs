@@ -77,9 +77,9 @@ namespace UTJ
         }
 #endif
 
-        public override void usdiInitialize(usdi.Schema schema)
+        public override void usdiOnLoad(usdi.Schema schema)
         {
-            base.usdiInitialize(schema);
+            base.usdiOnLoad(schema);
 
             m_mesh = usdi.usdiAsMesh(schema);
             if (!m_mesh)
@@ -90,6 +90,11 @@ namespace UTJ
 
             usdi.usdiMeshGetSummary(m_mesh, ref m_meshSummary);
             m_umesh = usdiAddMeshComponents();
+        }
+
+        public override void usdiOnUnload()
+        {
+            m_mesh = default(usdi.Mesh);
         }
 
         public override void usdiUpdate(double time)

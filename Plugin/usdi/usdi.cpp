@@ -11,24 +11,10 @@
 
 extern "C" {
 
-usdiExport usdi::Context* usdiOpen(const char *path)
+usdiExport usdi::Context* usdiCreateContext()
 {
     usdiTraceFunc();
-    auto *ret = new usdi::Context();
-    if (!ret->open(path)) {
-        delete ret;
-        return nullptr;
-    }
-
-    return ret;
-}
-
-usdiExport usdi::Context* usdiCreateContext(const char *identifier)
-{
-    usdiTraceFunc();
-    auto *ret = new usdi::Context();
-    ret->create(identifier);
-    return ret;
+    return new usdi::Context();
 }
 
 usdiExport void usdiDestroyContext(usdi::Context *ctx)
@@ -37,30 +23,49 @@ usdiExport void usdiDestroyContext(usdi::Context *ctx)
     delete ctx;
 }
 
+usdiExport bool usdiOpen(usdi::Context *ctx, const char *path)
+{
+    usdiTraceFunc();
+    if (!ctx || !path) return false;
+    return ctx->open(path);
+}
+
+usdiExport void usdiCreateStage(usdi::Context *ctx, const char *identifier)
+{
+    usdiTraceFunc();
+    if (!ctx) return;
+    ctx->createStage(identifier);
+}
+
 usdiExport bool usdiWrite(usdi::Context *ctx, const char *path)
 {
     usdiTraceFunc();
+    if (!ctx || !path) return false;
     return ctx->write(path);
 }
 
 usdiExport void usdiSetImportConfig(usdi::Context *ctx, const usdi::ImportConfig *conf)
 {
     usdiTraceFunc();
+    if (!ctx || !conf) return;
     ctx->setImportConfig(*conf);
 }
 usdiExport void usdiGetImportConfig(usdi::Context *ctx, usdi::ImportConfig *conf)
 {
     usdiTraceFunc();
+    if (!ctx || !conf) return;
     *conf = ctx->getImportConfig();
 }
 usdiExport void usdiSetExportConfig(usdi::Context *ctx, const usdi::ExportConfig *conf)
 {
     usdiTraceFunc();
+    if (!ctx || !conf) return;
     ctx->setExportConfig(*conf);
 }
 usdiExport void usdiGetExportConfig(usdi::Context *ctx, usdi::ExportConfig *conf)
 {
     usdiTraceFunc();
+    if (!ctx || !conf) return;
     *conf = ctx->getExportConfig();
 }
 

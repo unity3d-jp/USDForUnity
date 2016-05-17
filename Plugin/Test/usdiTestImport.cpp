@@ -16,12 +16,13 @@ void InspectRecursive(usdi::Schema *schema)
 
 bool TestImport(const char *path)
 {
-    auto *ctx = usdiOpen(path);
-    if (!ctx) {
+    auto *ctx = usdiCreateContext();
+    if (!usdiOpen(ctx, path)) {
         printf("failed to load %s\n", path);
-        return false;
     }
-    InspectRecursive(usdiGetRoot(ctx));
+    else {
+        InspectRecursive(usdiGetRoot(ctx));
+    }
     usdiDestroyContext(ctx);
 
     return true;

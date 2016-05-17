@@ -58,6 +58,10 @@ bool Xform::readSample(XformData& dst, Time t_)
         case UsdGeomXformOp::TypeOrient:
         {
             if (op.GetAs((GfQuatf*)&dst.rotation, t)) { ret = true; }
+            if (conf.swap_handedness) {
+                auto& q = dst.rotation;
+                q = { -q.x, q.y, q.z, -q.w };
+            }
             const float Deg2Rad = float(M_PI) / 180.0f;
             dst.rotation *= Deg2Rad;
             break;
@@ -97,7 +101,8 @@ bool Xform::writeSample(const XformData& src_, Time t_)
         XformData src = src_;
         if (conf.swap_handedness) {
             src.position.x *= -1.0f;
-            src.rotation = { -src.rotation.x, src.rotation.y, src.rotation.z, -src.rotation.w };
+            auto& q = src.rotation;
+            q = { -q.x, q.y, q.z, -q.w };
         }
         {
             const float Rad2Deg = 180.0f / float(M_PI);

@@ -10,7 +10,7 @@ namespace UTJ
         usdi.XformData  m_xfData;
         Transform       m_trans;
 
-        public override void usdiInitialize(usdi.Schema schema)
+        public override void usdiOnLoad(usdi.Schema schema)
         {
             m_xf = usdi.usdiAsXform(schema);
             if(!m_xf)
@@ -19,6 +19,11 @@ namespace UTJ
             }
 
             m_trans = GetComponent<Transform>();
+        }
+
+        public override void usdiOnUnload()
+        {
+            m_xf = default(usdi.Xform);
         }
 
         public override void usdiUpdate(double time)

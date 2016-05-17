@@ -137,9 +137,10 @@ struct PointsData
 
 extern "C" {
 
-usdiExport usdi::Context*   usdiOpen(const char *path);
-usdiExport usdi::Context*   usdiCreateContext(const char *identifier);
+usdiExport usdi::Context*   usdiCreateContext();
 usdiExport void             usdiDestroyContext(usdi::Context *ctx);
+usdiExport bool             usdiOpen(usdi::Context *ctx, const char *path);
+usdiExport void             usdiCreateStage(usdi::Context *ctx, const char *identifier);
 usdiExport bool             usdiWrite(usdi::Context *ctx, const char *path);
 usdiExport void             usdiSetImportConfig(usdi::Context *ctx, const usdi::ImportConfig *conf);
 usdiExport void             usdiGetImportConfig(usdi::Context *ctx, usdi::ImportConfig *conf);

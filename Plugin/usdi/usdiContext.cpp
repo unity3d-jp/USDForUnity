@@ -37,7 +37,7 @@ void Context::initialize()
     m_end_time = 0.0;
 }
 
-void Context::create(const char *identifier)
+void Context::createStage(const char *identifier)
 {
     initialize();
 
@@ -140,10 +140,25 @@ bool Context::write(const char *path)
     return ret;
 }
 
-const ImportConfig& Context::getImportConfig() const                { return m_import_config; }
-void                Context::setImportConfig(const ImportConfig& v) { m_import_config = v; }
-const ExportConfig& Context::getExportConfig() const                { return m_export_config; }
-void                Context::setExportConfig(const ExportConfig& v) { m_export_config = v; }
+const ImportConfig& Context::getImportConfig() const
+{
+    return m_import_config;
+}
+
+void Context::setImportConfig(const ImportConfig& v)
+{
+    m_import_config = v;
+}
+
+const ExportConfig& Context::getExportConfig() const
+{
+    return m_export_config;
+}
+
+void Context::setExportConfig(const ExportConfig& v)
+{
+    m_export_config = v;
+}
 
 
 Schema* Context::getRootNode()

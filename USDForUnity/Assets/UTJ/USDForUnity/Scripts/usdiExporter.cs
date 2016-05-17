@@ -696,8 +696,17 @@ namespace UTJ
                 }
             }
         }
-    
-    
+
+        void ApplyExportConfig()
+        {
+            usdi.ExportConfig conf = usdi.ExportConfig.default_value;
+            conf.scale = m_scale;
+            conf.swap_handedness = m_swapHandedness;
+            conf.swap_faces = m_swapFaces;
+            usdi.usdiSetExportConfig(m_ctx, ref conf);
+        }
+
+
         public bool BeginCapture()
         {
             if(m_recording) {
@@ -706,21 +715,12 @@ namespace UTJ
             }
     
             // create context and open archive
-            m_ctx = usdi.usdiCreateContext(m_outputPath);
-            if (!m_ctx)
-            {
-                Debug.LogWarning("usdi.usdiCreateContext() failed");
-                return false;
-            }
+            m_ctx = usdi.usdiCreateContext();
+            usdi.usdiCreateStage(m_ctx, m_outputPath);
+            ApplyExportConfig();
 
-            usdi.ExportConfig m_conf = usdi.ExportConfig.default_value;
-            m_conf.scale = m_scale;
-            m_conf.swap_handedness = m_swapHandedness;
-            m_conf.swap_faces = m_swapFaces;
-            usdi.usdiSetExportConfig(m_ctx, ref m_conf);
-    
             // create capturers
-            if(m_preserveTreeStructure) {
+            if (m_preserveTreeStructure) {
                 CreateCapturers_Tree();
             }
             else {

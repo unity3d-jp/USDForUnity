@@ -7,7 +7,8 @@ using usdi::float3;
 
 void TestExport(const char *filename)
 {
-    auto *ctx = usdiCreateContext(filename);
+    auto *ctx = usdiCreateContext();
+    usdiCreateStage(ctx, filename);
     auto *root = usdiGetRoot(ctx);
 
     auto *xf = usdiCreateXform(root, "child");

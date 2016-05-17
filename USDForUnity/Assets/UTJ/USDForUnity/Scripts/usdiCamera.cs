@@ -10,7 +10,7 @@ namespace UTJ
         usdi.CameraData m_cameraData = usdi.CameraData.default_value;
         Camera          m_ucam;
 
-        public override void usdiInitialize(usdi.Schema schema)
+        public override void usdiOnLoad(usdi.Schema schema)
         {
             m_camera = usdi.usdiAsCamera(schema);
             if(!m_camera)
@@ -19,6 +19,11 @@ namespace UTJ
             }
 
             m_ucam = GetOrAddComponent<Camera>();
+        }
+
+        public override void usdiOnUnload()
+        {
+            m_camera = default(usdi.Camera);
         }
 
         public override void usdiUpdate(double time)
