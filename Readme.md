@@ -1,5 +1,5 @@
 # USD For Unity
-
+<img align="right" src="Documents/CRS_usdview.png">
 USD (Universal Scene Description) is a file format that can store time-sampled 3D scene. It is something like "better alembic" developed by Disney / Pixar.  
 This plugin allow you to import USD scene to Unity, or export Unity scene to USD file.  
 
