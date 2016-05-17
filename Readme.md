@@ -1,7 +1,7 @@
 # USD For Unity
 
 USD (Universal Scene Description) is a file format that can store time-sampled 3D scene. It is something like "better alembic" developed by Disney / Pixar.  
-This plugin allow you to import USD scene to Unity, or Export Unity scene to USD file.  
+This plugin allow you to import USD scene to Unity, or export Unity scene to USD file.  
 
 USD is currently preview version and only Linux binary is available. For this reason, **this plugin is currently available only on Linux. Windows version will be available soon after public release version of USD is available**.
 
@@ -30,3 +30,7 @@ On Ubuntu, all you need to do is just install unity-editor-*.deb package. But on
 $ sudo yum install epel-release
 $ sudo yum install nodejs npm postgresql ld-linux.so.2 libstdc++.so.6
 ```
+
+### History
+- 2016/05/18:  
+  preview release
