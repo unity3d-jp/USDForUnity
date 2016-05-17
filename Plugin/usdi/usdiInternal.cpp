@@ -23,4 +23,19 @@ TraceFuncImpl::~TraceFuncImpl()
     usdiTrace("%s leave\n", m_func);
 }
 
+float2& operator*=(float2& l, float r)
+{
+    l.x *= r;
+    l.y *= r;
+    return l;
+}
+
+float3& operator*=(float3& l, float r)
+{
+    l.x *= r;
+    l.y *= r;
+    l.z *= r;
+    return l;
+}
+
 } // namespace usdi

@@ -64,6 +64,7 @@ namespace UTJ
 
         public struct ImportConfig
         {
+            public float scale;
             public Bool triangulate;
             public Bool swap_handedness;
             public Bool swap_faces;
@@ -74,9 +75,10 @@ namespace UTJ
                 {
                     return new ImportConfig
                     {
+                        scale = 1.0f,
                         triangulate = true,
                         swap_handedness = true,
-                        swap_faces = false,
+                        swap_faces = true,
                     };
                 }
             }
@@ -84,7 +86,7 @@ namespace UTJ
 
         public struct ExportConfig
         {
-            public Bool ascii;
+            public float scale;
             public Bool swap_handedness;
             public Bool swap_faces;
 
@@ -94,9 +96,9 @@ namespace UTJ
                 {
                     return new ExportConfig
                     {
-                        ascii = true,
+                        scale = 1.0f,
                         swap_handedness = true,
-                        swap_faces = false,
+                        swap_faces = true,
                     };
                 }
             }

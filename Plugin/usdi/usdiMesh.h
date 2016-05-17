@@ -10,6 +10,8 @@ struct MeshSample
     VtArray<GfVec3f> normals;
     VtArray<int>     counts;
     VtArray<int>     indices;
+
+    void clear();
 };
 
 
@@ -28,9 +30,9 @@ public:
     bool            writeSample(const MeshData& src, Time t);
 
 private:
-    typedef MeshSample Sample;
-
     UsdGeomMesh         m_mesh;
+    MeshSample          m_rsample;
+    MeshSample          m_wsample;
     TopologyVariance    m_topology_variance = TopologyVariance::Constant;
 };
 

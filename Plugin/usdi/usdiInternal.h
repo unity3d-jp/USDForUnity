@@ -11,6 +11,8 @@
     #define usdiTraceFunc(...) usdi::TraceFuncImpl _trace_(__FUNCTION__)
 #endif
 
+#include "usdi.h"
+
 namespace usdi {
 
 void LogImpl(const char *format, ...);
@@ -21,6 +23,7 @@ struct TraceFuncImpl
     ~TraceFuncImpl();
 };
 
-} // namespace usdi
+float2& operator*=(float2& l, float r);
+float3& operator*=(float3& l, float r);
 
-#include "usdi.h"
+} // namespace usdi

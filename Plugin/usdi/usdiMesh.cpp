@@ -54,6 +54,14 @@ static inline void TriangulateIndices(int *triangulated, const CountArray &count
     }
 }
 
+void MeshSample::clear()
+{
+    points.clear();
+    velocities.clear();
+    normals.clear();
+    counts.clear();
+    indices.clear();
+}
 
 
 
@@ -99,7 +107,7 @@ bool Mesh::readSample(MeshData& dst, Time t_)
     auto t = (const UsdTimeCode&)t_;
     const auto& conf = getImportConfig();
 
-    MeshSample sample;
+    MeshSample& sample = m_rsample;
     m_mesh.GetPointsAttr().Get(&sample.points, t);
     m_mesh.GetVelocitiesAttr().Get(&sample.velocities, t);
     m_mesh.GetNormalsAttr().Get(&sample.normals, t);
@@ -117,12 +125,24 @@ bool Mesh::readSample(MeshData& dst, Time t_)
                 dst.points[i].x *= -1.0f;
             }
         }
+        if (conf.scale != 1.0f) {
+            float s = conf.scale;
+            for (uint i = 0; i < dst.num_points; ++i) {
+                dst.points[i] *= s;
+            }
+        }
     }
     if (dst.velocities && !sample.velocities.empty()) {
         memcpy(dst.velocities, &sample.velocities[0], sizeof(float3) * dst.num_points);
         if (conf.swap_handedness) {
             for (uint i = 0; i < dst.num_points; ++i) {
                 dst.velocities[i].x *= -1.0f;
+            }
+        }
+        if (conf.scale != 1.0f) {
+            float s = conf.scale;
+            for (uint i = 0; i < dst.num_points; ++i) {
+                dst.velocities[i] *= s;
             }
         }
     }
@@ -148,6 +168,7 @@ bool Mesh::readSample(MeshData& dst, Time t_)
         }
     }
 
+    sample.clear();
     return dst.num_points > 0;
 }
 
@@ -156,13 +177,19 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
     auto t = (const UsdTimeCode&)t_;
     const auto& conf = getExportConfig();
 
-    MeshSample sample;
+    MeshSample& sample = m_wsample;
 
     if (src.points) {
         sample.points.assign((GfVec3f*)src.points, (GfVec3f*)src.points + src.num_points);
         if (conf.swap_handedness) {
             for (auto& v : sample.points) {
                 v[0] *= -1.0f;
+            }
+        }
+        if (conf.scale != 1.0f) {
+            float s = conf.scale;
+            for (auto& v : sample.points) {
+                (float3&)v *= s;
             }
         }
     }
@@ -172,6 +199,12 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
         if (conf.swap_handedness) {
             for (auto& v : sample.velocities) {
                 v[0] *= -1.0f;
+            }
+        }
+        if (conf.scale != 1.0f) {
+            float s = conf.scale;
+            for (auto& v : sample.velocities) {
+                (float3&)v *= s;
             }
         }
     }
@@ -185,10 +218,6 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
         }
     }
 
-    if (src.indices) {
-        sample.indices.assign(src.indices, src.indices + src.num_indices);
-    }
-
     if (src.counts) {
         sample.counts.assign(src.counts, src.counts + src.num_counts);
     }
@@ -198,12 +227,34 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
         sample.counts.assign(ntriangles, 3);
     }
 
+    if (src.indices) {
+        if (conf.swap_faces) {
+            auto copy_with_swap = [](VtArray<int>& dst_indices, const int *src_indices, const VtArray<int>& counts) {
+                int i = 0;
+                for (int ngon : counts) {
+                    for (int ni = 0; ni < ngon; ++ni) {
+                        int ini = ngon - ni - 1;
+                        dst_indices[i + ni] = src_indices[i + ini];
+                    }
+                    i += ngon;
+                }
+            };
+
+            sample.indices.resize(src.num_indices);
+            copy_with_swap(sample.indices, src.indices, sample.counts);
+        }
+        else {
+            sample.indices.assign(src.indices, src.indices + src.num_indices);
+        }
+    }
+
 
     bool  ret = m_mesh.GetPointsAttr().Set(sample.points, t);
     m_mesh.GetVelocitiesAttr().Set(sample.velocities, t);
     m_mesh.GetNormalsAttr().Set(sample.normals, t);
     m_mesh.GetFaceVertexCountsAttr().Set(sample.counts, t);
     m_mesh.GetFaceVertexIndicesAttr().Set(sample.indices, t);
+    sample.clear();
     return ret;
 }
 

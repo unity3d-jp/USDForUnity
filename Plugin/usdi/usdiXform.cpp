@@ -34,6 +34,7 @@ UsdGeomXformable& Xform::getUSDSchema()
 bool Xform::readSample(XformData& dst, Time t_)
 {
     auto t = (const UsdTimeCode&)t_;
+    const auto& conf = getImportConfig();
     dst.position = { 0.0f, 0.0f, 0.0f };
     dst.rotation = { 0.0f, 0.0f, 0.0f, 1.0f };
     dst.scale = { 1.0f, 1.0f, 1.0f };
@@ -77,9 +78,10 @@ bool Xform::readSample(XformData& dst, Time t_)
     return ret;
 }
 
-bool Xform::writeSample(const XformData& src, Time t_)
+bool Xform::writeSample(const XformData& src_, Time t_)
 {
     auto t = (const UsdTimeCode&)t_;
+    const auto& conf = getImportConfig();
 
     if (m_write_ops.empty()) {
         m_write_ops.push_back(m_xf.AddTranslateOp(UsdGeomXformOp::PrecisionFloat));
@@ -87,6 +89,11 @@ bool Xform::writeSample(const XformData& src, Time t_)
         m_write_ops.push_back(m_xf.AddScaleOp(UsdGeomXformOp::PrecisionFloat));
     }
     {
+        XformData src = src_;
+        if (conf.swap_handedness) {
+            src.position.x *= -1.0f;
+            src.rotation = { -src.rotation.x, -src.rotation.z, src.rotation.y, -src.rotation.w };
+        }
         m_write_ops[0].Set((const GfVec3f&)src.position, t);
         m_write_ops[1].Set((const GfQuatf&)src.rotation, t);
         m_write_ops[2].Set((const GfVec3f&)src.scale, t);

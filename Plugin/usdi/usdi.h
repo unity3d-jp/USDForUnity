@@ -54,16 +54,17 @@ struct Time
 
 struct ImportConfig
 {
+    float scale = 1.0f;
     bool triangulate = true;
     bool swap_handedness = true;
-    bool swap_faces = false;
+    bool swap_faces = true;
 };
 
 struct ExportConfig
 {
-    bool ascii = false;
+    float scale = 1.0f;
     bool swap_handedness = true;
-    bool swap_faces = false;
+    bool swap_faces = true;
 };
 
 struct XformData

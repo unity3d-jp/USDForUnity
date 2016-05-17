@@ -359,7 +359,9 @@ namespace UTJ
         [Header("USD")]
     
         public string m_outputPath;
-        public usdi.ExportConfig m_conf = usdi.ExportConfig.default_value;
+        public float m_scale = 1.0f;
+        public bool m_swapHandedness = true;
+        public bool m_swapFaces = true;
     
         [Header("Capture Components")]
     
@@ -719,6 +721,10 @@ namespace UTJ
                 return false;
             }
 
+            usdi.ExportConfig m_conf = usdi.ExportConfig.default_value;
+            m_conf.scale = m_scale;
+            m_conf.swap_handedness = m_swapHandedness;
+            m_conf.swap_faces = m_swapFaces;
             usdi.usdiSetExportConfig(m_ctx, ref m_conf);
     
             // create capturers
