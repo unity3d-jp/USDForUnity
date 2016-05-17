@@ -94,6 +94,7 @@ namespace UTJ
 
         public override void usdiOnUnload()
         {
+            base.usdiOnUnload();
             m_mesh = default(usdi.Mesh);
         }
 

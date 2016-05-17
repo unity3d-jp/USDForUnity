@@ -78,7 +78,7 @@ bool Camera::writeSample(const CameraData& src, Time t_)
     {
         const float Deg2Rad = float(M_PI) / 180.0f;
         float focal_length = src.focal_length;
-        if (focal_length = 0.0f) {
+        if (focal_length == 0.0f) {
             focal_length = src.aperture / std::tan(src.field_of_view * Deg2Rad / 2.0f) / 2.0f;
         }
 

@@ -2,12 +2,6 @@
 
 namespace usdi {
 
-class CameraSample
-{
-public:
-};
-
-
 class Camera : public Xform
 {
 typedef Xform super;

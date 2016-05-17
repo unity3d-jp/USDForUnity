@@ -77,13 +77,14 @@ namespace UTJ
             return elem;
         }
 
-        public static void usdiCreateNodeRecursive(Transform parent, usdi.Schema schema, Action<usdiElement> node_handler)
+        public void usdiCreateNodeRecursive(Transform parent, usdi.Schema schema, Action<usdiElement> node_handler)
         {
             if(!schema) { return; }
 
             var elem = usdiCreateNode(parent, schema);
             if (elem != null )
             {
+                elem.stream = this;
                 elem.usdiOnLoad(schema);
                 if (node_handler != null) { node_handler(elem); }
             }

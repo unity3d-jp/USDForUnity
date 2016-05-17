@@ -4,7 +4,7 @@ using UnityEngine;
 namespace UTJ
 {
 
-    public class usdiPoints : usdiElement
+    public class usdiPoints : usdiXform
     {
         usdi.Points     m_points;
         usdi.PointsData m_pointsData;
@@ -14,6 +14,8 @@ namespace UTJ
 
         public override void usdiOnLoad(usdi.Schema schema)
         {
+            base.usdiOnLoad(schema);
+
             m_points = usdi.usdiAsPoints(schema);
             if(!m_points)
             {
@@ -23,11 +25,13 @@ namespace UTJ
 
         public override void usdiOnUnload()
         {
+            base.usdiOnUnload();
             m_points = default(usdi.Points);
         }
 
         public override void usdiUpdate(double time)
         {
+            base.usdiUpdate(time);
             if (!m_points) { return; }
 
             if(usdi.usdiPointsReadSample(m_points, ref m_pointsData, time))

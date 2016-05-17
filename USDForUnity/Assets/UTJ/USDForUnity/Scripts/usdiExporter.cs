@@ -30,7 +30,6 @@ namespace UTJ
         {
             usdi.XformData data;
 
-            if (invertForward) { trans.forward = trans.forward * -1.0f; }
             if (inherits)
             {
                 data.position = trans.localPosition;
@@ -192,9 +191,9 @@ namespace UTJ
     
             public override void Capture(double t)
             {
+                base.Capture(t);
                 if (m_target == null) { return; }
 
-                base.Capture(t);
                 CaptureCamera(usdi.usdiAsCamera(m_usd), m_target, t/*, m_params*/);
             }
         }
@@ -215,9 +214,9 @@ namespace UTJ
     
             public override void Capture(double t)
             {
+                base.Capture(t);
                 if (m_target == null) { return; }
 
-                base.Capture(t);
                 CaptureMesh(usdi.usdiAsMesh(m_usd), m_target.GetComponent<MeshFilter>().sharedMesh, null, m_mesh_buffer, t);
             }
         }
@@ -248,9 +247,8 @@ namespace UTJ
 
             public override void Capture(double t)
             {
-                if (m_target == null) { return; }
-
                 base.Capture(t);
+                if (m_target == null) { return; }
 
                 if (m_mesh == null) { m_mesh = new Mesh(); }
                 m_target.BakeMesh(m_mesh);
@@ -279,9 +277,8 @@ namespace UTJ
     
             public override void Capture(double t)
             {
-                if (m_target == null) { return; }
-
                 base.Capture(t);
+                if (m_target == null) { return; }
 
                 // create buffer
                 int count_max = m_target.maxParticles;
@@ -332,9 +329,9 @@ namespace UTJ
     
             public override void Capture(double t)
             {
+                base.Capture(t);
                 if (m_target == null) { return; }
 
-                base.Capture(t);
                 m_target.Capture(t);
             }
         }
