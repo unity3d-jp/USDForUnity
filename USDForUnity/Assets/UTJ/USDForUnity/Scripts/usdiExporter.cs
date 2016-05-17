@@ -157,15 +157,17 @@ namespace UTJ
                 set { m_scale = value; }
             }
 
-            public TransformCapturer(ComponentCapturer parent, Transform target)
+            public TransformCapturer(ComponentCapturer parent, Transform target, bool create_usd_node = true)
                 : base(parent)
             {
                 m_obj = target.gameObject;
-                m_usd = usdi.usdiCreateXform(parent.usd, CreateName(target));
                 m_target = target;
-                m_inherits = inherits;
+                if(create_usd_node)
+                {
+                    m_usd = usdi.usdiCreateXform(parent.usd, CreateName(target));
+                }
             }
-    
+
             public override void Capture(double t)
             {
                 if (m_target == null) { return; }
@@ -180,7 +182,7 @@ namespace UTJ
             //AlembicCameraParams m_params;
     
             public CameraCapturer(ComponentCapturer parent, Camera target)
-                : base(parent, target.GetComponent<Transform>())
+                : base(parent, target.GetComponent<Transform>(), false)
             {
                 m_obj = target.gameObject;
                 m_usd = usdi.usdiCreateCamera(parent.usd, CreateName(target));
@@ -203,7 +205,7 @@ namespace UTJ
             MeshBuffer m_mesh_buffer;
     
             public MeshCapturer(ComponentCapturer parent, MeshRenderer target)
-                : base(parent, target.GetComponent<Transform>())
+                : base(parent, target.GetComponent<Transform>(), false)
             {
                 m_obj = target.gameObject;
                 m_usd = usdi.usdiCreateMesh(parent.usd, CreateName(target));
@@ -227,7 +229,7 @@ namespace UTJ
             MeshBuffer m_mesh_buffer;
     
             public SkinnedMeshCapturer(ComponentCapturer parent, SkinnedMeshRenderer target)
-                : base(parent, target.GetComponent<Transform>())
+                : base(parent, target.GetComponent<Transform>(), false)
             {
                 m_obj = target.gameObject;
                 m_usd = usdi.usdiCreateMesh(parent.usd, CreateName(target));
@@ -266,7 +268,7 @@ namespace UTJ
             Vector4[] m_buf_rotations;
     
             public ParticleCapturer(ComponentCapturer parent, ParticleSystem target)
-                : base(parent, target.GetComponent<Transform>())
+                : base(parent, target.GetComponent<Transform>(), false)
             {
                 m_obj = target.gameObject;
                 m_usd = usdi.usdiCreatePoints(parent.usd, CreateName(target));
@@ -322,7 +324,7 @@ namespace UTJ
             usdiCustomComponentCapturer m_target;
     
             public CustomCapturerHandler(ComponentCapturer parent, usdiCustomComponentCapturer target)
-                : base(parent, target.GetComponent<Transform>())
+                : base(parent, target.GetComponent<Transform>(), false)
             {
                 m_obj = target.gameObject;
                 m_target = target;
@@ -509,19 +511,19 @@ namespace UTJ
         Dictionary<Transform, CaptureNode> m_capture_node;
         List<CaptureNode> m_top_nodes;
     
-        CaptureNode ConstructTree(Transform node)
+        CaptureNode ConstructTree(Transform trans)
         {
-            if(node == null) { return null; }
-            if (m_detailedLog) Debug.Log("ConstructTree() : " + node.name);
+            if(trans == null) { return null; }
+            if (m_detailedLog) Debug.Log("ConstructTree() : " + trans.name);
     
             CaptureNode cn;
-            if (m_capture_node.TryGetValue(node, out cn)) { return cn; }
+            if (m_capture_node.TryGetValue(trans, out cn)) { return cn; }
     
             cn = new CaptureNode();
-            cn.trans = node;
-            m_capture_node.Add(node, cn);
+            cn.trans = trans;
+            m_capture_node.Add(trans, cn);
     
-            var parent = ConstructTree(node.parent);
+            var parent = ConstructTree(trans.parent);
             if (parent != null)
             {
                 parent.children.Add(cn);
@@ -649,10 +651,8 @@ namespace UTJ
                 foreach (var target in GetTargets<Camera>())
                 {
                     if (ShouldBeIgnored(target)) { continue; }
-                    var trans = CreateComponentCapturer(m_root, target.GetComponent<Transform>());
-                    trans.inherits = false;
-                    trans.invertForward = true;
-                    CreateComponentCapturer(trans, target);
+                    var cc = CreateComponentCapturer(m_root, target);
+                    (cc as TransformCapturer).invertForward = true;
                 }
             }
     
@@ -662,9 +662,7 @@ namespace UTJ
                 foreach (var target in GetTargets<MeshRenderer>())
                 {
                     if (ShouldBeIgnored(target)) { continue; }
-                    var trans = CreateComponentCapturer(m_root, target.GetComponent<Transform>());
-                    trans.inherits = false;
-                    CreateComponentCapturer(trans, target);
+                    CreateComponentCapturer(m_root, target);
                 }
             }
     
@@ -674,9 +672,7 @@ namespace UTJ
                 foreach (var target in GetTargets<SkinnedMeshRenderer>())
                 {
                     if (ShouldBeIgnored(target)) { continue; }
-                    var trans = CreateComponentCapturer(m_root, target.GetComponent<Transform>());
-                    trans.inherits = false;
-                    CreateComponentCapturer(trans, target);
+                    CreateComponentCapturer(m_root, target);
                 }
             }
     
@@ -686,9 +682,7 @@ namespace UTJ
                 foreach (var target in GetTargets<ParticleSystem>())
                 {
                     if (ShouldBeIgnored(target)) { continue; }
-                    var trans = CreateComponentCapturer(m_root, target.GetComponent<Transform>());
-                    trans.inherits = false;
-                    CreateComponentCapturer(trans, target);
+                    CreateComponentCapturer(m_root, target);
                 }
             }
     
@@ -698,9 +692,7 @@ namespace UTJ
                 foreach (var target in GetTargets<usdiCustomComponentCapturer>())
                 {
                     if (ShouldBeIgnored(target)) { continue; }
-                    var trans = CreateComponentCapturer(m_root, target.GetComponent<Transform>());
-                    trans.inherits = false;
-                    CreateComponentCapturer(trans, target);
+                    CreateComponentCapturer(m_root, target);
                 }
             }
         }
@@ -810,7 +802,7 @@ namespace UTJ
         {
             if (m_outputPath == null || m_outputPath == "")
             {
-                m_outputPath = "Assets/StreamingAssets/" + gameObject.name + ".usd";
+                m_outputPath = "Assets/StreamingAssets/" + gameObject.name + ".usda";
             }
         }
     
