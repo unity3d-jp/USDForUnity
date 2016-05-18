@@ -34,3 +34,6 @@ $ sudo yum install nodejs npm postgresql ld-linux.so.2 libstdc++.so.6
 ### History
 - 2016/05/18:  
   preview release for Linux
+
+## License
+[MIT](USDForUnity/Assets/StreamingAssets/UTJ/USDForUnity/License.txt)
