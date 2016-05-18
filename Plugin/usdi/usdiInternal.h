@@ -23,11 +23,17 @@ struct TraceFuncImpl
     ~TraceFuncImpl();
 };
 
+extern const float Rad2Deg;
+extern const float Deg2Rad;
+
 float2 operator*(const float2& l, float r);
 float3 operator*(const float3& l, float r);
 float4 operator*(const float4& l, float r);
+quaternion operator*(const quaternion& l, float r);
+quaternion operator*(const quaternion& l, const quaternion& r);
 float2& operator*=(float2& l, float r);
 float3& operator*=(float3& l, float r);
 float4& operator*=(float4& l, float r);
+quaternion& operator*=(quaternion& l, float r);
 
 } // namespace usdi

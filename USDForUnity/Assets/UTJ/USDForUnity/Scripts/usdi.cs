@@ -1,9 +1,5 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.Reflection;
 using UnityEngine;
 
 namespace UTJ
@@ -12,40 +8,40 @@ namespace UTJ
     {
         public struct Context
         {
-            public System.IntPtr ptr;
+            public IntPtr ptr;
             public static implicit operator bool(Context v) { return v.ptr != IntPtr.Zero; }
         }
 
         public struct Schema
         {
-            public System.IntPtr ptr;
+            public IntPtr ptr;
             public static implicit operator bool(Schema v) { return v.ptr != IntPtr.Zero; }
         }
 
         public struct Xform
         {
-            public System.IntPtr ptr;
+            public IntPtr ptr;
             public static implicit operator bool(Xform v) { return v.ptr != IntPtr.Zero; }
             public static implicit operator Schema(Xform v) { Schema r; r.ptr = v.ptr; return r; }
         }
 
         public struct Camera
         {
-            public System.IntPtr ptr;
+            public IntPtr ptr;
             public static implicit operator bool(Camera v) { return v.ptr != IntPtr.Zero; }
             public static implicit operator Schema(Camera v) { Schema r; r.ptr = v.ptr; return r; }
         }
 
         public struct Mesh
         {
-            public System.IntPtr ptr;
+            public IntPtr ptr;
             public static implicit operator bool(Mesh v) { return v.ptr != IntPtr.Zero; }
             public static implicit operator Schema(Mesh v) { Schema r; r.ptr = v.ptr; return r; }
         }
 
         public struct Points
         {
-            public System.IntPtr ptr;
+            public IntPtr ptr;
             public static implicit operator bool(Points v) { return v.ptr != IntPtr.Zero; }
             public static implicit operator Schema(Points v) { Schema r; r.ptr = v.ptr; return r; }
         }

@@ -21,7 +21,7 @@ Unknown::Unknown(Context *ctx, Schema *parent, const char *name, const char *typ
 
 Unknown::~Unknown()
 {
-    usdiTrace("Unknown::Unknown(): %s\n", getPath());
+    usdiTrace("Unknown::~Unknown(): %s\n", getPath());
 }
 
 UsdTyped& Unknown::getUSDSchema()

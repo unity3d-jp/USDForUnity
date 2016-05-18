@@ -38,6 +38,9 @@ typedef unsigned int uint;
 struct float2 { float x, y; };
 struct float3 { float x, y, z; };
 struct float4 { float x, y, z, w; };
+struct quaternion { float x, y, z, w; };
+struct float3x3 { float3 v[3]; };
+struct float4x4 { float4 v[4]; };
 
 
 enum class TopologyVariance
@@ -70,7 +73,7 @@ struct ExportConfig
 struct XformData
 {
     float3 position = { 0.0f, 0.0f, 0.0f};
-    float4 rotation = { 0.0f, 0.0f, 0.0f, 1.0f }; // quaternion
+    quaternion rotation = { 0.0f, 0.0f, 0.0f, 1.0f };
     float3 scale = { 1.0f, 1.0f, 1.0f };
 };
 
