@@ -46,6 +46,13 @@ namespace UTJ
             public static implicit operator Schema(Points v) { Schema r; r.ptr = v.ptr; return r; }
         }
 
+        public enum XformDataFormat
+        {
+            TRS_Quaternion,
+            TRS_Euler,
+            //Matrix, // not implemented
+        };
+
         public enum TopologyVariance
         {
             Constant, // both vertices and topologies are constant
@@ -82,6 +89,7 @@ namespace UTJ
 
         public struct ExportConfig
         {
+            public XformDataFormat xform_format;
             public float scale;
             public Bool swap_handedness;
             public Bool swap_faces;

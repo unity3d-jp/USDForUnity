@@ -6,14 +6,14 @@
 
 namespace usdi {
 
-static quaternion EulerToQuaternion(const float3& eular, UsdGeomXformOp::Type order)
+static quaternion EulerToQuaternion(const float3& euler, UsdGeomXformOp::Type order)
 {
-    float cX = std::cos(eular.x / 2.0f);
-    float sX = std::sin(eular.x / 2.0f);
-    float cY = std::cos(eular.y / 2.0f);
-    float sY = std::sin(eular.y / 2.0f);
-    float cZ = std::cos(eular.z / 2.0f);
-    float sZ = std::sin(eular.z / 2.0f);
+    float cX = std::cos(euler.x / 2.0f);
+    float sX = std::sin(euler.x / 2.0f);
+    float cY = std::cos(euler.y / 2.0f);
+    float sY = std::sin(euler.y / 2.0f);
+    float cZ = std::cos(euler.z / 2.0f);
+    float sZ = std::sin(euler.z / 2.0f);
     quaternion qX = { sX, 0.0f, 0.0f, cX };
     quaternion qY = { 0.0f, sY, 0.0f, cY };
     quaternion qZ = { 0.0f, 0.0f, sZ, cZ };
@@ -32,8 +32,7 @@ static quaternion EulerToQuaternion(const float3& eular, UsdGeomXformOp::Type or
 static float Clamp(float v, float vmin, float vmax) { return std::min<float>(std::max<float>(v, vmin), vmax); }
 static float Saturate(float v) { return Clamp(v, -1.0f, 1.0f); }
 
-// return ZXY eular angles
-static float3 QuaternionToEuler(const quaternion& q)
+static float3 QuaternionToEulerZXY(const quaternion& q)
 {
     float d[] = {
         q.x*q.x, q.x*q.y, q.x*q.z, q.x*q.w,
@@ -139,7 +138,6 @@ bool Xform::readSample(XformData& dst, Time t_)
                 auto& q = dst.rotation;
                 q = { -q.x, q.y, q.z, -q.w };
             }
-            dst.rotation *= Deg2Rad;
             break;
         }
         case UsdGeomXformOp::TypeRotateXYZ: // 
@@ -149,10 +147,10 @@ bool Xform::readSample(XformData& dst, Time t_)
         case UsdGeomXformOp::TypeRotateZXY: // 
         case UsdGeomXformOp::TypeRotateZYX: // fall through
         {
-            float3 eular;
-            if (op.GetAs((GfVec3f*)&eular, t)) { ret = true; }
-            eular *= Deg2Rad;
-            dst.rotation = EulerToQuaternion(eular, op.GetOpType());
+            float3 euler;
+            if (op.GetAs((GfVec3f*)&euler, t)) { ret = true; }
+            euler *= Deg2Rad;
+            (quaternion&)dst.rotation = EulerToQuaternion(euler, op.GetOpType());
             if (conf.swap_handedness) {
                 auto& q = dst.rotation;
                 q = { -q.x, q.y, q.z, -q.w };
@@ -169,42 +167,82 @@ bool Xform::readSample(XformData& dst, Time t_)
     return ret;
 }
 
-//#define usdiExportRotationAsEular
+
+// USD's quaternion serializer has bug (2016/05/19)
+// use euler angles for workaround.
+#define usdiSerializeRotationAsEuler
 
 bool Xform::writeSample(const XformData& src_, Time t_)
 {
     auto t = (const UsdTimeCode&)t_;
-    const auto& conf = getImportConfig();
+    const auto& conf = getExportConfig();
+    XformData src = src_;
 
     if (m_write_ops.empty()) {
         m_write_ops.push_back(m_xf.AddTranslateOp(UsdGeomXformOp::PrecisionFloat));
-#ifdef usdiExportRotationAsEular
+#ifdef usdiSerializeRotationAsEuler
         m_write_ops.push_back(m_xf.AddRotateZXYOp(UsdGeomXformOp::PrecisionFloat));
-#else // usdiExportRotationAsEular
+#else // usdiSerializeRotationAsEuler
         m_write_ops.push_back(m_xf.AddOrientOp(UsdGeomXformOp::PrecisionFloat));
-#endif // usdiExportRotationAsEular
+#endif // usdiSerializeRotationAsEuler
         m_write_ops.push_back(m_xf.AddScaleOp(UsdGeomXformOp::PrecisionFloat));
     }
-    {
-        XformData src = src_;
-        if (conf.swap_handedness) {
-            src.position.x *= -1.0f;
+
+    if (conf.swap_handedness) {
+        src.position.x *= -1.0f;
+        switch (conf.xform_format)
+        {
+        case XformDataFormat::TRS_Euler:
+        {
+            src.rotation.z *= -1.0f;
+            break;
+        }
+        case XformDataFormat::TRS_Quaternion:
+        {
             auto& q = src.rotation;
             q = { -q.x, q.y, q.z, -q.w };
+            break;
         }
-        {
-            src.rotation *= Rad2Deg;
+        default:
+            break;
         }
-
-        m_write_ops[0].Set((const GfVec3f&)src.position, t);
-#ifdef usdiExportRotationAsEular
-        float3 eular = QuaternionToEuler(src.rotation) * Rad2Deg;
-        m_write_ops[1].Set((const GfVec3f&)eular, t);
-#else // usdiExportRotationAsEular
-        m_write_ops[1].Set((const GfQuatf&)src.rotation, t);
-#endif // usdiExportRotationAsEular
-        m_write_ops[2].Set((const GfVec3f&)src.scale, t);
     }
+
+    m_write_ops[0].Set((const GfVec3f&)src.position, t);
+
+#ifdef usdiSerializeRotationAsEuler
+    switch (conf.xform_format)
+    {
+    case XformDataFormat::TRS_Euler:
+    {
+        m_write_ops[1].Set((const GfVec3f&)src.rotation, t);
+        break;
+    }
+    case XformDataFormat::TRS_Quaternion:
+    {
+        float3 euler = QuaternionToEulerZXY((quaternion&)src.rotation) * Rad2Deg;
+        m_write_ops[1].Set((const GfVec3f&)euler, t);
+        break;
+    }
+    }
+#else // usdiSerializeRotationAsEuler
+    switch (conf.xform_format)
+    {
+    case XformDataFormat::TRS_Euler:
+    {
+        auto quat = EulerToQuaternion((float3&)src.rotation);
+        m_write_ops[1].Set((const GfQuatf&)quat, t);
+        break;
+    }
+    case XformDataFormat::TRS_Quaternion:
+    {
+        m_write_ops[1].Set((const GfQuatf&)src.rotation, t);
+        break;
+    }
+    }
+#endif // usdiSerializeRotationAsEuler
+
+    m_write_ops[2].Set((const GfVec3f&)src.scale, t);
     return true;
 }
 

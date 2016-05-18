@@ -3,7 +3,7 @@
 [USD (Universal Scene Description)](http://graphics.pixar.com/usd/) is a file format that can store time-sampled 3D scene. It is something like 'Better Alembic' developed by Disney / Pixar.  
 This plugin allow you to import USD scene to Unity and export Unity scene to USD file. The above image is exported scene of [Candy Rock Star](https://github.com/unity3d-jp/unitychan-crs) in usdview.
 
-USD is currently preview version and only Linux binary is available. For this reason, **this plugin is currently works only on Linux. Windows version will be available soon after public release version of USD is available**.
+USD is currently preview version and only Linux binary is available. For this reason, **this plugin works only on Linux for now. Windows version will be available soon after public release version of USD is available**.
 
 
 ### How to build
