@@ -95,11 +95,6 @@ namespace UTJ
                 }
             }
 
-            Quaternion ConvertRotation(Vector3 euler)
-            {
-                return new Quaternion(euler.x, euler.y, euler.z, 0.0f);
-            }
-
             public override void Capture(double t)
             {
                 if (m_target == null) { return; }
@@ -107,17 +102,16 @@ namespace UTJ
                 var usd = usdi.usdiAsXform(m_usd);
                 usdi.XformData data;
 
-                bool euler = exporter.m_xformFormat == usdi.XformDataFormat.TRS_Euler;
                 if (inherits)
                 {
                     data.position = m_target.localPosition;
-                    data.rotation = euler ? ConvertRotation(m_target.localEulerAngles) : m_target.localRotation;
+                    data.rotation = m_target.localRotation;
                     data.scale = scale ? m_target.localScale : Vector3.one;
                 }
                 else
                 {
                     data.position = m_target.position;
-                    data.rotation = euler ? ConvertRotation(m_target.eulerAngles) : m_target.rotation;
+                    data.rotation = m_target.rotation;
                     data.scale = scale ? m_target.lossyScale : Vector3.one;
                 }
 
@@ -350,7 +344,6 @@ namespace UTJ
         [Header("USD")]
     
         public string m_outputPath;
-        public usdi.XformDataFormat m_xformFormat = usdi.XformDataFormat.TRS_Euler;
         public float m_scale = 1.0f;
         public bool m_swapHandedness = true;
         public bool m_swapFaces = true;
@@ -690,7 +683,6 @@ namespace UTJ
         void ApplyExportConfig()
         {
             usdi.ExportConfig conf = usdi.ExportConfig.default_value;
-            conf.xform_format = m_xformFormat;
             conf.scale = m_scale;
             conf.swap_handedness = m_swapHandedness;
             conf.swap_faces = m_swapFaces;

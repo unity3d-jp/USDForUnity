@@ -42,12 +42,6 @@ struct quaternion { float x, y, z, w; };
 struct float3x3 { float3 v[3]; };
 struct float4x4 { float4 v[4]; };
 
-enum class XformDataFormat
-{
-    TRS_Quaternion,
-    TRS_Euler,
-    Matrix,
-};
 
 enum class TopologyVariance
 {
@@ -71,7 +65,6 @@ struct ImportConfig
 
 struct ExportConfig
 {
-    XformDataFormat xform_format = XformDataFormat::TRS_Euler;
     float scale = 1.0f;
     bool swap_handedness = true;
     bool swap_faces = true;
@@ -80,7 +73,7 @@ struct ExportConfig
 struct XformData
 {
     float3 position = { 0.0f, 0.0f, 0.0f};
-    float4 rotation = { 0.0f, 0.0f, 0.0f, 1.0f }; // maybe euler angles or quaternion
+    quaternion rotation = { 0.0f, 0.0f, 0.0f, 1.0f };
     float3 scale = { 1.0f, 1.0f, 1.0f };
 };
 

@@ -4,6 +4,10 @@
 #include "usdiXform.h"
 #include "usdiContext.h"
 
+// USD's quaternion serializer has bug for now (2016/05/19)
+// use euler angles for workaround.
+#define usdiSerializeRotationAsEuler
+
 namespace usdi {
 
 static quaternion EulerToQuaternion(const float3& euler, UsdGeomXformOp::Type order)
@@ -77,6 +81,11 @@ static float3 QuaternionToEulerZXY(const quaternion& q)
     }
 }
 
+static void SwapHandedness(quaternion& q)
+{
+    q = {q.x, -q.y, -q.z, q.w};
+}
+
 
 Xform::Xform(Context *ctx, Schema *parent, const UsdGeomXformable& xf)
     : super(ctx, parent, xf)
@@ -135,8 +144,7 @@ bool Xform::readSample(XformData& dst, Time t_)
         {
             if (op.GetAs((GfQuatf*)&dst.rotation, t)) { ret = true; }
             if (conf.swap_handedness) {
-                auto& q = dst.rotation;
-                q = { -q.x, q.y, q.z, -q.w };
+                SwapHandedness(dst.rotation);
             }
             break;
         }
@@ -149,11 +157,9 @@ bool Xform::readSample(XformData& dst, Time t_)
         {
             float3 euler;
             if (op.GetAs((GfVec3f*)&euler, t)) { ret = true; }
-            euler *= Deg2Rad;
-            (quaternion&)dst.rotation = EulerToQuaternion(euler, op.GetOpType());
+            dst.rotation = EulerToQuaternion(euler * Deg2Rad, op.GetOpType());
             if (conf.swap_handedness) {
-                auto& q = dst.rotation;
-                q = { -q.x, q.y, q.z, -q.w };
+                SwapHandedness(dst.rotation);
             }
             break;
         }
@@ -167,10 +173,6 @@ bool Xform::readSample(XformData& dst, Time t_)
     return ret;
 }
 
-
-// USD's quaternion serializer has bug (2016/05/19)
-// use euler angles for workaround.
-#define usdiSerializeRotationAsEuler
 
 bool Xform::writeSample(const XformData& src_, Time t_)
 {
@@ -190,55 +192,19 @@ bool Xform::writeSample(const XformData& src_, Time t_)
 
     if (conf.swap_handedness) {
         src.position.x *= -1.0f;
-        switch (conf.xform_format)
-        {
-        case XformDataFormat::TRS_Euler:
-        {
-            src.rotation.z *= -1.0f;
-            break;
-        }
-        case XformDataFormat::TRS_Quaternion:
-        {
-            auto& q = src.rotation;
-            q = { -q.x, q.y, q.z, -q.w };
-            break;
-        }
-        default:
-            break;
-        }
+        SwapHandedness(src.rotation);
     }
 
     m_write_ops[0].Set((const GfVec3f&)src.position, t);
 
 #ifdef usdiSerializeRotationAsEuler
-    switch (conf.xform_format)
     {
-    case XformDataFormat::TRS_Euler:
-    {
-        m_write_ops[1].Set((const GfVec3f&)src.rotation, t);
-        break;
-    }
-    case XformDataFormat::TRS_Quaternion:
-    {
-        float3 euler = QuaternionToEulerZXY((quaternion&)src.rotation) * Rad2Deg;
+        float3 euler = QuaternionToEulerZXY(src.rotation) * Rad2Deg;
         m_write_ops[1].Set((const GfVec3f&)euler, t);
-        break;
-    }
     }
 #else // usdiSerializeRotationAsEuler
-    switch (conf.xform_format)
-    {
-    case XformDataFormat::TRS_Euler:
-    {
-        auto quat = EulerToQuaternion((float3&)src.rotation);
-        m_write_ops[1].Set((const GfQuatf&)quat, t);
-        break;
-    }
-    case XformDataFormat::TRS_Quaternion:
     {
         m_write_ops[1].Set((const GfQuatf&)src.rotation, t);
-        break;
-    }
     }
 #endif // usdiSerializeRotationAsEuler
 
