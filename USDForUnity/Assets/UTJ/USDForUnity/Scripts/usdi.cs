@@ -30,6 +30,7 @@ namespace UTJ
             public IntPtr ptr;
             public static implicit operator bool(Camera v) { return v.ptr != IntPtr.Zero; }
             public static implicit operator Schema(Camera v) { Schema r; r.ptr = v.ptr; return r; }
+            public static implicit operator Xform(Camera v) { Xform r; r.ptr = v.ptr; return r; }
         }
 
         public struct Mesh
@@ -37,6 +38,7 @@ namespace UTJ
             public IntPtr ptr;
             public static implicit operator bool(Mesh v) { return v.ptr != IntPtr.Zero; }
             public static implicit operator Schema(Mesh v) { Schema r; r.ptr = v.ptr; return r; }
+            public static implicit operator Xform(Mesh v) { Xform r; r.ptr = v.ptr; return r; }
         }
 
         public struct Points
@@ -44,6 +46,7 @@ namespace UTJ
             public IntPtr ptr;
             public static implicit operator bool(Points v) { return v.ptr != IntPtr.Zero; }
             public static implicit operator Schema(Points v) { Schema r; r.ptr = v.ptr; return r; }
+            public static implicit operator Xform(Points v) { Xform r; r.ptr = v.ptr; return r; }
         }
 
 

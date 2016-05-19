@@ -28,67 +28,86 @@ Attribute::~Attribute()
 }
 const char* Attribute::getName() const { return m_usdattr.GetName().GetText(); }
 const char* Attribute::getTypeName() const { return m_usdattr.GetTypeName().GetAsToken().GetText(); }
-bool Attribute::hasValue() const { m_usdattr.HasValue(); }
+bool        Attribute::isArray() const { return (int)getType() >= (int)AttributeType::IntArray; }
+bool        Attribute::hasValue() const { return m_usdattr.HasValue(); }
 
 template<class T>
 class TAttribute : public Attribute
 {
-    typedef Attribute super;
+typedef Attribute super;
 public:
-    TAttribute(Schema *parent, UsdAttribute usdattr);
-    ~TAttribute() override;
+    TAttribute(Schema *parent, UsdAttribute usdattr)
+        : super(parent, usdattr)
+    {
+        usdiTrace("Attribute::Attribute(): %s [%s]\n", getName(), getTypeName());
+    }
 
-    AttributeType getType() const override;
+    ~TAttribute()
+    {
+        usdiTrace("Attribute::~Attribute()\n");
+    }
 
-    bool get(T& dst, Time t) const;
-    bool set(const T& dst, Time t);
+    AttributeType getType() const override { return GetAttributeEnum<T>::value; }
+    size_t getSize(Time t) const override { return 1; }
 
-    bool get(void *data, Time t) const override;
-    bool set(const void *data, Time t) override;
+    bool get(T& dst, Time t) const { return m_usdattr.Get(&dst, t); }
+    bool set(const T& src, Time t) { return m_usdattr.Set(src, t); }
+
+    bool get(void *dst, Time t) const override { return get(*(T*)dst, t); }
+    bool set(const void *src, Time t) override { return set(*(const T*)src, t); }
+
+    bool getBuffered(void *dst, size_t size, Time t) const override { return get(dst, t); }
+    bool setBuffered(const void *src, size_t size, Time t) override { return set(src, t); }
 };
 
-template<class T>
-TAttribute<T>::TAttribute(Schema *parent, UsdAttribute usdattr)
-    : super(parent, usdattr)
+template<class V>
+class TAttribute<VtArray<V>> : public Attribute
 {
-    usdiTrace("Attribute::Attribute(): %s [%s]\n", getName(), getTypeName());
-}
+typedef Attribute super;
+public:
+    typedef VtArray<V> T;
 
-template<class T>
-TAttribute<T>::~TAttribute()
-{
-    usdiTrace("Attribute::~Attribute()\n");
-}
+    TAttribute(Schema *parent, UsdAttribute usdattr)
+        : super(parent, usdattr)
+    {
+        usdiTrace("Attribute::Attribute(): %s [%s]\n", getName(), getTypeName());
+    }
 
-template<class T>
-AttributeType TAttribute<T>::getType() const
-{
-    return GetAttributeEnum<T>::value;
-}
+    ~TAttribute()
+    {
+        usdiTrace("Attribute::~Attribute()\n");
+    }
 
-template<class T>
-bool TAttribute<T>::get(T& dst, Time t) const
-{
-    return m_usdattr.Get(&dst, t);
-}
+    AttributeType getType() const override { return GetAttributeEnum<T>::value; }
+    size_t getSize(Time t) const override
+    {
+        get(m_buf, t);
+        return m_buf.size();
+    }
 
-template<class T>
-bool TAttribute<T>::set(const T& dst, Time t)
-{
-    return m_usdattr.Set(dst, t);
-}
+    bool get(T& dst, Time t) const { return m_usdattr.Get(&dst, t); }
+    bool set(const T& src, Time t) { return m_usdattr.Set(src, t); }
 
-template<class T>
-bool TAttribute<T>::get(void *data, Time t) const
-{
-    return get(*(T*)data, t);
-}
+    bool get(void *dst, Time t) const override { return get(*(T*)dst, t); }
+    bool set(const void *src, Time t) override { return set(*(const T*)src, t); }
 
-template<class T>
-bool TAttribute<T>::set(const void *data, Time t)
-{
-    return set(*(const T*)data, t);
-}
+    bool getBuffered(void *dst, size_t size, Time t) const override
+    {
+        if (get(m_buf, t)) {
+            memcpy(dst, &m_buf[0], sizeof(V)*size);
+            return true;
+        }
+        return false;
+    }
+    bool setBuffered(const void *src, size_t size, Time t) override
+    {
+        m_buf.assign((V*)src, (V*)src + size);
+        return set(&m_buf, t);
+    }
+
+private:
+    mutable T m_buf;
+};
 
 
 Attribute* WrapExistingAttribute(Schema *parent, const char *name)

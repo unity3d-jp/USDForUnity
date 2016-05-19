@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "usdiInternal.h"
+#include "usdiAttribute.h"
 #include "usdiSchema.h"
 #include "usdiXform.h"
 #include "usdiCamera.h"
@@ -88,21 +89,21 @@ usdiExport int usdiGetID(usdi::Schema *schema)
 usdiExport const char* usdiGetPath(usdi::Schema *schema)
 {
     usdiTraceFunc();
-    if (!schema) { return nullptr; }
+    if (!schema) { return ""; }
     return schema->getPath();
 }
 
 usdiExport const char* usdiGetName(usdi::Schema *schema)
 {
     usdiTraceFunc();
-    if (!schema) { return nullptr; }
+    if (!schema) { return ""; }
     return schema->getName();
 }
 
 usdiExport const char* usdiGetTypeName(usdi::Schema *schema)
 {
     usdiTraceFunc();
-    if (!schema) { return nullptr; }
+    if (!schema) { return ""; }
     return schema->getTypeName();
 }
 
@@ -126,6 +127,33 @@ usdiExport usdi::Schema* usdiGetChild(usdi::Schema *schema, int i)
     if (!schema) return nullptr;
     return schema->getChild(i);
 
+}
+usdiExport int usdiGetNumAttributes(usdi::Schema *schema)
+{
+    usdiTraceFunc();
+    if (!schema) { return 0; }
+    return schema->getNumAttributes();
+}
+
+usdiExport usdi::Attribute* usdiGetAttribute(usdi::Schema *schema, int i)
+{
+    usdiTraceFunc();
+    if (!schema) { return nullptr; }
+    return schema->getAttribute(i);
+}
+
+usdiExport usdi::Attribute* usdiFindAttribute(usdi::Schema *schema, const char *name)
+{
+    usdiTraceFunc();
+    if (!schema) { return nullptr; }
+    return schema->findAttribute(name);
+}
+
+usdiExport usdi::Attribute* usdiCreateAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type)
+{
+    usdiTraceFunc();
+    if (!schema) { return nullptr; }
+    return schema->createAttribute(name, type);
 }
 
 
@@ -261,6 +289,56 @@ usdiExport bool usdiPointsWriteSample(usdi::Points *points, const usdi::PointsDa
     usdiTraceFunc();
     if (!points || !src) return false;
     return points->writeSample(*src, t);
+}
+
+
+usdiExport const char* usdiAttrGetName(usdi::Attribute *attr)
+{
+    usdiTraceFunc();
+    if (!attr) { return ""; }
+    return attr->getName();
+}
+
+usdiExport usdi::AttributeType usdiAttrGetType(usdi::Attribute *attr)
+{
+    usdiTraceFunc();
+    if (!attr) { return usdi::AttributeType::Unknown; }
+    return attr->getType();
+}
+
+usdiExport int usdiAttrGetSize(usdi::Attribute *attr, usdi::Time t)
+{
+    usdiTraceFunc();
+    if (!attr) { return 0; }
+    return (int)attr->getSize(t);
+}
+
+usdiExport bool usdiAttrReadSample(usdi::Attribute *attr, void *dst, usdi::Time t)
+{
+    usdiTraceFunc();
+    if (!attr) { return false; }
+    return attr->get(dst, t);
+}
+
+usdiExport bool usdiAttrReadArraySample(usdi::Attribute *attr, void *dst, int size, usdi::Time t)
+{
+    usdiTraceFunc();
+    if (!attr) { return false; }
+    return attr->getBuffered(dst, size, t);
+}
+
+usdiExport bool usdiAttrWriteSample(usdi::Attribute *attr, const void *src, usdi::Time t)
+{
+    usdiTraceFunc();
+    if (!attr) { return false; }
+    return attr->set(src, t);
+}
+
+usdiExport bool usdiAttrWriteArraySample(usdi::Attribute *attr, const void *src, int size, usdi::Time t)
+{
+    usdiTraceFunc();
+    if (!attr) { return false; }
+    return attr->setBuffered(src, size, t);
 }
 
 } // extern "C"

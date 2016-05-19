@@ -167,6 +167,7 @@ struct PointsData
 
 extern "C" {
 
+// Context interface
 usdiExport usdi::Context*   usdiCreateContext();
 usdiExport void             usdiDestroyContext(usdi::Context *ctx);
 usdiExport bool             usdiOpen(usdi::Context *ctx, const char *path);
@@ -178,6 +179,7 @@ usdiExport void             usdiSetExportConfig(usdi::Context *ctx, const usdi::
 usdiExport void             usdiGetExportConfig(usdi::Context *ctx, usdi::ExportConfig *conf);
 usdiExport usdi::Schema*    usdiGetRoot(usdi::Context *ctx);
 
+// Schema interface
 usdiExport int              usdiGetID(usdi::Schema *schema);
 usdiExport const char*      usdiGetPath(usdi::Schema *schema);
 usdiExport const char*      usdiGetName(usdi::Schema *schema);
@@ -185,28 +187,45 @@ usdiExport const char*      usdiGetTypeName(usdi::Schema *schema);
 usdiExport usdi::Schema*    usdiGetParent(usdi::Schema *schema);
 usdiExport int              usdiGetNumChildren(usdi::Schema *schema);
 usdiExport usdi::Schema*    usdiGetChild(usdi::Schema *schema, int i);
+usdiExport int              usdiGetNumAttributes(usdi::Schema *schema);
+usdiExport usdi::Attribute* usdiGetAttribute(usdi::Schema *schema, int i);
+usdiExport usdi::Attribute* usdiFindAttribute(usdi::Schema *schema, const char *name);
+usdiExport usdi::Attribute* usdiCreateAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type);
 
-usdiExport usdi::Xform*     usdiAsXform(usdi::Schema *schema);
+// Xform interface
+usdiExport usdi::Xform*     usdiAsXform(usdi::Schema *schema); // dynamic cast to Xform
 usdiExport usdi::Xform*     usdiCreateXform(usdi::Context *ctx, usdi::Schema *parent, const char *name);
 usdiExport bool             usdiXformReadSample(usdi::Xform *xf, usdi::XformData *dst, usdi::Time t);
 usdiExport bool             usdiXformWriteSample(usdi::Xform *xf, const usdi::XformData *src, usdi::Time t);
 
-usdiExport usdi::Camera*    usdiAsCamera(usdi::Schema *schema);
+// Camera interface
+usdiExport usdi::Camera*    usdiAsCamera(usdi::Schema *schema); // dynamic cast to Camera
 usdiExport usdi::Camera*    usdiCreateCamera(usdi::Context *ctx, usdi::Schema *parent, const char *name);
 usdiExport bool             usdiCameraReadSample(usdi::Camera *cam, usdi::CameraData *dst, usdi::Time t);
 usdiExport bool             usdiCameraWriteSample(usdi::Camera *cam, const usdi::CameraData *src, usdi::Time t);
 
-usdiExport usdi::Mesh*      usdiAsMesh(usdi::Schema *schema);
+// Mesh interface
+usdiExport usdi::Mesh*      usdiAsMesh(usdi::Schema *schema); // dynamic cast to Mesh
 usdiExport usdi::Mesh*      usdiCreateMesh(usdi::Context *ctx, usdi::Schema *parent, const char *name);
 usdiExport void             usdiMeshGetSummary(usdi::Mesh *mesh, usdi::MeshSummary *dst);
 usdiExport bool             usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t);
 usdiExport bool             usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t);
 
-usdiExport usdi::Points*    usdiAsPoints(usdi::Schema *schema);
+// Points interface
+usdiExport usdi::Points*    usdiAsPoints(usdi::Schema *schema); // dynamic cast to Points
 usdiExport usdi::Points*    usdiCreatePoints(usdi::Context *ctx, usdi::Schema *parent, const char *name);
 usdiExport void             usdiPointsGetSummary(usdi::Points *points, usdi::PointsSummary *dst);
 usdiExport bool             usdiPointsReadSample(usdi::Points *points, usdi::PointsData *dst, usdi::Time t);
 usdiExport bool             usdiPointsWriteSample(usdi::Points *points, const usdi::PointsData *src, usdi::Time t);
+
+// Attribute interface
+usdiExport const char*          usdiAttrGetName(usdi::Attribute *attr);
+usdiExport usdi::AttributeType  usdiAttrGetType(usdi::Attribute *attr);
+usdiExport int                  usdiAttrGetSize(usdi::Attribute *attr, usdi::Time t); // array size. always 1 if attr is not array
+usdiExport bool                 usdiAttrReadSample(usdi::Attribute *attr, void *dst, usdi::Time t);
+usdiExport bool                 usdiAttrReadArraySample(usdi::Attribute *attr, void *dst, int size, usdi::Time t);
+usdiExport bool                 usdiAttrWriteSample(usdi::Attribute *attr, const void *src, usdi::Time t);
+usdiExport bool                 usdiAttrWriteArraySample(usdi::Attribute *attr, const void *src, int size, usdi::Time t);
 
 } // extern "C"
 
