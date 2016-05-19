@@ -8,6 +8,7 @@ struct MeshSample
     VtArray<GfVec3f> points;
     VtArray<GfVec3f> velocities;
     VtArray<GfVec3f> normals;
+    VtArray<GfVec2f> uvs;
     VtArray<int>     counts;
     VtArray<int>     indices;
 
@@ -34,8 +35,8 @@ private:
 
 private:
     UsdGeomMesh         m_mesh;
-    MeshSample          m_rsample;
-    MeshSample          m_wsample;
+    MeshSample          m_sample;
+    Attribute           *m_attr_uv = nullptr;
 
     mutable bool        m_summary_needs_update = true;
     mutable MeshSummary m_summary;

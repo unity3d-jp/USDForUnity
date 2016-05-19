@@ -123,6 +123,7 @@ struct MeshSummary
     uint                peak_num_indices_triangulated = 0;
     TopologyVariance    topology_variance = TopologyVariance::Constant;
     bool                has_normals = false;
+    bool                has_uvs = false;
     bool                has_velocities = false;
 };
 
@@ -133,6 +134,7 @@ struct MeshData
     float3  *points = nullptr;
     float3  *velocities = nullptr;
     float3  *normals = nullptr;
+    float2  *uvs = nullptr;
     int     *counts = nullptr;
     int     *indices = nullptr;
     int     *indices_triangulated = nullptr;

@@ -149,6 +149,7 @@ namespace UTJ
             public uint peak_num_indices_triangulated;
             public TopologyVariance topology_variance;
             public Bool has_normals;
+            public Bool has_uvs;
             public Bool has_velocities;
         };
 
@@ -157,6 +158,7 @@ namespace UTJ
             public IntPtr   points;
             public IntPtr   velocities;
             public IntPtr   normals;
+            public IntPtr   uvs;
             public IntPtr   counts;
             public IntPtr   indices;
             public IntPtr   indices_triangulated;

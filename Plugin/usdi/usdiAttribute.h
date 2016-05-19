@@ -8,6 +8,10 @@ public:
     Attribute(Schema *parent, UsdAttribute usdattr);
     virtual ~Attribute();
 
+    const char* getName() const;
+    const char* getTypeName() const;
+    bool hasValue() const;
+
     virtual AttributeType getType() const = 0;
     virtual bool get(void *data, Time t) const = 0;
     virtual bool set(const void *data, Time t) = 0;
@@ -17,24 +21,8 @@ protected:
     UsdAttribute m_usdattr;
 };
 
-
-template<class T>
-class TAttribute : public Attribute
-{
-typedef Attribute super;
-public:
-    TAttribute(Schema *parent, UsdAttribute usdattr); // wrap existing one
-    TAttribute(Schema *parent, const char *name); // create new one
-    ~TAttribute() override;
-
-    AttributeType getType() const override;
-
-    bool get(T& dst, Time t) const;
-    bool set(const T& dst, Time t);
-
-    bool get(void *data, Time t) const override;
-    bool set(const void *data, Time t) override;
-};
+Attribute* WrapExistingAttribute(Schema *parent, const char *name);
+Attribute* CreateNewAttribute(Schema *parent, const char *name, AttributeType type);
 
 #define EachAttributeTypeAndEnum(Body)\
     Body(int, AttributeType::Int, SdfValueTypeNames->Int)\

@@ -16,10 +16,11 @@ namespace UTJ
         usdi.MeshSummary m_meshSummary;
 
         Mesh m_umesh;
-        Vector3[]   m_positions;
-        Vector3[]   m_velocities;
-        Vector3[]   m_normals;
-        int[]       m_indices;
+        Vector3[] m_positions;
+        Vector3[] m_velocities;
+        Vector3[] m_normals;
+        Vector2[] m_uvs;
+        int[] m_indices;
 
 
 
@@ -106,19 +107,37 @@ namespace UTJ
 
             if(m_meshData.points == IntPtr.Zero && usdi.usdiMeshReadSample(m_mesh, ref m_meshData, time))
             {
-                m_positions = new Vector3[m_meshData.num_points];
-                m_normals = new Vector3[m_meshData.num_points];
-                m_indices = new int[m_meshData.num_indices_triangulated];
-
-                m_meshData.points = Marshal.UnsafeAddrOfPinnedArrayElement(m_positions, 0);
-                m_meshData.normals = Marshal.UnsafeAddrOfPinnedArrayElement(m_normals, 0);
-                m_meshData.indices_triangulated = Marshal.UnsafeAddrOfPinnedArrayElement(m_indices, 0);
+                {
+                    m_positions = new Vector3[m_meshData.num_points];
+                    m_meshData.points = Marshal.UnsafeAddrOfPinnedArrayElement(m_positions, 0);
+                }
+                if (m_meshSummary.has_normals)
+                {
+                    m_normals = new Vector3[m_meshData.num_points];
+                    m_meshData.normals = Marshal.UnsafeAddrOfPinnedArrayElement(m_normals, 0);
+                }
+                if(m_meshSummary.has_uvs)
+                {
+                    m_uvs = new Vector2[m_meshData.num_points];
+                    m_meshData.uvs = Marshal.UnsafeAddrOfPinnedArrayElement(m_uvs, 0);
+                }
+                {
+                    m_indices = new int[m_meshData.num_indices_triangulated];
+                    m_meshData.indices_triangulated = Marshal.UnsafeAddrOfPinnedArrayElement(m_indices, 0);
+                }
             }
 
             if(usdi.usdiMeshReadSample(m_mesh, ref m_meshData, time))
             {
                 m_umesh.vertices = m_positions;
-                m_umesh.normals = m_normals;
+                if (m_meshSummary.has_normals)
+                {
+                    m_umesh.normals = m_normals;
+                }
+                if (m_meshSummary.has_uvs)
+                {
+                    m_umesh.uv = m_uvs;
+                }
                 m_umesh.SetIndices(m_indices, MeshTopology.Triangles, 0);
 
                 if(!m_meshSummary.has_normals)

@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "usdiInternal.h"
+#include "usdiAttribute.h"
 #include "usdiSchema.h"
 #include "usdiXform.h"
 #include "usdiMesh.h"
@@ -64,12 +65,14 @@ void MeshSample::clear()
 }
 
 
+#define usdiUVAttrName "UV"
 
 Mesh::Mesh(Context *ctx, Schema *parent, const UsdGeomMesh& mesh)
     : super(ctx, parent, UsdGeomXformable(mesh))
     , m_mesh(mesh)
 {
     usdiTrace("Mesh::Mesh(): %s\n", getPath());
+    m_attr_uv = createAttribute(usdiUVAttrName, AttributeType::Float2Array);
 }
 
 Mesh::Mesh(Context *ctx, Schema *parent, const char *name)
@@ -77,11 +80,12 @@ Mesh::Mesh(Context *ctx, Schema *parent, const char *name)
     , m_mesh(m_prim)
 {
     usdiTrace("Mesh::Mesh(): %s\n", getPath());
+    m_attr_uv = createAttribute(usdiUVAttrName, AttributeType::Float2Array);
 }
 
 Mesh::~Mesh()
 {
-    usdiTrace("Mesh::~Mesh() %s\n", getPath());
+    usdiTrace("Mesh::~Mesh(): %s\n", getPath());
 }
 
 UsdGeomMesh& Mesh::getUSDSchema()
@@ -92,6 +96,10 @@ UsdGeomMesh& Mesh::getUSDSchema()
 void Mesh::updateSummary() const
 {
     m_summary_needs_update = false;
+
+    m_summary.has_uvs = m_attr_uv && m_attr_uv->hasValue();
+    m_summary.has_normals = m_mesh.GetNormalsAttr().HasValue();
+    m_summary.has_velocities = m_mesh.GetVelocitiesAttr().HasValue();
 
     if (m_mesh.GetPointsAttr().ValueMightBeTimeVarying()) {
         m_summary.topology_variance = TopologyVariance::Homogenous;
@@ -115,12 +123,15 @@ bool Mesh::readSample(MeshData& dst, Time t_)
     auto t = UsdTimeCode(t_);
     const auto& conf = getImportConfig();
 
-    MeshSample& sample = m_rsample;
+    MeshSample& sample = m_sample;
     m_mesh.GetPointsAttr().Get(&sample.points, t);
     m_mesh.GetVelocitiesAttr().Get(&sample.velocities, t);
     m_mesh.GetNormalsAttr().Get(&sample.normals, t);
     m_mesh.GetFaceVertexCountsAttr().Get(&sample.counts, t);
     m_mesh.GetFaceVertexIndicesAttr().Get(&sample.indices, t);
+    if (m_attr_uv) {
+        m_attr_uv->get(&sample.uvs, t_);
+    }
 
 
     dst.num_points = sample.points.size();
@@ -162,6 +173,9 @@ bool Mesh::readSample(MeshData& dst, Time t_)
             }
         }
     }
+    if (dst.uvs && !sample.uvs.empty()) {
+        memcpy(dst.uvs, &sample.uvs[0], sizeof(float2) * dst.num_points);
+    }
     if (dst.counts && !sample.counts.empty()) {
         memcpy(dst.counts, &sample.counts[0], sizeof(int) * dst.num_counts);
     }
@@ -185,7 +199,7 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
     auto t = UsdTimeCode(t_);
     const auto& conf = getExportConfig();
 
-    MeshSample& sample = m_wsample;
+    MeshSample& sample = m_sample;
 
     if (src.points) {
         sample.points.assign((GfVec3f*)src.points, (GfVec3f*)src.points + src.num_points);
@@ -226,6 +240,10 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
         }
     }
 
+    if (src.uvs) {
+        sample.uvs.assign((GfVec2f*)src.uvs, (GfVec2f*)src.uvs + src.num_points);
+    }
+
     if (src.counts) {
         sample.counts.assign(src.counts, src.counts + src.num_counts);
     }
@@ -262,6 +280,10 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
     m_mesh.GetNormalsAttr().Set(sample.normals, t);
     m_mesh.GetFaceVertexCountsAttr().Set(sample.counts, t);
     m_mesh.GetFaceVertexIndicesAttr().Set(sample.indices, t);
+    if (m_attr_uv) {
+        m_attr_uv->set(&sample.uvs, t_);
+    }
+
     sample.clear();
     m_summary_needs_update = true;
     return ret;

@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "usdiInternal.h"
 #include "usdiContext.h"
+#include "usdiAttribute.h"
 #include "usdiSchema.h"
 
 namespace usdi {
@@ -8,8 +9,8 @@ namespace usdi {
 Schema::Schema(Context *ctx, Schema *parent, const UsdTyped& usd_schema)
     : m_ctx(ctx)
     , m_parent(parent)
-    , m_id(ctx->generateID())
     , m_prim(usd_schema.GetPrim())
+    , m_id(ctx->generateID())
 {
     ctx->addSchema(this);
     if (m_parent) {
@@ -31,6 +32,7 @@ Schema::Schema(Context *ctx, Schema *parent, const char *name, const char *type)
 
 Schema::~Schema()
 {
+    m_attributes.clear();
 }
 
 const ImportConfig& Schema::getImportConfig() const { return m_ctx->getImportConfig(); }
@@ -41,6 +43,32 @@ int         Schema::getID() const           { return m_id; }
 Schema*     Schema::getParent() const       { return m_parent; }
 size_t      Schema::getNumChildren() const  { return m_children.size(); }
 Schema*     Schema::getChild(int i) const   { return (size_t)i >= m_children.size() ? nullptr : m_children[i]; }
+
+
+size_t      Schema::getNumAttributes() const { return m_attributes.size(); }
+Attribute*  Schema::getAttribute(int i) const { return (size_t)i >= m_attributes.size() ? nullptr : m_attributes[i].get(); }
+
+Attribute* Schema::findAttribute(const char *name) const
+{
+    for (const auto& a : m_attributes) {
+        if (strcmp(a->getName(), name) == 0) {
+            return a.get();
+        }
+    }
+    return nullptr;
+}
+
+Attribute* Schema::createAttribute(const char *name, AttributeType type)
+{
+    auto *ret = WrapExistingAttribute(this, name);
+    if (!ret) {
+        ret = CreateNewAttribute(this, name, type);
+    }
+    if (ret) {
+        m_attributes.emplace_back(ret);
+    }
+    return ret;
+}
 
 const char* Schema::getPath() const         { return getUSDPrim().GetPath().GetText(); }
 const char* Schema::getName() const         { return getUSDPrim().GetName().GetText(); }

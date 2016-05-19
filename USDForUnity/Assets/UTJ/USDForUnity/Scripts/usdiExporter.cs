@@ -181,7 +181,7 @@ namespace UTJ
             data.indices = GetArrayPtr(dst_buf.indices);
             data.points = GetArrayPtr(dst_buf.vertices);
             if (dst_buf.normals != null) { data.normals = GetArrayPtr(dst_buf.normals); }
-            //if(dst_buf.uvs != null) { data.uvs = GetArrayPtr(dst_buf.uvs); }
+            if(dst_buf.uvs != null) { data.uvs = GetArrayPtr(dst_buf.uvs); }
             data.num_points = dst_buf.vertices.Length;
             data.num_indices = dst_buf.indices.Length;
 
