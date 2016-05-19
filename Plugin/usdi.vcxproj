@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="usdi\pch.h" />
+    <ClInclude Include="usdi\usdiAttribute.h" />
     <ClInclude Include="usdi\usdiCamera.h" />
     <ClInclude Include="usdi\usdiContext.h" />
     <ClInclude Include="usdi\usdiInternal.h" />
@@ -20,6 +21,7 @@
     <ClInclude Include="usdi\usdiPoints.h" />
     <ClInclude Include="usdi\usdiSchema.h" />
     <ClInclude Include="usdi\usdiUnknown.h" />
+    <ClInclude Include="usdi\usdiUtils.h" />
     <ClInclude Include="usdi\usdiXform.h" />
   </ItemGroup>
   <ItemGroup>
@@ -27,6 +29,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Master|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="usdi\usdiAttribute.cpp" />
     <ClCompile Include="usdi\usdiCamera.cpp" />
     <ClCompile Include="usdi\usdiContext.cpp" />
     <ClCompile Include="usdi\usdiInternal.cpp" />

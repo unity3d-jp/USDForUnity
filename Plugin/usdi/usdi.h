@@ -19,6 +19,7 @@ namespace usdi {
 
 #ifdef usdiImpl
     class Context;
+    class Attribute;
     class Schema;
     class Xform;
     class Camera;
@@ -27,6 +28,7 @@ namespace usdi {
 #else
     // force make convertible
     class Context {};
+    class Attribute {};
     class Schema {};
     class Xform : public Schema  {};
     class Camera : public Xform {};
@@ -47,6 +49,25 @@ enum class InterpolationType
 {
     None,
     Linear,
+};
+
+enum class AttributeType
+{
+    Unknown,
+    Int,
+    UInt,
+    Float,
+    Float2,
+    Float3,
+    Float4,
+    Quaternion,
+    IntArray,
+    UIntArray,
+    FloatArray,
+    Float2Array,
+    Float3Array,
+    Float4Array,
+    QuaternionArray,
 };
 
 enum class TopologyVariance
