@@ -12,6 +12,12 @@ namespace UTJ
             public static implicit operator bool(Context v) { return v.ptr != IntPtr.Zero; }
         }
 
+        public struct Attribute
+        {
+            public IntPtr ptr;
+            public static implicit operator bool(Attribute v) { return v.ptr != IntPtr.Zero; }
+        }
+
         public struct Schema
         {
             public IntPtr ptr;
@@ -49,6 +55,26 @@ namespace UTJ
             public static implicit operator Xform(Points v) { Xform r; r.ptr = v.ptr; return r; }
         }
 
+        public enum AttributeType
+        {
+            Unknown,
+            Int,
+            UInt,
+            Float,
+            Float2,
+            Float3,
+            Float4,
+            Quaternion,
+            Token,
+            IntArray,
+            UIntArray,
+            FloatArray,
+            Float2Array,
+            Float3Array,
+            Float4Array,
+            QuaternionArray,
+            TokenArray,
+        };
 
         public enum InterpolationType
         {
@@ -187,6 +213,7 @@ namespace UTJ
             public int num_points;
         }
 
+        // Context interface
         [DllImport ("usdi")] public static extern Context       usdiCreateContext();
         [DllImport ("usdi")] public static extern void          usdiDestroyContext(Context ctx);
         [DllImport ("usdi")] public static extern Bool          usdiOpen(Context ctx, string path);
@@ -199,6 +226,7 @@ namespace UTJ
         [DllImport ("usdi")] public static extern void          usdiGetExportConfig(Context ctx, ref ExportConfig conf);
         [DllImport ("usdi")] public static extern Schema        usdiGetRoot(Context ctx);
 
+        // Schema interface
         [DllImport ("usdi")] public static extern int           usdiGetID(Schema schema);
         [DllImport ("usdi")] public static extern IntPtr        usdiGetPath(Schema schema);
         [DllImport ("usdi")] public static extern IntPtr        usdiGetName(Schema schema);
@@ -206,28 +234,45 @@ namespace UTJ
         [DllImport ("usdi")] public static extern Schema        usdiGetParent(Schema schema);
         [DllImport ("usdi")] public static extern int           usdiGetNumChildren(Schema schema);
         [DllImport ("usdi")] public static extern Schema        usdiGetChild(Schema schema, int i);
+        [DllImport ("usdi")] public static extern int           usdiGetNumAttributes(Schema schema);
+        [DllImport ("usdi")] public static extern Attribute     usdiGetAttribute(Schema schema, int i);
+        [DllImport ("usdi")] public static extern Attribute     usdiFindAttribute(Schema schema, string name);
+        [DllImport ("usdi")] public static extern Attribute     usdiCreateAttribute(Schema schema, AttributeType type);
 
+        // Xform interface
         [DllImport ("usdi")] public static extern Xform         usdiAsXform(Schema schema);
         [DllImport ("usdi")] public static extern Xform         usdiCreateXform(Context ctx, Schema parent, string name);
         [DllImport ("usdi")] public static extern Bool          usdiXformReadSample(Xform xf, ref XformData dst, double t);
         [DllImport ("usdi")] public static extern Bool          usdiXformWriteSample(Xform xf, ref XformData src, double t);
 
+        // Camera interface
         [DllImport ("usdi")] public static extern Camera        usdiAsCamera(Schema schema);
         [DllImport ("usdi")] public static extern Camera        usdiCreateCamera(Context ctx, Schema parent, string name);
         [DllImport ("usdi")] public static extern Bool          usdiCameraReadSample(Camera cam, ref CameraData dst, double t);
         [DllImport ("usdi")] public static extern Bool          usdiCameraWriteSample(Camera cam, ref CameraData src, double t);
 
+        // Mesh interface
         [DllImport ("usdi")] public static extern Mesh          usdiAsMesh(Schema schema);
         [DllImport ("usdi")] public static extern Mesh          usdiCreateMesh(Context ctx, Schema parent, string name);
         [DllImport ("usdi")] public static extern void          usdiMeshGetSummary(Mesh mesh, ref MeshSummary dst);
         [DllImport ("usdi")] public static extern Bool          usdiMeshReadSample(Mesh mesh, ref MeshData dst, double t);
         [DllImport ("usdi")] public static extern Bool          usdiMeshWriteSample(Mesh mesh, ref MeshData src, double t);
-        
+
+        // Points interface
         [DllImport ("usdi")] public static extern Points        usdiAsPoints(Schema schema);
         [DllImport ("usdi")] public static extern Points        usdiCreatePoints(Context ctx, Schema parent, string name);
         [DllImport ("usdi")] public static extern void          usdiPointsGetSummary(Points points, ref PointsSummary dst);
         [DllImport ("usdi")] public static extern Bool          usdiPointsReadSample(Points points, ref PointsData dst, double t);
         [DllImport ("usdi")] public static extern Bool          usdiPointsWriteSample(Points points, ref PointsData src, double t);
+
+        // Attribute interface
+        [DllImport ("usdi")] public static extern IntPtr        usdiAttrGetName(Attribute attr);
+        [DllImport ("usdi")] public static extern AttributeType usdiAttrGetType(Attribute attr);
+        [DllImport ("usdi")] public static extern int           usdiAttrGetSize(Attribute attr, double t);
+        [DllImport ("usdi")] public static extern IntPtr        usdiAttrReadSample(Attribute attr, IntPtr dst, double t);
+        [DllImport ("usdi")] public static extern IntPtr        usdiAttrReadArraySample(Attribute attr, IntPtr dst, int size, double t);
+        [DllImport ("usdi")] public static extern IntPtr        usdiAttrWriteSample(Attribute attr, IntPtr src, double t);
+        [DllImport ("usdi")] public static extern IntPtr        usdiAttrWriteArraySample(Attribute attr, IntPtr src, int size, double t);
 
 
         public static string S(IntPtr cstring) { return Marshal.PtrToStringAnsi(cstring); }
