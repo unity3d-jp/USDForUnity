@@ -61,6 +61,7 @@ enum class AttributeType
     Float3,
     Float4,
     Quaternion,
+    Token,
     IntArray,
     UIntArray,
     FloatArray,
@@ -68,6 +69,7 @@ enum class AttributeType
     Float3Array,
     Float4Array,
     QuaternionArray,
+    TokenArray,
 };
 
 enum class TopologyVariance

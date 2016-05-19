@@ -79,7 +79,7 @@ $(SolutionDir)External\PatchLibrary\PatchLibraryProxy64.exe /target:Unity.exe /p
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <PreprocessorDefinitions>usdiImpl;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>usdiImpl;usdiDebug;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Optimization>Disabled</Optimization>
     </ClCompile>
     <Link>
@@ -95,7 +95,7 @@ $(SolutionDir)External\PatchLibrary\PatchLibraryProxy64.exe /target:Unity.exe /p
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/Zo %(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>usdiImpl;usdiMaster;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>usdiImpl;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Optimization>Full</Optimization>
     </ClCompile>
     <Link>

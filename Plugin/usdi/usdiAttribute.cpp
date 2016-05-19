@@ -39,7 +39,7 @@ public:
     TAttribute(Schema *parent, UsdAttribute usdattr)
         : super(parent, usdattr)
     {
-        usdiTrace("Attribute::Attribute(): %s [%s]\n", getName(), getTypeName());
+        usdiTrace("Attribute::Attribute(): %s (%s)\n", getName(), getTypeName());
     }
 
     ~TAttribute()
@@ -70,7 +70,7 @@ public:
     TAttribute(Schema *parent, UsdAttribute usdattr)
         : super(parent, usdattr)
     {
-        usdiTrace("Attribute::Attribute(): %s [%s]\n", getName(), getTypeName());
+        usdiTrace("Attribute::Attribute(): %s (%s)\n", getName(), getTypeName());
     }
 
     ~TAttribute()
@@ -110,9 +110,8 @@ private:
 };
 
 
-Attribute* WrapExistingAttribute(Schema *parent, const char *name)
+Attribute* WrapExistingAttribute(Schema *parent, UsdAttribute usd)
 {
-    UsdAttribute usd = parent->getUSDPrim().GetAttribute(TfToken(name));
     if (!usd) { return nullptr; }
 
     auto tname = usd.GetTypeName();
@@ -120,7 +119,25 @@ Attribute* WrapExistingAttribute(Schema *parent, const char *name)
     EachAttributeTypeAndEnum(Def)
 #undef Def
 
+#define Reinterpret(Sdf, Type) if (tname == SdfValueTypeNames->Sdf) { return new TAttribute<Type>(parent, usd); }
+    Reinterpret(Vector3f, GfVec3f)
+    Reinterpret(Normal3f, GfVec3f)
+    Reinterpret(Point3f, GfVec3f)
+    Reinterpret(Color3f, GfVec3f)
+    Reinterpret(Vector3fArray, VtArray<GfVec3f>)
+    Reinterpret(Normal3fArray, VtArray<GfVec3f>)
+    Reinterpret(Point3fArray, VtArray<GfVec3f>)
+    Reinterpret(Color3fArray, VtArray<GfVec3f>)
+#undef Reinterpret
+
+    usdiLog("failed to interpret attribute: %s (%s)\n", usd.GetName().GetText(), usd.GetTypeName().GetAsToken().GetText());
     return nullptr; // unknown type
+}
+
+Attribute* WrapExistingAttribute(Schema *parent, const char *name)
+{
+    UsdAttribute usd = parent->getUSDPrim().GetAttribute(TfToken(name));
+    return WrapExistingAttribute(parent, usd);
 }
 
 template<class T>
@@ -138,6 +155,8 @@ Attribute* CreateNewAttribute(Schema *parent, const char *name, AttributeType ty
         EachAttributeTypeAndEnum(Def)
 #undef Def
     }
+
+    usdiLog("failed to create attribute: %s\n", name);
     return nullptr;
 }
 

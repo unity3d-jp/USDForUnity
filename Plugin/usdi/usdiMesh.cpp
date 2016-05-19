@@ -65,7 +65,7 @@ void MeshSample::clear()
 }
 
 
-#define usdiUVAttrName "UV"
+#define usdiUVAttrName "uv"
 
 Mesh::Mesh(Context *ctx, Schema *parent, const UsdGeomMesh& mesh)
     : super(ctx, parent, UsdGeomXformable(mesh))

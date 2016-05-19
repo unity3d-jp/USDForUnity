@@ -7,6 +7,7 @@ class Schema
 public:
     Schema(Context *ctx, Schema *parent, const UsdTyped& usd_schema); // for import
     Schema(Context *ctx, Schema *parent, const char *name, const char *type); // for export
+    void init();
     virtual ~Schema();
 
     const ImportConfig& getImportConfig() const;

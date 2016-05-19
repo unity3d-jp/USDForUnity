@@ -12,10 +12,7 @@ Schema::Schema(Context *ctx, Schema *parent, const UsdTyped& usd_schema)
     , m_prim(usd_schema.GetPrim())
     , m_id(ctx->generateID())
 {
-    ctx->addSchema(this);
-    if (m_parent) {
-        m_parent->addChild(this);
-    }
+    init();
 }
 
 Schema::Schema(Context *ctx, Schema *parent, const char *name, const char *type)
@@ -23,11 +20,26 @@ Schema::Schema(Context *ctx, Schema *parent, const char *name, const char *type)
     , m_parent(parent)
     , m_id(ctx->generateID())
 {
-    ctx->addSchema(this);
+    m_prim = ctx->getUSDStage()->DefinePrim(SdfPath(makePath(name)), TfToken(type));
+    init();
+}
+
+void Schema::init()
+{
+    m_ctx->addSchema(this);
     if (m_parent) {
         m_parent->addChild(this);
     }
-    m_prim = ctx->getUSDStage()->DefinePrim(SdfPath(makePath(name)), TfToken(type));
+
+    if (m_prim) {
+        // gather attributes
+        auto attrs = m_prim.GetAuthoredAttributes();
+        for (auto attr : attrs) {
+            if (auto *ret = WrapExistingAttribute(this, attr)) {
+                m_attributes.emplace_back(ret);
+            }
+        }
+    }
 }
 
 Schema::~Schema()
@@ -60,14 +72,13 @@ Attribute* Schema::findAttribute(const char *name) const
 
 Attribute* Schema::createAttribute(const char *name, AttributeType type)
 {
-    auto *ret = WrapExistingAttribute(this, name);
-    if (!ret) {
-        ret = CreateNewAttribute(this, name, type);
+    if (auto *f = findAttribute(name)) { return f; }
+
+    if (auto *c = CreateNewAttribute(this, name, type)) {
+        m_attributes.emplace_back(c);
+        return c;
     }
-    if (ret) {
-        m_attributes.emplace_back(ret);
-    }
-    return ret;
+    return nullptr;
 }
 
 const char* Schema::getPath() const         { return getUSDPrim().GetPath().GetText(); }

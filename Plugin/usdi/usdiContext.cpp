@@ -136,6 +136,7 @@ bool Context::open(const char *path)
     }
 
     createNodeRecursive(nullptr, root_prim, 0);
+    return true;
 }
 
 bool Context::write(const char *path)

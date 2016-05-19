@@ -3,12 +3,12 @@
 #define usdiImpl
 
 #define usdiLog(...) usdi::LogImpl(__VA_ARGS__)
-#ifdef usdiMaster
-    #define usdiTrace(...)
-    #define usdiTraceFunc(...)
-#else
+#ifdef usdiDebug
     #define usdiTrace(...) usdi::LogImpl(__VA_ARGS__)
     #define usdiTraceFunc(...) usdi::TraceFuncImpl _trace_(__FUNCTION__)
+#else
+    #define usdiTrace(...)
+    #define usdiTraceFunc(...)
 #endif
 
 #include "usdi.h"
