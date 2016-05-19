@@ -113,7 +113,7 @@ UsdGeomXformable& Xform::getUSDSchema()
 
 bool Xform::readSample(XformData& dst, Time t_)
 {
-    auto t = (const UsdTimeCode&)t_;
+    auto t = UsdTimeCode(t_);
     const auto& conf = getImportConfig();
     dst.position = { 0.0f, 0.0f, 0.0f };
     dst.rotation = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -176,7 +176,7 @@ bool Xform::readSample(XformData& dst, Time t_)
 
 bool Xform::writeSample(const XformData& src_, Time t_)
 {
-    auto t = (const UsdTimeCode&)t_;
+    auto t = UsdTimeCode(t_);
     const auto& conf = getExportConfig();
     XformData src = src_;
 

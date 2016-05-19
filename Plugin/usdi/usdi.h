@@ -17,8 +17,8 @@
 
 namespace usdi {
 
-class Context;
 #ifdef usdiImpl
+    class Context;
     class Schema;
     class Xform;
     class Camera;
@@ -26,11 +26,12 @@ class Context;
     class Points;
 #else
     // force make convertible
+    class Context {};
     class Schema {};
     class Xform : public Schema  {};
-    class Camera : public Schema {};
-    class Mesh : public Schema {};
-    class Points : public Schema {};
+    class Camera : public Xform {};
+    class Mesh : public Xform {};
+    class Points : public Xform {};
 #endif
 
 
@@ -42,6 +43,11 @@ struct quaternion { float x, y, z, w; };
 struct float3x3 { float3 v[3]; };
 struct float4x4 { float4 v[4]; };
 
+enum class InterpolationType
+{
+    None,
+    Linear,
+};
 
 enum class TopologyVariance
 {
@@ -50,13 +56,11 @@ enum class TopologyVariance
     Heterogenous, // both vertices and topologies are not constant
 };
 
-struct Time
-{
-    double time = 0.0;
-};
+typedef double Time;
 
 struct ImportConfig
 {
+    InterpolationType interpolation = InterpolationType::Linear;
     float scale = 1.0f;
     bool triangulate = true;
     bool swap_handedness = true;

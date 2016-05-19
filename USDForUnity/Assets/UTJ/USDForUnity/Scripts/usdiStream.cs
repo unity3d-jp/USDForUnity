@@ -4,14 +4,21 @@ using UnityEngine;
 
 namespace UTJ
 {
+    [Serializable]
+    public class usdiImportOptions
+    {
+        public usdi.InterpolationType interpolation = usdi.InterpolationType.Linear;
+        public float scale = 1.0f;
+        public bool swapHandedness = true;
+        public bool swapFaces = true;
+    }
 
     public class usdiStream : MonoBehaviour
     {
-        public string   m_path;
-        public float    m_scale = 1.0f;
-        public bool     m_swapHandedness = true;
-        public bool     m_swapFaces = true;
-        public double   m_time;
+        public string m_path;
+        public usdiImportOptions m_importOptions = new usdiImportOptions();
+        public double m_time = 0.0;
+        public double m_timeScale = 1.0;
 
         usdi.Context m_ctx;
         List<usdiElement> m_elements = new List<usdiElement>();
@@ -101,10 +108,11 @@ namespace UTJ
         public void usdiApplyImportConfig()
         {
             usdi.ImportConfig conf;
-            conf.scale = m_scale;
+            conf.interpolation = m_importOptions.interpolation;
+            conf.scale = m_importOptions.scale;
             conf.triangulate = true;
-            conf.swap_handedness = m_swapHandedness;
-            conf.swap_faces = m_swapFaces;
+            conf.swap_handedness = m_importOptions.swapHandedness;
+            conf.swap_faces = m_importOptions.swapFaces;
             usdi.usdiSetImportConfig(m_ctx, ref conf);
         }
 
@@ -174,7 +182,7 @@ namespace UTJ
         void Update()
         {
             usdiUpdate(m_time);
-            m_time += Time.deltaTime;
+            m_time += Time.deltaTime * m_timeScale;
         }
     }
 

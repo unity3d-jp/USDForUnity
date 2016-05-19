@@ -69,13 +69,6 @@ Mesh::Mesh(Context *ctx, Schema *parent, const UsdGeomMesh& mesh)
     : super(ctx, parent, UsdGeomXformable(mesh))
     , m_mesh(mesh)
 {
-    if (m_mesh.GetFaceVertexCountsAttr().ValueMightBeTimeVarying()) {
-        m_topology_variance = TopologyVariance::Homogenous;
-    }
-    if (m_mesh.GetFaceVertexIndicesAttr().ValueMightBeTimeVarying()) {
-        m_topology_variance = TopologyVariance::Heterogenous;
-    }
-
     usdiTrace("Mesh::Mesh(): %s\n", getPath());
 }
 
@@ -96,15 +89,30 @@ UsdGeomMesh& Mesh::getUSDSchema()
     return m_mesh;
 }
 
-void Mesh::getSummary(MeshSummary& dst) const
+void Mesh::updateSummary() const
 {
-    dst.topology_variance = m_topology_variance;
-    // todo
+    m_summary_needs_update = false;
+
+    if (m_mesh.GetPointsAttr().ValueMightBeTimeVarying()) {
+        m_summary.topology_variance = TopologyVariance::Homogenous;
+    }
+    if (m_mesh.GetFaceVertexCountsAttr().ValueMightBeTimeVarying() ||
+        m_mesh.GetFaceVertexIndicesAttr().ValueMightBeTimeVarying()) {
+        m_summary.topology_variance = TopologyVariance::Heterogenous;
+    }
+}
+
+const MeshSummary& Mesh::getSummary() const
+{
+    if (m_summary_needs_update) {
+        updateSummary();
+    }
+    return m_summary;
 }
 
 bool Mesh::readSample(MeshData& dst, Time t_)
 {
-    auto t = (const UsdTimeCode&)t_;
+    auto t = UsdTimeCode(t_);
     const auto& conf = getImportConfig();
 
     MeshSample& sample = m_rsample;
@@ -174,7 +182,7 @@ bool Mesh::readSample(MeshData& dst, Time t_)
 
 bool Mesh::writeSample(const MeshData& src, Time t_)
 {
-    auto t = (const UsdTimeCode&)t_;
+    auto t = UsdTimeCode(t_);
     const auto& conf = getExportConfig();
 
     MeshSample& sample = m_wsample;
@@ -255,6 +263,7 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
     m_mesh.GetFaceVertexCountsAttr().Set(sample.counts, t);
     m_mesh.GetFaceVertexIndicesAttr().Set(sample.indices, t);
     sample.clear();
+    m_summary_needs_update = true;
     return ret;
 }
 

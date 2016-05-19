@@ -17,7 +17,7 @@ void TestExport(const char *filename)
         usdi::Time t;
         for (int i = 0; i < 10; ++i) {
             data.position.x += 0.2f;
-            t.time += 1.0 / 30.0;
+            t += 1.0 / 30.0;
             usdiXformWriteSample(xf, &data, t);
         }
     }
@@ -43,7 +43,7 @@ void TestExport(const char *filename)
 
         usdi::Time t;
         for (int i = 0; i < 10; ++i) {
-            t.time += 1.0 / 30.0;
+            t += 1.0 / 30.0;
             usdiMeshWriteSample(mesh, &data, t);
         }
     }

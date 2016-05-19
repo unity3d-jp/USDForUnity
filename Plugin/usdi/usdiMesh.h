@@ -23,17 +23,22 @@ public:
     Mesh(Context *ctx, Schema *parent, const char *name);
     ~Mesh() override;
 
-    UsdGeomMesh&    getUSDSchema() override;
+    UsdGeomMesh&        getUSDSchema() override;
 
-    void            getSummary(MeshSummary& dst) const;
-    bool            readSample(MeshData& dst, Time t);
-    bool            writeSample(const MeshData& src, Time t);
+    const MeshSummary&  getSummary() const;
+    bool                readSample(MeshData& dst, Time t);
+    bool                writeSample(const MeshData& src, Time t);
+
+private:
+    void updateSummary() const;
 
 private:
     UsdGeomMesh         m_mesh;
     MeshSample          m_rsample;
     MeshSample          m_wsample;
-    TopologyVariance    m_topology_variance = TopologyVariance::Constant;
+
+    mutable bool        m_summary_needs_update = true;
+    mutable MeshSummary m_summary;
 };
 
 } // namespace usdi

@@ -50,6 +50,16 @@ void Context::createStage(const char *identifier)
 }
 
 
+void Context::applyImportConfig()
+{
+    if (!m_stage) { return; }
+
+    switch (m_import_config.interpolation) {
+    case InterpolationType::None: m_stage->SetInterpolationType(UsdInterpolationTypeHeld); break;
+    case InterpolationType::Linear: m_stage->SetInterpolationType(UsdInterpolationTypeLinear); break;
+    }
+}
+
 void Context::createNodeRecursive(Schema *parent, UsdPrim prim, int depth)
 {
     if (!prim.IsValid()) { return; }
@@ -101,11 +111,12 @@ bool Context::open(const char *path)
     ArGetResolver().ConfigureResolverForAsset(path);
     auto resolverctx = ArGetResolver().CreateDefaultContextForAsset(path);
     m_stage = UsdStage::Open(path, resolverctx);
-    if (m_stage == UsdStageRefPtr()) {
+    if (!m_stage) {
         usdiLog("Context::open(): failed to load %s\n", path);
         return false;
     }
 
+    applyImportConfig();
     m_start_time = m_stage->GetStartTimeCode();
     m_end_time = m_stage->GetEndTimeCode();
 
@@ -152,6 +163,7 @@ const ImportConfig& Context::getImportConfig() const
 void Context::setImportConfig(const ImportConfig& v)
 {
     m_import_config = v;
+    applyImportConfig();
 }
 
 const ExportConfig& Context::getExportConfig() const

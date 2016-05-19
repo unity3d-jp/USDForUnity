@@ -46,6 +46,13 @@ namespace UTJ
             public static implicit operator Schema(Points v) { Schema r; r.ptr = v.ptr; return r; }
         }
 
+
+        public enum InterpolationType
+        {
+            None,
+            Linear,
+        };
+
         public enum TopologyVariance
         {
             Constant, // both vertices and topologies are constant
@@ -53,13 +60,9 @@ namespace UTJ
             Heterogenous, // both vertices and topologies are not constant
         };
 
-        public struct Time
-        {
-            public double time;
-        };
-
         public struct ImportConfig
         {
+            public InterpolationType interpolation;
             public float scale;
             public Bool triangulate;
             public Bool swap_handedness;
@@ -71,6 +74,7 @@ namespace UTJ
                 {
                     return new ImportConfig
                     {
+                        interpolation = InterpolationType.Linear,
                         scale = 1.0f,
                         triangulate = true,
                         swap_handedness = true,

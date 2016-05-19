@@ -208,7 +208,7 @@ usdiExport void usdiMeshGetSummary(usdi::Mesh *mesh, usdi::MeshSummary *dst)
 {
     usdiTraceFunc();
     if (!mesh || !dst) return;
-    mesh->getSummary(*dst);
+    *dst = mesh->getSummary();
 }
 
 usdiExport bool usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t)

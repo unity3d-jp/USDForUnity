@@ -33,7 +33,7 @@ UsdGeomCamera& Camera::getUSDSchema()
 
 bool Camera::readSample(CameraData& dst, Time t_)
 {
-    auto t = (const UsdTimeCode&)t_;
+    auto t = UsdTimeCode(t_);
     const auto& conf = getImportConfig();
 
     {
@@ -66,7 +66,7 @@ bool Camera::readSample(CameraData& dst, Time t_)
 
 bool Camera::writeSample(const CameraData& src, Time t_)
 {
-    auto t = (const UsdTimeCode&)t_;
+    auto t = UsdTimeCode(t_);
     const auto& conf = getExportConfig();
 
     {

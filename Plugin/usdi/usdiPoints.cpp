@@ -38,7 +38,7 @@ void Points::getSummary(PointsSummary& dst) const
 
 bool Points::readSample(PointsData& dst, Time t_)
 {
-    auto t = (const UsdTimeCode&)t_;
+    auto t = UsdTimeCode(t_);
     const auto& conf = getImportConfig();
 
     PointsSample sample;
@@ -69,7 +69,7 @@ bool Points::readSample(PointsData& dst, Time t_)
 
 bool Points::writeSample(const PointsData& src, Time t_)
 {
-    auto t = (const UsdTimeCode&)t_;
+    auto t = UsdTimeCode(t_);
     const auto& conf = getExportConfig();
 
     PointsSample sample;
