@@ -91,19 +91,19 @@ Xform::Xform(Context *ctx, Schema *parent, const UsdGeomXformable& xf)
     : super(ctx, parent, xf)
     , m_xf(xf)
 {
-    usdiTrace("Xform::Xform(): %s\n", getPath());
+    usdiLogTrace("Xform::Xform(): %s\n", getPath());
 }
 
 Xform::Xform(Context *ctx, Schema *parent, const char *name, const char *type)
     : super(ctx, parent, name, type)
     , m_xf(m_prim)
 {
-    usdiTrace("Xform::Xform(): %s\n", getPath());
+    usdiLogTrace("Xform::Xform(): %s\n", getPath());
 }
 
 Xform::~Xform()
 {
-    usdiTrace("Xform::~Xform(): %s\n", getPath());
+    usdiLogTrace("Xform::~Xform(): %s\n", getPath());
 }
 
 UsdGeomXformable& Xform::getUSDSchema()

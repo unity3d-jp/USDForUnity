@@ -13,13 +13,13 @@ namespace usdi {
 
 Context::Context()
 {
-    usdiLog("Context::Context()\n");
+    usdiLogTrace("Context::Context()\n");
 }
 
 Context::~Context()
 {
     initialize();
-    usdiLog("Context::~Context()\n");
+    usdiLogTrace("Context::~Context()\n");
 }
 
 bool Context::valid() const
@@ -46,7 +46,7 @@ void Context::createStage(const char *identifier)
     initialize();
 
     m_stage = UsdStage::CreateNew(identifier);
-    usdiLog("Context::create(): identifier %s\n", identifier);
+    usdiLogInfo("Context::create(): identifier %s\n", identifier);
 }
 
 
@@ -102,17 +102,17 @@ bool Context::open(const char *path)
 {
     initialize();
 
-    usdiTrace("Context::open(): %s\n", path);
-    usdiTrace("  scale: %f\n", m_import_config.scale);
-    usdiTrace("  triangulate: %d\n", (int)m_import_config.triangulate);
-    usdiTrace("  swap_handedness: %d\n", (int)m_import_config.swap_handedness);
-    usdiTrace("  swap_faces: %d\n", (int)m_import_config.swap_faces);
+    usdiLogTrace("Context::open(): %s\n", path);
+    usdiLogTrace("  scale: %f\n", m_import_config.scale);
+    usdiLogTrace("  triangulate: %d\n", (int)m_import_config.triangulate);
+    usdiLogTrace("  swap_handedness: %d\n", (int)m_import_config.swap_handedness);
+    usdiLogTrace("  swap_faces: %d\n", (int)m_import_config.swap_faces);
 
     ArGetResolver().ConfigureResolverForAsset(path);
     auto resolverctx = ArGetResolver().CreateDefaultContextForAsset(path);
     m_stage = UsdStage::Open(path, resolverctx);
     if (!m_stage) {
-        usdiLog("Context::open(): failed to load %s\n", path);
+        usdiLogWarning("Context::open(): failed to load %s\n", path);
         return false;
     }
 
@@ -125,7 +125,7 @@ bool Context::open(const char *path)
 
     // Check if prim exists.  Exit if not
     if (!root_prim.IsValid()) {
-        usdiLog("Context::open(): root prim is not valid\n");
+        usdiLogWarning("Context::open(): root prim is not valid\n");
         initialize();
         return false;
     }
@@ -141,17 +141,17 @@ bool Context::open(const char *path)
 
 bool Context::write(const char *path)
 {
-    usdiTrace("Context::write(): %s\n", path);
-    usdiTrace("  scale: %f\n", m_export_config.scale);
-    usdiTrace("  swap_handedness: %d\n", (int)m_export_config.swap_handedness);
-    usdiTrace("  swap_faces: %d\n", (int)m_export_config.swap_faces);
+    usdiLogTrace("Context::write(): %s\n", path);
+    usdiLogTrace("  scale: %f\n", m_export_config.scale);
+    usdiLogTrace("  swap_handedness: %d\n", (int)m_export_config.swap_handedness);
+    usdiLogTrace("  swap_faces: %d\n", (int)m_export_config.swap_faces);
 
     bool ret = m_stage->Export(path);
     if (ret) {
-        usdiLog("Context::write(): done\n");
+        usdiLogInfo("Context::write(): done\n");
     }
     else {
-        usdiLog("Context::write(): failed\n");
+        usdiLogInfo("Context::write(): failed\n");
     }
     return ret;
 }

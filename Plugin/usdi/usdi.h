@@ -174,6 +174,8 @@ struct PointsData
 
 extern "C" {
 
+usdiExport void             usdiSetDebugLevel(int l);
+
 // Context interface
 usdiExport usdi::Context*   usdiCreateContext();
 usdiExport void             usdiDestroyContext(usdi::Context *ctx);

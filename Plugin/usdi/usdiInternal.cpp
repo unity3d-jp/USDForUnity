@@ -3,8 +3,12 @@
 
 namespace usdi {
 
-void LogImpl(const char *format, ...)
+int g_debug_level = 5;
+
+void LogImpl(int level, const char *format, ...)
 {
+    if (level > g_debug_level) { return; }
+
     va_list args;
     va_start(args, format);
     vprintf(format, args);
@@ -15,12 +19,12 @@ void LogImpl(const char *format, ...)
 TraceFuncImpl::TraceFuncImpl(const char *func)
     : m_func(func)
 {
-    usdiTrace("%s enter\n", m_func);
+    usdiLogTrace("%s enter\n", m_func);
 }
 
 TraceFuncImpl::~TraceFuncImpl()
 {
-    usdiTrace("%s leave\n", m_func);
+    usdiLogTrace("%s leave\n", m_func);
 }
 
 const float Deg2Rad = float(M_PI) / 180.0f;

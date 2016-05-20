@@ -11,19 +11,19 @@ Camera::Camera(Context *ctx, Schema *parent, const UsdGeomCamera& cam)
     : super(ctx, parent, cam)
     , m_cam(cam)
 {
-    usdiTrace("Camera::Camera(): %s\n", getPath());
+    usdiLogTrace("Camera::Camera(): %s\n", getPath());
 }
 
 Camera::Camera(Context *ctx, Schema *parent, const char *name)
     : super(ctx, parent, name, "Camera")
     , m_cam(m_prim)
 {
-    usdiTrace("Camera::Camera(): %s\n", getPath());
+    usdiLogTrace("Camera::Camera(): %s\n", getPath());
 }
 
 Camera::~Camera()
 {
-    usdiTrace("Camera::~Camera(): %s\n", getPath());
+    usdiLogTrace("Camera::~Camera(): %s\n", getPath());
 }
 
 UsdGeomCamera& Camera::getUSDSchema()

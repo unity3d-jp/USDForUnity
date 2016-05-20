@@ -71,7 +71,7 @@ Mesh::Mesh(Context *ctx, Schema *parent, const UsdGeomMesh& mesh)
     : super(ctx, parent, UsdGeomXformable(mesh))
     , m_mesh(mesh)
 {
-    usdiTrace("Mesh::Mesh(): %s\n", getPath());
+    usdiLogTrace("Mesh::Mesh(): %s\n", getPath());
     m_attr_uv = createAttribute(usdiUVAttrName, AttributeType::Float2Array);
 }
 
@@ -79,13 +79,13 @@ Mesh::Mesh(Context *ctx, Schema *parent, const char *name)
     : super(ctx, parent, name, "Mesh")
     , m_mesh(m_prim)
 {
-    usdiTrace("Mesh::Mesh(): %s\n", getPath());
+    usdiLogTrace("Mesh::Mesh(): %s\n", getPath());
     m_attr_uv = createAttribute(usdiUVAttrName, AttributeType::Float2Array);
 }
 
 Mesh::~Mesh()
 {
-    usdiTrace("Mesh::~Mesh(): %s\n", getPath());
+    usdiLogTrace("Mesh::~Mesh(): %s\n", getPath());
 }
 
 UsdGeomMesh& Mesh::getUSDSchema()

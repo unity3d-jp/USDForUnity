@@ -163,9 +163,17 @@ void TestExport(const char *filename)
 
 int main(int argc, char *argv[])
 {
-    const char *filename = "test.usda";
-    if (argc > 1) {
-        filename = argv[1];
+    const char *path = "test.usda";
+    int int_value;
+    for (int i = 1; i < argc; ++i) {
+        auto *arg = argv[i];
+        if (sscanf(arg, "debug_level=%d", &int_value)) {
+            usdiSetDebugLevel(int_value);
+        }
+        else {
+            path = arg;
+        }
     }
-    TestExport(filename);
+
+    TestExport(path);
 }

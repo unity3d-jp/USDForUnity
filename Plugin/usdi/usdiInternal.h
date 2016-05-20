@@ -2,12 +2,14 @@
 
 #define usdiImpl
 
-#define usdiLog(...) usdi::LogImpl(__VA_ARGS__)
+#define usdiLogError(...) usdi::LogImpl(1, __VA_ARGS__)
+#define usdiLogWarning(...) usdi::LogImpl(2, __VA_ARGS__)
+#define usdiLogInfo(...) usdi::LogImpl(3, __VA_ARGS__)
 #ifdef usdiDebug
-    #define usdiTrace(...) usdi::LogImpl(__VA_ARGS__)
+    #define usdiLogTrace(...) usdi::LogImpl(4, __VA_ARGS__)
     #define usdiTraceFunc(...) usdi::TraceFuncImpl _trace_(__FUNCTION__)
 #else
-    #define usdiTrace(...)
+    #define usdiLogTrace(...)
     #define usdiTraceFunc(...)
 #endif
 
@@ -15,7 +17,7 @@
 
 namespace usdi {
 
-void LogImpl(const char *format, ...);
+void LogImpl(int level, const char *format, ...);
 struct TraceFuncImpl
 {
     const char *m_func;

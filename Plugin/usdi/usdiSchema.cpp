@@ -109,7 +109,7 @@ std::string Schema::makePath(const char *name_)
     path += "/";
     path += name;
 
-    usdiTrace("Schema::makePath(): %s\n", path.c_str());
+    usdiLogTrace("Schema::makePath(): %s\n", path.c_str());
     return path;
 }
 

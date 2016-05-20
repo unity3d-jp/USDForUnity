@@ -138,12 +138,12 @@ public:
     TAttribute(Schema *parent, UsdAttribute usdattr)
         : super(parent, usdattr)
     {
-        usdiTrace("Attribute::Attribute(): %s (%s)\n", getName(), getTypeName());
+        usdiLogTrace("Attribute::Attribute(): %s (%s)\n", getName(), getTypeName());
     }
 
     ~TAttribute()
     {
-        usdiTrace("Attribute::~Attribute()\n");
+        usdiLogTrace("Attribute::~Attribute()\n");
     }
 
     AttributeType getType() const override { return Traits::attr_type; }
@@ -174,12 +174,12 @@ public:
     TAttribute(Schema *parent, UsdAttribute usdattr)
         : super(parent, usdattr)
     {
-        usdiTrace("Attribute::Attribute(): %s (%s)\n", getName(), getTypeName());
+        usdiLogTrace("Attribute::Attribute(): %s (%s)\n", getName(), getTypeName());
     }
 
     ~TAttribute()
     {
-        usdiTrace("Attribute::~Attribute()\n");
+        usdiLogTrace("Attribute::~Attribute()\n");
     }
 
     AttributeType getType() const override { return Traits::attr_type; }
@@ -223,7 +223,7 @@ Attribute* WrapExistingAttribute(Schema *parent, UsdAttribute usd)
     Reinterpret(Color3fArray, VtArray<GfVec3f>)
 #undef Reinterpret
 
-    usdiLog("failed to interpret attribute: %s (%s)\n", usd.GetName().GetText(), usd.GetTypeName().GetAsToken().GetText());
+    usdiLogInfo("failed to interpret attribute: %s (%s)\n", usd.GetName().GetText(), usd.GetTypeName().GetAsToken().GetText());
     return nullptr; // unknown type
 }
 
@@ -249,7 +249,7 @@ Attribute* CreateNewAttribute(Schema *parent, const char *name, AttributeType ty
 #undef Def
     }
 
-    usdiLog("failed to create attribute: %s\n", name);
+    usdiLogWarning("failed to create attribute: %s\n", name);
     return nullptr;
 }
 

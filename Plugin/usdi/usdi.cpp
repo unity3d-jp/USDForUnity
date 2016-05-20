@@ -8,9 +8,17 @@
 #include "usdiPoints.h"
 #include "usdiContext.h"
 
-
+namespace usdi {
+extern int g_debug_level;
+} // namespace usdi
 
 extern "C" {
+
+usdiExport void usdiSetDebugLevel(int l)
+{
+    usdi::g_debug_level = l;
+}
+
 
 usdiExport usdi::Context* usdiCreateContext()
 {
@@ -167,8 +175,8 @@ usdiExport usdi::Xform* usdiAsXform(usdi::Schema *schema)
 usdiExport usdi::Xform* usdiCreateXform(usdi::Context *ctx, usdi::Schema *parent, const char *name)
 {
     usdiTraceFunc();
-    if (!ctx) { usdiLog("usdiCreateCamera(): ctx must be set\n"); return nullptr; }
-    if (!name) { usdiLog("usdiCreateXform(): name must be set\n"); return nullptr; }
+    if (!ctx) { usdiLogWarning("usdiCreateCamera(): ctx must be set\n"); return nullptr; }
+    if (!name) { usdiLogWarning("usdiCreateXform(): name must be set\n"); return nullptr; }
     return new usdi::Xform(ctx, parent, name);
 }
 
@@ -197,8 +205,8 @@ usdiExport usdi::Camera* usdiAsCamera(usdi::Schema *schema)
 usdiExport usdi::Camera* usdiCreateCamera(usdi::Context *ctx, usdi::Schema *parent, const char *name)
 {
     usdiTraceFunc();
-    if (!ctx) { usdiLog("usdiCreateCamera(): ctx must be set\n"); return nullptr; }
-    if (!name) { usdiLog("usdiCreateCamera(): name must be set\n"); return nullptr; }
+    if (!ctx) { usdiLogWarning("usdiCreateCamera(): ctx must be set\n"); return nullptr; }
+    if (!name) { usdiLogWarning("usdiCreateCamera(): name must be set\n"); return nullptr; }
     return new usdi::Camera(ctx, parent, name);
 }
 
@@ -227,8 +235,8 @@ usdiExport usdi::Mesh* usdiAsMesh(usdi::Schema *schema)
 usdiExport usdi::Mesh* usdiCreateMesh(usdi::Context *ctx, usdi::Schema *parent, const char *name)
 {
     usdiTraceFunc();
-    if (!ctx) { usdiLog("usdiCreateMesh(): ctx must be set\n"); return nullptr; }
-    if (!name) { usdiLog("usdiCreateMesh(): name must be set\n"); return nullptr; }
+    if (!ctx) { usdiLogWarning("usdiCreateMesh(): ctx must be set\n"); return nullptr; }
+    if (!name) { usdiLogWarning("usdiCreateMesh(): name must be set\n"); return nullptr; }
     return new usdi::Mesh(ctx, parent, name);
 }
 
@@ -264,8 +272,8 @@ usdiExport usdi::Points* usdiAsPoints(usdi::Schema *schema)
 usdiExport usdi::Points* usdiCreatePoints(usdi::Context *ctx, usdi::Schema *parent, const char *name)
 {
     usdiTraceFunc();
-    if (!ctx) { usdiLog("usdiCreatePoints(): ctx must be set\n"); return nullptr; }
-    if (!name) { usdiLog("usdiCreatePoints(): name must be set\n"); return nullptr; }
+    if (!ctx) { usdiLogWarning("usdiCreatePoints(): ctx must be set\n"); return nullptr; }
+    if (!name) { usdiLogWarning("usdiCreatePoints(): name must be set\n"); return nullptr; }
     return new usdi::Points(ctx, parent, name);
     return nullptr;
 }
@@ -356,4 +364,3 @@ usdiExport bool usdiAttrWriteArraySample(usdi::Attribute *attr, const void *src,
 }
 
 } // extern "C"
-
