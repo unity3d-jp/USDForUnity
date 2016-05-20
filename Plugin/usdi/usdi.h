@@ -228,7 +228,8 @@ usdiExport bool             usdiPointsWriteSample(usdi::Points *points, const us
 // Attribute interface
 usdiExport const char*          usdiAttrGetName(usdi::Attribute *attr);
 usdiExport usdi::AttributeType  usdiAttrGetType(usdi::Attribute *attr);
-usdiExport int                  usdiAttrGetSize(usdi::Attribute *attr, usdi::Time t); // array size. always 1 if attr is not array
+usdiExport int                  usdiAttrGetArraySize(usdi::Attribute *attr, usdi::Time t); // always 1 if attr is scalar
+usdiExport int                  usdiAttrGetNumSamples(usdi::Attribute *attr);
 usdiExport bool                 usdiAttrReadSample(usdi::Attribute *attr, void *dst, usdi::Time t);
 usdiExport bool                 usdiAttrReadArraySample(usdi::Attribute *attr, void *dst, int size, usdi::Time t);
 usdiExport bool                 usdiAttrWriteSample(usdi::Attribute *attr, const void *src, usdi::Time t);

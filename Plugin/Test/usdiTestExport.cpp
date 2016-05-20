@@ -19,7 +19,6 @@ void AddAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType ty
         usdiAttrWriteSample(attr, &v, t);
     }
 }
-
 template<class T, size_t N>
 void AddAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type, const T (&v)[N])
 {
@@ -27,9 +26,20 @@ void AddAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType ty
     auto *attr = usdiCreateAttribute(schema, name, type);
     for (int i = 0; i < 5; ++i) {
         t += 1.0 / 30.0;
-        usdiAttrWriteArraySample(attr, &v, N, t);
+        usdiAttrWriteArraySample(attr, v, N, t);
     }
 }
+
+void AddAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type, const char *&v)
+{
+    usdi::Time t = 0.0;
+    auto *attr = usdiCreateAttribute(schema, name, type);
+    for (int i = 0; i < 5; ++i) {
+        t += 1.0 / 30.0;
+        usdiAttrWriteSample(attr, v, t);
+    }
+}
+
 
 void TestAttributes(usdi::Schema *schema)
 {
@@ -57,6 +67,14 @@ void TestAttributes(usdi::Schema *schema)
         quaternion v = { 1.23f, 2.34f, 3.45f, 4.56f };
         AddAttribute(schema, "quaternion_scalar", usdi::AttributeType::Quaternion, v);
     }
+    {
+        const char *v = "test_token";
+        AddAttribute(schema, "token_scalar", usdi::AttributeType::Token, v);
+    }
+    {
+        const char *v = "test_string";
+        AddAttribute(schema, "string_scalar", usdi::AttributeType::String, v);
+    }
 
     {
         int v[] = { 123, 234, 345 };
@@ -81,6 +99,14 @@ void TestAttributes(usdi::Schema *schema)
     {
         quaternion v[] = { { 1.23f, 2.34f, 3.45f, 4.56f } ,{ 5.67f, 6.78f, 7.89f, 8.90f } ,{ 9.01f, 0.12f, 1.23f, 2.34f } };
         AddAttribute(schema, "quaternion_array", usdi::AttributeType::QuaternionArray, v);
+    }
+    {
+        const char *v[] = { "test_token0", "test_token1", "test_token2" };
+        AddAttribute(schema, "token_array", usdi::AttributeType::TokenArray, v);
+    }
+    {
+        const char *v[] = { "test_string0", "test_string1", "test_string2" };
+        AddAttribute(schema, "string_array", usdi::AttributeType::StringArray, v);
     }
 
 }

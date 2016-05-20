@@ -6,16 +6,111 @@
 
 namespace usdi {
 
-template<class T> struct GetAttributeEnum { static const AttributeType value = AttributeType::Unknown; };
-template<AttributeType T> struct GetAttributeType { typedef void type; };
-template<class T> SdfValueTypeName GetSdfTypeName() { return SdfValueTypeName(); }
 
-#define Def(Type, Enum, Sdf)\
-    template<> struct GetAttributeEnum<Type> { static const AttributeType value = Enum; };\
-    template<> struct GetAttributeType<Enum> { typedef Type type; };\
-    template<> SdfValueTypeName GetSdfTypeName<Type>() { return Sdf; }
-EachAttributeTypeAndEnum(Def)
-#undef Def
+#define EachAttributeTypes(Body)\
+    Body(byte, AttributeType::Byte, SdfValueTypeNames->UChar)\
+    Body(int, AttributeType::Int, SdfValueTypeNames->Int)\
+    Body(uint, AttributeType::UInt, SdfValueTypeNames->UInt)\
+    Body(float, AttributeType::Float, SdfValueTypeNames->Float)\
+    Body(GfVec2f, AttributeType::Float2, SdfValueTypeNames->Float2)\
+    Body(GfVec3f, AttributeType::Float3, SdfValueTypeNames->Float3)\
+    Body(GfVec4f, AttributeType::Float4, SdfValueTypeNames->Float4)\
+    Body(GfQuatf, AttributeType::Quaternion, SdfValueTypeNames->Quatf)\
+    Body(TfToken, AttributeType::Token, SdfValueTypeNames->Token)\
+    Body(std::string, AttributeType::String, SdfValueTypeNames->String)\
+    Body(VtArray<byte>, AttributeType::ByteArray, SdfValueTypeNames->UCharArray)\
+    Body(VtArray<int>, AttributeType::IntArray, SdfValueTypeNames->IntArray)\
+    Body(VtArray<uint>, AttributeType::UIntArray, SdfValueTypeNames->UIntArray)\
+    Body(VtArray<float>, AttributeType::FloatArray, SdfValueTypeNames->FloatArray)\
+    Body(VtArray<GfVec2f>, AttributeType::Float2Array, SdfValueTypeNames->Float2Array)\
+    Body(VtArray<GfVec3f>, AttributeType::Float3Array, SdfValueTypeNames->Float3Array)\
+    Body(VtArray<GfVec4f>, AttributeType::Float4Array, SdfValueTypeNames->Float4Array)\
+    Body(VtArray<GfQuatf>, AttributeType::QuaternionArray, SdfValueTypeNames->QuatfArray)\
+    Body(VtArray<TfToken>, AttributeType::TokenArray, SdfValueTypeNames->TokenArray)\
+    Body(VtArray<std::string>, AttributeType::StringArray, SdfValueTypeNames->StringArray)
+
+
+template<class T> struct AttrTypeTraits;
+
+#define DefTraits(Type, Attr, Sdf)\
+    template<> struct AttrTypeTraits<Type> {\
+        typedef Type store_type;\
+        static const AttributeType attr_type = Attr;\
+        static SdfValueTypeName sdf_typename() { return Sdf; }\
+    };
+
+EachAttributeTypes(DefTraits)
+#undef DefTraits
+
+
+template<class T>
+struct AttrArgs
+{
+    static void load(const T& s, void *a, size_t n) { *(T*)a = s; }
+    static void store(T& s, const void *a, size_t n) { s = *(const T*)a; }
+};
+template<>
+struct AttrArgs<TfToken>
+{
+    static void load(const TfToken& s, void *a, size_t n) { *(const void**)a = s.GetText(); }
+    static void store(TfToken& s, const void *a, size_t n) { s = TfToken((const char*)a); }
+};
+template<>
+struct AttrArgs<std::string>
+{
+    static void load(const std::string& s, void *a, size_t n) { *(const void**)a = s.c_str(); }
+    static void store(std::string& s, const void *a, size_t n) { s = std::string((const char*)a); }
+};
+
+template<class V>
+struct AttrArgs<VtArray<V>>
+{
+    static void load(const VtArray<V>& s, void *a, size_t n) {
+        if (!s.empty()) {
+            memcpy(a, &s[0], sizeof(V) * std::min<size_t>(n, s.size()));
+        }
+    }
+    static void store(VtArray<V>& s, const void *a, size_t n) {
+        s.assign((V*)a, (V*)a + n);
+    }
+};
+template<>
+struct AttrArgs<VtArray<TfToken>>
+{
+    static void load(const VtArray<TfToken>& s, void *a, size_t n) {
+        auto dst = (const char**)a;
+        n = std::min<size_t>(n, s.size());
+        for (size_t i = 0; i < n; ++i) {
+            dst[i] = s[i].GetText();
+        }
+    }
+    static void store(VtArray<TfToken>& s, const void *a, size_t n) {
+        auto src = (const char**)a;
+        s.resize(n);
+        for (size_t i = 0; i < n; ++i) {
+            s[i] = TfToken(src[i]);
+        }
+    }
+};
+template<>
+struct AttrArgs<VtArray<std::string>>
+{
+    static void load(const VtArray<std::string>& s, void *a, size_t n) {
+        auto dst = (const char**)a;
+        n = std::min<size_t>(n, s.size());
+        for (size_t i = 0; i < n; ++i) {
+            dst[i] = s[i].c_str();
+        }
+    }
+    static void store(VtArray<std::string>& s, const void *a, size_t n) {
+        auto src = (const char**)a;
+        s.resize(n);
+        for (size_t i = 0; i < n; ++i) {
+            s[i] = std::string(src[i]);
+        }
+    }
+};
+
 
 
 Attribute::Attribute(Schema *parent, UsdAttribute usdattr)
@@ -26,16 +121,20 @@ Attribute::Attribute(Schema *parent, UsdAttribute usdattr)
 Attribute::~Attribute()
 {
 }
-const char* Attribute::getName() const { return m_usdattr.GetName().GetText(); }
-const char* Attribute::getTypeName() const { return m_usdattr.GetTypeName().GetAsToken().GetText(); }
-bool        Attribute::isArray() const { return (int)getType() >= (int)AttributeType::UnknownArray; }
-bool        Attribute::hasValue() const { return m_usdattr.HasValue(); }
+const char* Attribute::getName() const      { return m_usdattr.GetName().GetText(); }
+const char* Attribute::getTypeName() const  { return m_usdattr.GetTypeName().GetAsToken().GetText(); }
+bool        Attribute::isArray() const      { return (int)getType() >= (int)AttributeType::UnknownArray; }
+bool        Attribute::hasValue() const     { return m_usdattr.HasValue(); }
+size_t      Attribute::getNumSamples() const{ return m_usdattr.GetNumTimeSamples(); }
 
 template<class T>
 class TAttribute : public Attribute
 {
 typedef Attribute super;
 public:
+    typedef AttrTypeTraits<T> Traits;
+    typedef AttrArgs<T> Args;
+
     TAttribute(Schema *parent, UsdAttribute usdattr)
         : super(parent, usdattr)
     {
@@ -47,8 +146,8 @@ public:
         usdiTrace("Attribute::~Attribute()\n");
     }
 
-    AttributeType getType() const override { return GetAttributeEnum<T>::value; }
-    size_t getSize(Time t) const override { return 1; }
+    AttributeType getType() const override { return Traits::attr_type; }
+    size_t getArraySize(Time t) const override { return 1; }
 
     bool get(T& dst, Time t) const { return m_usdattr.Get(&dst, t); }
     bool set(const T& src, Time t) { return m_usdattr.Set(src, t); }
@@ -56,8 +155,11 @@ public:
     bool get(void *dst, Time t) const override { return get(*(T*)dst, t); }
     bool set(const void *src, Time t) override { return set(*(const T*)src, t); }
 
-    bool getBuffered(void *dst, size_t size, Time t) const override { return get(dst, t); }
-    bool setBuffered(const void *src, size_t size, Time t) override { return set(src, t); }
+    bool getBuffered(void *dst, size_t size, Time t) const override { get(m_buf, t); Args::load(m_buf, dst, size); }
+    bool setBuffered(const void *src, size_t size, Time t) override { Args::store(m_buf, src, size); set(m_buf, t); }
+
+private:
+    mutable T m_buf;
 };
 
 template<class V>
@@ -66,6 +168,8 @@ class TAttribute<VtArray<V>> : public Attribute
 typedef Attribute super;
 public:
     typedef VtArray<V> T;
+    typedef AttrTypeTraits<T> Traits;
+    typedef AttrArgs<T> Args;
 
     TAttribute(Schema *parent, UsdAttribute usdattr)
         : super(parent, usdattr)
@@ -78,8 +182,8 @@ public:
         usdiTrace("Attribute::~Attribute()\n");
     }
 
-    AttributeType getType() const override { return GetAttributeEnum<T>::value; }
-    size_t getSize(Time t) const override
+    AttributeType getType() const override { return Traits::attr_type; }
+    size_t getArraySize(Time t) const override
     {
         get(m_buf, t);
         return m_buf.size();
@@ -91,19 +195,8 @@ public:
     bool get(void *dst, Time t) const override { return get(*(T*)dst, t); }
     bool set(const void *src, Time t) override { return set(*(const T*)src, t); }
 
-    bool getBuffered(void *dst, size_t size, Time t) const override
-    {
-        if (get(m_buf, t)) {
-            memcpy(dst, &m_buf[0], sizeof(V)*size);
-            return true;
-        }
-        return false;
-    }
-    bool setBuffered(const void *src, size_t size, Time t) override
-    {
-        m_buf.assign((V*)src, (V*)src + size);
-        return set(&m_buf, t);
-    }
+    bool getBuffered(void *dst, size_t size, Time t) const override { get(m_buf, t); Args::load(m_buf, dst, size); }
+    bool setBuffered(const void *src, size_t size, Time t) override { Args::store(m_buf, src, size); set(m_buf, t); }
 
 private:
     mutable T m_buf;
@@ -116,7 +209,7 @@ Attribute* WrapExistingAttribute(Schema *parent, UsdAttribute usd)
 
     auto tname = usd.GetTypeName();
 #define Def(Type, Enum, Sdf) if(tname == Sdf) { return new TAttribute<Type>(parent, usd); }
-    EachAttributeTypeAndEnum(Def)
+    EachAttributeTypes(Def)
 #undef Def
 
 #define Reinterpret(Sdf, Type) if (tname == SdfValueTypeNames->Sdf) { return new TAttribute<Type>(parent, usd); }
@@ -143,7 +236,7 @@ Attribute* WrapExistingAttribute(Schema *parent, const char *name)
 template<class T>
 static Attribute* CreateNewAttribute(Schema *parent, const char *name)
 {
-    UsdAttribute usd = parent->getUSDPrim().CreateAttribute(TfToken(name), GetSdfTypeName<T>());
+    UsdAttribute usd = parent->getUSDPrim().CreateAttribute(TfToken(name), AttrTypeTraits<T>::sdf_typename());
     if (!usd) { return nullptr; }
     return new TAttribute<T>(parent, usd);
 }
@@ -152,7 +245,7 @@ Attribute* CreateNewAttribute(Schema *parent, const char *name, AttributeType ty
 {
     switch (type) {
 #define Def(Type, Enum, Sdf) case Enum: return CreateNewAttribute<Type>(parent, name);
-        EachAttributeTypeAndEnum(Def)
+        EachAttributeTypes(Def)
 #undef Def
     }
 
@@ -161,7 +254,7 @@ Attribute* CreateNewAttribute(Schema *parent, const char *name, AttributeType ty
 }
 
 #define Def(Type, Enum, Sdf) template class TAttribute<Type>;
-EachAttributeTypeAndEnum(Def)
+EachAttributeTypes(Def)
 #undef Def
 
 

@@ -306,18 +306,25 @@ usdiExport usdi::AttributeType usdiAttrGetType(usdi::Attribute *attr)
     return attr->getType();
 }
 
-usdiExport int usdiAttrGetSize(usdi::Attribute *attr, usdi::Time t)
+usdiExport int usdiAttrGetArraySize(usdi::Attribute *attr, usdi::Time t)
 {
     usdiTraceFunc();
     if (!attr) { return 0; }
-    return (int)attr->getSize(t);
+    return (int)attr->getArraySize(t);
+}
+
+usdiExport int usdiAttrGetNumSamples(usdi::Attribute *attr)
+{
+    usdiTraceFunc();
+    if (!attr) { return 0; }
+    return (int)attr->getNumSamples();
 }
 
 usdiExport bool usdiAttrReadSample(usdi::Attribute *attr, void *dst, usdi::Time t)
 {
     usdiTraceFunc();
     if (!attr) { return false; }
-    return attr->get(dst, t);
+    return attr->getBuffered(dst, 1, t);
 }
 
 usdiExport bool usdiAttrReadArraySample(usdi::Attribute *attr, void *dst, int size, usdi::Time t)
@@ -331,7 +338,7 @@ usdiExport bool usdiAttrWriteSample(usdi::Attribute *attr, const void *src, usdi
 {
     usdiTraceFunc();
     if (!attr) { return false; }
-    return attr->set(src, t);
+    return attr->setBuffered(src, 1, t);
 }
 
 usdiExport bool usdiAttrWriteArraySample(usdi::Attribute *attr, const void *src, int size, usdi::Time t)
