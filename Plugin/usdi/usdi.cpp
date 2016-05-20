@@ -299,6 +299,13 @@ usdiExport const char* usdiAttrGetName(usdi::Attribute *attr)
     return attr->getName();
 }
 
+usdiExport const char* usdiAttrGetTypeName(usdi::Attribute *attr)
+{
+    usdiTraceFunc();
+    if (!attr) { return ""; }
+    return attr->getTypeName();
+}
+
 usdiExport usdi::AttributeType usdiAttrGetType(usdi::Attribute *attr)
 {
     usdiTraceFunc();

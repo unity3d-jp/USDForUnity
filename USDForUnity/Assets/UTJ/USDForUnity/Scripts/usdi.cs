@@ -275,6 +275,7 @@ namespace UTJ
 
         // Attribute interface
         [DllImport ("usdi")] public static extern IntPtr        usdiAttrGetName(Attribute attr);
+        [DllImport ("usdi")] public static extern IntPtr        usdiAttrGetTypeName(Attribute attr);
         [DllImport ("usdi")] public static extern AttributeType usdiAttrGetType(Attribute attr);
         [DllImport ("usdi")] public static extern int           usdiAttrGetArraySize(Attribute attr, double t);
         [DllImport ("usdi")] public static extern int           usdiAttrGetNumSamples(Attribute attr);
