@@ -274,7 +274,7 @@ usdiExport void usdiPointsGetSummary(usdi::Points *points, usdi::PointsSummary *
 {
     usdiTraceFunc();
     if (!points || !dst) return;
-    points->getSummary(*dst);
+    *dst = points->getSummary();
 }
 
 usdiExport bool usdiPointsReadSample(usdi::Points *points, usdi::PointsData *dst, usdi::Time t)

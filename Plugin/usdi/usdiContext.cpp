@@ -102,11 +102,11 @@ bool Context::open(const char *path)
 {
     initialize();
 
-    usdiLog("Context::open(): %s\n", path);
-    usdiLog("  scale: %f\n", m_import_config.scale);
-    usdiLog("  triangulate: %d\n", (int)m_import_config.triangulate);
-    usdiLog("  swap_handedness: %d\n", (int)m_import_config.swap_handedness);
-    usdiLog("  swap_faces: %d\n", (int)m_import_config.swap_faces);
+    usdiTrace("Context::open(): %s\n", path);
+    usdiTrace("  scale: %f\n", m_import_config.scale);
+    usdiTrace("  triangulate: %d\n", (int)m_import_config.triangulate);
+    usdiTrace("  swap_handedness: %d\n", (int)m_import_config.swap_handedness);
+    usdiTrace("  swap_faces: %d\n", (int)m_import_config.swap_faces);
 
     ArGetResolver().ConfigureResolverForAsset(path);
     auto resolverctx = ArGetResolver().CreateDefaultContextForAsset(path);
@@ -141,10 +141,10 @@ bool Context::open(const char *path)
 
 bool Context::write(const char *path)
 {
-    usdiLog("Context::write(): %s\n", path);
-    usdiLog("  scale: %f\n", m_export_config.scale);
-    usdiLog("  swap_handedness: %d\n", (int)m_export_config.swap_handedness);
-    usdiLog("  swap_faces: %d\n", (int)m_export_config.swap_faces);
+    usdiTrace("Context::write(): %s\n", path);
+    usdiTrace("  scale: %f\n", m_export_config.scale);
+    usdiTrace("  swap_handedness: %d\n", (int)m_export_config.swap_handedness);
+    usdiTrace("  swap_faces: %d\n", (int)m_export_config.swap_faces);
 
     bool ret = m_stage->Export(path);
     if (ret) {

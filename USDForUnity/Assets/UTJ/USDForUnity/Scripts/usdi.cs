@@ -58,6 +58,7 @@ namespace UTJ
         public enum AttributeType
         {
             Unknown,
+            Byte,
             Int,
             UInt,
             Float,
@@ -66,6 +67,9 @@ namespace UTJ
             Float4,
             Quaternion,
             Token,
+            String,
+            UnknownArray = 0x100,
+            ByteArray,
             IntArray,
             UIntArray,
             FloatArray,
@@ -74,6 +78,7 @@ namespace UTJ
             Float4Array,
             QuaternionArray,
             TokenArray,
+            StringArray,
         };
 
         public enum InterpolationType
@@ -88,6 +93,10 @@ namespace UTJ
             Homogenous, // vertices are not constant (= animated). topologies are constant.
             Heterogenous, // both vertices and topologies are not constant
         };
+
+        public static double default_time {
+            get { return Double.NaN; }
+        }
 
         public struct ImportConfig
         {
@@ -201,7 +210,6 @@ namespace UTJ
         public struct PointsSummary
         {
             public int peak_num_points;
-            public TopologyVariance topology_variance;
             public Bool has_velocities;
         };
 

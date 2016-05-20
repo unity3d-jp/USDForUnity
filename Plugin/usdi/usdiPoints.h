@@ -17,15 +17,19 @@ public:
     Points(Context *ctx, Schema *parent, const char *name);
     ~Points() override;
 
-    UsdGeomPoints&      getUSDSchema() override;
+    UsdGeomPoints&          getUSDSchema() override;
 
-    void                getSummary(PointsSummary& dst) const;
-    bool                readSample(PointsData& dst, Time t);
-    bool                writeSample(const PointsData& src, Time t);
+    const PointsSummary&    getSummary() const;
+    bool                    readSample(PointsData& dst, Time t);
+    bool                    writeSample(const PointsData& src, Time t);
 
 private:
-    UsdGeomPoints       m_points;
-    TopologyVariance    m_topology_variance = TopologyVariance::Constant;
+    void updateSummary() const;
+
+private:
+    UsdGeomPoints           m_points;
+    mutable bool            m_summary_needs_update = true;
+    mutable PointsSummary   m_summary;
 };
 
 } // namespace usdi

@@ -31,9 +31,20 @@ UsdGeomPoints& Points::getUSDSchema()
     return m_points;
 }
 
-void Points::getSummary(PointsSummary& dst) const
+void Points::updateSummary() const
 {
-    // todo
+    m_summary_needs_update = false;
+    m_summary.has_velocities = m_points.GetVelocitiesAttr().HasValue();
+    //
+}
+
+
+const PointsSummary& Points::getSummary() const
+{
+    if (m_summary_needs_update) {
+        updateSummary();
+    }
+    return m_summary;
 }
 
 bool Points::readSample(PointsData& dst, Time t_)
@@ -94,6 +105,7 @@ bool Points::writeSample(const PointsData& src, Time t_)
 
     bool  ret = m_points.GetPointsAttr().Set(sample.points, t);
     m_points.GetVelocitiesAttr().Set(sample.velocities, t);
+    m_summary_needs_update = true;
     return ret;
 }
 

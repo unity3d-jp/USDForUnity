@@ -28,7 +28,7 @@ Attribute::~Attribute()
 }
 const char* Attribute::getName() const { return m_usdattr.GetName().GetText(); }
 const char* Attribute::getTypeName() const { return m_usdattr.GetTypeName().GetAsToken().GetText(); }
-bool        Attribute::isArray() const { return (int)getType() >= (int)AttributeType::IntArray; }
+bool        Attribute::isArray() const { return (int)getType() >= (int)AttributeType::UnknownArray; }
 bool        Attribute::hasValue() const { return m_usdattr.HasValue(); }
 
 template<class T>

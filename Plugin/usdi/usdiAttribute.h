@@ -34,6 +34,7 @@ Attribute* WrapExistingAttribute(Schema *parent, const char *name);
 Attribute* CreateNewAttribute(Schema *parent, const char *name, AttributeType type);
 
 #define EachAttributeTypeAndEnum(Body)\
+    Body(byte, AttributeType::Byte, SdfValueTypeNames->UChar)\
     Body(int, AttributeType::Int, SdfValueTypeNames->Int)\
     Body(uint, AttributeType::UInt, SdfValueTypeNames->UInt)\
     Body(float, AttributeType::Float, SdfValueTypeNames->Float)\
@@ -42,6 +43,8 @@ Attribute* CreateNewAttribute(Schema *parent, const char *name, AttributeType ty
     Body(GfVec4f, AttributeType::Float4, SdfValueTypeNames->Float4)\
     Body(GfQuatf, AttributeType::Quaternion, SdfValueTypeNames->Quatf)\
     Body(TfToken, AttributeType::Token, SdfValueTypeNames->Token)\
+    Body(std::string, AttributeType::String, SdfValueTypeNames->String)\
+    Body(VtArray<byte>, AttributeType::ByteArray, SdfValueTypeNames->UCharArray)\
     Body(VtArray<int>, AttributeType::IntArray, SdfValueTypeNames->IntArray)\
     Body(VtArray<uint>, AttributeType::UIntArray, SdfValueTypeNames->UIntArray)\
     Body(VtArray<float>, AttributeType::FloatArray, SdfValueTypeNames->FloatArray)\
@@ -49,6 +52,7 @@ Attribute* CreateNewAttribute(Schema *parent, const char *name, AttributeType ty
     Body(VtArray<GfVec3f>, AttributeType::Float3Array, SdfValueTypeNames->Float3Array)\
     Body(VtArray<GfVec4f>, AttributeType::Float4Array, SdfValueTypeNames->Float4Array)\
     Body(VtArray<GfQuatf>, AttributeType::QuaternionArray, SdfValueTypeNames->QuatfArray)\
-    Body(VtArray<TfToken>, AttributeType::TokenArray, SdfValueTypeNames->TokenArray)
+    Body(VtArray<TfToken>, AttributeType::TokenArray, SdfValueTypeNames->TokenArray)\
+    Body(VtArray<std::string>, AttributeType::StringArray, SdfValueTypeNames->StringArray)
 
 } // namespace usdi

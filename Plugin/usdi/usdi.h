@@ -37,6 +37,7 @@ namespace usdi {
 #endif
 
 
+typedef unsigned char byte;
 typedef unsigned int uint;
 struct float2 { float x, y; };
 struct float3 { float x, y, z; };
@@ -54,6 +55,7 @@ enum class InterpolationType
 enum class AttributeType
 {
     Unknown,
+    Byte,
     Int,
     UInt,
     Float,
@@ -62,6 +64,9 @@ enum class AttributeType
     Float4,
     Quaternion,
     Token,
+    String,
+    UnknownArray = 0x100,
+    ByteArray,
     IntArray,
     UIntArray,
     FloatArray,
@@ -70,6 +75,7 @@ enum class AttributeType
     Float4Array,
     QuaternionArray,
     TokenArray,
+    StringArray,
 };
 
 enum class TopologyVariance
@@ -151,7 +157,6 @@ struct MeshData
 struct PointsSummary
 {
     uint                peak_num_points = 0;
-    TopologyVariance    topology_variance = TopologyVariance::Constant;
     bool                has_velocities = false;
 };
 
