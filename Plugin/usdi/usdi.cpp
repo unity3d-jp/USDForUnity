@@ -19,6 +19,11 @@ usdiExport void usdiSetDebugLevel(int l)
     usdi::g_debug_level = l;
 }
 
+usdiExport usdi::Time usdiGetDefaultTime()
+{
+    return std::numeric_limits<double>::quiet_NaN();
+}
+
 
 usdiExport usdi::Context* usdiCreateContext()
 {

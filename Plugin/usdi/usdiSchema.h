@@ -10,9 +10,6 @@ public:
     void init();
     virtual ~Schema();
 
-    const ImportConfig& getImportConfig() const;
-    const ExportConfig& getExportConfig() const;
-
     Context*            getContext() const;
     int                 getID() const;
     Schema*             getParent() const;
@@ -31,9 +28,12 @@ public:
     UsdTyped            getUSDSchema() const;
     virtual UsdTyped&   getUSDSchema() = 0;
 
-public:
+public: // for internal use
     void addChild(Schema *child);
     std::string makePath(const char *name);
+
+    const ImportConfig& getImportConfig() const;
+    const ExportConfig& getExportConfig() const;
 
 protected:
     typedef std::vector<Schema*> Children;

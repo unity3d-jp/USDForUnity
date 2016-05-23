@@ -55,6 +55,7 @@ enum class InterpolationType
 enum class AttributeType
 {
     Unknown,
+    Bool,
     Byte,
     Int,
     UInt,
@@ -65,7 +66,9 @@ enum class AttributeType
     Quaternion,
     Token,
     String,
+    Asset,
     UnknownArray = 0x100,
+    BoolArray,
     ByteArray,
     IntArray,
     UIntArray,
@@ -76,6 +79,7 @@ enum class AttributeType
     QuaternionArray,
     TokenArray,
     StringArray,
+    AssetArray,
 };
 
 enum class TopologyVariance
@@ -175,6 +179,7 @@ struct PointsData
 extern "C" {
 
 usdiExport void             usdiSetDebugLevel(int l);
+usdiExport usdi::Time       usdiGetDefaultTime();
 
 // Context interface
 usdiExport usdi::Context*   usdiCreateContext();

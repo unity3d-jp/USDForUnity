@@ -8,6 +8,7 @@ namespace usdi {
 
 
 #define EachAttributeTypes(Body)\
+    Body(bool, AttributeType::Bool, SdfValueTypeNames->Bool)\
     Body(byte, AttributeType::Byte, SdfValueTypeNames->UChar)\
     Body(int, AttributeType::Int, SdfValueTypeNames->Int)\
     Body(uint, AttributeType::UInt, SdfValueTypeNames->UInt)\
@@ -18,6 +19,8 @@ namespace usdi {
     Body(GfQuatf, AttributeType::Quaternion, SdfValueTypeNames->Quatf)\
     Body(TfToken, AttributeType::Token, SdfValueTypeNames->Token)\
     Body(std::string, AttributeType::String, SdfValueTypeNames->String)\
+    Body(SdfAssetPath, AttributeType::Asset, SdfValueTypeNames->Asset)\
+    Body(VtArray<bool>, AttributeType::BoolArray, SdfValueTypeNames->BoolArray)\
     Body(VtArray<byte>, AttributeType::ByteArray, SdfValueTypeNames->UCharArray)\
     Body(VtArray<int>, AttributeType::IntArray, SdfValueTypeNames->IntArray)\
     Body(VtArray<uint>, AttributeType::UIntArray, SdfValueTypeNames->UIntArray)\
@@ -27,7 +30,8 @@ namespace usdi {
     Body(VtArray<GfVec4f>, AttributeType::Float4Array, SdfValueTypeNames->Float4Array)\
     Body(VtArray<GfQuatf>, AttributeType::QuaternionArray, SdfValueTypeNames->QuatfArray)\
     Body(VtArray<TfToken>, AttributeType::TokenArray, SdfValueTypeNames->TokenArray)\
-    Body(VtArray<std::string>, AttributeType::StringArray, SdfValueTypeNames->StringArray)
+    Body(VtArray<std::string>, AttributeType::StringArray, SdfValueTypeNames->StringArray)\
+    Body(VtArray<SdfAssetPath>, AttributeType::AssetArray, SdfValueTypeNames->AssetArray)
 
 
 template<class T> struct AttrTypeTraits;
@@ -52,14 +56,20 @@ struct AttrArgs
 template<>
 struct AttrArgs<TfToken>
 {
-    static void load(const TfToken& s, void *a, size_t n) { *(const void**)a = s.GetText(); }
+    static void load(const TfToken& s, void *a, size_t n) { *(const char**)a = s.GetText(); }
     static void store(TfToken& s, const void *a, size_t n) { s = TfToken((const char*)a); }
 };
 template<>
 struct AttrArgs<std::string>
 {
-    static void load(const std::string& s, void *a, size_t n) { *(const void**)a = s.c_str(); }
+    static void load(const std::string& s, void *a, size_t n) { *(const char**)a = s.c_str(); }
     static void store(std::string& s, const void *a, size_t n) { s = std::string((const char*)a); }
+};
+template<>
+struct AttrArgs<SdfAssetPath>
+{
+    static void load(const SdfAssetPath& s, void *a, size_t n) { *(const char**)a = s.GetAssetPath().c_str(); }
+    static void store(SdfAssetPath& s, const void *a, size_t n) { s = SdfAssetPath((const char*)a); }
 };
 
 template<class V>
@@ -110,6 +120,24 @@ struct AttrArgs<VtArray<std::string>>
         }
     }
 };
+template<>
+struct AttrArgs<VtArray<SdfAssetPath>>
+{
+    static void load(const VtArray<SdfAssetPath>& s, void *a, size_t n) {
+        auto dst = (const char**)a;
+        n = std::min<size_t>(n, s.size());
+        for (size_t i = 0; i < n; ++i) {
+            dst[i] = s[i].GetAssetPath().c_str();
+        }
+    }
+    static void store(VtArray<SdfAssetPath>& s, const void *a, size_t n) {
+        auto src = (const char**)a;
+        s.resize(n);
+        for (size_t i = 0; i < n; ++i) {
+            s[i] = SdfAssetPath(src[i]);
+        }
+    }
+};
 
 
 
@@ -127,6 +155,8 @@ bool        Attribute::isArray() const      { return (int)getType() >= (int)Attr
 bool        Attribute::hasValue() const     { return m_usdattr.HasValue(); }
 size_t      Attribute::getNumSamples() const{ return m_usdattr.GetNumTimeSamples(); }
 
+
+// scalar attribute impl
 template<class T>
 class TAttribute : public Attribute
 {
@@ -162,6 +192,7 @@ private:
     mutable T m_buf;
 };
 
+// vector attribute impl
 template<class V>
 class TAttribute<VtArray<V>> : public Attribute
 {
@@ -185,7 +216,7 @@ public:
     AttributeType getType() const override { return Traits::attr_type; }
     size_t getArraySize(Time t) const override
     {
-        get(m_buf, t);
+        get(m_buf, t); // this can be acceptable because VtArray<> has copy-on-write mechanism.
         return m_buf.size();
     }
 

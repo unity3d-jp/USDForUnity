@@ -47,9 +47,6 @@ Schema::~Schema()
     m_attributes.clear();
 }
 
-const ImportConfig& Schema::getImportConfig() const { return m_ctx->getImportConfig(); }
-const ExportConfig& Schema::getExportConfig() const { return m_ctx->getExportConfig(); }
-
 Context*    Schema::getContext() const      { return m_ctx; }
 int         Schema::getID() const           { return m_id; }
 Schema*     Schema::getParent() const       { return m_parent; }
@@ -86,6 +83,9 @@ const char* Schema::getName() const         { return getUSDPrim().GetName().GetT
 const char* Schema::getTypeName() const     { return getUSDPrim().GetTypeName().GetText(); }
 UsdPrim     Schema::getUSDPrim() const      { return m_prim; }
 UsdTyped    Schema::getUSDSchema() const    { return const_cast<Schema*>(this)->getUSDSchema(); }
+
+const ImportConfig& Schema::getImportConfig() const { return m_ctx->getImportConfig(); }
+const ExportConfig& Schema::getExportConfig() const { return m_ctx->getExportConfig(); }
 
 void Schema::addChild(Schema *child)
 {

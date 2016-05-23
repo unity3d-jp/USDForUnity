@@ -58,6 +58,7 @@ namespace UTJ
         public enum AttributeType
         {
             Unknown,
+            Bool,
             Byte,
             Int,
             UInt,
@@ -68,7 +69,9 @@ namespace UTJ
             Quaternion,
             Token,
             String,
+            Asset,
             UnknownArray = 0x100,
+            BoolArray,
             ByteArray,
             IntArray,
             UIntArray,
@@ -79,6 +82,7 @@ namespace UTJ
             QuaternionArray,
             TokenArray,
             StringArray,
+            AssetArray,
         };
 
         public enum InterpolationType
