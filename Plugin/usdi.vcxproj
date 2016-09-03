@@ -62,14 +62,14 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir);$(SolutionDir)External\usd-vfx2015\include;$(SolutionDir)External\usd-vfx2015\include\python2.7;$(SolutionDir)External\usd-vfx2015\packages\openexr-2.2.0\include\OpenEXR;$(SolutionDir)External\usd\include;$(IncludePath)</IncludePath>
-    <LibraryPath>External\libs\x86_64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)External\alembic\include;$(SolutionDir)External\boost\include;$(SolutionDir)External\double-conversion\include;$(SolutionDir)External\python27\include;$(SolutionDir)External\OpenEXR\include\OpenEXR;$(SolutionDir)External\tbb\include;$(SolutionDir)External\USD\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)External\alembic\lib;$(SolutionDir)External\boost\lib;$(SolutionDir)External\double-conversion\lib;$(SolutionDir)External\HDF5\lib;$(SolutionDir)External\OpenEXR\lib;$(SolutionDir)External\python27\lib;$(SolutionDir)External\tbb\lib;$(SolutionDir)External\USD\lib;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)_out\$(ProjectName)_$(Platform)_$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)_tmp\$(ProjectName)_$(Platform)_$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Master|x64'">
-    <IncludePath>$(SolutionDir);$(SolutionDir)External\usd-vfx2015\include;$(SolutionDir)External\usd-vfx2015\include\python2.7;$(SolutionDir)External\usd-vfx2015\packages\openexr-2.2.0\include\OpenEXR;$(SolutionDir)External\usd\include;$(IncludePath)</IncludePath>
-    <LibraryPath>External\libs\x86_64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)External\boost\include;$(SolutionDir)External\double-conversion\include;$(SolutionDir)External\python27\include;$(SolutionDir)External\OpenEXR\include\OpenEXR;$(SolutionDir)External\tbb\include;$(SolutionDir)External\USD\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)External\boost\lib;$(SolutionDir)External\double-conversion\lib;$(SolutionDir)External\OpenEXR\lib;$(SolutionDir)External\python27\lib;$(SolutionDir)External\tbb\lib;$(SolutionDir)External\USD\lib;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)_out\$(ProjectName)_$(Platform)_$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)_tmp\$(ProjectName)_$(Platform)_$(Configuration)\</IntDir>
   </PropertyGroup>
@@ -82,7 +82,7 @@ $(SolutionDir)External\PatchLibrary\PatchLibraryProxy64.exe /target:Unity.exe /p
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <PreprocessorDefinitions>usdiImpl;usdiDebug;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>usdiDebug;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Optimization>Disabled</Optimization>
     </ClCompile>
     <Link>
@@ -98,8 +98,16 @@ $(SolutionDir)External\PatchLibrary\PatchLibraryProxy64.exe /target:Unity.exe /p
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/Zo %(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>usdiImpl;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Optimization>Full</Optimization>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>false</OmitFramePointers>
+      <StringPooling>true</StringPooling>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <ControlFlowGuard>false</ControlFlowGuard>
+      <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>

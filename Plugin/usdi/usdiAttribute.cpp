@@ -185,8 +185,8 @@ public:
     bool get(void *dst, Time t) const override { return get(*(T*)dst, t); }
     bool set(const void *src, Time t) override { return set(*(const T*)src, t); }
 
-    bool getBuffered(void *dst, size_t size, Time t) const override { get(m_buf, t); Args::load(m_buf, dst, size); }
-    bool setBuffered(const void *src, size_t size, Time t) override { Args::store(m_buf, src, size); set(m_buf, t); }
+    bool getBuffered(void *dst, size_t size, Time t) const override { get(m_buf, t); Args::load(m_buf, dst, size); return true; }
+    bool setBuffered(const void *src, size_t size, Time t) override { Args::store(m_buf, src, size); set(m_buf, t); return true; }
 
 private:
     mutable T m_buf;
@@ -226,8 +226,8 @@ public:
     bool get(void *dst, Time t) const override { return get(*(T*)dst, t); }
     bool set(const void *src, Time t) override { return set(*(const T*)src, t); }
 
-    bool getBuffered(void *dst, size_t size, Time t) const override { get(m_buf, t); Args::load(m_buf, dst, size); }
-    bool setBuffered(const void *src, size_t size, Time t) override { Args::store(m_buf, src, size); set(m_buf, t); }
+    bool getBuffered(void *dst, size_t size, Time t) const override { get(m_buf, t); Args::load(m_buf, dst, size); return true; }
+    bool setBuffered(const void *src, size_t size, Time t) override { Args::store(m_buf, src, size); set(m_buf, t); return true; }
 
 private:
     mutable T m_buf;
