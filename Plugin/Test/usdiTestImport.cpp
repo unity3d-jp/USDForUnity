@@ -128,7 +128,7 @@ bool TestImport(const char *path)
 
 int main(int argc, char *argv[])
 {
-    const char *path = nullptr;
+    const char *path = "test.usda";
     int int_value;
     for (int i = 1; i < argc; ++i) {
         auto *arg = argv[i];

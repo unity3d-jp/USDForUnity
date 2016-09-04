@@ -30,26 +30,6 @@
     #define BUILD_COMPONENT_SRC_PREFIX "pxr/"
     #define BUILD_OPTLEVEL_OPT
     #define TF_NO_GNU_EXT
-
-    #define ARCH_STATIC
-    #define GF_STATIC
-    #define JS_STATIC
-    #define PLUG_STATIC
-    #define TF_STATIC
-    #define TRACELITE_STATIC
-    #define VT_STATIC
-    #define WORK_STATIC
-    #define AR_STATIC
-    #define KIND_STATIC
-    #define PCP_STATIC
-    #define SDF_STATIC
-    #define USD_STATIC
-    #define USDGEOM_STATIC
-    #define USDHYDRA_STATIC
-    #define USDRI_STATIC
-    #define USDSHADE_STATIC
-    #define USUI_STATIC
-    #define USDUTILS_STATIC
 #endif
 
 #include "pxr/usd/usd/modelAPI.h"

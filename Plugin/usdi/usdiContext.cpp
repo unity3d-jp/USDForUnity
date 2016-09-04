@@ -146,14 +146,7 @@ bool Context::write(const char *path)
     usdiLogTrace("  swap_handedness: %d\n", (int)m_export_config.swap_handedness);
     usdiLogTrace("  swap_faces: %d\n", (int)m_export_config.swap_faces);
 
-    bool ret = m_stage->Export(path);
-    if (ret) {
-        usdiLogInfo("Context::write(): done\n");
-    }
-    else {
-        usdiLogInfo("Context::write(): failed\n");
-    }
-    return ret;
+    return m_stage->GetRootLayer()->Save();
 }
 
 const ImportConfig& Context::getImportConfig() const
