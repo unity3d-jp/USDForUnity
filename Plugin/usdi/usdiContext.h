@@ -12,6 +12,7 @@ public:
     void                initialize();
     void                createStage(const char *identifier);
     bool                open(const char *path);
+    bool                save();
     bool                write(const char *path);
 
     const ImportConfig& getImportConfig() const;

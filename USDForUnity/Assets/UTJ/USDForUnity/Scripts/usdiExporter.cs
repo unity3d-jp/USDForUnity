@@ -723,7 +723,7 @@ namespace UTJ
             if (!m_recording) { return; }
     
             m_capturers.Clear();
-            usdi.usdiWrite(m_ctx, m_outputPath);
+            usdi.usdiSave(m_ctx);
             usdi.usdiDestroyContext(m_ctx); // flush archive
             m_ctx = default(usdi.Context);
             m_recording = false;
@@ -785,7 +785,7 @@ namespace UTJ
         {
             if (m_outputPath == null || m_outputPath == "")
             {
-                m_outputPath = "Assets/StreamingAssets/" + gameObject.name + ".usda";
+                m_outputPath = "Assets/StreamingAssets/" + gameObject.name + ".usdc";
             }
         }
     
@@ -798,6 +798,11 @@ namespace UTJ
             UpdateOutputPath();
         }
     #endif
+
+        void Awake()
+        {
+            usdi.AddDLLSearchPath();
+        }
     
         void OnEnable()
         {

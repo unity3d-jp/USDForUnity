@@ -102,7 +102,7 @@ bool Context::open(const char *path)
 {
     initialize();
 
-    usdiLogTrace("Context::open(): %s\n", path);
+    usdiLogInfo( "Context::open(): %s\n", path);
     usdiLogTrace("  scale: %f\n", m_import_config.scale);
     usdiLogTrace("  triangulate: %d\n", (int)m_import_config.triangulate);
     usdiLogTrace("  swap_handedness: %d\n", (int)m_import_config.swap_handedness);
@@ -139,14 +139,24 @@ bool Context::open(const char *path)
     return true;
 }
 
-bool Context::write(const char *path)
+bool Context::save()
 {
-    usdiLogTrace("Context::write(): %s\n", path);
+    usdiLogInfo( "Context::save():\n");
     usdiLogTrace("  scale: %f\n", m_export_config.scale);
     usdiLogTrace("  swap_handedness: %d\n", (int)m_export_config.swap_handedness);
     usdiLogTrace("  swap_faces: %d\n", (int)m_export_config.swap_faces);
 
     return m_stage->GetRootLayer()->Save();
+}
+
+bool Context::write(const char *path)
+{
+    usdiLogInfo( "Context::write(): %s\n", path);
+    usdiLogTrace("  scale: %f\n", m_export_config.scale);
+    usdiLogTrace("  swap_handedness: %d\n", (int)m_export_config.swap_handedness);
+    usdiLogTrace("  swap_faces: %d\n", (int)m_export_config.swap_faces);
+
+    return m_stage->Export(path);
 }
 
 const ImportConfig& Context::getImportConfig() const
@@ -156,6 +166,7 @@ const ImportConfig& Context::getImportConfig() const
 
 void Context::setImportConfig(const ImportConfig& v)
 {
+    usdiLogTrace("Context::setImportConfig()\n");
     m_import_config = v;
     applyImportConfig();
 }
@@ -167,6 +178,7 @@ const ExportConfig& Context::getExportConfig() const
 
 void Context::setExportConfig(const ExportConfig& v)
 {
+    usdiLogTrace("Context::setExportConfig()\n");
     m_export_config = v;
 }
 
@@ -180,6 +192,8 @@ UsdStageRefPtr Context::getUSDStage() const { return m_stage; }
 
 void Context::addSchema(Schema *schema)
 {
+    if (!schema) { return; }
+    usdiLogTrace("Context::addSchema(): %s\n", schema->getName());
     m_schemas.emplace_back(schema);
 }
 

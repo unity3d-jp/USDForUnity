@@ -43,3 +43,13 @@
 #include "pxr/usd/usdGeom/points.h"
 #include "pxr/base/gf/transform.h"
 #include "pxr/usd/ar/resolver.h"
+
+namespace usdi {
+    class Context;
+    class Attribute;
+    class Schema;
+    class Xform;
+    class Camera;
+    class Mesh;
+    class Points;
+} // namespace usdi

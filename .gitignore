@@ -19,6 +19,12 @@
 *.exe
 *.dll
 *.so
+
+*.usda
+*.usda.meta
+*.usdc
+*.usdc.meta
+
 Makefile
 
 _out/

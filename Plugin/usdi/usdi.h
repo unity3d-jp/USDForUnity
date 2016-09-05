@@ -4,28 +4,20 @@
 #ifdef _WIN32
     #ifndef usdiStaticLink
         #ifdef usdiImpl
-            #define usdiExport __declspec(dllexport)
+            #define usdiAPI __declspec(dllexport)
         #else
-            #define usdiExport __declspec(dllimport)
+            #define usdiAPI __declspec(dllimport)
         #endif
     #else
-        #define usdiExport
+        #define usdiAPI
     #endif
 #else
-    #define usdiExport
+    #define usdiAPI
 #endif
 
 namespace usdi {
 
-#ifdef usdiImpl
-    class Context;
-    class Attribute;
-    class Schema;
-    class Xform;
-    class Camera;
-    class Mesh;
-    class Points;
-#else
+#ifndef usdiImpl
     // force make convertible
     class Context {};
     class Attribute {};
@@ -178,70 +170,71 @@ struct PointsData
 
 extern "C" {
 
-usdiExport void             usdiSetDebugLevel(int l);
-usdiExport usdi::Time       usdiGetDefaultTime();
+usdiAPI void             usdiSetDebugLevel(int l);
+usdiAPI usdi::Time       usdiGetDefaultTime();
 
 // Context interface
-usdiExport usdi::Context*   usdiCreateContext();
-usdiExport void             usdiDestroyContext(usdi::Context *ctx);
-usdiExport bool             usdiOpen(usdi::Context *ctx, const char *path);
-usdiExport void             usdiCreateStage(usdi::Context *ctx, const char *identifier);
-usdiExport bool             usdiWrite(usdi::Context *ctx, const char *path);
-usdiExport void             usdiSetImportConfig(usdi::Context *ctx, const usdi::ImportConfig *conf);
-usdiExport void             usdiGetImportConfig(usdi::Context *ctx, usdi::ImportConfig *conf);
-usdiExport void             usdiSetExportConfig(usdi::Context *ctx, const usdi::ExportConfig *conf);
-usdiExport void             usdiGetExportConfig(usdi::Context *ctx, usdi::ExportConfig *conf);
-usdiExport usdi::Schema*    usdiGetRoot(usdi::Context *ctx);
+usdiAPI usdi::Context*   usdiCreateContext();
+usdiAPI void             usdiDestroyContext(usdi::Context *ctx);
+usdiAPI bool             usdiOpen(usdi::Context *ctx, const char *path);
+usdiAPI void             usdiCreateStage(usdi::Context *ctx, const char *path);
+usdiAPI bool             usdiSave(usdi::Context *ctx);
+usdiAPI bool             usdiWrite(usdi::Context *ctx, const char *path);
+usdiAPI void             usdiSetImportConfig(usdi::Context *ctx, const usdi::ImportConfig *conf);
+usdiAPI void             usdiGetImportConfig(usdi::Context *ctx, usdi::ImportConfig *conf);
+usdiAPI void             usdiSetExportConfig(usdi::Context *ctx, const usdi::ExportConfig *conf);
+usdiAPI void             usdiGetExportConfig(usdi::Context *ctx, usdi::ExportConfig *conf);
+usdiAPI usdi::Schema*    usdiGetRoot(usdi::Context *ctx);
 
 // Schema interface
-usdiExport int              usdiGetID(usdi::Schema *schema);
-usdiExport const char*      usdiGetPath(usdi::Schema *schema);
-usdiExport const char*      usdiGetName(usdi::Schema *schema);
-usdiExport const char*      usdiGetTypeName(usdi::Schema *schema);
-usdiExport usdi::Schema*    usdiGetParent(usdi::Schema *schema);
-usdiExport int              usdiGetNumChildren(usdi::Schema *schema);
-usdiExport usdi::Schema*    usdiGetChild(usdi::Schema *schema, int i);
-usdiExport int              usdiGetNumAttributes(usdi::Schema *schema);
-usdiExport usdi::Attribute* usdiGetAttribute(usdi::Schema *schema, int i);
-usdiExport usdi::Attribute* usdiFindAttribute(usdi::Schema *schema, const char *name);
-usdiExport usdi::Attribute* usdiCreateAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type);
+usdiAPI int              usdiGetID(usdi::Schema *schema);
+usdiAPI const char*      usdiGetPath(usdi::Schema *schema);
+usdiAPI const char*      usdiGetName(usdi::Schema *schema);
+usdiAPI const char*      usdiGetTypeName(usdi::Schema *schema);
+usdiAPI usdi::Schema*    usdiGetParent(usdi::Schema *schema);
+usdiAPI int              usdiGetNumChildren(usdi::Schema *schema);
+usdiAPI usdi::Schema*    usdiGetChild(usdi::Schema *schema, int i);
+usdiAPI int              usdiGetNumAttributes(usdi::Schema *schema);
+usdiAPI usdi::Attribute* usdiGetAttribute(usdi::Schema *schema, int i);
+usdiAPI usdi::Attribute* usdiFindAttribute(usdi::Schema *schema, const char *name);
+usdiAPI usdi::Attribute* usdiCreateAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type);
 
 // Xform interface
-usdiExport usdi::Xform*     usdiAsXform(usdi::Schema *schema); // dynamic cast to Xform
-usdiExport usdi::Xform*     usdiCreateXform(usdi::Context *ctx, usdi::Schema *parent, const char *name);
-usdiExport bool             usdiXformReadSample(usdi::Xform *xf, usdi::XformData *dst, usdi::Time t);
-usdiExport bool             usdiXformWriteSample(usdi::Xform *xf, const usdi::XformData *src, usdi::Time t);
+usdiAPI usdi::Xform*     usdiAsXform(usdi::Schema *schema); // dynamic cast to Xform
+usdiAPI usdi::Xform*     usdiCreateXform(usdi::Context *ctx, usdi::Schema *parent, const char *name);
+usdiAPI bool             usdiXformReadSample(usdi::Xform *xf, usdi::XformData *dst, usdi::Time t);
+usdiAPI bool             usdiXformWriteSample(usdi::Xform *xf, const usdi::XformData *src, usdi::Time t);
 
 // Camera interface
-usdiExport usdi::Camera*    usdiAsCamera(usdi::Schema *schema); // dynamic cast to Camera
-usdiExport usdi::Camera*    usdiCreateCamera(usdi::Context *ctx, usdi::Schema *parent, const char *name);
-usdiExport bool             usdiCameraReadSample(usdi::Camera *cam, usdi::CameraData *dst, usdi::Time t);
-usdiExport bool             usdiCameraWriteSample(usdi::Camera *cam, const usdi::CameraData *src, usdi::Time t);
+usdiAPI usdi::Camera*    usdiAsCamera(usdi::Schema *schema); // dynamic cast to Camera
+usdiAPI usdi::Camera*    usdiCreateCamera(usdi::Context *ctx, usdi::Schema *parent, const char *name);
+usdiAPI bool             usdiCameraReadSample(usdi::Camera *cam, usdi::CameraData *dst, usdi::Time t);
+usdiAPI bool             usdiCameraWriteSample(usdi::Camera *cam, const usdi::CameraData *src, usdi::Time t);
 
 // Mesh interface
-usdiExport usdi::Mesh*      usdiAsMesh(usdi::Schema *schema); // dynamic cast to Mesh
-usdiExport usdi::Mesh*      usdiCreateMesh(usdi::Context *ctx, usdi::Schema *parent, const char *name);
-usdiExport void             usdiMeshGetSummary(usdi::Mesh *mesh, usdi::MeshSummary *dst);
-usdiExport bool             usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t);
-usdiExport bool             usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t);
+usdiAPI usdi::Mesh*      usdiAsMesh(usdi::Schema *schema); // dynamic cast to Mesh
+usdiAPI usdi::Mesh*      usdiCreateMesh(usdi::Context *ctx, usdi::Schema *parent, const char *name);
+usdiAPI void             usdiMeshGetSummary(usdi::Mesh *mesh, usdi::MeshSummary *dst);
+usdiAPI bool             usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t);
+usdiAPI bool             usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t);
 
 // Points interface
-usdiExport usdi::Points*    usdiAsPoints(usdi::Schema *schema); // dynamic cast to Points
-usdiExport usdi::Points*    usdiCreatePoints(usdi::Context *ctx, usdi::Schema *parent, const char *name);
-usdiExport void             usdiPointsGetSummary(usdi::Points *points, usdi::PointsSummary *dst);
-usdiExport bool             usdiPointsReadSample(usdi::Points *points, usdi::PointsData *dst, usdi::Time t);
-usdiExport bool             usdiPointsWriteSample(usdi::Points *points, const usdi::PointsData *src, usdi::Time t);
+usdiAPI usdi::Points*    usdiAsPoints(usdi::Schema *schema); // dynamic cast to Points
+usdiAPI usdi::Points*    usdiCreatePoints(usdi::Context *ctx, usdi::Schema *parent, const char *name);
+usdiAPI void             usdiPointsGetSummary(usdi::Points *points, usdi::PointsSummary *dst);
+usdiAPI bool             usdiPointsReadSample(usdi::Points *points, usdi::PointsData *dst, usdi::Time t);
+usdiAPI bool             usdiPointsWriteSample(usdi::Points *points, const usdi::PointsData *src, usdi::Time t);
 
 // Attribute interface
-usdiExport const char*          usdiAttrGetName(usdi::Attribute *attr);
-usdiExport const char*          usdiAttrGetTypeName(usdi::Attribute *attr);
-usdiExport usdi::AttributeType  usdiAttrGetType(usdi::Attribute *attr);
-usdiExport int                  usdiAttrGetArraySize(usdi::Attribute *attr, usdi::Time t); // always 1 if attr is scalar
-usdiExport int                  usdiAttrGetNumSamples(usdi::Attribute *attr);
-usdiExport bool                 usdiAttrReadSample(usdi::Attribute *attr, void *dst, usdi::Time t);
-usdiExport bool                 usdiAttrReadArraySample(usdi::Attribute *attr, void *dst, int size, usdi::Time t);
-usdiExport bool                 usdiAttrWriteSample(usdi::Attribute *attr, const void *src, usdi::Time t);
-usdiExport bool                 usdiAttrWriteArraySample(usdi::Attribute *attr, const void *src, int size, usdi::Time t);
+usdiAPI const char*          usdiAttrGetName(usdi::Attribute *attr);
+usdiAPI const char*          usdiAttrGetTypeName(usdi::Attribute *attr);
+usdiAPI usdi::AttributeType  usdiAttrGetType(usdi::Attribute *attr);
+usdiAPI int                  usdiAttrGetArraySize(usdi::Attribute *attr, usdi::Time t); // always 1 if attr is scalar
+usdiAPI int                  usdiAttrGetNumSamples(usdi::Attribute *attr);
+usdiAPI bool                 usdiAttrReadSample(usdi::Attribute *attr, void *dst, usdi::Time t);
+usdiAPI bool                 usdiAttrReadArraySample(usdi::Attribute *attr, void *dst, int size, usdi::Time t);
+usdiAPI bool                 usdiAttrWriteSample(usdi::Attribute *attr, const void *src, usdi::Time t);
+usdiAPI bool                 usdiAttrWriteArraySample(usdi::Attribute *attr, const void *src, int size, usdi::Time t);
 
 } // extern "C"
 

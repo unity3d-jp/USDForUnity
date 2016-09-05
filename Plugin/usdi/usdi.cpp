@@ -35,76 +35,83 @@ extern int g_debug_level;
 
 extern "C" {
 
-usdiExport void usdiSetDebugLevel(int l)
+usdiAPI void usdiSetDebugLevel(int l)
 {
     usdi::g_debug_level = l;
 }
 
-usdiExport usdi::Time usdiGetDefaultTime()
+usdiAPI usdi::Time usdiGetDefaultTime()
 {
     return std::numeric_limits<double>::quiet_NaN();
 }
 
 
-usdiExport usdi::Context* usdiCreateContext()
+usdiAPI usdi::Context* usdiCreateContext()
 {
     usdiTraceFunc();
     return new usdi::Context();
 }
 
-usdiExport void usdiDestroyContext(usdi::Context *ctx)
+usdiAPI void usdiDestroyContext(usdi::Context *ctx)
 {
     usdiTraceFunc();
     delete ctx;
 }
 
-usdiExport bool usdiOpen(usdi::Context *ctx, const char *path)
+usdiAPI bool usdiOpen(usdi::Context *ctx, const char *path)
 {
     usdiTraceFunc();
     if (!ctx || !path) return false;
     return ctx->open(path);
 }
 
-usdiExport void usdiCreateStage(usdi::Context *ctx, const char *identifier)
+usdiAPI void usdiCreateStage(usdi::Context *ctx, const char *path)
 {
     usdiTraceFunc();
     if (!ctx) return;
-    ctx->createStage(identifier);
+    ctx->createStage(path);
 }
 
-usdiExport bool usdiWrite(usdi::Context *ctx, const char *path)
+usdiAPI bool usdiSave(usdi::Context *ctx)
+{
+    usdiTraceFunc();
+    if (!ctx) return false;
+    return ctx->save();
+}
+
+usdiAPI bool usdiWrite(usdi::Context *ctx, const char *path)
 {
     usdiTraceFunc();
     if (!ctx || !path) return false;
     return ctx->write(path);
 }
 
-usdiExport void usdiSetImportConfig(usdi::Context *ctx, const usdi::ImportConfig *conf)
+usdiAPI void usdiSetImportConfig(usdi::Context *ctx, const usdi::ImportConfig *conf)
 {
     usdiTraceFunc();
     if (!ctx || !conf) return;
     ctx->setImportConfig(*conf);
 }
-usdiExport void usdiGetImportConfig(usdi::Context *ctx, usdi::ImportConfig *conf)
+usdiAPI void usdiGetImportConfig(usdi::Context *ctx, usdi::ImportConfig *conf)
 {
     usdiTraceFunc();
     if (!ctx || !conf) return;
     *conf = ctx->getImportConfig();
 }
-usdiExport void usdiSetExportConfig(usdi::Context *ctx, const usdi::ExportConfig *conf)
+usdiAPI void usdiSetExportConfig(usdi::Context *ctx, const usdi::ExportConfig *conf)
 {
     usdiTraceFunc();
     if (!ctx || !conf) return;
     ctx->setExportConfig(*conf);
 }
-usdiExport void usdiGetExportConfig(usdi::Context *ctx, usdi::ExportConfig *conf)
+usdiAPI void usdiGetExportConfig(usdi::Context *ctx, usdi::ExportConfig *conf)
 {
     usdiTraceFunc();
     if (!ctx || !conf) return;
     *conf = ctx->getExportConfig();
 }
 
-usdiExport usdi::Schema* usdiGetRoot(usdi::Context *ctx)
+usdiAPI usdi::Schema* usdiGetRoot(usdi::Context *ctx)
 {
     usdiTraceFunc();
     if (!ctx) return nullptr;
@@ -113,77 +120,77 @@ usdiExport usdi::Schema* usdiGetRoot(usdi::Context *ctx)
 }
 
 
-usdiExport int usdiGetID(usdi::Schema *schema)
+usdiAPI int usdiGetID(usdi::Schema *schema)
 {
     usdiTraceFunc();
     if (!schema) { return 0; }
     return schema->getID();
 }
 
-usdiExport const char* usdiGetPath(usdi::Schema *schema)
+usdiAPI const char* usdiGetPath(usdi::Schema *schema)
 {
     usdiTraceFunc();
     if (!schema) { return ""; }
     return schema->getPath();
 }
 
-usdiExport const char* usdiGetName(usdi::Schema *schema)
+usdiAPI const char* usdiGetName(usdi::Schema *schema)
 {
     usdiTraceFunc();
     if (!schema) { return ""; }
     return schema->getName();
 }
 
-usdiExport const char* usdiGetTypeName(usdi::Schema *schema)
+usdiAPI const char* usdiGetTypeName(usdi::Schema *schema)
 {
     usdiTraceFunc();
     if (!schema) { return ""; }
     return schema->getTypeName();
 }
 
-usdiExport usdi::Schema* usdiGetParent(usdi::Schema *schema)
+usdiAPI usdi::Schema* usdiGetParent(usdi::Schema *schema)
 {
     usdiTraceFunc();
     if (!schema) { return nullptr; }
     return schema->getParent();
 }
 
-usdiExport int usdiGetNumChildren(usdi::Schema *schema)
+usdiAPI int usdiGetNumChildren(usdi::Schema *schema)
 {
     usdiTraceFunc();
     if (!schema) return 0;
     return (int)schema->getNumChildren();
 }
 
-usdiExport usdi::Schema* usdiGetChild(usdi::Schema *schema, int i)
+usdiAPI usdi::Schema* usdiGetChild(usdi::Schema *schema, int i)
 {
     usdiTraceFunc();
     if (!schema) return nullptr;
     return schema->getChild(i);
 
 }
-usdiExport int usdiGetNumAttributes(usdi::Schema *schema)
+usdiAPI int usdiGetNumAttributes(usdi::Schema *schema)
 {
     usdiTraceFunc();
     if (!schema) { return 0; }
     return schema->getNumAttributes();
 }
 
-usdiExport usdi::Attribute* usdiGetAttribute(usdi::Schema *schema, int i)
+usdiAPI usdi::Attribute* usdiGetAttribute(usdi::Schema *schema, int i)
 {
     usdiTraceFunc();
     if (!schema) { return nullptr; }
     return schema->getAttribute(i);
 }
 
-usdiExport usdi::Attribute* usdiFindAttribute(usdi::Schema *schema, const char *name)
+usdiAPI usdi::Attribute* usdiFindAttribute(usdi::Schema *schema, const char *name)
 {
     usdiTraceFunc();
     if (!schema) { return nullptr; }
     return schema->findAttribute(name);
 }
 
-usdiExport usdi::Attribute* usdiCreateAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type)
+usdiAPI usdi::Attribute* usdiCreateAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type)
 {
     usdiTraceFunc();
     if (!schema) { return nullptr; }
@@ -191,14 +198,14 @@ usdiExport usdi::Attribute* usdiCreateAttribute(usdi::Schema *schema, const char
 }
 
 
-usdiExport usdi::Xform* usdiAsXform(usdi::Schema *schema)
+usdiAPI usdi::Xform* usdiAsXform(usdi::Schema *schema)
 {
     usdiTraceFunc();
     if (!schema) return nullptr;
     return dynamic_cast<usdi::Xform*>(schema);
 }
 
-usdiExport usdi::Xform* usdiCreateXform(usdi::Context *ctx, usdi::Schema *parent, const char *name)
+usdiAPI usdi::Xform* usdiCreateXform(usdi::Context *ctx, usdi::Schema *parent, const char *name)
 {
     usdiTraceFunc();
     if (!ctx) { usdiLogWarning("usdiCreateCamera(): ctx must be set\n"); return nullptr; }
@@ -206,14 +213,14 @@ usdiExport usdi::Xform* usdiCreateXform(usdi::Context *ctx, usdi::Schema *parent
     return new usdi::Xform(ctx, parent, name);
 }
 
-usdiExport bool usdiXformReadSample(usdi::Xform *xf, usdi::XformData *dst, usdi::Time t)
+usdiAPI bool usdiXformReadSample(usdi::Xform *xf, usdi::XformData *dst, usdi::Time t)
 {
     usdiTraceFunc();
     if (!xf || !dst) return false;
     return xf->readSample(*dst, t);
 }
 
-usdiExport bool usdiXformWriteSample(usdi::Xform *xf, const usdi::XformData *src, usdi::Time t)
+usdiAPI bool usdiXformWriteSample(usdi::Xform *xf, const usdi::XformData *src, usdi::Time t)
 {
     usdiTraceFunc();
     if (!xf || !src) return false;
@@ -221,14 +228,14 @@ usdiExport bool usdiXformWriteSample(usdi::Xform *xf, const usdi::XformData *src
 }
 
 
-usdiExport usdi::Camera* usdiAsCamera(usdi::Schema *schema)
+usdiAPI usdi::Camera* usdiAsCamera(usdi::Schema *schema)
 {
     usdiTraceFunc();
     if (!schema) return nullptr;
     return dynamic_cast<usdi::Camera*>(schema);
 }
 
-usdiExport usdi::Camera* usdiCreateCamera(usdi::Context *ctx, usdi::Schema *parent, const char *name)
+usdiAPI usdi::Camera* usdiCreateCamera(usdi::Context *ctx, usdi::Schema *parent, const char *name)
 {
     usdiTraceFunc();
     if (!ctx) { usdiLogWarning("usdiCreateCamera(): ctx must be set\n"); return nullptr; }
@@ -236,14 +243,14 @@ usdiExport usdi::Camera* usdiCreateCamera(usdi::Context *ctx, usdi::Schema *pare
     return new usdi::Camera(ctx, parent, name);
 }
 
-usdiExport bool usdiCameraReadSample(usdi::Camera *cam, usdi::CameraData *dst, usdi::Time t)
+usdiAPI bool usdiCameraReadSample(usdi::Camera *cam, usdi::CameraData *dst, usdi::Time t)
 {
     usdiTraceFunc();
     if (!cam || !dst) return false;
     return cam->readSample(*dst, t);
 }
 
-usdiExport bool usdiCameraWriteSample(usdi::Camera *cam, const usdi::CameraData *src, usdi::Time t)
+usdiAPI bool usdiCameraWriteSample(usdi::Camera *cam, const usdi::CameraData *src, usdi::Time t)
 {
     usdiTraceFunc();
     if (!cam || !src) return false;
@@ -251,14 +258,14 @@ usdiExport bool usdiCameraWriteSample(usdi::Camera *cam, const usdi::CameraData 
 }
 
 
-usdiExport usdi::Mesh* usdiAsMesh(usdi::Schema *schema)
+usdiAPI usdi::Mesh* usdiAsMesh(usdi::Schema *schema)
 {
     usdiTraceFunc();
     if (!schema) return nullptr;
     return dynamic_cast<usdi::Mesh*>(schema);
 }
 
-usdiExport usdi::Mesh* usdiCreateMesh(usdi::Context *ctx, usdi::Schema *parent, const char *name)
+usdiAPI usdi::Mesh* usdiCreateMesh(usdi::Context *ctx, usdi::Schema *parent, const char *name)
 {
     usdiTraceFunc();
     if (!ctx) { usdiLogWarning("usdiCreateMesh(): ctx must be set\n"); return nullptr; }
@@ -266,21 +273,21 @@ usdiExport usdi::Mesh* usdiCreateMesh(usdi::Context *ctx, usdi::Schema *parent, 
     return new usdi::Mesh(ctx, parent, name);
 }
 
-usdiExport void usdiMeshGetSummary(usdi::Mesh *mesh, usdi::MeshSummary *dst)
+usdiAPI void usdiMeshGetSummary(usdi::Mesh *mesh, usdi::MeshSummary *dst)
 {
     usdiTraceFunc();
     if (!mesh || !dst) return;
     *dst = mesh->getSummary();
 }
 
-usdiExport bool usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t)
+usdiAPI bool usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t)
 {
     usdiTraceFunc();
     if (!mesh || !dst) return false;
     return mesh->readSample(*dst, t);
 }
 
-usdiExport bool usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t)
+usdiAPI bool usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t)
 {
     usdiTraceFunc();
     if (!mesh || !src) return false;
@@ -288,14 +295,14 @@ usdiExport bool usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src,
 }
 
 
-usdiExport usdi::Points* usdiAsPoints(usdi::Schema *schema)
+usdiAPI usdi::Points* usdiAsPoints(usdi::Schema *schema)
 {
     usdiTraceFunc();
     if (!schema) return nullptr;
     return dynamic_cast<usdi::Points*>(schema);
 }
 
-usdiExport usdi::Points* usdiCreatePoints(usdi::Context *ctx, usdi::Schema *parent, const char *name)
+usdiAPI usdi::Points* usdiCreatePoints(usdi::Context *ctx, usdi::Schema *parent, const char *name)
 {
     usdiTraceFunc();
     if (!ctx) { usdiLogWarning("usdiCreatePoints(): ctx must be set\n"); return nullptr; }
@@ -304,21 +311,21 @@ usdiExport usdi::Points* usdiCreatePoints(usdi::Context *ctx, usdi::Schema *pare
     return nullptr;
 }
 
-usdiExport void usdiPointsGetSummary(usdi::Points *points, usdi::PointsSummary *dst)
+usdiAPI void usdiPointsGetSummary(usdi::Points *points, usdi::PointsSummary *dst)
 {
     usdiTraceFunc();
     if (!points || !dst) return;
     *dst = points->getSummary();
 }
 
-usdiExport bool usdiPointsReadSample(usdi::Points *points, usdi::PointsData *dst, usdi::Time t)
+usdiAPI bool usdiPointsReadSample(usdi::Points *points, usdi::PointsData *dst, usdi::Time t)
 {
     usdiTraceFunc();
     if (!points || !dst) return false;
     return points->readSample(*dst, t);
 }
 
-usdiExport bool usdiPointsWriteSample(usdi::Points *points, const usdi::PointsData *src, usdi::Time t)
+usdiAPI bool usdiPointsWriteSample(usdi::Points *points, const usdi::PointsData *src, usdi::Time t)
 {
     usdiTraceFunc();
     if (!points || !src) return false;
@@ -326,63 +333,63 @@ usdiExport bool usdiPointsWriteSample(usdi::Points *points, const usdi::PointsDa
 }
 
 
-usdiExport const char* usdiAttrGetName(usdi::Attribute *attr)
+usdiAPI const char* usdiAttrGetName(usdi::Attribute *attr)
 {
     usdiTraceFunc();
     if (!attr) { return ""; }
     return attr->getName();
 }
 
-usdiExport const char* usdiAttrGetTypeName(usdi::Attribute *attr)
+usdiAPI const char* usdiAttrGetTypeName(usdi::Attribute *attr)
 {
     usdiTraceFunc();
     if (!attr) { return ""; }
     return attr->getTypeName();
 }
 
-usdiExport usdi::AttributeType usdiAttrGetType(usdi::Attribute *attr)
+usdiAPI usdi::AttributeType usdiAttrGetType(usdi::Attribute *attr)
 {
     usdiTraceFunc();
     if (!attr) { return usdi::AttributeType::Unknown; }
     return attr->getType();
 }
 
-usdiExport int usdiAttrGetArraySize(usdi::Attribute *attr, usdi::Time t)
+usdiAPI int usdiAttrGetArraySize(usdi::Attribute *attr, usdi::Time t)
 {
     usdiTraceFunc();
     if (!attr) { return 0; }
     return (int)attr->getArraySize(t);
 }
 
-usdiExport int usdiAttrGetNumSamples(usdi::Attribute *attr)
+usdiAPI int usdiAttrGetNumSamples(usdi::Attribute *attr)
 {
     usdiTraceFunc();
     if (!attr) { return 0; }
     return (int)attr->getNumSamples();
 }
 
-usdiExport bool usdiAttrReadSample(usdi::Attribute *attr, void *dst, usdi::Time t)
+usdiAPI bool usdiAttrReadSample(usdi::Attribute *attr, void *dst, usdi::Time t)
 {
     usdiTraceFunc();
     if (!attr) { return false; }
     return attr->getBuffered(dst, 1, t);
 }
 
-usdiExport bool usdiAttrReadArraySample(usdi::Attribute *attr, void *dst, int size, usdi::Time t)
+usdiAPI bool usdiAttrReadArraySample(usdi::Attribute *attr, void *dst, int size, usdi::Time t)
 {
     usdiTraceFunc();
     if (!attr) { return false; }
     return attr->getBuffered(dst, size, t);
 }
 
-usdiExport bool usdiAttrWriteSample(usdi::Attribute *attr, const void *src, usdi::Time t)
+usdiAPI bool usdiAttrWriteSample(usdi::Attribute *attr, const void *src, usdi::Time t)
 {
     usdiTraceFunc();
     if (!attr) { return false; }
     return attr->setBuffered(src, 1, t);
 }
 
-usdiExport bool usdiAttrWriteArraySample(usdi::Attribute *attr, const void *src, int size, usdi::Time t)
+usdiAPI bool usdiAttrWriteArraySample(usdi::Attribute *attr, const void *src, int size, usdi::Time t)
 {
     usdiTraceFunc();
     if (!attr) { return false; }

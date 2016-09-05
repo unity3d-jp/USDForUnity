@@ -163,6 +163,10 @@ namespace UTJ
             }
         }
 
+        void Awake()
+        {
+            usdi.AddDLLSearchPath();
+        }
 
         void Start()
         {
