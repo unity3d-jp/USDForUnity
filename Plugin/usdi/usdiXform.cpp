@@ -4,9 +4,7 @@
 #include "usdiXform.h"
 #include "usdiContext.h"
 
-// USD's quaternion serializer has bug for now (2016/05/19)
-// use euler angles for workaround.
-#define usdiSerializeRotationAsEuler
+//#define usdiSerializeRotationAsEuler
 
 namespace usdi {
 
