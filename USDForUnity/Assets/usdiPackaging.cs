@@ -12,7 +12,7 @@ public class usdiPackaging
         {
 "Assets/UTJ/USDForUnity",
 "Assets/UTJ/Misc",
-"Assets/UTJ/Plugins/x86_64/usdi.so",
+"Assets/UTJ/Plugins/x86_64/",
 "Assets/StreamingAssets/UTJ/USDForUnity",
         };
         AssetDatabase.ExportPackage(files, "USDForUnity.unitypackage", ExportPackageOptions.Recurse);

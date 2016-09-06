@@ -23,7 +23,8 @@
     #define or_eq   |=
     #define xor     ^
     #define xor_eq  ^=
-
+#endif
+#ifdef _WIN32
     #define BOOST_PYTHON_STATIC_LIB
     #define NOMINMAX
 
