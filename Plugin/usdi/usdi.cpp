@@ -65,11 +65,11 @@ usdiAPI bool usdiOpen(usdi::Context *ctx, const char *path)
     return ctx->open(path);
 }
 
-usdiAPI void usdiCreateStage(usdi::Context *ctx, const char *path)
+usdiAPI bool usdiCreateStage(usdi::Context *ctx, const char *path)
 {
     usdiTraceFunc();
-    if (!ctx) return;
-    ctx->createStage(path);
+    if (!ctx) return false;
+    return ctx->createStage(path);
 }
 
 usdiAPI bool usdiSave(usdi::Context *ctx)

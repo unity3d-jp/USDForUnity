@@ -177,7 +177,7 @@ usdiAPI usdi::Time       usdiGetDefaultTime();
 usdiAPI usdi::Context*   usdiCreateContext();
 usdiAPI void             usdiDestroyContext(usdi::Context *ctx);
 usdiAPI bool             usdiOpen(usdi::Context *ctx, const char *path);
-usdiAPI void             usdiCreateStage(usdi::Context *ctx, const char *path);
+usdiAPI bool             usdiCreateStage(usdi::Context *ctx, const char *path);
 usdiAPI bool             usdiSave(usdi::Context *ctx);
 usdiAPI bool             usdiWrite(usdi::Context *ctx, const char *path);
 usdiAPI void             usdiSetImportConfig(usdi::Context *ctx, const usdi::ImportConfig *conf);

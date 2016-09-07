@@ -67,17 +67,11 @@ namespace UTJ
         {
             Transform m_target;
             bool m_inherits = true;
-            bool m_invertForward = false;
             bool m_scale = true;
 
             public bool inherits {
                 get { return m_inherits; }
                 set { m_inherits = value; }
-            }
-            public bool invertForward
-            {
-                get { return m_invertForward; }
-                set { m_invertForward = value; }
             }
             public bool scale
             {
@@ -115,7 +109,6 @@ namespace UTJ
                     data.scale = scale ? m_target.lossyScale : Vector3.one;
                 }
 
-                if (m_invertForward) { m_target.forward = m_target.forward * -1.0f; }
                 usdi.usdiXformWriteSample(usd, ref data, t);
             }
         }
@@ -448,7 +441,7 @@ namespace UTJ
         {
             if (m_detailedLog) { Debug.Log("usdiExporter: new CustomCapturerHandler(\"" + target.name + "\""); }
     
-            target.CreateAbcObject(m_ctx, parent.usd);
+            target.CreateUSDObject(m_ctx, parent.usd);
             var cap = new CustomCapturerHandler(this, parent, target);
             m_capturers.Add(cap);
             return cap;
@@ -533,7 +526,6 @@ namespace UTJ
             else if (node.componentType == typeof(Camera))
             {
                 node.capturer = CreateComponentCapturer(parent_capturer, node.trans.GetComponent<Camera>());
-                (node.capturer as TransformCapturer).invertForward = true;
             }
             else if (node.componentType == typeof(MeshRenderer))
             {
@@ -634,8 +626,7 @@ namespace UTJ
                 foreach (var target in GetTargets<Camera>())
                 {
                     if (ShouldBeIgnored(target)) { continue; }
-                    var cc = CreateComponentCapturer(m_root, target);
-                    (cc as TransformCapturer).invertForward = true;
+                    CreateComponentCapturer(m_root, target);
                 }
             }
     
@@ -699,7 +690,13 @@ namespace UTJ
     
             // create context and open archive
             m_ctx = usdi.usdiCreateContext();
-            usdi.usdiCreateStage(m_ctx, m_outputPath);
+            if(!usdi.usdiCreateStage(m_ctx, m_outputPath))
+            {
+                Debug.Log("usdiExporter: failed to create " + m_outputPath);
+                usdi.usdiDestroyContext(m_ctx);
+                m_ctx = default(usdi.Context);
+                return false;
+            }
             ApplyExportConfig();
 
             // create capturers

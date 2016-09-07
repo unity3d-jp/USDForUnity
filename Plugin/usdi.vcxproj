@@ -77,8 +77,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <PostBuildEvent>
       <Command>xcopy /Yq $(TargetPath) $(SolutionDir)bin\x86_64\
-xcopy /Yq $(TargetPath) $(SolutionDir)..\USDForUnity\Assets\UTJ\Plugins\x86_64\
-$(SolutionDir)External\PatchLibrary\PatchLibraryProxy64.exe /target:Unity.exe /patch:$(TargetPath)</Command>
+xcopy /Yq $(TargetPath) $(SolutionDir)..\USDForUnity\Assets\UTJ\Plugins\x86_64\</Command>
     </PostBuildEvent>
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>

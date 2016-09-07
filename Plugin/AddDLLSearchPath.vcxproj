@@ -79,7 +79,7 @@
 xcopy /Yq $(TargetPath) $(SolutionDir)..\USDForUnity\Assets\UTJ\Plugins\x86_64\</Command>
     </PostBuildEvent>
     <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <PreprocessorDefinitions>tImpl;%(PreprocessorDefinitions)</PreprocessorDefinitions>

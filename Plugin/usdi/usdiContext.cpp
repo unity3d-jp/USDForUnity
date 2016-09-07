@@ -13,6 +13,7 @@ namespace usdi {
 
 Context::Context()
 {
+    initialize();
     usdiLogTrace("Context::Context()\n");
 }
 
@@ -33,6 +34,8 @@ void Context::initialize()
         m_stage->Close();
     }
     m_stage = UsdStageRefPtr();
+
+    // delete USD objects in reverse order
     for (auto i = m_schemas.rbegin(); i != m_schemas.rend(); ++i) { i->reset(); }
     m_schemas.clear();
 
@@ -41,12 +44,23 @@ void Context::initialize()
     m_end_time = 0.0;
 }
 
-void Context::createStage(const char *identifier)
+bool Context::createStage(const char *identifier)
 {
     initialize();
 
+    // UsdStage::CreateNew() will fail if file already exists. try to delete existing one.
+    {
+        FILE *f = fopen(identifier, "rb");
+        if (f) {
+            fclose(f);
+            usdiLogTrace("Context::createStage(): delete existing file %s\n", identifier);
+            std::remove(identifier);
+        }
+    }
+
     m_stage = UsdStage::CreateNew(identifier);
-    usdiLogInfo("Context::create(): identifier %s\n", identifier);
+    usdiLogInfo("Context::createStage(): identifier %s\n", identifier);
+    return m_stage;
 }
 
 

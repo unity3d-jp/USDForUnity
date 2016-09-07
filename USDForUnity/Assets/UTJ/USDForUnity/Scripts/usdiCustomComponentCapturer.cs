@@ -11,7 +11,7 @@ namespace UTJ
 {
     public abstract class usdiCustomComponentCapturer : MonoBehaviour
     {
-        public abstract void CreateAbcObject(usdi.Context ctx, usdi.Schema parent);
+        public abstract void CreateUSDObject(usdi.Context ctx, usdi.Schema parent);
         public abstract void Capture(double t);
     }
 }

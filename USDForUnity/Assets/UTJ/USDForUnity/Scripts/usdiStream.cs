@@ -125,7 +125,7 @@ namespace UTJ
             usdiApplyImportConfig();
             if (!usdi.usdiOpen(m_ctx, Application.streamingAssetsPath + "/" + m_path))
             {
-                Debug.Log("failed to load USD: " + m_path);
+                Debug.Log("usdiStream: failed to load " + m_path);
                 usdi.usdiDestroyContext(m_ctx);
                 return false;
             }
@@ -137,6 +137,7 @@ namespace UTJ
                         m_elements.Add(e);
                     });
                 usdiUpdate(0.0);
+                Debug.Log("usdiStream: loaded " + m_path);
                 return true;
             }
         }
@@ -151,6 +152,7 @@ namespace UTJ
                 }
                 usdi.usdiDestroyContext(m_ctx);
                 m_ctx = default(usdi.Context);
+                Debug.Log("usdiStream: unloaded " + m_path);
             }
         }
 
