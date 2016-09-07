@@ -53,13 +53,19 @@ bool Context::createStage(const char *identifier)
         FILE *f = fopen(identifier, "rb");
         if (f) {
             fclose(f);
-            usdiLogTrace("Context::createStage(): delete existing file %s\n", identifier);
-            std::remove(identifier);
+            if (std::remove(identifier)) {
+                usdiLogTrace("Context::createStage(): deleted existing file %s\n", identifier);
+            }
         }
     }
 
     m_stage = UsdStage::CreateNew(identifier);
-    usdiLogInfo("Context::createStage(): identifier %s\n", identifier);
+    if (m_stage) {
+        usdiLogInfo("Context::createStage(): succeeded to create %s\n", identifier);
+    }
+    else {
+        usdiLogInfo("Context::createStage(): failed to create %s\n", identifier);
+    }
     return m_stage;
 }
 

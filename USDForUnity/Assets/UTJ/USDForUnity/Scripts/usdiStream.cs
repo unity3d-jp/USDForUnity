@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace UTJ
 {
@@ -13,6 +16,8 @@ namespace UTJ
         public bool swapFaces = true;
     }
 
+
+    [ExecuteInEditMode]
     public class usdiStream : MonoBehaviour
     {
         public string m_path;
@@ -125,8 +130,9 @@ namespace UTJ
             usdiApplyImportConfig();
             if (!usdi.usdiOpen(m_ctx, Application.streamingAssetsPath + "/" + m_path))
             {
-                Debug.Log("usdiStream: failed to load " + m_path);
                 usdi.usdiDestroyContext(m_ctx);
+                m_ctx = default(usdi.Context);
+                Debug.Log("usdiStream: failed to load " + m_path);
                 return false;
             }
             else
@@ -174,6 +180,16 @@ namespace UTJ
         {
             usdiLoad(m_path);
         }
+
+#if UNITY_EDITOR
+        void OnDisable()
+        {
+            if (!EditorApplication.isPlaying && EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                usdiUnload();
+            }
+        }
+#endif
 
         void OnDestroy()
         {
