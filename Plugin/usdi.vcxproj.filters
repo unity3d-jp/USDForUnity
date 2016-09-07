@@ -81,4 +81,9 @@
   <ItemGroup>
     <Text Include="CMakeLists.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="usdi\usdiInternal.i">
+      <Filter>usdi</Filter>
+    </None>
+  </ItemGroup>
 </Project>

@@ -2,12 +2,12 @@
 
 #define usdiImpl
 
-#define usdiLogError(...) usdi::LogImpl(1, __VA_ARGS__)
-#define usdiLogWarning(...) usdi::LogImpl(2, __VA_ARGS__)
-#define usdiLogInfo(...) usdi::LogImpl(3, __VA_ARGS__)
+#define usdiLogError(...)       usdi::LogImpl(1, "usdi error: " __VA_ARGS__)
+#define usdiLogWarning(...)     usdi::LogImpl(2, "usdi warning: " __VA_ARGS__)
+#define usdiLogInfo(...)        usdi::LogImpl(3, "usdi info: " __VA_ARGS__)
 #ifdef usdiDebug
-    #define usdiLogTrace(...) usdi::LogImpl(4, __VA_ARGS__)
-    #define usdiTraceFunc(...) usdi::TraceFuncImpl _trace_(__FUNCTION__)
+    #define usdiLogTrace(...)   usdi::LogImpl(4, "usdi trace: " __VA_ARGS__)
+    #define usdiTraceFunc(...)  usdi::TraceFuncImpl _trace_(__FUNCTION__)
 #else
     #define usdiLogTrace(...)
     #define usdiTraceFunc(...)
@@ -39,3 +39,5 @@ float4& operator*=(float4& l, float r);
 quaternion& operator*=(quaternion& l, float r);
 
 } // namespace usdi
+
+#include "usdiInternal.i"
