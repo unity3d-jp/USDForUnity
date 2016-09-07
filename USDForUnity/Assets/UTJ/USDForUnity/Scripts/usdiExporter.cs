@@ -354,7 +354,9 @@ namespace UTJ
         public bool m_customCapturer = true;
     
         [Header("Capture Setting")]
-    
+
+        [Tooltip("Flush to file at every N frames. 0=never")]
+        public int m_flushEveryNFrames = 0;
         [Tooltip("Start capture on start.")]
         public bool m_captureOnStart = false;
         [Tooltip("Automatically end capture when reached Max Capture Frame. 0=Infinite")]
@@ -745,12 +747,19 @@ namespace UTJ
     
             float begin_time = Time.realtimeSinceStartup;
     
+            // capture components
             foreach (var recorder in m_capturers)
             {
                 recorder.Capture(m_time);
             }
             m_time += Time.deltaTime;
             ++m_frameCount;
+
+            // flush to file when needed
+            if(m_flushEveryNFrames > 0 && m_frameCount % m_flushEveryNFrames == 0)
+            {
+                usdi.usdiSave(m_ctx);
+            }
     
             m_elapsed = Time.realtimeSinceStartup - begin_time;
             if (m_detailedLog)
