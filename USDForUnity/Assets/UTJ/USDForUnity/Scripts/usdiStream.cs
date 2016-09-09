@@ -25,6 +25,8 @@ namespace UTJ
         public double m_time = 0.0;
         public double m_timeScale = 1.0;
 
+        public bool m_detailedLog = false;
+
         usdi.Context m_ctx;
         List<usdiElement> m_elements = new List<usdiElement>();
 
@@ -32,7 +34,15 @@ namespace UTJ
         bool m_isCompiling = false;
 #endif
 
-    public static usdiElement usdiCreateNode(Transform parent, usdi.Schema schema)
+        void usdiLog(string message)
+        {
+            if(m_detailedLog)
+            {
+                Debug.Log(message);
+            }
+        }
+
+        public static usdiElement usdiCreateNode(Transform parent, usdi.Schema schema)
         {
             {
                 var name = usdi.S(usdi.usdiGetName(schema));
@@ -135,7 +145,7 @@ namespace UTJ
             {
                 usdi.usdiDestroyContext(m_ctx);
                 m_ctx = default(usdi.Context);
-                Debug.Log("usdiStream: failed to load " + m_path);
+                usdiLog("usdiStream: failed to load " + m_path);
                 return false;
             }
             else
@@ -146,7 +156,7 @@ namespace UTJ
                         m_elements.Add(e);
                     });
                 usdiUpdate(0.0);
-                Debug.Log("usdiStream: loaded " + m_path);
+                usdiLog("usdiStream: loaded " + m_path);
                 return true;
             }
         }
@@ -161,7 +171,7 @@ namespace UTJ
                 }
                 usdi.usdiDestroyContext(m_ctx);
                 m_ctx = default(usdi.Context);
-                Debug.Log("usdiStream: unloaded " + m_path);
+                usdiLog("usdiStream: unloaded " + m_path);
             }
         }
 

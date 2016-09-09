@@ -62,6 +62,8 @@ namespace UTJ
             Transform m_target;
             bool m_inherits = true;
             bool m_scale = true;
+            bool m_captureEveryFrame = true;
+            int m_count = 0;
 
             public bool inherits {
                 get { return m_inherits; }
@@ -81,29 +83,42 @@ namespace UTJ
                 {
                     m_usd = usdi.usdiCreateXform(ctx, parent.usd, CreateName(target));
                 }
+
+                if(m_target.gameObject.isStatic)
+                {
+                    m_captureEveryFrame = false;
+                }
+
+                var config = target.GetComponent<usdiTransformExportConfig>();
+                if(config)
+                {
+                    m_captureEveryFrame = config.m_captureEveryFrame;
+                }
             }
 
             public override void Capture(double t)
             {
                 if (m_target == null) { return; }
 
-                var usd = usdi.usdiAsXform(m_usd);
-                usdi.XformData data;
-
-                if (inherits)
+                if(m_captureEveryFrame || m_count == 0)
                 {
-                    data.position = m_target.localPosition;
-                    data.rotation = m_target.localRotation;
-                    data.scale = scale ? m_target.localScale : Vector3.one;
-                }
-                else
-                {
-                    data.position = m_target.position;
-                    data.rotation = m_target.rotation;
-                    data.scale = scale ? m_target.lossyScale : Vector3.one;
-                }
+                    usdi.XformData data;
+                    if (inherits)
+                    {
+                        data.position = m_target.localPosition;
+                        data.rotation = m_target.localRotation;
+                        data.scale = scale ? m_target.localScale : Vector3.one;
+                    }
+                    else
+                    {
+                        data.position = m_target.position;
+                        data.rotation = m_target.rotation;
+                        data.scale = scale ? m_target.lossyScale : Vector3.one;
+                    }
+                    usdi.usdiXformWriteSample(usdi.usdiAsXform(m_usd), ref data, t);
 
-                usdi.usdiXformWriteSample(usd, ref data, t);
+                    ++m_count;
+                }
             }
         }
     
@@ -230,8 +245,8 @@ namespace UTJ
                     CaptureMesh(
                         usdi.usdiAsMesh(m_usd), m_target.GetComponent<MeshFilter>().sharedMesh, null, m_mesh_buffer, t,
                         m_captureNormals, captureUV, captureIndices);
+                    ++m_count;
                 }
-                ++m_count;
             }
         }
     
@@ -283,8 +298,8 @@ namespace UTJ
                     bool captureIndices = m_count == 0 || m_captureEveryFrameIndices;
                     CaptureMesh(usdi.usdiAsMesh(m_usd), m_mesh, m_target.GetComponent<Cloth>(), m_mesh_buffer, t,
                         m_captureNormals, captureUV, captureIndices);
+                    ++m_count;
                 }
-                ++m_count;
             }
         }
 

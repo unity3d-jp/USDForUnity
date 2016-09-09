@@ -9,7 +9,7 @@ using UnityEditor;
 namespace UTJ
 {
 
-    [AddComponentMenu("UTJ/USD/Mesh Export Config")]
+    [AddComponentMenu("UTJ/USD/Particle Export Config")]
     public class usdiParticleExportConfig : MonoBehaviour
     {
         public bool m_captureRotations = true;
