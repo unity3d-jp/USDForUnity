@@ -99,35 +99,44 @@ namespace UTJ
             m_mesh = default(usdi.Mesh);
         }
 
-        public override void usdiUpdate(double time)
+
+        void usdiAllocateMeshData(double t)
         {
-            base.usdiUpdate(time);
+            usdi.MeshData md = default(usdi.MeshData);
+            usdi.usdiMeshReadSample(m_mesh, ref md, t);
 
-            if(!m_mesh) { return; }
-
-            if(m_meshData.points == IntPtr.Zero && usdi.usdiMeshReadSample(m_mesh, ref m_meshData, time))
+            if( m_meshData.num_points == md.num_points &&
+                m_meshData.num_indices_triangulated == md.num_indices_triangulated)
             {
-                {
-                    m_positions = new Vector3[m_meshData.num_points];
-                    m_meshData.points = Marshal.UnsafeAddrOfPinnedArrayElement(m_positions, 0);
-                }
-                if (m_meshSummary.has_normals)
-                {
-                    m_normals = new Vector3[m_meshData.num_points];
-                    m_meshData.normals = Marshal.UnsafeAddrOfPinnedArrayElement(m_normals, 0);
-                }
-                if(m_meshSummary.has_uvs)
-                {
-                    m_uvs = new Vector2[m_meshData.num_points];
-                    m_meshData.uvs = Marshal.UnsafeAddrOfPinnedArrayElement(m_uvs, 0);
-                }
-                {
-                    m_indices = new int[m_meshData.num_indices_triangulated];
-                    m_meshData.indices_triangulated = Marshal.UnsafeAddrOfPinnedArrayElement(m_indices, 0);
-                }
+                // skip allocation
+                return;
             }
 
-            if(usdi.usdiMeshReadSample(m_mesh, ref m_meshData, time))
+            m_meshData = md;
+            {
+                m_positions = new Vector3[m_meshData.num_points];
+                m_meshData.points = usdi.GetArrayPtr(m_positions);
+            }
+            if (m_meshSummary.has_normals)
+            {
+                m_normals = new Vector3[m_meshData.num_points];
+                m_meshData.normals = usdi.GetArrayPtr(m_normals);
+            }
+            if (m_meshSummary.has_uvs)
+            {
+                m_uvs = new Vector2[m_meshData.num_points];
+                m_meshData.uvs = usdi.GetArrayPtr(m_uvs);
+            }
+            {
+                m_indices = new int[m_meshData.num_indices_triangulated];
+                m_meshData.indices_triangulated = usdi.GetArrayPtr(m_indices);
+            }
+
+        }
+
+        void usdiUpdateMeshData(double t, bool topology, bool close)
+        {
+            if (usdi.usdiMeshReadSample(m_mesh, ref m_meshData, t))
             {
                 m_umesh.vertices = m_positions;
                 if (m_meshSummary.has_normals)
@@ -138,12 +147,52 @@ namespace UTJ
                 {
                     m_umesh.uv = m_uvs;
                 }
-                m_umesh.SetIndices(m_indices, MeshTopology.Triangles, 0);
 
-                if(!m_meshSummary.has_normals)
+                if(topology)
                 {
-                    m_umesh.RecalculateNormals();
+                    m_umesh.SetIndices(m_indices, MeshTopology.Triangles, 0);
+
+                    if (!m_meshSummary.has_normals)
+                    {
+                        m_umesh.RecalculateNormals();
+                    }
                 }
+
+                m_umesh.UploadMeshData(false);
+            }
+        }
+
+        public override void usdiUpdate(double time)
+        {
+            base.usdiUpdate(time);
+
+            if(!m_mesh) { return; }
+
+            switch (m_meshSummary.topology_variance) {
+                case usdi.TopologyVariance.Constant:
+                    if(m_meshData.points == IntPtr.Zero)
+                    {
+                        usdiAllocateMeshData(time);
+                        usdiUpdateMeshData(time, true, true);
+                    }
+                    break;
+
+                case usdi.TopologyVariance.Homogenous:
+                    if (m_meshData.points == IntPtr.Zero)
+                    {
+                        usdiAllocateMeshData(time);
+                        usdiUpdateMeshData(time, true, false);
+                    }
+                    else
+                    {
+                        usdiUpdateMeshData(time, false, false);
+                    }
+                    break;
+
+                case usdi.TopologyVariance.Heterogenous:
+                    usdiAllocateMeshData(time);
+                    usdiUpdateMeshData(time, true, false);
+                    break;
             }
         }
     }

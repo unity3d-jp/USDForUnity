@@ -28,8 +28,11 @@ namespace UTJ
         usdi.Context m_ctx;
         List<usdiElement> m_elements = new List<usdiElement>();
 
+#if UNITY_EDITOR
+        bool m_isCompiling = false;
+#endif
 
-        public static usdiElement usdiCreateNode(Transform parent, usdi.Schema schema)
+    public static usdiElement usdiCreateNode(Transform parent, usdi.Schema schema)
         {
             {
                 var name = usdi.S(usdi.usdiGetName(schema));
@@ -203,6 +206,18 @@ namespace UTJ
 
         void Update()
         {
+#if UNITY_EDITOR
+            if (EditorApplication.isCompiling && !m_isCompiling)
+            {
+                m_isCompiling = true;
+                usdiUnload();
+            }
+            else if(!EditorApplication.isCompiling && m_isCompiling)
+            {
+                m_isCompiling = false;
+                usdiLoad(m_path);
+            }
+#endif
             usdiUpdate(m_time);
             m_time += Time.deltaTime * m_timeScale;
         }

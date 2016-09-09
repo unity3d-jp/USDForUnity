@@ -67,10 +67,15 @@ bool Points::readSample(PointsData& dst, Time t_)
         }
     }
     if (dst.velocities) {
-        memcpy(dst.velocities, &sample.velocities[0], sizeof(float3) * dst.num_points);
-        if (conf.swap_handedness) {
-            for (uint i = 0; i < dst.num_points; ++i) {
-                dst.velocities[i].x *= -1.0f;
+        if (sample.velocities.size() != dst.num_points) {
+            usdiLogWarning("Points::readSample(): num points != size of velocity!!\n");
+        }
+        else {
+            memcpy(dst.velocities, &sample.velocities[0], sizeof(float3) * dst.num_points);
+            if (conf.swap_handedness) {
+                for (uint i = 0; i < dst.num_points; ++i) {
+                    dst.velocities[i].x *= -1.0f;
+                }
             }
         }
     }
@@ -95,7 +100,7 @@ bool Points::writeSample(const PointsData& src, Time t_)
     }
 
     if (src.velocities) {
-        sample.points.assign((GfVec3f*)src.velocities, (GfVec3f*)src.velocities + src.num_points);
+        sample.velocities.assign((GfVec3f*)src.velocities, (GfVec3f*)src.velocities + src.num_points);
         if (conf.swap_handedness) {
             for (auto& v : sample.velocities) {
                 v[0] *= -1.0f;
@@ -104,7 +109,9 @@ bool Points::writeSample(const PointsData& src, Time t_)
     }
 
     bool  ret = m_points.GetPointsAttr().Set(sample.points, t);
-    m_points.GetVelocitiesAttr().Set(sample.velocities, t);
+    if (src.velocities) {
+        m_points.GetVelocitiesAttr().Set(sample.velocities, t);
+    }
     m_summary_needs_update = true;
     return ret;
 }

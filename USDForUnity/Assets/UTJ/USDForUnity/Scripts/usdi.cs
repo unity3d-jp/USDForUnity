@@ -252,7 +252,7 @@ namespace UTJ
         [DllImport ("usdi")] public static extern int           usdiGetNumAttributes(Schema schema);
         [DllImport ("usdi")] public static extern Attribute     usdiGetAttribute(Schema schema, int i);
         [DllImport ("usdi")] public static extern Attribute     usdiFindAttribute(Schema schema, string name);
-        [DllImport ("usdi")] public static extern Attribute     usdiCreateAttribute(Schema schema, AttributeType type);
+        [DllImport ("usdi")] public static extern Attribute     usdiCreateAttribute(Schema schema, string name, AttributeType type);
 
         // Xform interface
         [DllImport ("usdi")] public static extern Xform         usdiAsXform(Schema schema);
@@ -293,5 +293,6 @@ namespace UTJ
 
 
         public static string S(IntPtr cstring) { return Marshal.PtrToStringAnsi(cstring); }
+        public static IntPtr GetArrayPtr(Array v) { return Marshal.UnsafeAddrOfPinnedArrayElement(v, 0); }
     }
 }

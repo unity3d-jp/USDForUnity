@@ -276,11 +276,15 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
 
 
     bool  ret = m_mesh.GetPointsAttr().Set(sample.points, t);
-    m_mesh.GetVelocitiesAttr().Set(sample.velocities, t);
-    m_mesh.GetNormalsAttr().Set(sample.normals, t);
+    if (src.velocities) {
+        m_mesh.GetVelocitiesAttr().Set(sample.velocities, t);
+    }
+    if (src.normals) {
+        m_mesh.GetNormalsAttr().Set(sample.normals, t);
+    }
     m_mesh.GetFaceVertexCountsAttr().Set(sample.counts, t);
     m_mesh.GetFaceVertexIndicesAttr().Set(sample.indices, t);
-    if (m_attr_uv) {
+    if (src.uvs && m_attr_uv) {
         m_attr_uv->set(&sample.uvs, t_);
     }
 

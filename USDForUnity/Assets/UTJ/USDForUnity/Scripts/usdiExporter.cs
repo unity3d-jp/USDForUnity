@@ -230,7 +230,7 @@ namespace UTJ
             MeshBuffer m_mesh_buffer;
             bool m_captureNormals = true;
             bool m_captureUVs = true;
-            bool m_captureEveryFrame = false;
+            bool m_captureEveryFrame = true;
             int m_count = 0;
 
             public SkinnedMeshCapturer(usdiExporter exporter, ComponentCapturer parent, SkinnedMeshRenderer target)
@@ -269,25 +269,36 @@ namespace UTJ
                 ++m_count;
             }
         }
-    
+
         public class ParticleCapturer : TransformCapturer
         {
             ParticleSystem m_target;
-            //AbcAPI.aeProperty m_prop_rotatrions;
+            usdi.Attribute m_attr_rotatrions;
     
             ParticleSystem.Particle[] m_buf_particles;
             Vector3[] m_buf_positions;
             Vector4[] m_buf_rotations;
+
+            bool m_captureRotations = true;
+
     
             public ParticleCapturer(usdiExporter exporter, ComponentCapturer parent, ParticleSystem target)
                 : base(exporter, parent, target.GetComponent<Transform>(), false)
             {
                 m_usd = usdi.usdiCreatePoints(ctx, parent.usd, CreateName(target));
                 m_target = target;
-    
-                //m_prop_rotatrions = AbcAPI.aeNewProperty(m_usd, "rotation", AbcAPI.aePropertyType.Float4Array);
+
+                var config = target.GetComponent<usdiParticleExportConfig>();
+                if(config != null)
+                {
+                    m_captureRotations = config.m_captureRotations;
+                }
+                if (m_captureRotations)
+                {
+                    m_attr_rotatrions = usdi.usdiCreateAttribute(m_usd, "rotations", usdi.AttributeType.Float4Array);
+                }
             }
-    
+
             public override void Capture(double t)
             {
                 base.Capture(t);
@@ -314,18 +325,24 @@ namespace UTJ
                 {
                     m_buf_positions[i] = m_buf_particles[i].position;
                 }
-                for (int i = 0; i < count; ++i)
+                if (m_captureRotations)
                 {
-                    m_buf_rotations[i] = m_buf_particles[i].axisOfRotation;
-                    m_buf_rotations[i].w = m_buf_particles[i].rotation;
+                    for (int i = 0; i < count; ++i)
+                    {
+                        m_buf_rotations[i] = m_buf_particles[i].axisOfRotation;
+                        m_buf_rotations[i].w = m_buf_particles[i].rotation;
+                    }
                 }
-    
+
                 // write!
                 var data = default(usdi.PointsData);
                 data.points = GetArrayPtr(m_buf_positions);
                 data.num_points = count;
                 usdi.usdiPointsWriteSample(usdi.usdiAsPoints(m_usd), ref data, t);
-                //AbcAPI.aePropertyWriteArraySample(m_prop_rotatrions, GetArrayPtr(m_buf_rotations), count);
+                if (m_captureRotations)
+                {
+                    usdi.usdiAttrWriteArraySample(m_attr_rotatrions, GetArrayPtr(m_buf_rotations), count, t);
+                }
             }
         }
     
