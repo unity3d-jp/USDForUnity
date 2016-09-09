@@ -293,6 +293,6 @@ namespace UTJ
 
 
         public static string S(IntPtr cstring) { return Marshal.PtrToStringAnsi(cstring); }
-        public static IntPtr GetArrayPtr(Array v) { return Marshal.UnsafeAddrOfPinnedArrayElement(v, 0); }
+        public static IntPtr GetArrayPtr(Array v) { return v == null ? IntPtr.Zero : Marshal.UnsafeAddrOfPinnedArrayElement(v, 0); }
     }
 }

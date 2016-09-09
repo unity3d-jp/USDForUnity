@@ -15,6 +15,8 @@ namespace UTJ
         public bool m_captureNormals = true;
         public bool m_captureUVs = true;
         public bool m_captureEveryFrame = false;
+        public bool m_captureEveryFrameUV = false;
+        public bool m_captureEveryFrameIndices = false;
 
 #if UNITY_EDITOR
         void Reset()

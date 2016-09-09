@@ -19,12 +19,6 @@ namespace UTJ
     {
         #region impl
     
-        public static IntPtr GetArrayPtr(Array v)
-        {
-            return Marshal.UnsafeAddrOfPinnedArrayElement(v, 0);
-        }
-
-
         static string CreateName(UnityEngine.Object target)
         {
             return target.name + "_" + target.GetInstanceID().ToString("X8");
@@ -157,28 +151,40 @@ namespace UTJ
 
         public static void CaptureMesh(
             usdi.Mesh usd, Mesh mesh, Cloth cloth, MeshBuffer dst_buf, double t,
-            bool capture_normals, bool capture_uvs)
+            bool capture_normals, bool capture_uvs, bool capture_indices)
         {
-            dst_buf.indices = mesh.triangles;
-            if(capture_uvs) dst_buf.uvs = mesh.uv;
+            dst_buf.indices = capture_indices ? mesh.triangles : null;
+            dst_buf.uvs = capture_uvs ? mesh.uv : null;
             if (cloth == null)
             {
                 dst_buf.vertices = mesh.vertices;
-                if (capture_normals) dst_buf.normals = mesh.normals;
+                dst_buf.normals = capture_normals ? mesh.normals : null;
             }
             else
             {
                 dst_buf.vertices = cloth.vertices;
-                if (capture_normals) dst_buf.normals = cloth.normals;
+                dst_buf.normals = capture_normals ? cloth.normals : null;
             }
 
             usdi.MeshData data = default(usdi.MeshData);
-            data.indices = GetArrayPtr(dst_buf.indices);
-            data.points = GetArrayPtr(dst_buf.vertices);
-            if (dst_buf.normals != null) { data.normals = GetArrayPtr(dst_buf.normals); }
-            if(dst_buf.uvs != null) { data.uvs = GetArrayPtr(dst_buf.uvs); }
-            data.num_points = dst_buf.vertices.Length;
-            data.num_indices = dst_buf.indices.Length;
+            if(dst_buf.vertices != null)
+            {
+                data.points = usdi.GetArrayPtr(dst_buf.vertices);
+                data.num_points = dst_buf.vertices.Length;
+            }
+            if(dst_buf.indices != null)
+            {
+                data.indices = usdi.GetArrayPtr(dst_buf.indices);
+                data.num_indices = dst_buf.indices.Length;
+            }
+            if(dst_buf.normals != null)
+            {
+                data.normals = usdi.GetArrayPtr(dst_buf.normals);
+            }
+            if(dst_buf.uvs != null)
+            {
+                data.uvs = usdi.GetArrayPtr(dst_buf.uvs);
+            }
 
             usdi.usdiMeshWriteSample(usd, ref data, t);
         }
@@ -190,6 +196,8 @@ namespace UTJ
             bool m_captureNormals = true;
             bool m_captureUVs = true;
             bool m_captureEveryFrame = false;
+            bool m_captureEveryFrameUV = false;
+            bool m_captureEveryFrameIndices = false;
             int m_count = 0;
     
             public MeshCapturer(usdiExporter exporter, ComponentCapturer parent, MeshRenderer target)
@@ -205,6 +213,8 @@ namespace UTJ
                     m_captureNormals = conf.m_captureNormals;
                     m_captureUVs = conf.m_captureUVs;
                     m_captureEveryFrame = conf.m_captureEveryFrame;
+                    m_captureEveryFrameUV = conf.m_captureEveryFrameUV;
+                    m_captureEveryFrameIndices = conf.m_captureEveryFrameIndices;
                 }
             }
     
@@ -215,9 +225,11 @@ namespace UTJ
 
                 if(m_captureEveryFrame || m_count == 0)
                 {
+                    bool captureUV = m_captureUVs && (m_count == 0 || m_captureEveryFrameUV);
+                    bool captureIndices = m_count == 0 || m_captureEveryFrameIndices;
                     CaptureMesh(
                         usdi.usdiAsMesh(m_usd), m_target.GetComponent<MeshFilter>().sharedMesh, null, m_mesh_buffer, t,
-                        m_captureNormals, m_captureUVs);
+                        m_captureNormals, captureUV, captureIndices);
                 }
                 ++m_count;
             }
@@ -231,6 +243,8 @@ namespace UTJ
             bool m_captureNormals = true;
             bool m_captureUVs = true;
             bool m_captureEveryFrame = true;
+            bool m_captureEveryFrameUV = false;
+            bool m_captureEveryFrameIndices = false;
             int m_count = 0;
 
             public SkinnedMeshCapturer(usdiExporter exporter, ComponentCapturer parent, SkinnedMeshRenderer target)
@@ -251,6 +265,8 @@ namespace UTJ
                     m_captureNormals = conf.m_captureNormals;
                     m_captureUVs = conf.m_captureUVs;
                     m_captureEveryFrame = conf.m_captureEveryFrame;
+                    m_captureEveryFrameUV = conf.m_captureEveryFrameUV;
+                    m_captureEveryFrameIndices = conf.m_captureEveryFrameIndices;
                 }
             }
 
@@ -263,8 +279,10 @@ namespace UTJ
                 {
                     if (m_mesh == null) { m_mesh = new Mesh(); }
                     m_target.BakeMesh(m_mesh);
+                    bool captureUV = m_captureUVs && (m_count == 0 || m_captureEveryFrameUV);
+                    bool captureIndices = m_count == 0 || m_captureEveryFrameIndices;
                     CaptureMesh(usdi.usdiAsMesh(m_usd), m_mesh, m_target.GetComponent<Cloth>(), m_mesh_buffer, t,
-                        m_captureNormals, m_captureUVs);
+                        m_captureNormals, captureUV, captureIndices);
                 }
                 ++m_count;
             }
@@ -336,12 +354,12 @@ namespace UTJ
 
                 // write!
                 var data = default(usdi.PointsData);
-                data.points = GetArrayPtr(m_buf_positions);
+                data.points = usdi.GetArrayPtr(m_buf_positions);
                 data.num_points = count;
                 usdi.usdiPointsWriteSample(usdi.usdiAsPoints(m_usd), ref data, t);
                 if (m_captureRotations)
                 {
-                    usdi.usdiAttrWriteArraySample(m_attr_rotatrions, GetArrayPtr(m_buf_rotations), count, t);
+                    usdi.usdiAttrWriteArraySample(m_attr_rotatrions, usdi.GetArrayPtr(m_buf_rotations), count, t);
                 }
             }
         }

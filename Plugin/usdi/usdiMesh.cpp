@@ -62,6 +62,7 @@ void MeshSample::clear()
     normals.clear();
     counts.clear();
     indices.clear();
+    uvs.clear();
 }
 
 
@@ -247,7 +248,7 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
     if (src.counts) {
         sample.counts.assign(src.counts, src.counts + src.num_counts);
     }
-    else {
+    else if (src.indices) {
         // assume all faces are triangles
         size_t ntriangles = src.num_indices / 3;
         sample.counts.assign(ntriangles, 3);
@@ -282,8 +283,10 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
     if (src.normals) {
         m_mesh.GetNormalsAttr().Set(sample.normals, t);
     }
-    m_mesh.GetFaceVertexCountsAttr().Set(sample.counts, t);
-    m_mesh.GetFaceVertexIndicesAttr().Set(sample.indices, t);
+    if (src.indices) {
+        m_mesh.GetFaceVertexCountsAttr().Set(sample.counts, t);
+        m_mesh.GetFaceVertexIndicesAttr().Set(sample.indices, t);
+    }
     if (src.uvs && m_attr_uv) {
         m_attr_uv->set(&sample.uvs, t_);
     }
