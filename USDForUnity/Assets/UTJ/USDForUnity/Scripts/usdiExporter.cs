@@ -155,19 +155,21 @@ namespace UTJ
             public Vector2[] uvs;
         }
 
-        public static void CaptureMesh(usdi.Mesh usd, Mesh mesh, Cloth cloth, MeshBuffer dst_buf, double t)
+        public static void CaptureMesh(
+            usdi.Mesh usd, Mesh mesh, Cloth cloth, MeshBuffer dst_buf, double t,
+            bool capture_normals, bool capture_uvs)
         {
             dst_buf.indices = mesh.triangles;
-            dst_buf.uvs = mesh.uv;
+            if(capture_uvs) dst_buf.uvs = mesh.uv;
             if (cloth == null)
             {
                 dst_buf.vertices = mesh.vertices;
-                dst_buf.normals = mesh.normals;
+                if (capture_normals) dst_buf.normals = mesh.normals;
             }
             else
             {
                 dst_buf.vertices = cloth.vertices;
-                dst_buf.normals = cloth.normals;
+                if (capture_normals) dst_buf.normals = cloth.normals;
             }
 
             usdi.MeshData data = default(usdi.MeshData);
@@ -185,6 +187,10 @@ namespace UTJ
         {
             MeshRenderer m_target;
             MeshBuffer m_mesh_buffer;
+            bool m_captureNormals = true;
+            bool m_captureUVs = true;
+            bool m_captureEveryFrame = false;
+            int m_count = 0;
     
             public MeshCapturer(usdiExporter exporter, ComponentCapturer parent, MeshRenderer target)
                 : base(exporter, parent, target.GetComponent<Transform>(), false)
@@ -192,6 +198,14 @@ namespace UTJ
                 m_usd = usdi.usdiCreateMesh(ctx, parent.usd, CreateName(target));
                 m_target = target;
                 m_mesh_buffer = new MeshBuffer();
+
+                var conf = target.GetComponent<usdiMeshExportConfig>();
+                if(conf != null)
+                {
+                    m_captureNormals = conf.m_captureNormals;
+                    m_captureUVs = conf.m_captureUVs;
+                    m_captureEveryFrame = conf.m_captureEveryFrame;
+                }
             }
     
             public override void Capture(double t)
@@ -199,7 +213,13 @@ namespace UTJ
                 base.Capture(t);
                 if (m_target == null) { return; }
 
-                CaptureMesh(usdi.usdiAsMesh(m_usd), m_target.GetComponent<MeshFilter>().sharedMesh, null, m_mesh_buffer, t);
+                if(m_captureEveryFrame || m_count == 0)
+                {
+                    CaptureMesh(
+                        usdi.usdiAsMesh(m_usd), m_target.GetComponent<MeshFilter>().sharedMesh, null, m_mesh_buffer, t,
+                        m_captureNormals, m_captureUVs);
+                }
+                ++m_count;
             }
         }
     
@@ -208,7 +228,11 @@ namespace UTJ
             SkinnedMeshRenderer m_target;
             Mesh m_mesh;
             MeshBuffer m_mesh_buffer;
-    
+            bool m_captureNormals = true;
+            bool m_captureUVs = true;
+            bool m_captureEveryFrame = false;
+            int m_count = 0;
+
             public SkinnedMeshCapturer(usdiExporter exporter, ComponentCapturer parent, SkinnedMeshRenderer target)
                 : base(exporter, parent, target.GetComponent<Transform>(), false)
             {
@@ -218,11 +242,15 @@ namespace UTJ
 
                 if (m_target.GetComponent<Cloth>() != null)
                 {
-                    var t = parent as TransformCapturer;
-                    if (t != null)
-                    {
-                        t.scale = false;
-                    }
+                    base.scale = false;
+                }
+
+                var conf = target.GetComponent<usdiMeshExportConfig>();
+                if (conf != null)
+                {
+                    m_captureNormals = conf.m_captureNormals;
+                    m_captureUVs = conf.m_captureUVs;
+                    m_captureEveryFrame = conf.m_captureEveryFrame;
                 }
             }
 
@@ -231,9 +259,14 @@ namespace UTJ
                 base.Capture(t);
                 if (m_target == null) { return; }
 
-                if (m_mesh == null) { m_mesh = new Mesh(); }
-                m_target.BakeMesh(m_mesh);
-                CaptureMesh(usdi.usdiAsMesh(m_usd), m_mesh, m_target.GetComponent<Cloth>(), m_mesh_buffer, t);
+                if (m_captureEveryFrame || m_count == 0)
+                {
+                    if (m_mesh == null) { m_mesh = new Mesh(); }
+                    m_target.BakeMesh(m_mesh);
+                    CaptureMesh(usdi.usdiAsMesh(m_usd), m_mesh, m_target.GetComponent<Cloth>(), m_mesh_buffer, t,
+                        m_captureNormals, m_captureUVs);
+                }
+                ++m_count;
             }
         }
     
