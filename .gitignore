@@ -25,6 +25,8 @@
 *.usdc
 *.usdc.meta
 
+plugInfo.json
+
 Makefile
 
 _out/
