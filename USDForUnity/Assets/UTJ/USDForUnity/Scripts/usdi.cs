@@ -226,6 +226,7 @@ namespace UTJ
         }
 
         [DllImport ("AddDLLSearchPath")] public static extern void AddDLLSearchPath();
+        [DllImport ("AddDLLSearchPath")] public static extern void SetEnv(string name, string value);
 
         // Context interface
         [DllImport ("usdi")] public static extern Context       usdiCreateContext();
@@ -294,5 +295,11 @@ namespace UTJ
 
         public static string S(IntPtr cstring) { return Marshal.PtrToStringAnsi(cstring); }
         public static IntPtr GetArrayPtr(Array v) { return v == null ? IntPtr.Zero : Marshal.UnsafeAddrOfPinnedArrayElement(v, 0); }
+
+        public static void InitializePlugin()
+        {
+            usdi.AddDLLSearchPath();
+            usdi.SetEnv("PXR_PLUGINPATH_NAME", Application.streamingAssetsPath + "/UTJ/USDForUnity/plugins");
+        }
     }
 }

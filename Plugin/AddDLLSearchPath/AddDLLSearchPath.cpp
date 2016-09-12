@@ -2,6 +2,7 @@
     #include <windows.h>
     #define DLLEXPORT __declspec(dllexport)
 #else 
+    #include <stdlib.h>
     #define DLLEXPORT
 #endif // _WIN32
 #include <string>
@@ -37,3 +38,19 @@ extern "C" DLLEXPORT void AddDLLSearchPath()
 #endif
     }
 }
+
+extern "C" DLLEXPORT void SetEnv(const char *name, const char *value)
+{
+#ifdef _WIN32
+    // get/setenv() and Set/GetEnvironmentVariable() is *not* compatible.
+    // set both to make sure.
+    std::string tmp = name;
+    tmp += "=";
+    tmp += value;
+    ::_putenv(tmp.c_str());
+    ::SetEnvironmentVariableA(name, value);
+#else
+    ::setenv(name, value, 1);
+#endif
+}
+

@@ -890,7 +890,7 @@ namespace UTJ
 
         void Awake()
         {
-            usdi.AddDLLSearchPath();
+            usdi.InitializePlugin();
         }
     
         void OnEnable()
