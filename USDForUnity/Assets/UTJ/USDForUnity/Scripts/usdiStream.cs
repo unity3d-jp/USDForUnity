@@ -25,23 +25,28 @@ namespace UTJ
         public usdiImportOptions m_importOptions = new usdiImportOptions();
         public double m_time = 0.0;
         public double m_timeScale = 1.0;
+
+        [Header("Debug")]
+#if UNITY_EDITOR
+        public bool m_forceSingleThread = false;
         public bool m_detailedLog = false;
+        bool m_isCompiling = false;
+#endif
 
         usdi.Context m_ctx;
         List<usdiElement> m_elements = new List<usdiElement>();
         double m_prevUpdateTime = Double.NaN;
         ManualResetEvent m_eventAsyncUpdate = new ManualResetEvent(true);
 
-#if UNITY_EDITOR
-        bool m_isCompiling = false;
-#endif
 
         void usdiLog(string message)
         {
-            if(m_detailedLog)
+#if UNITY_EDITOR
+            if (m_detailedLog)
             {
                 Debug.Log(message);
             }
+#endif
         }
 
         public static usdiElement usdiCreateNode(Transform parent, usdi.Schema schema)
@@ -247,17 +252,27 @@ namespace UTJ
             }
 #endif
 
-            m_eventAsyncUpdate.Reset();
-            ThreadPool.QueueUserWorkItem((object state)=>{
-                try
+#if UNITY_EDITOR
+            if (m_forceSingleThread)
+            {
+                usdiAsyncUpdate(m_time);
+            }
+            else
+#endif
+            {
+                m_eventAsyncUpdate.Reset();
+                ThreadPool.QueueUserWorkItem((object state) =>
                 {
-                    usdiAsyncUpdate(m_time);
-                }
-                finally
-                {
-                    m_eventAsyncUpdate.Set();
-                }
-            });
+                    try
+                    {
+                        usdiAsyncUpdate(m_time);
+                    }
+                    finally
+                    {
+                        m_eventAsyncUpdate.Set();
+                    }
+                });
+            }
         }
 
         void LateUpdate()

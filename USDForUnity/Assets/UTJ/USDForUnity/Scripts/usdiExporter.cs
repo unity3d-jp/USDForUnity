@@ -492,9 +492,11 @@ namespace UTJ
         [Tooltip("Automatically end capture when reached Max Capture Frame. 0=Infinite")]
         public int m_maxCaptureFrame = 0;
 
-        [Header("Misc")]
-
+        [Header("Debug")]
+#if UNITY_EDITOR
+        public bool m_forceSingleThread;
         public bool m_detailedLog;
+#endif
 
         usdi.Context m_ctx;
         ComponentCapturer m_root;
@@ -513,6 +515,16 @@ namespace UTJ
         public float frameCount { get { return m_frameCount; } }
 
 
+        void usdiLog(string message)
+        {
+#if UNITY_EDITOR
+            if (m_detailedLog)
+            {
+                Debug.Log(message);
+            }
+#endif
+        }
+
         T[] GetTargets<T>() where T : Component
         {
             if(m_scope == Scope.CurrentBranch)
@@ -528,7 +540,7 @@ namespace UTJ
 
         public TransformCapturer CreateComponentCapturer(ComponentCapturer parent, Transform target)
         {
-            if (m_detailedLog) { Debug.Log("usdiExporter: new TransformCapturer(\"" + target.name + "\""); }
+            usdiLog("usdiExporter: new TransformCapturer(\"" + target.name + "\"");
 
             var cap = new TransformCapturer(this, parent, target);
             m_capturers.Add(cap);
@@ -537,7 +549,7 @@ namespace UTJ
 
         public CameraCapturer CreateComponentCapturer(ComponentCapturer parent, Camera target)
         {
-            if (m_detailedLog) { Debug.Log("usdiExporter: new CameraCapturer(\"" + target.name + "\""); }
+            usdiLog("usdiExporter: new CameraCapturer(\"" + target.name + "\"");
 
             var cap = new CameraCapturer(this, parent, target);
             m_capturers.Add(cap);
@@ -546,7 +558,7 @@ namespace UTJ
 
         public MeshCapturer CreateComponentCapturer(ComponentCapturer parent, MeshRenderer target)
         {
-            if (m_detailedLog) { Debug.Log("usdiExporter: new MeshCapturer(\"" + target.name + "\""); }
+            usdiLog("usdiExporter: new MeshCapturer(\"" + target.name + "\"");
 
             var cap = new MeshCapturer(this, parent, target);
             m_capturers.Add(cap);
@@ -555,7 +567,7 @@ namespace UTJ
 
         public SkinnedMeshCapturer CreateComponentCapturer(ComponentCapturer parent, SkinnedMeshRenderer target)
         {
-            if (m_detailedLog) { Debug.Log("usdiExporter: new SkinnedMeshCapturer(\"" + target.name + "\""); }
+            usdiLog("usdiExporter: new SkinnedMeshCapturer(\"" + target.name + "\"");
 
             var cap = new SkinnedMeshCapturer(this, parent, target);
             m_capturers.Add(cap);
@@ -564,7 +576,7 @@ namespace UTJ
 
         public ParticleCapturer CreateComponentCapturer(ComponentCapturer parent, ParticleSystem target)
         {
-            if (m_detailedLog) { Debug.Log("usdiExporter: new ParticleCapturer(\"" + target.name + "\""); }
+            usdiLog("usdiExporter: new ParticleCapturer(\"" + target.name + "\"");
 
             var cap = new ParticleCapturer(this, parent, target);
             m_capturers.Add(cap);
@@ -573,7 +585,7 @@ namespace UTJ
 
         public CustomCapturerHandler CreateComponentCapturer(ComponentCapturer parent, usdiCustomComponentCapturer target)
         {
-            if (m_detailedLog) { Debug.Log("usdiExporter: new CustomCapturerHandler(\"" + target.name + "\""); }
+            usdiLog("usdiExporter: new CustomCapturerHandler(\"" + target.name + "\"");
 
             target.CreateUSDObject(m_ctx, parent.usd);
             var cap = new CustomCapturerHandler(this, parent, target);
@@ -624,7 +636,7 @@ namespace UTJ
         CaptureNode ConstructTree(Transform trans)
         {
             if(trans == null) { return null; }
-            if (m_detailedLog) Debug.Log("ConstructTree() : " + trans.name);
+            usdiLog("ConstructTree() : " + trans.name);
 
             CaptureNode cn;
             if (m_capture_node.TryGetValue(trans, out cn)) { return cn; }
@@ -648,7 +660,8 @@ namespace UTJ
 
         void SetupComponentCapturer(CaptureNode parent, CaptureNode node)
         {
-            if(m_detailedLog) Debug.Log("SetupComponentCapturer() " + node.trans.name);
+            usdiLog("SetupComponentCapturer() " + node.trans.name);
+
             node.parent = parent;
             var parent_capturer = parent == null ? m_root : parent.capturer;
 
@@ -846,6 +859,13 @@ namespace UTJ
             }
 
             // kick flush task
+#if UNITY_EDITOR
+            if(m_forceSingleThread)
+            {
+                foreach (var recorder in m_capturers) { recorder.Flush(time); }
+            }
+            else
+#endif
             {
                 var time = m_time;
                 m_eventFlush.Reset();
@@ -853,10 +873,7 @@ namespace UTJ
                 {
                     try
                     {
-                        foreach (var recorder in m_capturers)
-                        {
-                            recorder.Flush(time);
-                        }
+                        foreach (var recorder in m_capturers) { recorder.Flush(time); }
                     }
                     finally
                     {
@@ -875,10 +892,7 @@ namespace UTJ
             }
 
             m_elapsed = Time.realtimeSinceStartup - begin_time;
-            if (m_detailedLog)
-            {
-                Debug.Log("usdiExporter.ProcessCapture(): " + (m_elapsed * 1000.0f) + "ms");
-            }
+            usdiLog("usdiExporter.ProcessCapture(): " + (m_elapsed * 1000.0f) + "ms");
 
             if(m_maxCaptureFrame > 0 && m_frameCount >= m_maxCaptureFrame)
             {
