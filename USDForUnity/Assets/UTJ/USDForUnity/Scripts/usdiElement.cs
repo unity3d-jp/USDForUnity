@@ -15,6 +15,7 @@ namespace UTJ
 
         public abstract void usdiOnLoad(usdi.Schema schema);
         public abstract void usdiOnUnload();
+        public abstract void usdiAsyncUpdate(double time);
         public abstract void usdiUpdate(double time);
 
 

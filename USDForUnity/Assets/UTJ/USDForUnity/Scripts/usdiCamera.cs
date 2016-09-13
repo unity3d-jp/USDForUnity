@@ -37,25 +37,28 @@ namespace UTJ
             m_camera = default(usdi.Camera);
         }
 
+        public override void usdiAsyncUpdate(double time)
+        {
+            base.usdiAsyncUpdate(time);
+            usdi.usdiCameraReadSample(m_camera, ref m_cameraData, time);
+        }
+
         public override void usdiUpdate(double time)
         {
             base.usdiUpdate(time);
             if (!m_camera) { return; }
 
-            if(usdi.usdiCameraReadSample(m_camera, ref m_cameraData, time))
-            {
-                m_ucam.nearClipPlane = m_cameraData.near_clipping_plane;
-                m_ucam.farClipPlane = m_cameraData.far_clipping_plane;
-                m_ucam.fieldOfView = m_cameraData.field_of_view;
+            m_ucam.nearClipPlane = m_cameraData.near_clipping_plane;
+            m_ucam.farClipPlane = m_cameraData.far_clipping_plane;
+            m_ucam.fieldOfView = m_cameraData.field_of_view;
 
-                if(m_acpectRatioMode == AcpectRatioMode.USD)
-                {
-                    m_ucam.aspect = m_cameraData.aspect_ratio;
-                }
-                else
-                {
-                    m_ucam.ResetAspect();
-                }
+            if (m_acpectRatioMode == AcpectRatioMode.USD)
+            {
+                m_ucam.aspect = m_cameraData.aspect_ratio;
+            }
+            else
+            {
+                m_ucam.ResetAspect();
             }
         }
     }

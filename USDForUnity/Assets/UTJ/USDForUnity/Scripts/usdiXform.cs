@@ -26,16 +26,18 @@ namespace UTJ
             m_xf = default(usdi.Xform);
         }
 
+        public override void usdiAsyncUpdate(double time)
+        {
+            usdi.usdiXformReadSample(m_xf, ref m_xfData, time);
+        }
+
         public override void usdiUpdate(double time)
         {
             if (!m_xf) { return; }
 
-            if(usdi.usdiXformReadSample(m_xf, ref m_xfData, time))
-            {
-                m_trans.localPosition = m_xfData.position;
-                m_trans.localRotation = m_xfData.rotation;
-                m_trans.localScale = m_xfData.scale;
-            }
+            m_trans.localPosition = m_xfData.position;
+            m_trans.localRotation = m_xfData.rotation;
+            m_trans.localScale = m_xfData.scale;
         }
     }
 

@@ -144,31 +144,62 @@ namespace UTJ
             m_meshData.indices_triangulated = IntPtr.Zero;
         }
 
+        void usdiReadMeshData(double t)
+        {
+            usdi.usdiMeshReadSample(m_mesh, ref m_meshData, t);
+        }
+
         void usdiUpdateMeshData(double t, bool topology, bool close)
         {
-            if (usdi.usdiMeshReadSample(m_mesh, ref m_meshData, t))
+            m_umesh.vertices = m_positions;
+            if (m_meshSummary.has_normals)
             {
-                m_umesh.vertices = m_positions;
-                if (m_meshSummary.has_normals)
-                {
-                    m_umesh.normals = m_normals;
-                }
-                if (m_meshSummary.has_uvs)
-                {
-                    m_umesh.uv = m_uvs;
-                }
+                m_umesh.normals = m_normals;
+            }
+            if (m_meshSummary.has_uvs)
+            {
+                m_umesh.uv = m_uvs;
+            }
 
-                if(topology)
-                {
-                    m_umesh.SetIndices(m_indices, MeshTopology.Triangles, 0);
+            if (topology)
+            {
+                m_umesh.SetIndices(m_indices, MeshTopology.Triangles, 0);
 
-                    if (!m_meshSummary.has_normals)
+                if (!m_meshSummary.has_normals)
+                {
+                    m_umesh.RecalculateNormals();
+                }
+            }
+
+            m_umesh.UploadMeshData(close);
+        }
+
+        public override void usdiAsyncUpdate(double time)
+        {
+            base.usdiAsyncUpdate(time);
+
+            switch (m_meshSummary.topology_variance)
+            {
+                case usdi.TopologyVariance.Constant:
+                    if (m_frame == 0 && m_umesh.vertexCount == 0)
                     {
-                        m_umesh.RecalculateNormals();
+                        usdiAllocateMeshData(time);
+                        usdiReadMeshData(time);
                     }
-                }
+                    break;
 
-                m_umesh.UploadMeshData(close);
+                case usdi.TopologyVariance.Homogenous:
+                    if (m_frame == 0)
+                    {
+                        usdiAllocateMeshData(time);
+                    }
+                    usdiReadMeshData(time);
+                    break;
+
+                case usdi.TopologyVariance.Heterogenous:
+                    usdiAllocateMeshData(time);
+                    usdiReadMeshData(time);
+                    break;
             }
         }
 
@@ -182,7 +213,6 @@ namespace UTJ
                 case usdi.TopologyVariance.Constant:
                     if(m_frame == 0 && m_umesh.vertexCount == 0)
                     {
-                        usdiAllocateMeshData(time);
                         usdiUpdateMeshData(time, true, true);
                         usdiFreeMeshData();
                     }
@@ -191,7 +221,6 @@ namespace UTJ
                 case usdi.TopologyVariance.Homogenous:
                     if (m_frame == 0)
                     {
-                        usdiAllocateMeshData(time);
                         usdiUpdateMeshData(time, true, false);
                     }
                     else
@@ -201,7 +230,6 @@ namespace UTJ
                     break;
 
                 case usdi.TopologyVariance.Heterogenous:
-                    usdiAllocateMeshData(time);
                     usdiUpdateMeshData(time, true, false);
                     break;
             }

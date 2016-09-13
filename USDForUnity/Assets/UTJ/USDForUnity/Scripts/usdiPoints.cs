@@ -52,17 +52,14 @@ namespace UTJ
             m_ptrRotations = default(IntPtr);
         }
 
-        public override void usdiUpdate(double t)
+        public override void usdiAsyncUpdate(double time)
         {
-            base.usdiUpdate(t);
-            if (!m_points) { return; }
-
-
-            // allocate points data if needed
+            base.usdiAsyncUpdate(time);
 
             usdi.PointsData tmp = default(usdi.PointsData);
-            usdi.usdiPointsReadSample(m_points, ref tmp, t);
+            usdi.usdiPointsReadSample(m_points, ref tmp, time);
 
+            // allocate points data
             if (m_pointsData.num_points == tmp.num_points)
             {
                 // no need to allocate
@@ -86,15 +83,23 @@ namespace UTJ
                 }
             }
 
-            if(m_pointsData.num_points > 0)
+            // read points data
+            if (m_pointsData.num_points > 0)
             {
-                // read points data
-                usdi.usdiPointsReadSample(m_points, ref m_pointsData, t);
+                usdi.usdiPointsReadSample(m_points, ref m_pointsData, time);
                 if (m_attrRotations)
                 {
-                    usdi.usdiAttrReadArraySample(m_attrRotations, m_ptrRotations, m_rotations.Length, t);
+                    usdi.usdiAttrReadArraySample(m_attrRotations, m_ptrRotations, m_rotations.Length, time);
                 }
             }
+        }
+
+        public override void usdiUpdate(double t)
+        {
+            base.usdiUpdate(t);
+            if (!m_points) { return; }
+
+
         }
     }
 

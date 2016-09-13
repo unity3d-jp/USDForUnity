@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -29,6 +30,7 @@ namespace UTJ
         usdi.Context m_ctx;
         List<usdiElement> m_elements = new List<usdiElement>();
         double m_prevUpdateTime = Double.NaN;
+        Mutex m_mutex = new Mutex();
 
 #if UNITY_EDITOR
         bool m_isCompiling = false;
@@ -151,10 +153,9 @@ namespace UTJ
             else
             {
                 usdiCreateNodeRecursive(GetComponent<Transform>(), usdi.usdiGetRoot(m_ctx),
-                    (e) =>
-                    {
-                        m_elements.Add(e);
-                    });
+                    (e) => { m_elements.Add(e); });
+
+                usdiAsyncUpdate(0.0);
                 usdiUpdate(0.0);
                 usdiLog("usdiStream: loaded " + m_path);
                 return true;
@@ -175,15 +176,23 @@ namespace UTJ
             }
         }
 
-        public void usdiUpdate(double t)
+        public void usdiAsyncUpdate(double t)
         {
             // skip if update is not needed
-            if(t == m_prevUpdateTime)
-            {
-                return;
-            }
+            if (t == m_prevUpdateTime) { return; }
 
             usdiApplyImportConfig();
+            // update all elements
+            foreach (var e in m_elements)
+            {
+                e.usdiAsyncUpdate(t);
+            }
+        }
+
+        public void usdiUpdate(double t)
+        {
+            if (t == m_prevUpdateTime) { return; }
+
             // update all elements
             foreach (var e in m_elements)
             {
@@ -237,6 +246,20 @@ namespace UTJ
                 usdiLoad(m_path);
             }
 #endif
+
+            m_mutex.WaitOne();
+            ThreadPool.QueueUserWorkItem((object state)=>{
+                usdiAsyncUpdate(m_time);
+                m_mutex.ReleaseMutex();
+            });
+        }
+
+        void LateUpdate()
+        {
+            // wait usdiAsyncUpdate() to complete
+            m_mutex.WaitOne();
+            m_mutex.ReleaseMutex();
+
             usdiUpdate(m_time);
             m_time += Time.deltaTime * m_timeScale;
         }
