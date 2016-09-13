@@ -6,6 +6,12 @@ namespace UTJ
 {
     public static class usdi
     {
+        public struct AsyncHandle
+        {
+            public uint handle;
+            public static implicit operator bool(AsyncHandle v) { return v.handle != 0; }
+        }
+
         public struct Context
         {
             public IntPtr ptr;
@@ -272,14 +278,22 @@ namespace UTJ
         [DllImport ("usdi")] public static extern Mesh          usdiCreateMesh(Context ctx, Schema parent, string name);
         [DllImport ("usdi")] public static extern void          usdiMeshGetSummary(Mesh mesh, ref MeshSummary dst);
         [DllImport ("usdi")] public static extern Bool          usdiMeshReadSample(Mesh mesh, ref MeshData dst, double t);
+        [DllImport ("usdi")] public static extern AsyncHandle   usdiMeshReadSampleBegin(Mesh mesh, ref MeshData dst, double t);
+        [DllImport ("usdi")] public static extern Bool          usdiMeshReadSampleEnd(AsyncHandle handle);
         [DllImport ("usdi")] public static extern Bool          usdiMeshWriteSample(Mesh mesh, ref MeshData src, double t);
+        [DllImport ("usdi")] public static extern AsyncHandle   usdiMeshWriteSampleBegin(Mesh mesh, ref MeshData src, double t);
+        [DllImport ("usdi")] public static extern Bool          usdiMeshWriteSampleEnd(AsyncHandle handle);
 
         // Points interface
         [DllImport ("usdi")] public static extern Points        usdiAsPoints(Schema schema);
         [DllImport ("usdi")] public static extern Points        usdiCreatePoints(Context ctx, Schema parent, string name);
         [DllImport ("usdi")] public static extern void          usdiPointsGetSummary(Points points, ref PointsSummary dst);
         [DllImport ("usdi")] public static extern Bool          usdiPointsReadSample(Points points, ref PointsData dst, double t);
+        [DllImport ("usdi")] public static extern AsyncHandle   usdiPointsReadSampleBegin(Points points, ref PointsData dst, double t);
+        [DllImport ("usdi")] public static extern Bool          usdiPointsReadSampleEnd(AsyncHandle handle);
         [DllImport ("usdi")] public static extern Bool          usdiPointsWriteSample(Points points, ref PointsData src, double t);
+        [DllImport ("usdi")] public static extern AsyncHandle   usdiPointsWriteSampleBegin(Points points, ref PointsData src, double t);
+        [DllImport ("usdi")] public static extern Bool          usdiPointsWriteSampleEnd(AsyncHandle handle);
 
         // Attribute interface
         [DllImport ("usdi")] public static extern IntPtr        usdiAttrGetName(Attribute attr);
@@ -287,10 +301,14 @@ namespace UTJ
         [DllImport ("usdi")] public static extern AttributeType usdiAttrGetType(Attribute attr);
         [DllImport ("usdi")] public static extern int           usdiAttrGetArraySize(Attribute attr, double t);
         [DllImport ("usdi")] public static extern int           usdiAttrGetNumSamples(Attribute attr);
-        [DllImport ("usdi")] public static extern IntPtr        usdiAttrReadSample(Attribute attr, IntPtr dst, double t);
-        [DllImport ("usdi")] public static extern IntPtr        usdiAttrReadArraySample(Attribute attr, IntPtr dst, int size, double t);
-        [DllImport ("usdi")] public static extern IntPtr        usdiAttrWriteSample(Attribute attr, IntPtr src, double t);
-        [DllImport ("usdi")] public static extern IntPtr        usdiAttrWriteArraySample(Attribute attr, IntPtr src, int size, double t);
+        [DllImport ("usdi")] public static extern Bool          usdiAttrReadSample(Attribute attr, IntPtr dst, double t);
+        [DllImport ("usdi")] public static extern Bool          usdiAttrReadArraySample(Attribute attr, IntPtr dst, int size, double t);
+        [DllImport ("usdi")] public static extern AsyncHandle   usdiAttrReadArraySampleBegin(Attribute attr, IntPtr dst, int size, double t);
+        [DllImport ("usdi")] public static extern Bool          usdiAttrReadArraySampleEnd(AsyncHandle handle);
+        [DllImport ("usdi")] public static extern Bool          usdiAttrWriteSample(Attribute attr, IntPtr src, double t);
+        [DllImport ("usdi")] public static extern Bool          usdiAttrWriteArraySample(Attribute attr, IntPtr src, int size, double t);
+        [DllImport ("usdi")] public static extern AsyncHandle   usdiAttrWriteArraySampleBegin(Attribute attr, IntPtr src, int size, double t);
+        [DllImport ("usdi")] public static extern Bool          usdiAttrWriteArraySampleEnd(AsyncHandle handle);
 
 
         public static string S(IntPtr cstring) { return Marshal.PtrToStringAnsi(cstring); }

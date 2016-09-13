@@ -24,11 +24,11 @@ namespace UTJ
         public usdiImportOptions m_importOptions = new usdiImportOptions();
         public double m_time = 0.0;
         public double m_timeScale = 1.0;
-
         public bool m_detailedLog = false;
 
         usdi.Context m_ctx;
         List<usdiElement> m_elements = new List<usdiElement>();
+        double m_prevUpdateTime = Double.NaN;
 
 #if UNITY_EDITOR
         bool m_isCompiling = false;
@@ -177,11 +177,20 @@ namespace UTJ
 
         public void usdiUpdate(double t)
         {
+            // skip if update is not needed
+            if(t == m_prevUpdateTime)
+            {
+                return;
+            }
+
             usdiApplyImportConfig();
+            // update all elements
             foreach (var e in m_elements)
             {
                 e.usdiUpdate(t);
             }
+
+            m_prevUpdateTime = t;
         }
 
         void Awake()

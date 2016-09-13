@@ -21,8 +21,7 @@ namespace UTJ
         Vector3[] m_normals;
         Vector2[] m_uvs;
         int[] m_indices;
-
-
+        int m_frame;
 
 
         Mesh usdiAddMeshComponents()
@@ -105,10 +104,10 @@ namespace UTJ
             usdi.MeshData md = default(usdi.MeshData);
             usdi.usdiMeshReadSample(m_mesh, ref md, t);
 
-            if( m_meshData.num_points == md.num_points &&
+            // skip if already allocated
+            if ( m_meshData.num_points == md.num_points &&
                 m_meshData.num_indices_triangulated == md.num_indices_triangulated)
             {
-                // skip allocation
                 return;
             }
 
@@ -131,7 +130,18 @@ namespace UTJ
                 m_indices = new int[m_meshData.num_indices_triangulated];
                 m_meshData.indices_triangulated = usdi.GetArrayPtr(m_indices);
             }
+        }
 
+        void usdiFreeMeshData()
+        {
+            m_positions = null;
+            m_normals = null;
+            m_uvs = null;
+            m_indices = null;
+            m_meshData.points = IntPtr.Zero;
+            m_meshData.normals = IntPtr.Zero;
+            m_meshData.uvs = IntPtr.Zero;
+            m_meshData.indices_triangulated = IntPtr.Zero;
         }
 
         void usdiUpdateMeshData(double t, bool topology, bool close)
@@ -158,7 +168,7 @@ namespace UTJ
                     }
                 }
 
-                m_umesh.UploadMeshData(false);
+                m_umesh.UploadMeshData(close);
             }
         }
 
@@ -170,15 +180,16 @@ namespace UTJ
 
             switch (m_meshSummary.topology_variance) {
                 case usdi.TopologyVariance.Constant:
-                    if(m_meshData.points == IntPtr.Zero)
+                    if(m_frame == 0 && m_umesh.vertexCount == 0)
                     {
                         usdiAllocateMeshData(time);
                         usdiUpdateMeshData(time, true, true);
+                        usdiFreeMeshData();
                     }
                     break;
 
                 case usdi.TopologyVariance.Homogenous:
-                    if (m_meshData.points == IntPtr.Zero)
+                    if (m_frame == 0)
                     {
                         usdiAllocateMeshData(time);
                         usdiUpdateMeshData(time, true, false);
@@ -194,6 +205,8 @@ namespace UTJ
                     usdiUpdateMeshData(time, true, false);
                     break;
             }
+
+            ++m_frame;
         }
     }
 
