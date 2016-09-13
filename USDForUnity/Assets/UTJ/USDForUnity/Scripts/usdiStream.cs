@@ -30,7 +30,7 @@ namespace UTJ
         usdi.Context m_ctx;
         List<usdiElement> m_elements = new List<usdiElement>();
         double m_prevUpdateTime = Double.NaN;
-        Mutex m_mutex = new Mutex();
+        ManualResetEvent m_eventAsyncUpdate = new ManualResetEvent(true);
 
 #if UNITY_EDITOR
         bool m_isCompiling = false;
@@ -247,18 +247,23 @@ namespace UTJ
             }
 #endif
 
-            m_mutex.WaitOne();
+            m_eventAsyncUpdate.Reset();
             ThreadPool.QueueUserWorkItem((object state)=>{
-                usdiAsyncUpdate(m_time);
-                m_mutex.ReleaseMutex();
+                try
+                {
+                    usdiAsyncUpdate(m_time);
+                }
+                finally
+                {
+                    m_eventAsyncUpdate.Set();
+                }
             });
         }
 
         void LateUpdate()
         {
             // wait usdiAsyncUpdate() to complete
-            m_mutex.WaitOne();
-            m_mutex.ReleaseMutex();
+            m_eventAsyncUpdate.WaitOne();
 
             usdiUpdate(m_time);
             m_time += Time.deltaTime * m_timeScale;

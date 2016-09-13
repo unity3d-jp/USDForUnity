@@ -453,7 +453,7 @@ namespace UTJ
             var method = typeof(UnityEditor.PlayerSettings).GetMethod("SetBatchingForPlatform", BindingFlags.NonPublic | BindingFlags.Static);
             method.Invoke(null, new object[] { BuildTarget.StandaloneWindows, 0, 0 });
             method.Invoke(null, new object[] { BuildTarget.StandaloneWindows64, 0, 0 });
-}
+        }
 #endif
 
         #endregion
@@ -503,7 +503,7 @@ namespace UTJ
         float m_time;
         float m_elapsed;
         int m_frameCount;
-        Mutex m_mutexFlush = new Mutex();
+        ManualResetEvent m_eventFlush = new ManualResetEvent(true);
         int m_prevFrame = -1;
 
 
@@ -815,8 +815,7 @@ namespace UTJ
 
         void WaitForFlush()
         {
-            m_mutexFlush.WaitOne();
-            m_mutexFlush.ReleaseMutex();
+            m_eventFlush.WaitOne();
         }
 
         void FlushUSD()
@@ -849,14 +848,20 @@ namespace UTJ
             // kick flush task
             {
                 var time = m_time;
-                m_mutexFlush.WaitOne();
+                m_eventFlush.Reset();
                 ThreadPool.QueueUserWorkItem((object state) =>
                 {
-                    foreach (var recorder in m_capturers)
+                    try
                     {
-                        recorder.Flush(time);
+                        foreach (var recorder in m_capturers)
+                        {
+                            recorder.Flush(time);
+                        }
                     }
-                    m_mutexFlush.ReleaseMutex();
+                    finally
+                    {
+                        m_eventFlush.Set();
+                    }
                 });
             }
 
