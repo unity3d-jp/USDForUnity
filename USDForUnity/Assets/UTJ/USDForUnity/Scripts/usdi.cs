@@ -157,6 +157,19 @@ namespace UTJ
             public Vector3     position;
             public Quaternion  rotation;
             public Vector3     scale;
+
+            public static XformData default_value
+            {
+                get
+                {
+                    return new XformData
+                    {
+                        position = Vector3.zero,
+                        rotation = Quaternion.identity,
+                        scale = Vector3.one,
+                    };
+                }
+            }
         }
 
         public struct CameraData
@@ -215,6 +228,14 @@ namespace UTJ
             public int      num_counts;
             public int      num_indices;
             public int      num_indices_triangulated;
+
+            public static MeshData default_value
+            {
+                get
+                {
+                    return default(MeshData);
+                }
+            }
         }
 
         public struct PointsSummary
@@ -229,6 +250,14 @@ namespace UTJ
             public IntPtr velocities;
 
             public int num_points;
+
+            public static PointsData default_value
+            {
+                get
+                {
+                    return default(PointsData);
+                }
+            }
         }
 
         [DllImport ("AddDLLSearchPath")] public static extern void AddDLLSearchPath();

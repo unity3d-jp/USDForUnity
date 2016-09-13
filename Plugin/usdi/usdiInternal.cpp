@@ -23,15 +23,22 @@ void LogImpl(int level, const char *format, ...)
     fflush(stdout);
 }
 
+
+static uint32_t GetThreadID()
+{
+    std::hash<std::thread::id> hasher;
+    return (uint32_t)hasher(std::this_thread::get_id());
+}
+
 TraceFuncImpl::TraceFuncImpl(const char *func)
     : m_func(func)
 {
-    usdiLogTrace("%s enter\n", m_func);
+    usdiLogTrace("[tid %u] %s enter\n", GetThreadID(), m_func);
 }
 
 TraceFuncImpl::~TraceFuncImpl()
 {
-    usdiLogTrace("%s leave\n", m_func);
+    usdiLogTrace("[tid %u] %s leave\n", GetThreadID(), m_func);
 }
 
 const float Deg2Rad = float(M_PI) / 180.0f;
