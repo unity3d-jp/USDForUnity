@@ -42,6 +42,9 @@
     <ClInclude Include="usdi\usdiAttribute.h">
       <Filter>usdi</Filter>
     </ClInclude>
+    <ClInclude Include="usdi\usdiAsyncManager.h">
+      <Filter>usdi</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="usdi\pch.cpp">

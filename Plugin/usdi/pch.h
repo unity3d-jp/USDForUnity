@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <thread>
 #include <mutex>
+#include <future>
 #include <functional>
 #include <atomic>
 #include <cstdarg>

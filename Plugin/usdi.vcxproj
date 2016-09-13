@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="usdi\pch.h" />
+    <ClInclude Include="usdi\usdiAsyncManager.h" />
     <ClInclude Include="usdi\usdiAttribute.h" />
     <ClInclude Include="usdi\usdiCamera.h" />
     <ClInclude Include="usdi\usdiContext.h" />

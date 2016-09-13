@@ -7,6 +7,7 @@
 #include "usdiMesh.h"
 #include "usdiPoints.h"
 #include "usdiContext.h"
+#include "usdiAsyncManager.h"
 
 
 #pragma comment(lib, "Shlwapi.lib")
@@ -286,12 +287,36 @@ usdiAPI bool usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Tim
     if (!mesh || !dst) return false;
     return mesh->readSample(*dst, t);
 }
+usdiAPI usdi::hasync usdiMeshReadSampleBegin(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t)
+{
+    usdiTraceFunc();
+    if (!mesh || !dst) return 0;
+    return usdi::AsyncBegin([=]() { return mesh->readSample(*dst, t); });
+}
+usdiAPI bool usdiMeshReadSampleEnd(usdi::hasync handle)
+{
+    usdiTraceFunc();
+    return usdi::AsyncEnd<bool>(handle);
+}
 
 usdiAPI bool usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t)
 {
     usdiTraceFunc();
-    if (!mesh || !src) return false;
+    if (!mesh || !src) return 0;
     return mesh->writeSample(*src, t);
+}
+
+usdiAPI usdi::hasync usdiMeshWriteSampleBegin(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t)
+{
+    usdiTraceFunc();
+    if (!mesh || !src) return 0;
+    return usdi::AsyncBegin([=]() { return mesh->writeSample(*src, t); });
+}
+
+usdiAPI bool usdiMeshWriteSampleEnd(usdi::hasync handle)
+{
+    usdiTraceFunc();
+    return usdi::AsyncEnd<bool>(handle);
 }
 
 
@@ -324,12 +349,34 @@ usdiAPI bool usdiPointsReadSample(usdi::Points *points, usdi::PointsData *dst, u
     if (!points || !dst) return false;
     return points->readSample(*dst, t);
 }
+usdiAPI usdi::hasync usdiPointsReadSampleBegin(usdi::Points *points, usdi::PointsData *dst, usdi::Time t)
+{
+    usdiTraceFunc();
+    if (!points || !dst) return 0;
+    return usdi::AsyncBegin([=]() { return points->readSample(*dst, t); });
+}
+usdiAPI bool usdiPointsReadSampleEnd(usdi::hasync handle)
+{
+    usdiTraceFunc();
+    return usdi::AsyncEnd<bool>(handle);
+}
 
 usdiAPI bool usdiPointsWriteSample(usdi::Points *points, const usdi::PointsData *src, usdi::Time t)
 {
     usdiTraceFunc();
     if (!points || !src) return false;
     return points->writeSample(*src, t);
+}
+usdiAPI usdi::hasync usdiPointsWriteSampleBegin(usdi::Points *points, const usdi::PointsData *src, usdi::Time t)
+{
+    usdiTraceFunc();
+    if (!points || !src) return 0;
+    return usdi::AsyncBegin([=]() { return points->writeSample(*src, t); });
+}
+usdiAPI bool usdiPointsWriteSampleEnd(usdi::hasync handle)
+{
+    usdiTraceFunc();
+    return usdi::AsyncEnd<bool>(handle);
 }
 
 
@@ -381,6 +428,17 @@ usdiAPI bool usdiAttrReadArraySample(usdi::Attribute *attr, void *dst, int size,
     if (!attr) { return false; }
     return attr->getBuffered(dst, size, t);
 }
+usdiAPI usdi::hasync usdiAttrReadArraySampleBegin(usdi::Attribute *attr, void *dst, int size, usdi::Time t)
+{
+    usdiTraceFunc();
+    if (!attr) { return 0; }
+    return usdi::AsyncBegin([=]() { return attr->getBuffered(dst, size, t); });
+}
+usdiAPI bool usdiAttrReadArraySampleEnd(usdi::hasync handle)
+{
+    usdiTraceFunc();
+    return usdi::AsyncEnd<bool>(handle);
+}
 
 usdiAPI bool usdiAttrWriteSample(usdi::Attribute *attr, const void *src, usdi::Time t)
 {
@@ -394,6 +452,17 @@ usdiAPI bool usdiAttrWriteArraySample(usdi::Attribute *attr, const void *src, in
     usdiTraceFunc();
     if (!attr) { return false; }
     return attr->setBuffered(src, size, t);
+}
+usdiAPI usdi::hasync usdiAttrWriteArraySampleBegin(usdi::Attribute *attr, const void *src, int size, usdi::Time t)
+{
+    usdiTraceFunc();
+    if (!attr) { return 0; }
+    return usdi::AsyncBegin([=]() { return attr->setBuffered(src, size, t); });
+}
+usdiAPI bool usdiAttrWriteArraySampleEnd(usdi::hasync handle)
+{
+    usdiTraceFunc();
+    return usdi::AsyncEnd<bool>(handle);
 }
 
 } // extern "C"
