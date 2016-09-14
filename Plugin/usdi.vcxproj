@@ -48,6 +48,11 @@
   <ItemGroup>
     <None Include="usdi\usdiInternal.i" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="GraphicsInterface.vcxproj">
+      <Project>{29751262-3a23-4cf5-9dec-8d11aff02599}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{08361722-5520-47AC-A0C2-31E8A062B73F}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

@@ -13,6 +13,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "usdiTestExport", "Test\usdi
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AddDLLSearchPath", "AddDLLSearchPath.vcxproj", "{66397903-6FF2-46C6-B51E-B323FD248FAD}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GraphicsInterface", "GraphicsInterface.vcxproj", "{29751262-3A23-4CF5-9DEC-8D11AFF02599}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -47,6 +49,14 @@ Global
 		{66397903-6FF2-46C6-B51E-B323FD248FAD}.Master|x64.Build.0 = Master|x64
 		{66397903-6FF2-46C6-B51E-B323FD248FAD}.Master|x86.ActiveCfg = Master|Win32
 		{66397903-6FF2-46C6-B51E-B323FD248FAD}.Master|x86.Build.0 = Master|Win32
+		{29751262-3A23-4CF5-9DEC-8D11AFF02599}.Debug|x64.ActiveCfg = Debug|x64
+		{29751262-3A23-4CF5-9DEC-8D11AFF02599}.Debug|x64.Build.0 = Debug|x64
+		{29751262-3A23-4CF5-9DEC-8D11AFF02599}.Debug|x86.ActiveCfg = Debug|Win32
+		{29751262-3A23-4CF5-9DEC-8D11AFF02599}.Debug|x86.Build.0 = Debug|Win32
+		{29751262-3A23-4CF5-9DEC-8D11AFF02599}.Master|x64.ActiveCfg = Master|x64
+		{29751262-3A23-4CF5-9DEC-8D11AFF02599}.Master|x64.Build.0 = Master|x64
+		{29751262-3A23-4CF5-9DEC-8D11AFF02599}.Master|x86.ActiveCfg = Master|Win32
+		{29751262-3A23-4CF5-9DEC-8D11AFF02599}.Master|x86.Build.0 = Master|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
