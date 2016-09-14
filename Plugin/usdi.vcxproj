@@ -11,8 +11,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="usdi\HandleBasedVector.h" />
     <ClInclude Include="usdi\pch.h" />
-    <ClInclude Include="usdi\usdiAsyncManager.h" />
     <ClInclude Include="usdi\usdiAttribute.h" />
     <ClInclude Include="usdi\usdiCamera.h" />
     <ClInclude Include="usdi\usdiContext.h" />
@@ -33,6 +33,7 @@
     <ClCompile Include="usdi\usdiAttribute.cpp" />
     <ClCompile Include="usdi\usdiCamera.cpp" />
     <ClCompile Include="usdi\usdiContext.cpp" />
+    <ClCompile Include="usdi\usdiExt.cpp" />
     <ClCompile Include="usdi\usdiInternal.cpp" />
     <ClCompile Include="usdi\usdiMesh.cpp" />
     <ClCompile Include="usdi\usdi.cpp" />

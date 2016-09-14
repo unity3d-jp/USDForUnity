@@ -31,7 +31,7 @@ namespace usdi {
 
 typedef unsigned char byte;
 typedef unsigned int uint;
-typedef unsigned int hasync; // async handle
+typedef unsigned int handle_t; // async handle
 struct float2 { float x, y; };
 struct float3 { float x, y, z; };
 struct float4 { float x, y, z, w; };
@@ -217,22 +217,14 @@ usdiAPI usdi::Mesh*      usdiAsMesh(usdi::Schema *schema); // dynamic cast to Me
 usdiAPI usdi::Mesh*      usdiCreateMesh(usdi::Context *ctx, usdi::Schema *parent, const char *name);
 usdiAPI void             usdiMeshGetSummary(usdi::Mesh *mesh, usdi::MeshSummary *dst);
 usdiAPI bool             usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t);
-usdiAPI usdi::hasync     usdiMeshReadSampleBegin(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t);
-usdiAPI bool             usdiMeshReadSampleEnd(usdi::hasync handle);
 usdiAPI bool             usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t);
-usdiAPI usdi::hasync     usdiMeshWriteSampleBegin(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t);
-usdiAPI bool             usdiMeshWriteSampleEnd(usdi::hasync handle);
 
 // Points interface
 usdiAPI usdi::Points*    usdiAsPoints(usdi::Schema *schema); // dynamic cast to Points
 usdiAPI usdi::Points*    usdiCreatePoints(usdi::Context *ctx, usdi::Schema *parent, const char *name);
 usdiAPI void             usdiPointsGetSummary(usdi::Points *points, usdi::PointsSummary *dst);
 usdiAPI bool             usdiPointsReadSample(usdi::Points *points, usdi::PointsData *dst, usdi::Time t);
-usdiAPI usdi::hasync     usdiPointsReadSampleBegin(usdi::Points *points, usdi::PointsData *dst, usdi::Time t);
-usdiAPI bool             usdiPointsReadSampleEnd(usdi::hasync handle);
 usdiAPI bool             usdiPointsWriteSample(usdi::Points *points, const usdi::PointsData *src, usdi::Time t);
-usdiAPI usdi::hasync     usdiPointsWriteSampleBegin(usdi::Points *points, const usdi::PointsData *src, usdi::Time t);
-usdiAPI bool             usdiPointsWriteSampleEnd(usdi::hasync handle);
 
 // Attribute interface
 usdiAPI const char*          usdiAttrGetName(usdi::Attribute *attr);
@@ -242,12 +234,14 @@ usdiAPI int                  usdiAttrGetArraySize(usdi::Attribute *attr, usdi::T
 usdiAPI int                  usdiAttrGetNumSamples(usdi::Attribute *attr);
 usdiAPI bool                 usdiAttrReadSample(usdi::Attribute *attr, void *dst, usdi::Time t);
 usdiAPI bool                 usdiAttrReadArraySample(usdi::Attribute *attr, void *dst, int size, usdi::Time t);
-usdiAPI usdi::hasync         usdiAttrReadArraySampleBegin(usdi::Attribute *attr, void *dst, int size, usdi::Time t);
-usdiAPI bool                 usdiAttrReadArraySampleEnd(usdi::hasync handle);
 usdiAPI bool                 usdiAttrWriteSample(usdi::Attribute *attr, const void *src, usdi::Time t);
 usdiAPI bool                 usdiAttrWriteArraySample(usdi::Attribute *attr, const void *src, int size, usdi::Time t);
-usdiAPI usdi::hasync         usdiAttrWriteArraySampleBegin(usdi::Attribute *attr, const void *src, int size, usdi::Time t);
-usdiAPI bool                 usdiAttrWriteArraySampleEnd(usdi::hasync handle);
+
+// ext
+usdiAPI usdi::handle_t  usdiExtCreateTaskQueue();
+usdiAPI bool            usdiExtDestroyTaskQueue(usdi::handle_t queue);
+usdiAPI bool            usdiExtQueueVertexBufferUpdateTask(usdi::handle_t queue, const usdi::MeshData *src, void *vb, void *ib);
+usdiAPI bool            usdiExtFlushTaskQueue(usdi::handle_t queue);
 
 } // extern "C"
 
