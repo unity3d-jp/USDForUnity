@@ -375,7 +375,12 @@ namespace UTJ
                 if (m_target == null) { return; }
 
                 // create buffer
-                int count_max = m_target.maxParticles;
+                int count_max =
+#if UNITY_5_5_OR_NEWER
+                    m_target.main.maxParticles;
+#else
+                    m_target.maxParticles;
+#endif
                 if (m_buf_particles == null)
                 {
                     m_buf_particles = new ParticleSystem.Particle[count_max];
@@ -456,7 +461,7 @@ namespace UTJ
         }
 #endif
 
-        #endregion
+#endregion
 
 
         public enum Scope
@@ -617,7 +622,7 @@ namespace UTJ
         }
 
 
-        #region impl_capture_tree
+#region impl_capture_tree
 
         // capture node tree for "Preserve Tree Structure" option.
         public class CaptureNode
@@ -696,7 +701,7 @@ namespace UTJ
                 SetupComponentCapturer(node, c);
             }
         }
-        #endregion
+#endregion
 
         void ConstructCaptureTree()
         {
@@ -853,16 +858,16 @@ namespace UTJ
             float begin_time = Time.realtimeSinceStartup;
 
             // capture components
-            foreach (var recorder in m_capturers)
+            foreach (var c in m_capturers)
             {
-                recorder.Capture(m_time);
+                c.Capture(m_time);
             }
 
             // kick flush task
 #if UNITY_EDITOR
             if(m_forceSingleThread)
             {
-                foreach (var recorder in m_capturers) { recorder.Flush(time); }
+                foreach (var c in m_capturers) { c.Flush(time); }
             }
             else
 #endif
@@ -873,7 +878,7 @@ namespace UTJ
                 {
                     try
                     {
-                        foreach (var recorder in m_capturers) { recorder.Flush(time); }
+                        foreach (var c in m_capturers) { c.Flush(time); }
                     }
                     finally
                     {

@@ -21,7 +21,13 @@ namespace UTJ
         Vector3[] m_normals;
         Vector2[] m_uvs;
         int[] m_indices;
+        int m_prevVertexCount;
+        int m_prevIndexCount;
         int m_frame;
+#if UNITY_5_5_OR_NEWER
+        IntPtr m_vertexBuffer;
+        IntPtr m_indexBuffer;
+#endif
 
 
         Mesh usdiAddMeshComponents()
@@ -101,12 +107,15 @@ namespace UTJ
 
         void usdiAllocateMeshData(double t)
         {
+            m_prevVertexCount = m_meshData.num_points;
+            m_prevIndexCount = m_meshData.num_indices_triangulated;
+
             usdi.MeshData md = default(usdi.MeshData);
             usdi.usdiMeshReadSample(m_mesh, ref md, t);
 
             // skip if already allocated
-            if ( m_meshData.num_points == md.num_points &&
-                m_meshData.num_indices_triangulated == md.num_indices_triangulated)
+            if (m_prevVertexCount == md.num_points &&
+                m_prevIndexCount == md.num_indices_triangulated)
             {
                 return;
             }
@@ -172,6 +181,10 @@ namespace UTJ
             }
 
             m_umesh.UploadMeshData(close);
+#if UNITY_5_5_OR_NEWER
+            m_vertexBuffer = m_umesh.GetNativeVertexBufferPtr(0);
+            m_indexBuffer = m_umesh.GetNativeIndexBufferPtr();
+#endif
         }
 
         public override void usdiAsyncUpdate(double time)

@@ -6,6 +6,8 @@ struct PointsSample
 {
     VtArray<GfVec3f> points;
     VtArray<GfVec3f> velocities;
+
+    void clear();
 };
 
 
@@ -28,6 +30,9 @@ private:
 
 private:
     UsdGeomPoints           m_points;
+    PointsSample            m_sample;
+
+    mutable Time            m_prev_time = DBL_MIN;
     mutable bool            m_summary_needs_update = true;
     mutable PointsSummary   m_summary;
 };

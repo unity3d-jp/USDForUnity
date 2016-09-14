@@ -6,6 +6,12 @@
 
 namespace usdi {
 
+void PointsSample::clear()
+{
+    points.clear();
+    velocities.clear();
+}
+
 
 Points::Points(Context *ctx, Schema *parent, const UsdGeomPoints& points)
     : super(ctx, parent, points)
@@ -52,9 +58,14 @@ bool Points::readSample(PointsData& dst, Time t_)
     auto t = UsdTimeCode(t_);
     const auto& conf = getImportConfig();
 
-    PointsSample sample;
-    m_points.GetPointsAttr().Get(&sample.points, t);
-    m_points.GetVelocitiesAttr().Get(&sample.velocities, t);
+    auto& sample = m_sample;
+    if (m_prev_time != t_) {
+        m_prev_time = t_;
+        sample.clear();
+
+        m_points.GetPointsAttr().Get(&sample.points, t);
+        m_points.GetVelocitiesAttr().Get(&sample.velocities, t);
+    }
 
 
     dst.num_points = sample.points.size();

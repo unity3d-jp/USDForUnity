@@ -125,13 +125,18 @@ bool Mesh::readSample(MeshData& dst, Time t_)
     const auto& conf = getImportConfig();
 
     MeshSample& sample = m_sample;
-    m_mesh.GetPointsAttr().Get(&sample.points, t);
-    m_mesh.GetVelocitiesAttr().Get(&sample.velocities, t);
-    m_mesh.GetNormalsAttr().Get(&sample.normals, t);
-    m_mesh.GetFaceVertexCountsAttr().Get(&sample.counts, t);
-    m_mesh.GetFaceVertexIndicesAttr().Get(&sample.indices, t);
-    if (m_attr_uv) {
-        m_attr_uv->get(&sample.uvs, t_);
+    if (m_prev_time != t_) {
+        m_prev_time = t_;
+        sample.clear();
+
+        m_mesh.GetPointsAttr().Get(&sample.points, t);
+        m_mesh.GetVelocitiesAttr().Get(&sample.velocities, t);
+        m_mesh.GetNormalsAttr().Get(&sample.normals, t);
+        m_mesh.GetFaceVertexCountsAttr().Get(&sample.counts, t);
+        m_mesh.GetFaceVertexIndicesAttr().Get(&sample.indices, t);
+        if (m_attr_uv) {
+            m_attr_uv->get(&sample.uvs, t_);
+        }
     }
 
 
@@ -191,7 +196,6 @@ bool Mesh::readSample(MeshData& dst, Time t_)
         }
     }
 
-    sample.clear();
     return dst.num_points > 0;
 }
 

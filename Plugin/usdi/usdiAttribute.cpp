@@ -182,11 +182,33 @@ public:
     bool get(T& dst, Time t) const { return m_usdattr.Get(&dst, t); }
     bool set(const T& src, Time t) { return m_usdattr.Set(src, t); }
 
-    bool get(void *dst, Time t) const override { return get(*(T*)dst, t); }
-    bool set(const void *src, Time t) override { return set(*(const T*)src, t); }
+    bool get(void *dst, Time t) const override
+    {
+        if (!dst) { return false; }
+        return get(*(T*)dst, t);
+    }
 
-    bool getBuffered(void *dst, size_t size, Time t) const override { get(m_buf, t); Args::load(m_buf, dst, size); return true; }
-    bool setBuffered(const void *src, size_t size, Time t) override { Args::store(m_buf, src, size); set(m_buf, t); return true; }
+    bool set(const void *src, Time t) override
+    {
+        if (!src) { return false; }
+        return set(*(const T*)src, t);
+    }
+
+    bool getBuffered(void *dst, size_t size, Time t) const override
+    {
+        if (!dst) { return false; }
+        get(m_buf, t);
+        Args::load(m_buf, dst, size);
+        return true;
+    }
+
+    bool setBuffered(const void *src, size_t size, Time t) override
+    {
+        if (!src) { return false; }
+        Args::store(m_buf, src, size);
+        set(m_buf, t);
+        return true;
+    }
 
 private:
     mutable T m_buf;
@@ -216,21 +238,50 @@ public:
     AttributeType getType() const override { return Traits::attr_type; }
     size_t getArraySize(Time t) const override
     {
-        get(m_buf, t); // this can be acceptable because VtArray<> has copy-on-write mechanism.
+        if (t != m_prev_time) {
+            m_prev_time = t;
+            get(m_buf, t);
+        }
         return m_buf.size();
     }
 
     bool get(T& dst, Time t) const { return m_usdattr.Get(&dst, t); }
     bool set(const T& src, Time t) { return m_usdattr.Set(src, t); }
 
-    bool get(void *dst, Time t) const override { return get(*(T*)dst, t); }
-    bool set(const void *src, Time t) override { return set(*(const T*)src, t); }
+    bool get(void *dst, Time t) const override
+    {
+        if (!dst) { return false; }
+        return get(*(T*)dst, t);
+    }
 
-    bool getBuffered(void *dst, size_t size, Time t) const override { get(m_buf, t); Args::load(m_buf, dst, size); return true; }
-    bool setBuffered(const void *src, size_t size, Time t) override { Args::store(m_buf, src, size); set(m_buf, t); return true; }
+    bool set(const void *src, Time t) override
+    {
+        if (!src) { return false; }
+        return set(*(const T*)src, t);
+    }
+
+    bool getBuffered(void *dst, size_t size, Time t) const override
+    {
+        if (!dst) { return false; }
+        if (t != m_prev_time) {
+            m_prev_time = t;
+            get(m_buf, t);
+        }
+        Args::load(m_buf, dst, size);
+        return true;
+    }
+
+    bool setBuffered(const void *src, size_t size, Time t) override
+    {
+        if (!src) { return false; }
+        Args::store(m_buf, src, size);
+        set(m_buf, t);
+        return true;
+    }
 
 private:
     mutable T m_buf;
+    mutable Time m_prev_time = DBL_MIN;
 };
 
 

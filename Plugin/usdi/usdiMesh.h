@@ -38,6 +38,7 @@ private:
     MeshSample          m_sample;
     Attribute           *m_attr_uv = nullptr;
 
+    mutable Time        m_prev_time = DBL_MIN;
     mutable bool        m_summary_needs_update = true;
     mutable MeshSummary m_summary;
 };

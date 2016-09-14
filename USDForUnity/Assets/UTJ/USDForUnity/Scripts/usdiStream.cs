@@ -25,6 +25,9 @@ namespace UTJ
         public usdiImportOptions m_importOptions = new usdiImportOptions();
         public double m_time = 0.0;
         public double m_timeScale = 1.0;
+#if UNITY_5_5_OR_NEWER
+        public bool m_directVertexBufferUpdate = true;
+#endif
 
         [Header("Debug")]
 #if UNITY_EDITOR
