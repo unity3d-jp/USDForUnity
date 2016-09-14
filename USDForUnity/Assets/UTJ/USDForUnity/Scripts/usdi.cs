@@ -327,6 +327,7 @@ namespace UTJ
         [DllImport("usdi")] public static extern int usdiExtCreateTaskQueue();
         [DllImport("usdi")] public static extern Bool usdiExtDestroyTaskQueue(int qh);
         [DllImport("usdi")] public static extern Bool usdiExtQueueVertexBufferUpdateTask(int qh, ref MeshData data, IntPtr vb, IntPtr ib);
+        [DllImport("usdi")] public static extern Bool usdiExtFlushTaskQueue(int qh);
 
 
         public static string S(IntPtr cstring) { return Marshal.PtrToStringAnsi(cstring); }

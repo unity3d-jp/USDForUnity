@@ -21,7 +21,8 @@ public:
 
     void flush()
     {
-        tbb::parallel_for_each(m_tasks, [](auto& task) { task(); });
+        //tbb::parallel_for_each(m_tasks, [](auto& task) { task(); });
+        for (auto& t : m_tasks) { t(); }
         m_tasks.clear();
     }
 
@@ -30,6 +31,7 @@ private:
 };
 typedef std::shared_ptr<TaskQueue> TaskQueuePtr;
 
+std::mutex g_task_mutex;
 HandleBasedVector<TaskQueuePtr> g_task_queues;
 
 
@@ -117,15 +119,17 @@ extern "C" {
 usdiAPI usdi::handle_t usdiExtCreateTaskQueue()
 {
     usdiTraceFunc();
+    std::unique_lock<std::mutex> lock(usdi::g_task_mutex);
+
     return usdi::g_task_queues.push(new usdi::TaskQueue());
 }
 
 usdiAPI bool usdiExtDestroyTaskQueue(usdi::handle_t hq)
 {
     usdiTraceFunc();
-    if (!usdi::g_task_queues.valid(hq)) {
-        return false;
-    }
+    std::unique_lock<std::mutex> lock(usdi::g_task_mutex);
+
+    if (!usdi::g_task_queues.valid(hq)) { return false; }
     usdi::g_task_queues.pull(hq);
     return true;
 }
@@ -133,6 +137,8 @@ usdiAPI bool usdiExtDestroyTaskQueue(usdi::handle_t hq)
 usdiAPI bool usdiExtQueueVertexBufferUpdateTask(usdi::handle_t hq, const usdi::MeshData *src, void *vb, void *ib)
 {
     usdiTraceFunc();
+    std::unique_lock<std::mutex> lock(usdi::g_task_mutex);
+
     if (!src || (!vb && !ib) || !usdi::g_task_queues.valid(hq)) { return false; }
     usdi::g_task_queues.get(hq).push([=]() {
         usdiLogTrace("vertex buffer update task\n");
@@ -144,6 +150,8 @@ usdiAPI bool usdiExtQueueVertexBufferUpdateTask(usdi::handle_t hq, const usdi::M
 usdiAPI bool usdiExtFlushTaskQueue(usdi::handle_t hq)
 {
     usdiTraceFunc();
+    std::unique_lock<std::mutex> lock(usdi::g_task_mutex);
+
     if (!usdi::g_task_queues.valid(hq)) { return false; }
     usdi::g_task_queues.get(hq).flush();
     return true;

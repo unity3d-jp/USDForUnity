@@ -334,7 +334,7 @@ Result GraphicsInterfaceD3D11::writeBuffer(void *dst_buf_, const void *src, size
 
     auto proc_write = [this](ID3D11Buffer *buf, const void *src, size_t size) -> HRESULT {
         D3D11_MAPPED_SUBRESOURCE mapped;
-        HRESULT hr = m_context->Map(buf, 0, D3D11_MAP_WRITE, 0, &mapped);
+        HRESULT hr = m_context->Map(buf, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
         if (FAILED(hr)) { return hr; }
         memcpy(mapped.pData, src, size);
         m_context->Unmap(buf, 0);

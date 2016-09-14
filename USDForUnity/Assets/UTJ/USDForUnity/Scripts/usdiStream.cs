@@ -195,11 +195,43 @@ namespace UTJ
             if (t == m_prevUpdateTime) { return; }
 
             usdiApplyImportConfig();
+
             // update all elements
             foreach (var e in m_elements)
             {
                 e.usdiAsyncUpdate(t);
             }
+
+            //// task parallel async update.
+            //// this will be faster if m_elements is large enough. but otherwise slower.
+            //{
+            //    int division = 16;
+            //    int numActiveTasks = 0;
+            //    int granurarity = Mathf.Max(m_elements.Count / division, 1);
+            //    int numTasks = m_elements.Count / granurarity + (m_elements.Count % granurarity == 0 ? 0 : 1);
+            //    for (int ti=0; ti< numTasks; ++ti)
+            //    {
+            //        Interlocked.Increment(ref numActiveTasks);
+            //        ThreadPool.QueueUserWorkItem((object state) =>
+            //        {
+            //            int nth = (int)state;
+            //            try
+            //            {
+            //                int begin = granurarity * nth;
+            //                int end = Mathf.Min(granurarity * (nth + 1), m_elements.Count);
+            //                for (int i = begin; i < end; ++i)
+            //                {
+            //                    m_elements[i].usdiAsyncUpdate(t);
+            //                }
+            //            }
+            //            finally
+            //            {
+            //                Interlocked.Decrement(ref numActiveTasks);
+            //            }
+            //        }, ti);
+            //    }
+            //    while(numActiveTasks > 0) { }
+            //}
         }
 
         public void usdiUpdate(double t)
@@ -211,7 +243,12 @@ namespace UTJ
             {
                 e.usdiUpdate(t);
             }
-            GL.IssuePluginEvent(usdi.usdiGetRenderEventFunc(), m_taskQueue);
+
+            // kick VB update task
+            if(m_directVBUpdate)
+            {
+                GL.IssuePluginEvent(usdi.usdiGetRenderEventFunc(), m_taskQueue);
+            }
 
             m_prevUpdateTime = t;
         }
@@ -261,6 +298,10 @@ namespace UTJ
             }
 #endif
 
+            // make sure all previous tasks are finished
+            usdi.usdiExtFlushTaskQueue(m_taskQueue);
+
+            // kick async update tasks
 #if UNITY_EDITOR
             if (m_forceSingleThread)
             {

@@ -21,6 +21,7 @@ namespace UTJ
         Vector3[] m_normals;
         Vector2[] m_uvs;
         int[] m_indices;
+        bool m_umeshIsEmpty;
         int m_prevVertexCount;
         int m_prevIndexCount;
         int m_frame;
@@ -40,7 +41,6 @@ namespace UTJ
             if (meshFilter == null || meshFilter.sharedMesh == null)
             {
                 mesh = new Mesh();
-                mesh.MarkDynamic();
 
                 if (meshFilter == null)
                 {
@@ -67,6 +67,7 @@ namespace UTJ
                 mesh = meshFilter.sharedMesh;
             }
 
+            mesh.MarkDynamic();
             return mesh;
         }
 
@@ -96,6 +97,7 @@ namespace UTJ
 
             usdi.usdiMeshGetSummary(m_mesh, ref m_meshSummary);
             m_umesh = usdiAddMeshComponents();
+            m_umeshIsEmpty = m_umesh.vertexCount == 0;
         }
 
         public override void usdiOnUnload()
@@ -192,10 +194,14 @@ namespace UTJ
 
                 m_umesh.UploadMeshData(close);
 #if UNITY_5_5_OR_NEWER
-                m_vertexBuffer = m_umesh.GetNativeVertexBufferPtr(0);
-                m_indexBuffer = m_umesh.GetNativeIndexBufferPtr();
+                if(m_stream.directVBUpdate)
+                {
+                    m_vertexBuffer = m_umesh.GetNativeVertexBufferPtr(0);
+                    m_indexBuffer = m_umesh.GetNativeIndexBufferPtr();
+                }
 #endif
             }
+            m_umeshIsEmpty = m_umesh.vertexCount == 0;
             m_prevVertexCount = m_meshData.num_points;
             m_prevIndexCount = m_meshData.num_indices_triangulated;
         }
@@ -207,7 +213,7 @@ namespace UTJ
             switch (m_meshSummary.topology_variance)
             {
                 case usdi.TopologyVariance.Constant:
-                    if (m_frame == 0 && m_umesh.vertexCount == 0)
+                    if (m_frame == 0 && m_umeshIsEmpty)
                     {
                         usdiAllocateMeshData(time);
                         usdiReadMeshData(time);
@@ -237,7 +243,7 @@ namespace UTJ
 
             switch (m_meshSummary.topology_variance) {
                 case usdi.TopologyVariance.Constant:
-                    if(m_frame == 0 && m_umesh.vertexCount == 0)
+                    if(m_frame == 0 && m_umeshIsEmpty)
                     {
                         usdiUpdateMeshData(time, true, true);
                         usdiFreeMeshData();
