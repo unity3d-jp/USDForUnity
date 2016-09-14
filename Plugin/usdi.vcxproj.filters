@@ -83,6 +83,9 @@
     <ClCompile Include="usdi\usdiExt.cpp">
       <Filter>usdi</Filter>
     </ClCompile>
+    <ClCompile Include="usdi\UnityPlugin.cpp">
+      <Filter>usdi</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />

@@ -24,10 +24,10 @@ namespace UTJ
         int m_prevVertexCount;
         int m_prevIndexCount;
         int m_frame;
-#if UNITY_5_5_OR_NEWER
+
+        // for Unity 5.5 or later
         IntPtr m_vertexBuffer;
         IntPtr m_indexBuffer;
-#endif
 
 
         Mesh usdiAddMeshComponents()
@@ -107,9 +107,6 @@ namespace UTJ
 
         void usdiAllocateMeshData(double t)
         {
-            m_prevVertexCount = m_meshData.num_points;
-            m_prevIndexCount = m_meshData.num_indices_triangulated;
-
             usdi.MeshData md = default(usdi.MeshData);
             usdi.usdiMeshReadSample(m_mesh, ref md, t);
 
@@ -160,31 +157,47 @@ namespace UTJ
 
         void usdiUpdateMeshData(double t, bool topology, bool close)
         {
-            m_umesh.vertices = m_positions;
-            if (m_meshSummary.has_normals)
-            {
-                m_umesh.normals = m_normals;
-            }
-            if (m_meshSummary.has_uvs)
-            {
-                m_umesh.uv = m_uvs;
-            }
+            // need to improve this..
+            bool directVBUpdate = m_stream.directVBUpdate &&
+                (m_prevVertexCount == m_meshData.num_points && m_prevIndexCount == m_meshData.num_indices_triangulated) &&
+                (m_vertexBuffer != IntPtr.Zero);
 
-            if (topology)
+            if (directVBUpdate)
             {
-                m_umesh.SetIndices(m_indices, MeshTopology.Triangles, 0);
-
-                if (!m_meshSummary.has_normals)
+                usdi.usdiExtQueueVertexBufferUpdateTask(m_stream.taskQueue, ref m_meshData,
+                    m_vertexBuffer,
+                    topology ? m_indexBuffer : IntPtr.Zero);
+            }
+            else
+            {
+                m_umesh.vertices = m_positions;
+                if (m_meshSummary.has_normals)
                 {
-                    m_umesh.RecalculateNormals();
+                    m_umesh.normals = m_normals;
                 }
-            }
+                if (m_meshSummary.has_uvs)
+                {
+                    m_umesh.uv = m_uvs;
+                }
 
-            m_umesh.UploadMeshData(close);
+                if (topology)
+                {
+                    m_umesh.SetIndices(m_indices, MeshTopology.Triangles, 0);
+
+                    if (!m_meshSummary.has_normals)
+                    {
+                        m_umesh.RecalculateNormals();
+                    }
+                }
+
+                m_umesh.UploadMeshData(close);
 #if UNITY_5_5_OR_NEWER
-            m_vertexBuffer = m_umesh.GetNativeVertexBufferPtr(0);
-            m_indexBuffer = m_umesh.GetNativeIndexBufferPtr();
+                m_vertexBuffer = m_umesh.GetNativeVertexBufferPtr(0);
+                m_indexBuffer = m_umesh.GetNativeIndexBufferPtr();
 #endif
+            }
+            m_prevVertexCount = m_meshData.num_points;
+            m_prevIndexCount = m_meshData.num_indices_triangulated;
         }
 
         public override void usdiAsyncUpdate(double time)

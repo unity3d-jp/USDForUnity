@@ -45,11 +45,11 @@ usdiAPI usdi::handle_t usdiExtCreateTaskQueue()
 usdiAPI bool usdiExtDestroyTaskQueue(usdi::handle_t hq)
 {
     usdiTraceFunc();
-    if (usdi::g_task_queues.valid(hq)) {
-        usdi::g_task_queues.pull(hq);
-        return true;
+    if (!usdi::g_task_queues.valid(hq)) {
+        return false;
     }
-    return false;
+    usdi::g_task_queues.pull(hq);
+    return true;
 }
 
 usdiAPI bool usdiExtQueueVertexBufferUpdateTask(usdi::handle_t hq, const usdi::MeshData *src, void *vb, void *ib)
@@ -57,6 +57,7 @@ usdiAPI bool usdiExtQueueVertexBufferUpdateTask(usdi::handle_t hq, const usdi::M
     usdiTraceFunc();
     if (!src || (!vb && !ib) || !usdi::g_task_queues.valid(hq)) { return false; }
     usdi::g_task_queues.get(hq).push([=]() {
+        usdiLogTrace("vertex buffer update task\n");
         // todo
     });
     return true;

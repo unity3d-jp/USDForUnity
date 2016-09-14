@@ -54,9 +54,8 @@ public:
 
     value_t pull(handle_t h)
     {
-        auto tmp = std::move(m_values[h]);
         m_handles.push_back(h);
-        return std::move(tmp);
+        return std::move(m_values[h]);
     }
 
 private:
@@ -123,9 +122,8 @@ public:
 
     pointer_t pull(handle_t h)
     {
-        auto tmp = std::move(m_values[h]);
         m_handles.push_back(h);
-        return std::move(tmp);
+        return std::move(m_values[h]);
     }
 
 private:

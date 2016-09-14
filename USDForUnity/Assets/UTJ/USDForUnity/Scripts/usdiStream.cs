@@ -25,9 +25,6 @@ namespace UTJ
         public usdiImportOptions m_importOptions = new usdiImportOptions();
         public double m_time = 0.0;
         public double m_timeScale = 1.0;
-#if UNITY_5_5_OR_NEWER
-        public bool m_directVertexBufferUpdate = true;
-#endif
 
         [Header("Debug")]
 #if UNITY_EDITOR
@@ -35,11 +32,17 @@ namespace UTJ
         public bool m_detailedLog = false;
         bool m_isCompiling = false;
 #endif
+        public bool m_directVBUpdate = true;
+        int m_taskQueue;
 
         usdi.Context m_ctx;
         List<usdiElement> m_elements = new List<usdiElement>();
         double m_prevUpdateTime = Double.NaN;
         ManualResetEvent m_eventAsyncUpdate = new ManualResetEvent(true);
+
+
+        public bool directVBUpdate { get { return m_directVBUpdate; } }
+        public int taskQueue { get { return m_taskQueue; } }
 
 
         void usdiLog(string message)
@@ -158,16 +161,16 @@ namespace UTJ
                 usdiLog("usdiStream: failed to load " + m_path);
                 return false;
             }
-            else
-            {
-                usdiCreateNodeRecursive(GetComponent<Transform>(), usdi.usdiGetRoot(m_ctx),
-                    (e) => { m_elements.Add(e); });
 
-                usdiAsyncUpdate(0.0);
-                usdiUpdate(0.0);
-                usdiLog("usdiStream: loaded " + m_path);
-                return true;
-            }
+            usdiCreateNodeRecursive(GetComponent<Transform>(), usdi.usdiGetRoot(m_ctx),
+                (e) => { m_elements.Add(e); });
+
+            usdiAsyncUpdate(0.0);
+            usdiUpdate(0.0);
+
+            m_taskQueue = usdi.usdiExtCreateTaskQueue();
+            usdiLog("usdiStream: loaded " + m_path);
+            return true;
         }
 
         public void usdiUnload()
@@ -180,6 +183,8 @@ namespace UTJ
                 }
                 usdi.usdiDestroyContext(m_ctx);
                 m_ctx = default(usdi.Context);
+                usdi.usdiExtDestroyTaskQueue(m_taskQueue);
+                m_taskQueue = 0;
                 usdiLog("usdiStream: unloaded " + m_path);
             }
         }
@@ -206,6 +211,7 @@ namespace UTJ
             {
                 e.usdiUpdate(t);
             }
+            GL.IssuePluginEvent(usdi.usdiGetRenderEventFunc(), m_taskQueue);
 
             m_prevUpdateTime = t;
         }
@@ -284,7 +290,13 @@ namespace UTJ
             m_eventAsyncUpdate.WaitOne();
 
             usdiUpdate(m_time);
-            m_time += Time.deltaTime * m_timeScale;
+
+#if UNITY_EDITOR
+            if(Application.isPlaying)
+#endif
+            {
+                m_time += Time.deltaTime * m_timeScale;
+            }
         }
     }
 
