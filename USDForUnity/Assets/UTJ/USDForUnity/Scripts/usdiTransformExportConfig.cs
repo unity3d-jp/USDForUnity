@@ -12,8 +12,11 @@ namespace UTJ
     [AddComponentMenu("UTJ/USD/Transform Export Config")]
     public class usdiTransformExportConfig : MonoBehaviour
     {
+        #region fields
         public bool m_captureEveryFrame = true;
+        #endregion
 
+        #region callbacks
         void Reset()
         {
             if (gameObject.isStatic)
@@ -21,6 +24,7 @@ namespace UTJ
                 m_captureEveryFrame = false;
             }
         }
+        #endregion
     }
 
 }

@@ -5,14 +5,21 @@ namespace UTJ
 
     public abstract class usdiElement : MonoBehaviour
     {
+        #region fields
         protected usdiStream m_stream;
+        #endregion
 
+
+        #region properties
         public usdiStream stream
         {
             get { return m_stream; }
             set { m_stream = value; }
         }
+        #endregion
 
+
+        #region impl
         public abstract void usdiOnLoad(usdi.Schema schema);
         public abstract void usdiOnUnload();
         public abstract void usdiAsyncUpdate(double time);
@@ -27,7 +34,8 @@ namespace UTJ
                 c = gameObject.AddComponent<T>();
             }
             return c;
-        } 
+        }
+        #endregion
     }
 
 }

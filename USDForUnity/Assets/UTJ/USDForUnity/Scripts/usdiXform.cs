@@ -6,10 +6,13 @@ namespace UTJ
 
     public class usdiXform : usdiElement
     {
+        #region fields
         usdi.Xform      m_xf;
         usdi.XformData  m_xfData;
         Transform       m_trans;
+        #endregion
 
+        #region impl
         public override void usdiOnLoad(usdi.Schema schema)
         {
             m_xf = usdi.usdiAsXform(schema);
@@ -39,6 +42,7 @@ namespace UTJ
             m_trans.localRotation = m_xfData.rotation;
             m_trans.localScale = m_xfData.scale;
         }
+        #endregion
     }
 
 }

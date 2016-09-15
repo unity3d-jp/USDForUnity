@@ -470,6 +470,7 @@ namespace UTJ
             CurrentBranch,
         }
 
+        #region fields
         [Header("USD")]
 
         public string m_outputPath;
@@ -512,14 +513,18 @@ namespace UTJ
         int m_frameCount;
         ManualResetEvent m_eventFlush = new ManualResetEvent(true);
         int m_prevFrame = -1;
+        #endregion
 
 
+        #region properties
         public bool isRecording { get { return m_recording; } }
         public float time { get { return m_time; } }
         public float elapsed { get { return m_elapsed; } }
         public float frameCount { get { return m_frameCount; } }
+        #endregion
 
 
+        #region impl
         void usdiLog(string message)
         {
 #if UNITY_EDITOR
@@ -622,8 +627,6 @@ namespace UTJ
         }
 
 
-#region impl_capture_tree
-
         // capture node tree for "Preserve Tree Structure" option.
         public class CaptureNode
         {
@@ -701,7 +704,6 @@ namespace UTJ
                 SetupComponentCapturer(node, c);
             }
         }
-#endregion
 
         void ConstructCaptureTree()
         {
@@ -920,9 +922,11 @@ namespace UTJ
                 m_outputPath = "Assets/StreamingAssets/" + gameObject.name + ".usdc";
             }
         }
+        #endregion
 
 
 
+        #region callbacks
 #if UNITY_EDITOR
         void Reset()
         {
@@ -965,5 +969,6 @@ namespace UTJ
                 StartCoroutine(ProcessRecording());
             }
         }
+        #endregion
     }
 }

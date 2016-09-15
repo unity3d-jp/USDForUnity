@@ -11,6 +11,7 @@ namespace UTJ
 
     public class usdiMesh : usdiXform
     {
+        #region fields
         usdi.Mesh m_mesh;
         usdi.MeshData m_meshData;
         usdi.MeshSummary m_meshSummary;
@@ -29,8 +30,10 @@ namespace UTJ
         // for Unity 5.5 or later
         IntPtr m_vertexBuffer;
         IntPtr m_indexBuffer;
+        #endregion
 
 
+        #region impl
         Mesh usdiAddMeshComponents()
         {
             Mesh mesh = null;
@@ -160,13 +163,13 @@ namespace UTJ
         void usdiUpdateMeshData(double t, bool topology, bool close)
         {
             // need to improve this..
-            bool directVBUpdate = m_stream.directVBUpdate &&
+            bool directVBUpdate = m_stream.usdDirectVBUpdate &&
                 (m_prevVertexCount == m_meshData.num_points && m_prevIndexCount == m_meshData.num_indices_triangulated) &&
                 (m_vertexBuffer != IntPtr.Zero);
 
             if (directVBUpdate)
             {
-                usdi.usdiExtQueueVertexBufferUpdateTask(m_stream.taskQueue, ref m_meshData,
+                usdi.usdiExtQueueVertexBufferUpdateTask(m_stream.usdTaskQueue, ref m_meshData,
                     m_vertexBuffer,
                     topology ? m_indexBuffer : IntPtr.Zero);
             }
@@ -194,7 +197,7 @@ namespace UTJ
 
                 m_umesh.UploadMeshData(close);
 #if UNITY_5_5_OR_NEWER
-                if(m_stream.directVBUpdate)
+                if(m_stream.usdDirectVBUpdate)
                 {
                     m_vertexBuffer = m_umesh.GetNativeVertexBufferPtr(0);
                     m_indexBuffer = m_umesh.GetNativeIndexBufferPtr();
@@ -269,5 +272,6 @@ namespace UTJ
             ++m_frame;
         }
     }
+    #endregion
 
 }

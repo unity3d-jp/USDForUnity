@@ -11,6 +11,7 @@ namespace UTJ
 {
     public abstract class usdiCustomComponentCapturer : MonoBehaviour
     {
+        #region impl
         public abstract void CreateUSDObject(usdi.Context ctx, usdi.Schema parent);
 
         // capture data. called from main thread.
@@ -19,5 +20,6 @@ namespace UTJ
         // write data to USD. called from worker thread.
         // you can write data in Capture(), but do it in Flush() is better for performance.
         public abstract void Flush(double t);
+        #endregion
     }
 }

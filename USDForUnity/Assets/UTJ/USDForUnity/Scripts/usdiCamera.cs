@@ -12,12 +12,15 @@ namespace UTJ
             USD,
         }
 
+        #region fields
         public AcpectRatioMode m_acpectRatioMode;
 
-        usdi.Camera     m_camera;
+        usdi.Camera m_camera;
         usdi.CameraData m_cameraData = usdi.CameraData.default_value;
-        Camera          m_ucam;
+        Camera m_ucam;
+        #endregion
 
+        #region impl
         public override void usdiOnLoad(usdi.Schema schema)
         {
             base.usdiOnLoad(schema);
@@ -61,6 +64,6 @@ namespace UTJ
                 m_ucam.ResetAspect();
             }
         }
+        #endregion
     }
-
 }

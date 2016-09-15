@@ -6,6 +6,7 @@ namespace UTJ
 
     public class usdiPoints : usdiXform
     {
+        #region fields
         usdi.Points     m_points;
         usdi.PointsSummary m_summary = default(usdi.PointsSummary);
         usdi.PointsData m_pointsData;
@@ -16,12 +17,16 @@ namespace UTJ
         Vector4[] m_rotations;
 
         IntPtr m_ptrRotations;
+        #endregion
 
 
+        #region properties
         public Vector3[] positions { get { return m_positions; } }
         public Vector3[] velocities { get { return m_velocities; } }
+        #endregion
 
 
+        #region impl
         public override void usdiOnLoad(usdi.Schema schema)
         {
             base.usdiOnLoad(schema);
@@ -101,6 +106,7 @@ namespace UTJ
 
 
         }
+        #endregion
     }
 
 }

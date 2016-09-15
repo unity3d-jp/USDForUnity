@@ -21,30 +21,51 @@ namespace UTJ
     [ExecuteInEditMode]
     public class usdiStream : MonoBehaviour
     {
-        public string m_path;
-        public usdiImportOptions m_importOptions = new usdiImportOptions();
-        public double m_time = 0.0;
-        public double m_timeScale = 1.0;
+        #region fields 
+        [SerializeField] string m_path;
+        [SerializeField] usdiImportOptions m_importOptions = new usdiImportOptions();
+        [SerializeField] double m_time;
+        [SerializeField] double m_timeScale = 1.0;
 
         [Header("Debug")]
 #if UNITY_EDITOR
-        public bool m_forceSingleThread = false;
-        public bool m_detailedLog = false;
+        [SerializeField] bool m_forceSingleThread = false;
+        [SerializeField] bool m_detailedLog = false;
         bool m_isCompiling = false;
 #endif
-        public bool m_directVBUpdate = true;
+        [SerializeField] bool m_directVBUpdate = true;
         int m_taskQueue;
 
         usdi.Context m_ctx;
         List<usdiElement> m_elements = new List<usdiElement>();
         double m_prevUpdateTime = Double.NaN;
         ManualResetEvent m_eventAsyncUpdate = new ManualResetEvent(true);
+        #endregion
 
 
-        public bool directVBUpdate { get { return m_directVBUpdate; } }
-        public int taskQueue { get { return m_taskQueue; } }
+        #region properties
+        public string usdPath { get { return m_path; } }
+        public usdiImportOptions usdImportOptions
+        {
+            get { return m_importOptions; }
+            set { m_importOptions = value; }
+        }
+        public double usdTime
+        {
+            get { return m_time; }
+            set { m_time = value; }
+        }
+        public double usdTimeScale
+        {
+            get { return m_timeScale; }
+            set { m_timeScale = value; }
+        }
+        public bool usdDirectVBUpdate { get { return m_directVBUpdate; } }
+        public int usdTaskQueue { get { return m_taskQueue; } }
+        #endregion
 
 
+        #region impl
         void usdiLog(string message)
         {
 #if UNITY_EDITOR
@@ -55,7 +76,7 @@ namespace UTJ
 #endif
         }
 
-        public static usdiElement usdiCreateNode(Transform parent, usdi.Schema schema)
+        static usdiElement usdiCreateNode(Transform parent, usdi.Schema schema)
         {
             {
                 var name = usdi.S(usdi.usdiGetName(schema));
@@ -115,7 +136,7 @@ namespace UTJ
             return elem;
         }
 
-        public void usdiCreateNodeRecursive(Transform parent, usdi.Schema schema, Action<usdiElement> node_handler)
+        void usdiCreateNodeRecursive(Transform parent, usdi.Schema schema, Action<usdiElement> node_handler)
         {
             if(!schema) { return; }
 
@@ -136,7 +157,7 @@ namespace UTJ
             }
         }
 
-        public void usdiApplyImportConfig()
+        void usdiApplyImportConfig()
         {
             usdi.ImportConfig conf;
             conf.interpolation = m_importOptions.interpolation;
@@ -165,8 +186,8 @@ namespace UTJ
             usdiCreateNodeRecursive(GetComponent<Transform>(), usdi.usdiGetRoot(m_ctx),
                 (e) => { m_elements.Add(e); });
 
-            usdiAsyncUpdate(0.0);
-            usdiUpdate(0.0);
+            usdiAsyncUpdate(m_time);
+            usdiUpdate(m_time);
 
             m_taskQueue = usdi.usdiExtCreateTaskQueue();
             usdiLog("usdiStream: loaded " + m_path);
@@ -185,11 +206,12 @@ namespace UTJ
                 m_ctx = default(usdi.Context);
                 usdi.usdiExtDestroyTaskQueue(m_taskQueue);
                 m_taskQueue = 0;
+
                 usdiLog("usdiStream: unloaded " + m_path);
             }
         }
 
-        public void usdiAsyncUpdate(double t)
+        void usdiAsyncUpdate(double t)
         {
             // skip if update is not needed
             if (t == m_prevUpdateTime) { return; }
@@ -234,7 +256,7 @@ namespace UTJ
             //}
         }
 
-        public void usdiUpdate(double t)
+        void usdiUpdate(double t)
         {
             if (t == m_prevUpdateTime) { return; }
 
@@ -252,7 +274,10 @@ namespace UTJ
 
             m_prevUpdateTime = t;
         }
+        #endregion
 
+
+        #region callbacks
         void Awake()
         {
             usdi.InitializePlugin();
@@ -339,6 +364,7 @@ namespace UTJ
                 m_time += Time.deltaTime * m_timeScale;
             }
         }
+        #endregion
     }
 
 }
