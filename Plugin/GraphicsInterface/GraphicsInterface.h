@@ -46,6 +46,7 @@ enum class TextureFormat
 
 enum class BufferType
 {
+    Unknown,
     Index,
     Vertex,
     Constant,
@@ -62,6 +63,25 @@ enum class ResourceFlags
 };
 inline ResourceFlags operator|(ResourceFlags a, ResourceFlags b) { return ResourceFlags((int)a | (int)b); }
 
+enum class MapMode
+{
+    Unknown,
+    Read,
+    Write,
+    //ReadWrite,
+    //WriteDiscard,
+};
+
+struct MapContext
+{
+    void *data_ptr = nullptr;
+    void *resource = nullptr;
+    void *staging_resource = nullptr;
+    BufferType type = BufferType::Unknown;
+    MapMode mode = MapMode::Unknown;
+    unsigned int size = 0;
+    bool keep_staging_resource = false;
+};
 
 class GraphicsInterface
 {
@@ -83,8 +103,11 @@ public:
 
     virtual Result  createBuffer(void **dst_buf, size_t size, BufferType type, const void *data, ResourceFlags flags = ResourceFlags::None) = 0;
     virtual void    releaseBuffer(void *buf) = 0;
-    virtual Result  readBuffer(void *dst, void *src_buf, size_t read_size, BufferType type) = 0;
-    virtual Result  writeBuffer(void *dst_buf, const void *src, size_t write_size, BufferType type) = 0;
+    virtual Result  mapBuffer(MapContext& ctx) = 0;
+    virtual Result  unmapBuffer(MapContext& ctx) = 0;
+    void releaseStagingResource(MapContext& ctx);
+    Result readBuffer(void *dst_mem, void *src_buf, size_t read_size, BufferType type);
+    Result writeBuffer(void *dst_buf, const void *src_mem, size_t write_size, BufferType type);
 
     static int GetTexelSize(TextureFormat format);
 };

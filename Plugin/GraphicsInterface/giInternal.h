@@ -10,7 +10,7 @@
     #define giSupportD3D11
     #define giSupportD3D12
     #define giSupportOpenGL
-    #define giSupportVulkan
+    //#define giSupportVulkan
 #else
     #define giSupportOpenGL
 #endif

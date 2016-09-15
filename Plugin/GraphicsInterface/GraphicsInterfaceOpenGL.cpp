@@ -58,8 +58,8 @@ public:
 
     Result createBuffer(void **dst_buf, size_t size, BufferType type, const void *data, ResourceFlags flags) override;
     void   releaseBuffer(void *buf) override;
-    Result readBuffer(void *dst, void *src_buf, size_t read_size, BufferType type) override;
-    Result writeBuffer(void *dst_buf, const void *src, size_t write_size, BufferType type) override;
+    Result mapBuffer(MapContext& ctx) override;
+    Result unmapBuffer(MapContext& ctx) override;
 };
 
 
@@ -246,43 +246,38 @@ void GraphicsInterfaceOpenGL::releaseBuffer(void *buf_)
     _glDeleteBuffers(1, &buf);
 }
 
-Result GraphicsInterfaceOpenGL::readBuffer(void *dst, void *src_buf, size_t read_size, BufferType type)
+Result GraphicsInterfaceOpenGL::mapBuffer(MapContext& ctx)
 {
-    GLuint buf = (GLuint)(size_t)src_buf;
-    GLenum gltype = GetGLBufferType(type);
+    if (!ctx.resource) { return Result::InvalidParameter; }
+
+    GLuint buf = (GLuint)(size_t)ctx.resource;
+    GLenum gltype = GetGLBufferType(ctx.type);
 
     Result ret = Result::OK;
     _glBindBuffer(gltype, buf);
-    void *mapped_data = _glMapBuffer(gltype, GL_READ_ONLY);
-    if (mapped_data) {
-        memcpy(dst, mapped_data, read_size);
-        _glUnmapBuffer(gltype);
+    switch (ctx.mode) {
+    case MapMode::Read: ctx.data_ptr = _glMapBuffer(gltype, GL_READ_ONLY); break;
+    case MapMode::Write: ctx.data_ptr = _glMapBuffer(gltype, GL_WRITE_ONLY); break;
+    default: ret = Result::InvalidParameter; break;
     }
-    else {
+
+    if (!ctx.data_ptr) {
         ret = GetGLError();
     }
-    _glBindBuffer(gltype, 0);
-
     return ret;
 }
 
-Result GraphicsInterfaceOpenGL::writeBuffer(void *dst_buf, const void *src, size_t write_size, BufferType type)
+Result GraphicsInterfaceOpenGL::unmapBuffer(MapContext& ctx)
 {
-    GLuint buf = (GLuint)(size_t)dst_buf;
-    GLenum gltype = GetGLBufferType(type);
+    if (!ctx.resource || !ctx.data_ptr) { return Result::InvalidParameter; }
+
+    GLuint buf = (GLuint)(size_t)ctx.resource;
+    GLenum gltype = GetGLBufferType(ctx.type);
 
     Result ret = Result::OK;
     _glBindBuffer(gltype, buf);
-    void *mapped_data = _glMapBuffer(gltype, GL_WRITE_ONLY);
-    if (mapped_data) {
-        memcpy(mapped_data, src, write_size);
-        _glUnmapBuffer(gltype);
-    }
-    else {
-        ret = GetGLError();
-    }
-    _glBindBuffer(gltype, 0);
-
+    _glUnmapBuffer(gltype);
+    ctx.data_ptr = nullptr;
     return ret;
 }
 

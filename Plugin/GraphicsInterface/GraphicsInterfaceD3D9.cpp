@@ -26,8 +26,8 @@ public:
 
     Result createBuffer(void **dst_buf, size_t size, BufferType type, const void *data, ResourceFlags flags) override;
     void   releaseBuffer(void *buf) override;
-    Result readBuffer(void *dst, void *src_buf, size_t read_size, BufferType type) override;
-    Result writeBuffer(void *dst_buf, const void *src, size_t write_size, BufferType type) override;
+    Result mapBuffer(MapContext& ctx) override;
+    Result unmapBuffer(MapContext& ctx) override;
 
 private:
     ComPtr<IDirect3DSurface9> createStagingSurface(int width, int height, TextureFormat format);
@@ -279,38 +279,31 @@ Result GraphicsInterfaceD3D9::writeTexture2D(void *dst_tex, int width, int heigh
 }
 
 
-enum class MapMode {
-    Read,
-    Write,
-};
-
-// Body: [](void *mapped_data) -> void
-template<class BufferT, class Body>
-static HRESULT MapBuffer(BufferT *buf, MapMode mode, const Body& body)
+template<class BufferT>
+static HRESULT MapBuffer(BufferT *buf, MapMode mode, void *& data)
 {
-    if (!buf) { return E_INVALIDARG; }
-
     DWORD lock_mode = 0;
     switch (mode) {
     case MapMode::Read: lock_mode = D3DLOCK_READONLY; break;
     case MapMode::Write: lock_mode = D3DLOCK_DISCARD; break;
     }
-
-    void *mapped_data;
-    auto hr = buf->Lock(0, 0, &mapped_data, lock_mode);
-    if (FAILED(hr)) { return hr; }
-    body(mapped_data);
-    buf->Unlock();
-    return S_OK;
+    return buf->Lock(0, 0, &data, lock_mode);
 }
 
-// Body: [](void *mapped_data) -> void
-template<class Body>
-static HRESULT MapBuffer(void *buf, BufferType type, MapMode mode, const Body& body)
+static HRESULT MapBuffer(void *buf, BufferType type, MapMode mode, void*& data)
 {
     switch (type) {
-    case BufferType::Index: return MapBuffer((IDirect3DIndexBuffer9*)buf, mode, body);
-    case BufferType::Vertex: return MapBuffer((IDirect3DVertexBuffer9*)buf, mode, body);
+    case BufferType::Index: return MapBuffer((IDirect3DIndexBuffer9*)buf, mode, data);
+    case BufferType::Vertex: return MapBuffer((IDirect3DVertexBuffer9*)buf, mode, data);
+    default: return E_INVALIDARG;
+    }
+}
+
+static HRESULT UnmapBuffer(void *buf, BufferType type)
+{
+    switch (type) {
+    case BufferType::Index: return ((IDirect3DIndexBuffer9*)buf)->Unlock();
+    case BufferType::Vertex: return ((IDirect3DVertexBuffer9*)buf)->Unlock();
     default: return E_INVALIDARG;
     }
 }
@@ -350,25 +343,18 @@ void GraphicsInterfaceD3D9::releaseBuffer(void *buf)
     ((IUnknown*)buf)->Release();
 }
 
-Result GraphicsInterfaceD3D9::readBuffer(void *dst, void *src_buf, size_t read_size, BufferType type)
+Result GraphicsInterfaceD3D9::mapBuffer(MapContext& ctx)
 {
-    if (read_size == 0) { return Result::OK; }
-    if (!dst || !src_buf) { return Result::InvalidParameter; }
-
-    auto hr = MapBuffer(src_buf, type, MapMode::Read, [&](void *mapped_data) {
-        memcpy(dst, mapped_data, read_size);
-    });
+    if (!ctx.resource) { return Result::InvalidParameter; }
+    auto hr = MapBuffer(ctx.resource, ctx.type, ctx.mode, ctx.data_ptr);
     return TranslateReturnCode(hr);
 }
 
-Result GraphicsInterfaceD3D9::writeBuffer(void *dst_buf, const void *src, size_t write_size, BufferType type)
+Result GraphicsInterfaceD3D9::unmapBuffer(MapContext& ctx)
 {
-    if (write_size == 0) { return Result::OK; }
-    if (!dst_buf || !src) { return Result::InvalidParameter; }
-
-    auto hr = MapBuffer(dst_buf, type, MapMode::Write, [&](void *mapped_data) {
-        memcpy(mapped_data, src, write_size);
-    });
+    if (!ctx.resource) { return Result::InvalidParameter; }
+    auto hr = UnmapBuffer(ctx.resource, ctx.type);
+    ctx.data_ptr = nullptr;
     return TranslateReturnCode(hr);
 }
 

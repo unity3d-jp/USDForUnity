@@ -26,8 +26,8 @@ public:
 
     Result createBuffer(void **dst_buf, size_t size, BufferType type, const void *data, ResourceFlags flags) override;
     void   releaseBuffer(void *buf) override;
-    Result readBuffer(void *dst, void *src_buf, size_t read_size, BufferType type) override;
-    Result writeBuffer(void *dst_buf, const void *src, size_t write_size, BufferType type) override;
+    Result mapBuffer(MapContext& ctx) override;
+    Result unmapBuffer(MapContext& ctx) override;
 
 private:
     enum class StagingFlag {
@@ -294,64 +294,98 @@ void GraphicsInterfaceD3D11::releaseBuffer(void *buf)
     }
 }
 
-Result GraphicsInterfaceD3D11::readBuffer(void *dst, void *src_buf_, size_t read_size, BufferType type)
+Result GraphicsInterfaceD3D11::mapBuffer(MapContext& ctx)
 {
-    if (read_size == 0) { return Result::OK; }
-    if (!dst || !src_buf_) { return Result::InvalidParameter; }
+    if (!ctx.resource) { return Result::InvalidParameter; }
 
-    auto *src_buf = (ID3D11Buffer*)src_buf_;
+    D3D11_MAP flag;
+    switch (ctx.mode) {
+    case MapMode::Read: flag = D3D11_MAP_READ; break;
+    case MapMode::Write: flag = D3D11_MAP_WRITE_DISCARD; break;
+    default: return Result::InvalidParameter;
+    }
 
-
-    auto proc_read = [this](void *dst, ID3D11Buffer *buf, size_t size) -> HRESULT {
-        D3D11_MAPPED_SUBRESOURCE mapped;
-        HRESULT hr = m_context->Map(buf, 0, D3D11_MAP_READ, 0, &mapped);
-        if (FAILED(hr)) { return hr; }
-        memcpy(dst, mapped.pData, size);
-        m_context->Unmap(buf, 0);
-        return S_OK;
-    };
+    D3D11_BUFFER_DESC desc;
+    D3D11_MAPPED_SUBRESOURCE mapped;
+    auto *resouce = (ID3D11Buffer*)ctx.resource;
+    resouce->GetDesc(&desc);
+    ctx.size = desc.ByteWidth;
 
     // try direct access
-    auto hr = proc_read(dst, src_buf, read_size);
-    if (SUCCEEDED(hr)) { return Result::OK; }
+    HRESULT hr = m_context->Map(resouce, 0, flag, 0, &mapped);
+    if (SUCCEEDED(hr)) {
+        ctx.data_ptr = mapped.pData;
+    }
+    else {
+        // staging
 
+        ComPtr<ID3D11Buffer> staging;
 
-    // try copy-via-staging
-    auto staging = createStagingBuffer(read_size, StagingFlag::Readback);
-    m_context->CopyResource(staging.Get(), src_buf);
-    sync();
-    hr = proc_read(dst, staging.Get(), read_size);
+        // reuse previous staging resource if available
+        if (ctx.staging_resource) {
+            D3D11_BUFFER_DESC sdesc;
+            auto* sresouce = (ID3D11Buffer*)ctx.staging_resource;
+            sresouce->GetDesc(&sdesc);
+            if (desc.ByteWidth == sdesc.ByteWidth) {
+                staging = sresouce;
+            }
+            else {
+                sresouce->Release();
+                ctx.staging_resource = nullptr;
+            }
+        }
 
+        if (ctx.mode == MapMode::Read) {
+            if (!staging) {
+                staging = createStagingBuffer(ctx.size, StagingFlag::Readback);
+            }
+            if (staging) {
+                // copy content to staging
+                m_context->CopyResource(staging.Get(), resouce);
+                sync();
+            }
+        }
+        else if (ctx.mode == MapMode::Write) {
+            if (!staging) {
+                staging = createStagingBuffer(ctx.size, StagingFlag::Upload);
+            }
+        }
+
+        if (!staging) {
+            return Result::Unknown;
+        }
+
+        hr = m_context->Map(staging.Get(), 0, flag, 0, &mapped);
+        if (SUCCEEDED(hr)) {
+            ctx.data_ptr = mapped.pData;
+            ctx.staging_resource = staging.Get();
+            staging->AddRef();
+        }
+    }
     return TranslateReturnCode(hr);
 }
 
-Result GraphicsInterfaceD3D11::writeBuffer(void *dst_buf_, const void *src, size_t write_size, BufferType type)
+Result GraphicsInterfaceD3D11::unmapBuffer(MapContext& ctx)
 {
-    if (write_size == 0) { return Result::OK; }
-    if (!dst_buf_ || !src) { return Result::InvalidParameter; }
+    if (!ctx.resource || !ctx.data_ptr) { return Result::InvalidParameter; }
 
-    auto *dst_buf = (ID3D11Buffer*)dst_buf_;
-
-    auto proc_write = [this](ID3D11Buffer *buf, const void *src, size_t size) -> HRESULT {
-        D3D11_MAPPED_SUBRESOURCE mapped;
-        HRESULT hr = m_context->Map(buf, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
-        if (FAILED(hr)) { return hr; }
-        memcpy(mapped.pData, src, size);
-        m_context->Unmap(buf, 0);
-        return S_OK;
-    };
-
-    // try direct access
-    auto hr = proc_write(dst_buf, src, write_size);
-    if (SUCCEEDED(hr)) { return Result::OK; }
-
-
-    // try copy-via-staging
-    auto staging = createStagingBuffer(write_size, StagingFlag::Upload);
-    hr = proc_write(staging.Get(), src, write_size);
-    m_context->CopyResource(dst_buf, staging.Get());
-
-    return TranslateReturnCode(hr);
+    if (ctx.staging_resource) {
+        auto staging = (ID3D11Buffer*)ctx.staging_resource;
+        m_context->Unmap(staging, 0);
+        if (ctx.mode == MapMode::Write) {
+            // copy content to dest
+            m_context->CopyResource((ID3D11Buffer*)ctx.resource, staging);
+        }
+        if (!ctx.keep_staging_resource) {
+            staging->Release();
+        }
+    }
+    else {
+        auto resource = (ID3D11Buffer*)ctx.resource;
+        m_context->Unmap(resource, 0);
+    }
+    ctx.data_ptr = nullptr;
+    return Result::OK;
 }
 
 } // namespace gi

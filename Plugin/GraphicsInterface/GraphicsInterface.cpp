@@ -7,6 +7,46 @@ GraphicsInterface::~GraphicsInterface()
 {
 }
 
+
+void GraphicsInterface::releaseStagingResource(MapContext& ctx)
+{
+    if (ctx.keep_staging_resource && ctx.staging_resource) {
+        releaseBuffer(ctx.staging_resource);
+        ctx.staging_resource = nullptr;
+    }
+}
+
+Result GraphicsInterface::readBuffer(void *dst_mem, void *src_buf, size_t read_size, BufferType type)
+{
+    MapContext ctx;
+    ctx.resource = src_buf;
+    ctx.type = type;
+    ctx.mode = MapMode::Read;
+
+    auto res = mapBuffer(ctx);
+    if (res == Result::OK) {
+        memcpy(dst_mem, ctx.data_ptr, read_size);
+        res = unmapBuffer(ctx);
+    }
+    return res;
+}
+
+
+Result GraphicsInterface::writeBuffer(void *dst_buf, const void *src_mem, size_t write_size, BufferType type)
+{
+    MapContext ctx;
+    ctx.resource = dst_buf;
+    ctx.type = type;
+    ctx.mode = MapMode::Write;
+
+    auto res = mapBuffer(ctx);
+    if (res == Result::OK) {
+        memcpy(ctx.data_ptr, src_mem, write_size);
+        res = unmapBuffer(ctx);
+    }
+    return res;
+}
+
 int GraphicsInterface::GetTexelSize(TextureFormat format)
 {
     switch (format)

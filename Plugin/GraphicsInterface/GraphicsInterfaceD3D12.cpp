@@ -27,8 +27,8 @@ public:
 
     Result createBuffer(void **dst_buf, size_t size, BufferType type, const void *data, ResourceFlags flags) override;
     void   releaseBuffer(void *buf) override;
-    Result readBuffer(void *dst, void *src_buf, size_t read_size, BufferType type) override;
-    Result writeBuffer(void *dst_buf, const void *src, size_t write_size, BufferType type) override;
+    Result mapBuffer(MapContext& ctx) override;
+    Result unmapBuffer(MapContext& ctx) override;
 
 private:
     enum class StagingFlag {
@@ -36,6 +36,7 @@ private:
         Readback,
     };
     ComPtr<ID3D12Resource> createStagingBuffer(size_t size, StagingFlag flag);
+    HRESULT copyResource(ID3D12Resource *dst, ID3D12Resource *src);
 
     // Body: [](ID3D12GraphicsCommandList *clist) -> void
     template<class Body> HRESULT executeCommands(const Body& body);
@@ -385,78 +386,101 @@ void GraphicsInterfaceD3D12::releaseBuffer(void *buf_)
     buf->Release();
 }
 
-Result GraphicsInterfaceD3D12::readBuffer(void *dst, void *src_buf, size_t read_size, BufferType type)
+HRESULT GraphicsInterfaceD3D12::copyResource(ID3D12Resource *dst, ID3D12Resource *src)
 {
-    if (read_size == 0) { return Result::OK; }
-    if (!dst || !src_buf) { return Result::InvalidParameter; }
-
-    auto *buf = (ID3D12Resource*)src_buf;
-
-    auto read_proc = [](void *dst, ID3D12Resource *src_buf, size_t read_size) -> HRESULT {
-        void *mapped_data = nullptr;
-        auto hr = src_buf->Map(0, nullptr, &mapped_data);
-        if (FAILED(hr)) { return hr; }
-        memcpy(dst, mapped_data, read_size);
-        src_buf->Unmap(0, nullptr);
-        return S_OK;
-    };
-
-
-    // try direct access
-    auto hr = read_proc(dst, buf, read_size);
-    if (SUCCEEDED(hr)) { return Result::OK; }
-
-    // try copy-via-staging
-    auto staging = createStagingBuffer(read_size, StagingFlag::Readback);
-    if (!staging) { return Result::OutOfMemory; }
-
-    hr = executeCommands([&](ID3D12GraphicsCommandList *clist) {
-        clist->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(buf, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_SOURCE));
-        clist->CopyResource(staging.Get(), buf);
-        clist->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(buf, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COMMON));
+    return executeCommands([&](ID3D12GraphicsCommandList *clist) {
+        clist->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(src, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_SOURCE));
+        clist->CopyResource(dst, src);
+        clist->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(src, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COMMON));
     });
-    if (FAILED(hr)) { return TranslateReturnCode(hr); }
+}
 
-    hr = read_proc(dst, staging.Get(), read_size);
+Result GraphicsInterfaceD3D12::mapBuffer(MapContext& ctx)
+{
+    if (!ctx.resource) { return Result::InvalidParameter; }
+    auto *resource = (ID3D12Resource*)ctx.resource;
+    auto desc = resource->GetDesc();
+
+    ctx.size = (uint32_t)desc.Width;
+    auto hr = resource->Map(0, nullptr, &ctx.data_ptr);
+    if (FAILED(hr)) {
+        // staging
+
+        ComPtr<ID3D12Resource> staging;
+
+        // reuse previous staging resource if available
+        if (ctx.staging_resource) {
+            auto* sresouce = (ID3D12Resource*)ctx.staging_resource;
+            auto sdesc = sresouce->GetDesc();
+            if (desc.Width == sdesc.Width) {
+                staging = sresouce;
+            }
+            else {
+                sresouce->Release();
+                ctx.staging_resource = nullptr;
+            }
+        }
+
+        if (ctx.mode == MapMode::Read) {
+            if (!staging) {
+                staging = createStagingBuffer(ctx.size, StagingFlag::Readback);
+            }
+            if (staging) {
+                // copy content to staging
+                hr = executeCommands([&](ID3D12GraphicsCommandList *clist) {
+                    clist->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(resource, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_SOURCE));
+                    clist->CopyResource(staging.Get(), resource);
+                    clist->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(resource, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COMMON));
+                });
+                if (FAILED(hr)) {
+                    staging = nullptr;
+                }
+            }
+        }
+        else if (ctx.mode == MapMode::Write) {
+            if (!staging) {
+                staging = createStagingBuffer(ctx.size, StagingFlag::Upload);
+            }
+        }
+
+        if (!staging) {
+            return Result::Unknown;
+        }
+
+        hr = staging->Map(0, nullptr, &ctx.data_ptr);
+        if (SUCCEEDED(hr)) {
+            ctx.staging_resource = staging.Get();
+            staging->AddRef();
+        }
+    }
+
     return TranslateReturnCode(hr);
 }
 
-Result GraphicsInterfaceD3D12::writeBuffer(void *dst_buf, const void *src, size_t write_size, BufferType type)
+Result GraphicsInterfaceD3D12::unmapBuffer(MapContext& ctx)
 {
-    if (write_size == 0) { return Result::OK; }
-    if (!dst_buf || !src) { return Result::InvalidParameter; }
+    if (!ctx.resource || !ctx.data_ptr) { return Result::InvalidParameter; }
+    auto resource = (ID3D12Resource*)ctx.resource;
 
-    auto *buf = (ID3D12Resource*)dst_buf;
-
-    auto write_proc = [](ID3D12Resource *buf, const void *src, size_t write_size) -> HRESULT {
-        void *mapped_data = nullptr;
-        auto hr = buf->Map(0, nullptr, &mapped_data);
-        if (FAILED(hr)) { return hr; }
-        memcpy(mapped_data, src, write_size);
-        buf->Unmap(0, nullptr);
-        return hr;
-    };
-
-
-    // try direct access
-    auto hr = write_proc(buf, src, write_size);
-    if (SUCCEEDED(hr)) { return Result::OK; }
-
-
-    // try copy-via-staging
-    auto staging = createStagingBuffer(write_size, StagingFlag::Upload);
-    if (!staging) { return Result::OutOfMemory; }
-
-    hr = write_proc(staging.Get(), src, write_size);
-    if (FAILED(hr)) { return TranslateReturnCode(hr); }
-
-    hr = executeCommands([&](ID3D12GraphicsCommandList *clist) {
-        clist->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(buf, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST));
-        clist->CopyResource(buf, staging.Get());
-        clist->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(buf, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COMMON));
-    });
-    if (FAILED(hr)) { return TranslateReturnCode(hr); }
-
+    if (ctx.staging_resource) {
+        auto staging = (ID3D12Resource*)ctx.staging_resource;
+        staging->Unmap(0, nullptr);
+        if (ctx.mode == MapMode::Write) {
+            // copy content to dest
+            executeCommands([&](ID3D12GraphicsCommandList *clist) {
+                clist->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(resource, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST));
+                clist->CopyResource(resource, staging);
+                clist->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(resource, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COMMON));
+            });
+        }
+        if (!ctx.keep_staging_resource) {
+            staging->Release();
+        }
+    }
+    else {
+        resource->Unmap(0, nullptr);
+    }
+    ctx.data_ptr = nullptr;
     return Result::OK;
 }
 
