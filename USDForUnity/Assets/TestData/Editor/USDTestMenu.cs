@@ -18,10 +18,10 @@ public class USDTestMenu
         var opt = new usdiImportOptions();
         Vector3 pos = Vector3.zero;
         Vector3 forward = Vector3.forward;
-        Instanciate(path, opt, pos, forward);
+        InstanciateUSD(path, opt, pos, forward);
     }
 
-    static usdiStream Instanciate(string path, usdiImportOptions opt, Vector3 pos, Vector3 forward)
+    static usdiStream InstanciateUSD(string path, usdiImportOptions opt, Vector3 pos, Vector3 forward)
     {
         var usd = UTJ.usdiImportWindow.InstanciateUSD(path, opt);
         var trans = usd.GetComponent<Transform>();

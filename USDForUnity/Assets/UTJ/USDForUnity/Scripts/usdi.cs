@@ -324,9 +324,19 @@ namespace UTJ
         [DllImport ("usdi")] public static extern Bool          usdiAttrWriteArraySample(Attribute attr, IntPtr src, int size, double t);
 
 
-        [DllImport("usdi")] public static extern int usdiExtCreateTaskQueue();
-        [DllImport("usdi")] public static extern Bool usdiExtDestroyTaskQueue(int qh);
-        [DllImport("usdi")] public static extern Bool usdiExtQueueVertexBufferUpdateTask(int qh, ref MeshData data, IntPtr vb, IntPtr ib);
+        public struct MapContext
+        {
+            public IntPtr dataPtr;
+            public IntPtr resource;
+            public IntPtr stagingResource;
+            public int bufferType;
+            public int mapMode;
+            public int size;
+            public Bool keepStagingResource;
+        };
+
+        [DllImport("usdi")] public static extern Bool usdiExtQueueVertexBufferUpdateTask(
+            ref MeshData data, ref MapContext ctxVB, ref MapContext ctxIB);
         [DllImport("usdi")] public static extern Bool usdiExtFlushTaskQueue(int qh);
 
 

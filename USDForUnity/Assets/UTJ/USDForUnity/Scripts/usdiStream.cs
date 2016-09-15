@@ -34,12 +34,15 @@ namespace UTJ
         bool m_isCompiling = false;
 #endif
         [SerializeField] bool m_directVBUpdate = true;
-        int m_taskQueue;
 
         usdi.Context m_ctx;
         List<usdiElement> m_elements = new List<usdiElement>();
         double m_prevUpdateTime = Double.NaN;
         ManualResetEvent m_eventAsyncUpdate = new ManualResetEvent(true);
+
+        static int s_enableCount;
+        static int s_updateCount;
+        static int s_lateupdateCount;
         #endregion
 
 
@@ -61,7 +64,6 @@ namespace UTJ
             set { m_timeScale = value; }
         }
         public bool usdDirectVBUpdate { get { return m_directVBUpdate; } }
-        public int usdTaskQueue { get { return m_taskQueue; } }
         #endregion
 
 
@@ -189,7 +191,6 @@ namespace UTJ
             usdiAsyncUpdate(m_time);
             usdiUpdate(m_time);
 
-            m_taskQueue = usdi.usdiExtCreateTaskQueue();
             usdiLog("usdiStream: loaded " + m_path);
             return true;
         }
@@ -204,8 +205,6 @@ namespace UTJ
                 }
                 usdi.usdiDestroyContext(m_ctx);
                 m_ctx = default(usdi.Context);
-                usdi.usdiExtDestroyTaskQueue(m_taskQueue);
-                m_taskQueue = 0;
 
                 usdiLog("usdiStream: unloaded " + m_path);
             }
@@ -223,37 +222,6 @@ namespace UTJ
             {
                 e.usdiAsyncUpdate(t);
             }
-
-            //// task parallel async update.
-            //// this will be faster if m_elements is large enough. but otherwise slower.
-            //{
-            //    int division = 16;
-            //    int numActiveTasks = 0;
-            //    int granurarity = Mathf.Max(m_elements.Count / division, 1);
-            //    int numTasks = m_elements.Count / granurarity + (m_elements.Count % granurarity == 0 ? 0 : 1);
-            //    for (int ti=0; ti< numTasks; ++ti)
-            //    {
-            //        Interlocked.Increment(ref numActiveTasks);
-            //        ThreadPool.QueueUserWorkItem((object state) =>
-            //        {
-            //            int nth = (int)state;
-            //            try
-            //            {
-            //                int begin = granurarity * nth;
-            //                int end = Mathf.Min(granurarity * (nth + 1), m_elements.Count);
-            //                for (int i = begin; i < end; ++i)
-            //                {
-            //                    m_elements[i].usdiAsyncUpdate(t);
-            //                }
-            //            }
-            //            finally
-            //            {
-            //                Interlocked.Decrement(ref numActiveTasks);
-            //            }
-            //        }, ti);
-            //    }
-            //    while(numActiveTasks > 0) { }
-            //}
         }
 
         void usdiUpdate(double t)
@@ -264,12 +232,6 @@ namespace UTJ
             foreach (var e in m_elements)
             {
                 e.usdiUpdate(t);
-            }
-
-            // kick VB update task
-            if(m_directVBUpdate)
-            {
-                GL.IssuePluginEvent(usdi.usdiGetRenderEventFunc(), m_taskQueue);
             }
 
             m_prevUpdateTime = t;
@@ -288,15 +250,23 @@ namespace UTJ
             usdiLoad(m_path);
         }
 
-#if UNITY_EDITOR
+        void OnEnable()
+        {
+            ++s_enableCount;
+            //Debug.Log("usdiStream: s_enableCount = " + s_enableCount);
+        }
+
         void OnDisable()
         {
+            --s_enableCount;
+            //Debug.Log("usdiStream: s_enableCount = " + s_enableCount);
+#if UNITY_EDITOR
             if (!EditorApplication.isPlaying && EditorApplication.isPlayingOrWillChangePlaymode)
             {
                 usdiUnload();
             }
-        }
 #endif
+        }
 
         void OnDestroy()
         {
@@ -310,6 +280,9 @@ namespace UTJ
 
         void Update()
         {
+            s_lateupdateCount = 0;
+            ++s_updateCount;
+
 #if UNITY_EDITOR
             if (EditorApplication.isCompiling && !m_isCompiling)
             {
@@ -324,7 +297,10 @@ namespace UTJ
 #endif
 
             // make sure all previous tasks are finished
-            usdi.usdiExtFlushTaskQueue(m_taskQueue);
+            if (s_updateCount == 1 && m_directVBUpdate)
+            {
+                usdi.usdiExtFlushTaskQueue(0);
+            }
 
             // kick async update tasks
 #if UNITY_EDITOR
@@ -352,8 +328,20 @@ namespace UTJ
 
         void LateUpdate()
         {
+            ++s_lateupdateCount;
+            if(s_lateupdateCount == s_enableCount)
+            {
+                s_updateCount = 0;
+            }
+
             // wait usdiAsyncUpdate() to complete
             m_eventAsyncUpdate.WaitOne();
+
+            // kick VB update tasks
+            if (s_lateupdateCount == 1 && m_directVBUpdate)
+            {
+                GL.IssuePluginEvent(usdi.usdiGetRenderEventFunc(), 0);
+            }
 
             usdiUpdate(m_time);
 

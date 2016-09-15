@@ -38,6 +38,7 @@ struct float4 { float x, y, z, w; };
 struct quaternion { float x, y, z, w; };
 struct float3x3 { float3 v[3]; };
 struct float4x4 { float4 v[4]; };
+struct MapContext;
 
 enum class InterpolationType
 {
@@ -238,9 +239,7 @@ usdiAPI bool                 usdiAttrWriteSample(usdi::Attribute *attr, const vo
 usdiAPI bool                 usdiAttrWriteArraySample(usdi::Attribute *attr, const void *src, int size, usdi::Time t);
 
 // ext
-usdiAPI usdi::handle_t  usdiExtCreateTaskQueue();
-usdiAPI bool            usdiExtDestroyTaskQueue(usdi::handle_t queue);
-usdiAPI bool            usdiExtQueueVertexBufferUpdateTask(usdi::handle_t queue, const usdi::MeshData *src, void *vb, void *ib);
+usdiAPI bool            usdiExtQueueVertexBufferUpdateTask(const usdi::MeshData *src, usdi::MapContext *ctxVB, usdi::MapContext *ctxIB);
 usdiAPI bool            usdiExtFlushTaskQueue(usdi::handle_t queue);
 
 } // extern "C"

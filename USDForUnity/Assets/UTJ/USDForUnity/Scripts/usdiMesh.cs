@@ -28,8 +28,9 @@ namespace UTJ
         int m_frame;
 
         // for Unity 5.5 or later
-        IntPtr m_vertexBuffer;
-        IntPtr m_indexBuffer;
+        bool m_directVBUpdate;
+        usdi.MapContext m_ctxVB;
+        usdi.MapContext m_ctxIB;
         #endregion
 
 
@@ -158,22 +159,26 @@ namespace UTJ
         void usdiReadMeshData(double t)
         {
             usdi.usdiMeshReadSample(m_mesh, ref m_meshData, t);
+
+            // need to improve this..
+            m_directVBUpdate = m_stream.usdDirectVBUpdate &&
+                (m_prevVertexCount == m_meshData.num_points && m_prevIndexCount == m_meshData.num_indices_triangulated) &&
+                (m_ctxVB.resource != IntPtr.Zero);
+
+            if (m_directVBUpdate)
+            {
+                bool update_topology = m_meshSummary.topology_variance == usdi.TopologyVariance.Heterogenous;
+                if(!update_topology)
+                {
+                    m_meshData.indices_triangulated = IntPtr.Zero;
+                }
+                usdi.usdiExtQueueVertexBufferUpdateTask(ref m_meshData, ref m_ctxVB, ref m_ctxIB);
+            }
         }
 
         void usdiUpdateMeshData(double t, bool topology, bool close)
         {
-            // need to improve this..
-            bool directVBUpdate = m_stream.usdDirectVBUpdate &&
-                (m_prevVertexCount == m_meshData.num_points && m_prevIndexCount == m_meshData.num_indices_triangulated) &&
-                (m_vertexBuffer != IntPtr.Zero);
-
-            if (directVBUpdate)
-            {
-                usdi.usdiExtQueueVertexBufferUpdateTask(m_stream.usdTaskQueue, ref m_meshData,
-                    m_vertexBuffer,
-                    topology ? m_indexBuffer : IntPtr.Zero);
-            }
-            else
+            if (!m_directVBUpdate)
             {
                 m_umesh.vertices = m_positions;
                 if (m_meshSummary.has_normals)
@@ -199,8 +204,8 @@ namespace UTJ
 #if UNITY_5_5_OR_NEWER
                 if(m_stream.usdDirectVBUpdate)
                 {
-                    m_vertexBuffer = m_umesh.GetNativeVertexBufferPtr(0);
-                    m_indexBuffer = m_umesh.GetNativeIndexBufferPtr();
+                    m_ctxVB.resource = m_umesh.GetNativeVertexBufferPtr(0);
+                    m_ctxIB.resource = m_umesh.GetNativeIndexBufferPtr();
                 }
 #endif
             }
