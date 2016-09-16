@@ -31,6 +31,8 @@
 
 namespace usdi {
 extern int g_debug_level;
+tbb::task_group g_read_tasks;
+tbb::task_group g_write_tasks;
 } // namespace usdi
 
 extern "C" {
@@ -44,6 +46,16 @@ usdiAPI usdi::Time usdiGetDefaultTime()
 {
     return std::numeric_limits<double>::quiet_NaN();
 }
+
+usdiAPI void usdiWaitAsyncRead()
+{
+    usdi::g_read_tasks.wait();
+}
+usdiAPI void usdiWaitAsyncWrite()
+{
+    usdi::g_write_tasks.wait();
+}
+
 
 
 usdiAPI usdi::Context* usdiCreateContext()
@@ -286,12 +298,26 @@ usdiAPI bool usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Tim
     if (!mesh || !dst) return false;
     return mesh->readSample(*dst, t);
 }
+usdiAPI bool usdiMeshReadSampleAsync(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t)
+{
+    usdiTraceFunc();
+    if (!mesh || !dst) return false;
+    usdi:: g_read_tasks.run([=]() { mesh->readSample(*dst, t); });
+    return true;
+}
 
 usdiAPI bool usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t)
 {
     usdiTraceFunc();
-    if (!mesh || !src) return 0;
+    if (!mesh || !src) return false;
     return mesh->writeSample(*src, t);
+}
+usdiAPI bool usdiMeshWriteSampleAsync(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t)
+{
+    usdiTraceFunc();
+    if (!mesh || !src) return false;
+    usdi::g_write_tasks.run([=]() { mesh->writeSample(*src, t); });
+    return true;
 }
 
 

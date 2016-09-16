@@ -259,6 +259,9 @@ namespace UTJ
 
         [DllImport ("usdi")] public static extern IntPtr        usdiGetRenderEventFunc();
 
+        [DllImport ("usdi")] public static extern void          usdiWaitAsyncRead();
+        [DllImport ("usdi")] public static extern void          usdiWaitAsyncWrite();
+
         // Context interface
         [DllImport ("usdi")] public static extern Context       usdiCreateContext();
         [DllImport ("usdi")] public static extern void          usdiDestroyContext(Context ctx);
@@ -303,7 +306,9 @@ namespace UTJ
         [DllImport ("usdi")] public static extern Mesh          usdiCreateMesh(Context ctx, Schema parent, string name);
         [DllImport ("usdi")] public static extern void          usdiMeshGetSummary(Mesh mesh, ref MeshSummary dst);
         [DllImport ("usdi")] public static extern Bool          usdiMeshReadSample(Mesh mesh, ref MeshData dst, double t);
+        [DllImport ("usdi")] public static extern Bool          usdiMeshReadSampleAsync(Mesh mesh, ref MeshData dst, double t);
         [DllImport ("usdi")] public static extern Bool          usdiMeshWriteSample(Mesh mesh, ref MeshData src, double t);
+        [DllImport ("usdi")] public static extern Bool          usdiMeshWriteSampleAsync(Mesh mesh, ref MeshData src, double t);
 
         // Points interface
         [DllImport ("usdi")] public static extern Points        usdiAsPoints(Schema schema);
@@ -335,8 +340,7 @@ namespace UTJ
             public Bool keepStagingResource;
         };
 
-        [DllImport("usdi")] public static extern Bool usdiExtQueueVertexBufferUpdateTask(
-            ref MeshData data, ref MapContext ctxVB, ref MapContext ctxIB);
+        [DllImport("usdi")] public static extern Bool usdiExtQueueVertexBufferUpdateTask(ref MeshData data, ref MapContext ctxVB, ref MapContext ctxIB);
         [DllImport("usdi")] public static extern Bool usdiExtFlushTaskQueue(int qh);
 
 

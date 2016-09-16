@@ -3,7 +3,7 @@
 
 namespace usdi {
 
-int g_debug_level = 5;
+int g_debug_level = 4;
 
 void LogImpl(int level, const char *format, ...)
 {
@@ -33,12 +33,12 @@ static uint32_t GetThreadID()
 TraceFuncImpl::TraceFuncImpl(const char *func)
     : m_func(func)
 {
-    usdiLogTrace("[tid %u] %s enter\n", GetThreadID(), m_func);
+    usdiLogDetail("[tid %u] %s enter\n", GetThreadID(), m_func);
 }
 
 TraceFuncImpl::~TraceFuncImpl()
 {
-    usdiLogTrace("[tid %u] %s leave\n", GetThreadID(), m_func);
+    usdiLogDetail("[tid %u] %s leave\n", GetThreadID(), m_func);
 }
 
 const float Deg2Rad = float(M_PI) / 180.0f;

@@ -64,6 +64,9 @@ namespace UTJ
             set { m_timeScale = value; }
         }
         public bool usdDirectVBUpdate { get { return m_directVBUpdate; } }
+#if UNITY_EDITOR
+        public bool usdForceSingleThread { get { return m_forceSingleThread; } }
+#endif
         #endregion
 
 
@@ -337,10 +340,15 @@ namespace UTJ
             // wait usdiAsyncUpdate() to complete
             m_eventAsyncUpdate.WaitOne();
 
-            // kick VB update tasks
-            if (s_lateupdateCount == 1 && m_directVBUpdate)
+            if (s_lateupdateCount == 1)
             {
-                GL.IssuePluginEvent(usdi.usdiGetRenderEventFunc(), 0);
+                usdi.usdiWaitAsyncRead();
+
+                // kick VB update tasks
+                if(m_directVBUpdate)
+                {
+                    GL.IssuePluginEvent(usdi.usdiGetRenderEventFunc(), 0);
+                }
             }
 
             usdiUpdate(m_time);

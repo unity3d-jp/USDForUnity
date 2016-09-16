@@ -174,6 +174,8 @@ extern "C" {
 
 usdiAPI void             usdiSetDebugLevel(int l);
 usdiAPI usdi::Time       usdiGetDefaultTime();
+usdiAPI void             usdiWaitAsyncRead();
+usdiAPI void             usdiWaitAsyncWrite();
 
 // Context interface
 usdiAPI usdi::Context*   usdiCreateContext();
@@ -218,7 +220,9 @@ usdiAPI usdi::Mesh*      usdiAsMesh(usdi::Schema *schema); // dynamic cast to Me
 usdiAPI usdi::Mesh*      usdiCreateMesh(usdi::Context *ctx, usdi::Schema *parent, const char *name);
 usdiAPI void             usdiMeshGetSummary(usdi::Mesh *mesh, usdi::MeshSummary *dst);
 usdiAPI bool             usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t);
+usdiAPI bool             usdiMeshReadSampleAsync(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t);
 usdiAPI bool             usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t);
+usdiAPI bool             usdiMeshWriteSampleAsync(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t);
 
 // Points interface
 usdiAPI usdi::Points*    usdiAsPoints(usdi::Schema *schema); // dynamic cast to Points

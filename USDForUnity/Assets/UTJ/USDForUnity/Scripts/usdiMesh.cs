@@ -158,7 +158,17 @@ namespace UTJ
 
         void usdiReadMeshData(double t)
         {
-            usdi.usdiMeshReadSample(m_mesh, ref m_meshData, t);
+#if UNITY_EDITOR
+            if (m_stream.usdForceSingleThread)
+            {
+                usdi.usdiMeshReadSample(m_mesh, ref m_meshData, t);
+            }
+            else
+#endif
+            {
+                usdi.usdiMeshReadSampleAsync(m_mesh, ref m_meshData, t);
+            }
+
 
             // need to improve this..
             m_directVBUpdate = m_stream.usdDirectVBUpdate &&
