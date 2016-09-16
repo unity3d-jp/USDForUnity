@@ -202,10 +202,12 @@ namespace UTJ
         {
             if(m_ctx)
             {
-                foreach (var e in m_elements)
+                int c = m_elements.Count;
+                for (int i = 0; i < c; ++i)
                 {
-                    e.usdiOnUnload();
+                    m_elements[i].usdiOnUnload();
                 }
+
                 usdi.usdiDestroyContext(m_ctx);
                 m_ctx = default(usdi.Context);
 
@@ -221,9 +223,10 @@ namespace UTJ
             usdiApplyImportConfig();
 
             // update all elements
-            foreach (var e in m_elements)
+            int c = m_elements.Count;
+            for (int i = 0; i < c; ++i)
             {
-                e.usdiAsyncUpdate(t);
+                m_elements[i].usdiAsyncUpdate(t);
             }
         }
 
@@ -232,9 +235,10 @@ namespace UTJ
             if (t == m_prevUpdateTime) { return; }
 
             // update all elements
-            foreach (var e in m_elements)
+            int c = m_elements.Count;
+            for(int i=0; i<c; ++i)
             {
-                e.usdiUpdate(t);
+                m_elements[i].usdiUpdate(t);
             }
 
             m_prevUpdateTime = t;

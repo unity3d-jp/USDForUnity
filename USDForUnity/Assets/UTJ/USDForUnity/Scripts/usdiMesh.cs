@@ -210,6 +210,7 @@ namespace UTJ
                     }
                 }
 
+                m_umeshIsEmpty = m_umesh.vertexCount == 0;
                 m_umesh.UploadMeshData(close);
 #if UNITY_5_5_OR_NEWER
                 if(m_stream.usdDirectVBUpdate)
@@ -219,7 +220,6 @@ namespace UTJ
                 }
 #endif
             }
-            m_umeshIsEmpty = m_umesh.vertexCount == 0;
             m_prevVertexCount = m_meshData.num_points;
             m_prevIndexCount = m_meshData.num_indices_triangulated;
         }
