@@ -6,37 +6,50 @@
     #define DLLEXPORT
 #endif // _WIN32
 #include <string>
+#include <mutex>
 
-extern "C" DLLEXPORT void AddDLLSearchPath()
+
+extern "C" DLLEXPORT const char* GetModulePath()
 {
-    static bool s_initialized = false;
-    if (!s_initialized) {
-        s_initialized = true;
-
-#ifdef _WIN32
-        std::string path;
-        path.resize(1024 * 128);
-        DWORD ret = ::GetEnvironmentVariableA("PATH", &path[0], (DWORD)path.size());
-        path.resize(ret);
-
-        char path_to_this_module[MAX_PATH + 1];
+    static char s_path[MAX_PATH + 1];
+    if (s_path[0] == 0) {
         HMODULE mod = 0;
-        ::GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCSTR)&AddDLLSearchPath, &mod);
-        DWORD size = ::GetModuleFileNameA(mod, path_to_this_module, sizeof(path_to_this_module));
+        ::GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, (LPCSTR)&GetModulePath, &mod);
+        DWORD size = ::GetModuleFileNameA(mod, s_path, sizeof(s_path));
         for (int i = size - 1; i >= 0; --i) {
-            if (path_to_this_module[i] == '\\') {
-                path_to_this_module[i] = '\0';
+            if (s_path[i] == '\\') {
+                s_path[i] = '\0';
                 break;
             }
         }
-        path += ";";
-        path += path_to_this_module;
+    }
+    return s_path;
+}
 
+extern "C" DLLEXPORT void AddDLLSearchPath(const char *v)
+{
+#ifdef _WIN32
+    std::string path;
+    {
+        DWORD size = ::GetEnvironmentVariableA("PATH", nullptr, 0);
+        path.resize(size);
+        ::GetEnvironmentVariableA("PATH", &path[0], (DWORD)path.size());
+        path.pop_back(); // delete last '\0'
+    }
+    if (path.find(v) == std::string::npos) {
+        path += ";";
+        auto pos = path.size();
+        path += v;
+        for (size_t i = pos; i < path.size(); ++i) {
+            if (path[i] == '/') {
+                path[i] = '\\';
+            }
+        }
         ::SetEnvironmentVariableA("PATH", path.c_str());
+    }
 #else
 
 #endif
-    }
 }
 
 extern "C" DLLEXPORT void SetEnv(const char *name, const char *value)
