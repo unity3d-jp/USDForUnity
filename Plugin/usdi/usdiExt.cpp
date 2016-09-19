@@ -54,34 +54,6 @@ static void WriteVertices(const usdi::MeshData& src, std::vector<char>& buf)
     }
 }
 
-static bool UpdateVertexBuffer(const usdi::MeshData& src, void *vb, void *ib)
-{
-    auto *gi = gi::GetGraphicsInterface();
-    if (!gi) { return false; }
-
-    auto& buf = GetTemporaryBuffer();
-
-    if (vb) {
-        if (src.uvs) { WriteVertices<vertex_v3n3u2>(src, buf); }
-        else { WriteVertices<vertex_v3n3>(src, buf); }
-        gi->writeBuffer(vb, &buf[0], buf.size(), gi::BufferType::Vertex);
-    }
-
-    if (ib) {
-        // need to convert 32 bit IB -> 16 bit IB...
-        using index_t = uint16_t;
-        buf.resize(sizeof(index_t) * src.num_indices_triangulated);
-        index_t *indices = (index_t*)&buf[0];
-
-        for (int i = 0; i < src.num_indices_triangulated; ++i) {
-            indices[i] = (index_t)src.indices_triangulated[i];
-        }
-        gi->writeBuffer(ib, &buf[0], buf.size(), gi::BufferType::Index);
-    }
-
-    return true;
-}
-
 
 struct MapContext : gi::MapContext {};
 

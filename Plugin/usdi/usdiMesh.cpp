@@ -124,27 +124,30 @@ bool Mesh::readSample(MeshData& dst, Time t_)
     auto t = UsdTimeCode(t_);
     const auto& conf = getImportConfig();
 
-    MeshSample& sample = m_sample;
-    if (m_prev_time != t_) {
-        m_prev_time = t_;
-        sample.clear();
+    {
+        MeshSample& sample = m_sample;
+        if (m_prev_time != t_) {
+            m_prev_time = t_;
+            sample.clear();
 
-        m_mesh.GetPointsAttr().Get(&sample.points, t);
-        m_mesh.GetVelocitiesAttr().Get(&sample.velocities, t);
-        m_mesh.GetNormalsAttr().Get(&sample.normals, t);
-        m_mesh.GetFaceVertexCountsAttr().Get(&sample.counts, t);
-        m_mesh.GetFaceVertexIndicesAttr().Get(&sample.indices, t);
-        if (m_attr_uv) {
-            m_attr_uv->get(&sample.uvs, t_);
+            m_mesh.GetPointsAttr().Get(&sample.points, t);
+            m_mesh.GetVelocitiesAttr().Get(&sample.velocities, t);
+            m_mesh.GetNormalsAttr().Get(&sample.normals, t);
+            m_mesh.GetFaceVertexCountsAttr().Get(&sample.counts, t);
+            m_mesh.GetFaceVertexIndicesAttr().Get(&sample.indices, t);
+            if (m_attr_uv) {
+                m_attr_uv->get(&sample.uvs, t_);
+            }
         }
     }
 
 
+    const MeshSample& sample = m_sample;
     dst.num_points = sample.points.size();
     dst.num_counts = sample.counts.size();
     dst.num_indices = sample.indices.size();
     if (dst.points && !sample.points.empty()) {
-        memcpy(dst.points, &sample.points[0], sizeof(float3) * dst.num_points);
+        memcpy(dst.points, sample.points.data(), sizeof(float3) * dst.num_points);
         if (conf.swap_handedness) {
             for (uint i = 0; i < dst.num_points; ++i) {
                 dst.points[i].x *= -1.0f;
@@ -158,7 +161,7 @@ bool Mesh::readSample(MeshData& dst, Time t_)
         }
     }
     if (dst.velocities && !sample.velocities.empty()) {
-        memcpy(dst.velocities, &sample.velocities[0], sizeof(float3) * dst.num_points);
+        memcpy(dst.velocities, sample.velocities.data(), sizeof(float3) * dst.num_points);
         if (conf.swap_handedness) {
             for (uint i = 0; i < dst.num_points; ++i) {
                 dst.velocities[i].x *= -1.0f;
@@ -172,7 +175,7 @@ bool Mesh::readSample(MeshData& dst, Time t_)
         }
     }
     if (dst.normals && !sample.normals.empty()) {
-        memcpy(dst.normals, &sample.normals[0], sizeof(float3) * dst.num_points);
+        memcpy(dst.normals, sample.normals.data(), sizeof(float3) * dst.num_points);
         if (conf.swap_handedness) {
             for (uint i = 0; i < dst.num_points; ++i) {
                 dst.normals[i].x *= -1.0f;
@@ -180,13 +183,13 @@ bool Mesh::readSample(MeshData& dst, Time t_)
         }
     }
     if (dst.uvs && !sample.uvs.empty()) {
-        memcpy(dst.uvs, &sample.uvs[0], sizeof(float2) * dst.num_points);
+        memcpy(dst.uvs, sample.uvs.data(), sizeof(float2) * dst.num_points);
     }
     if (dst.counts && !sample.counts.empty()) {
-        memcpy(dst.counts, &sample.counts[0], sizeof(int) * dst.num_counts);
+        memcpy(dst.counts, sample.counts.data(), sizeof(int) * dst.num_counts);
     }
     if (dst.indices && !sample.indices.empty()) {
-        memcpy(dst.indices, &sample.indices[0], sizeof(int) * dst.num_indices);
+        memcpy(dst.indices, sample.indices.data(), sizeof(int) * dst.num_indices);
     }
 
     if (conf.triangulate) {
