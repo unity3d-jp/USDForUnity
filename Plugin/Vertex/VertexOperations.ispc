@@ -55,28 +55,32 @@ export void InvertXF3(uniform float dst[], uniform const int num_)
 {
     uniform const int num = num_ * 3;
     if(programCount == 4) {
+        uniform float<4> * uniform v = (uniform float<4>* uniform)dst;
         uniform int num_masked = num - (num % 12);
-        for(uniform int i=0; i < num_masked; i+=12) {
-            dst[i + 0] *= -1.0f;
-            dst[i + 3] *= -1.0f;
-            dst[i + 6] *= -1.0f;
-            dst[i + 9] *= -1.0f;
+        uniform int num_vectors = num_masked / 4;
+        const uniform float<4> _c0 = {-1.0f, 1.0f, 1.0f,-1.0f};
+        const uniform float<4> _c1 = { 1.0f, 1.0f,-1.0f, 1.0f};
+        const uniform float<4> _c2 = { 1.0f,-1.0f, 1.0f, 1.0f};
+        for(uniform int i=0; i < num_vectors; i+=3) {
+            v[i + 0] *= _c0;
+            v[i + 1] *= _c1;
+            v[i + 2] *= _c2;
         }
         for(uniform int i=num_masked; i < num; i+=3) {
             dst[i] *= -1.0f;
         }
     }
     else if(programCount == 8) {
+        uniform float<8> * uniform v = (uniform float<8>* uniform)dst;
         uniform int num_masked = num - (num % 24);
-        for(uniform int i=0; i < num_masked; i+=24) {
-            dst[i + 0] *= -1.0f;
-            dst[i + 3] *= -1.0f;
-            dst[i + 6] *= -1.0f;
-            dst[i + 9] *= -1.0f;
-            dst[i +12] *= -1.0f;
-            dst[i +15] *= -1.0f;
-            dst[i +18] *= -1.0f;
-            dst[i +21] *= -1.0f;
+        uniform int num_vectors = num_masked / 8;
+        const uniform float<8> _c0 = {-1.0f, 1.0f, 1.0f,-1.0f, 1.0f, 1.0f,-1.0f, 1.0f};
+        const uniform float<8> _c1 = { 1.0f,-1.0f, 1.0f, 1.0f,-1.0f, 1.0f, 1.0f,-1.0f};
+        const uniform float<8> _c2 = { 1.0f, 1.0f,-1.0f, 1.0f, 1.0f,-1.0f, 1.0f, 1.0f};
+        for(uniform int i=0; i < num_vectors; i+=3) {
+            v[i + 0] *= _c0;
+            v[i + 1] *= _c1;
+            v[i + 2] *= _c2;
         }
         for(uniform int i=num_masked; i < num; i+=3) {
             dst[i] *= -1.0f;
