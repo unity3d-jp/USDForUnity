@@ -41,6 +41,7 @@
     <ClCompile Include="usdi\usdi.cpp" />
     <ClCompile Include="usdi\usdiPoints.cpp" />
     <ClCompile Include="usdi\usdiSchema.cpp" />
+    <ClCompile Include="usdi\usdiSIMD.cpp" />
     <ClCompile Include="usdi\usdiUnknown.cpp" />
     <ClCompile Include="usdi\usdiXform.cpp" />
   </ItemGroup>

@@ -158,7 +158,12 @@ namespace UTJ
 
         void usdiReadMeshData(double t)
         {
+            // todo: update heterogenous mesh if possible
+            m_directVBUpdate = m_stream.usdDirectVBUpdate &&
+                m_meshSummary.topology_variance == usdi.TopologyVariance.Homogenous &&
+                m_ctxVB.resource != IntPtr.Zero;
             bool copyVertexData = !m_directVBUpdate;
+
 #if UNITY_EDITOR
             if (m_stream.usdForceSingleThread)
             {
@@ -171,18 +176,9 @@ namespace UTJ
             }
 
 
-            // need to improve this..
-            m_directVBUpdate = m_stream.usdDirectVBUpdate &&
-                (m_prevVertexCount == m_meshData.num_points && m_prevIndexCount == m_meshData.num_indices_triangulated) &&
-                (m_ctxVB.resource != IntPtr.Zero);
-
             if (m_directVBUpdate)
             {
-                bool update_topology = m_meshSummary.topology_variance == usdi.TopologyVariance.Heterogenous;
-                if(!update_topology)
-                {
-                    m_meshData.indices_triangulated = IntPtr.Zero;
-                }
+                m_meshData.indices_triangulated = IntPtr.Zero;
                 usdi.usdiExtQueueVertexBufferUpdateTask(ref m_meshData, ref m_ctxVB, ref m_ctxIB);
             }
         }

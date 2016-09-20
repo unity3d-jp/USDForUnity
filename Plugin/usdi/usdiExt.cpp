@@ -7,9 +7,11 @@
 
 namespace usdi {
 
-std::vector<char>& GetTemporaryBuffer()
+typedef std::vector<char, AlignedAllocator<char, 0x20>> TempBuffer;
+
+TempBuffer& GetTemporaryBuffer()
 {
-    static thread_local std::vector<char> s_buf;
+    static thread_local TempBuffer s_buf;
     return s_buf;
 }
 
@@ -28,50 +30,52 @@ struct vertex_v3n3u2
 };
 
 template<class VertexT>
-static void WriteVertices(const usdi::MeshData& src, std::vector<char>& buf);
-
-#undef usdiEnableISPC
+static void WriteVertices(VertexT *dst, const usdi::MeshData& src);
+template<class VertexT>
+static void WriteVertices(TempBuffer& buf, const usdi::MeshData& src);
 
 #ifdef usdiEnableISPC
 
 template<>
-static void WriteVertices<vertex_v3n3>(const usdi::MeshData& src, std::vector<char>& buf)
+static void WriteVertices(vertex_v3n3 *dst, const usdi::MeshData& src)
 {
-    using vertex_t = vertex_v3n3;
-    buf.resize(sizeof(vertex_t) * src.num_points);
-
     ispc::InterleaveVerticesV3N3(
-        (ispc::vertex_v3n3u2*)&buf[0],
+        (ispc::vertex_v3n3*)dst,
         (ispc::float3*)src.points,
         (ispc::float3*)src.normals,
         src.num_points);
 }
 
 template<>
-static void WriteVertices<vertex_v3n3u2>(const usdi::MeshData& src, std::vector<char>& buf)
+static void WriteVertices(vertex_v3n3u2 *dst, const usdi::MeshData& src)
 {
-    using vertex_t = vertex_v3n3u2;
-    buf.resize(sizeof(vertex_t) * src.num_points);
-
     ispc::InterleaveVerticesV3N3U2(
-        (ispc::vertex_v3n3u2*)&buf[0],
+        (ispc::vertex_v3n3u2*)dst,
         (ispc::float3*)src.points,
         (ispc::float3*)src.normals,
         (ispc::float2*)src.uvs,
         src.num_points);
 }
 
+template<class VertexT>
+static void WriteVertices(TempBuffer& buf, const usdi::MeshData& src)
+{
+    using vertex_t = VertexT;
+    buf.resize(sizeof(vertex_t) * src.num_points);
+    WriteVertices((VertexT*)buf.data(), src);
+}
+
 #else
 
-template<class VertexT> static inline void WriteVertex(const usdi::MeshData& src, VertexT *dst, int i);
+template<class VertexT> static inline void WriteVertex(VertexT *dst, const usdi::MeshData& src, int i);
 
-template<> static inline void WriteVertex(const usdi::MeshData& src, vertex_v3n3 *dst, int i)
+template<> static inline void WriteVertex(vertex_v3n3 *dst, const usdi::MeshData& src, int i)
 {
     dst[i].p = src.points[i];
     dst[i].n = src.normals[i];
 }
 
-template<> static inline void WriteVertex(const usdi::MeshData& src, vertex_v3n3u2 *dst, int i)
+template<> static inline void WriteVertex(vertex_v3n3u2 *dst, const usdi::MeshData& src, int i)
 {
     dst[i].p = src.points[i];
     dst[i].n = src.normals[i];
@@ -79,16 +83,20 @@ template<> static inline void WriteVertex(const usdi::MeshData& src, vertex_v3n3
 }
 
 template<class VertexT>
-static void WriteVertices(const usdi::MeshData& src, std::vector<char>& buf)
+static void WriteVertices(VertexT *dst, const usdi::MeshData& src)
+{
+    for (int i = 0; i < src.num_points; ++i) {
+        WriteVertex(dst, src, i);
+    }
+}
+
+template<class VertexT>
+static void WriteVertices(TempBuffer& buf, const usdi::MeshData& src)
 {
     using vertex_t = VertexT;
-
     buf.resize(sizeof(vertex_t) * src.num_points);
-    vertex_t *dst = (vertex_t*)&buf[0];
-
-    for (int i = 0; i < src.num_points; ++i) {
-        WriteVertex(src, dst, i);
-    }
+    vertex_t *dst = (vertex_t*)buf.data();
+    WriteVertices((VertexT*)buf.data(), src);
 }
 #endif
 
@@ -132,25 +140,21 @@ struct VertexUpdateTask
     void copy()
     {
         auto *ifs = gi::GetGraphicsInterface();
-
         auto& buf = GetTemporaryBuffer();
 
         if (m_ctx_vb->data_ptr) {
-            if (m_mesh_data->uvs) { WriteVertices<vertex_v3n3u2>(*m_mesh_data, buf); }
-            else { WriteVertices<vertex_v3n3>(*m_mesh_data, buf); }
-            memcpy(m_ctx_vb->data_ptr, &buf[0], buf.size());
+            if (m_mesh_data->uvs) { WriteVertices<vertex_v3n3u2>(buf, *m_mesh_data); }
+            else { WriteVertices<vertex_v3n3>(buf, *m_mesh_data); }
+            memcpy(m_ctx_vb->data_ptr, buf.data(), buf.size());
         }
 
         if (m_ctx_ib->data_ptr) {
             // need to convert 32 bit IB -> 16 bit IB...
             using index_t = uint16_t;
-            buf.resize(sizeof(index_t) * m_mesh_data->num_indices_triangulated);
-            index_t *indices = (index_t*)&buf[0];
-
+            index_t *indices = (index_t*)m_ctx_ib->data_ptr;
             for (int i = 0; i < m_mesh_data->num_indices_triangulated; ++i) {
                 indices[i] = (index_t)m_mesh_data->indices_triangulated[i];
             }
-            memcpy(m_ctx_ib->data_ptr, &buf[0], buf.size());
         }
     }
 
