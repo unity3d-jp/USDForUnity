@@ -131,7 +131,6 @@ bool Mesh::readSample(MeshData& dst, Time t_, bool copy)
         MeshSample& sample = m_sample;
         if (m_prev_time != t_) {
             m_prev_time = t_;
-            sample.clear();
 
             m_mesh.GetPointsAttr().Get(&sample.points, t);
             m_mesh.GetVelocitiesAttr().Get(&sample.velocities, t);
@@ -287,7 +286,6 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
         m_attr_uv->set(&sample.uvs, t_);
     }
 
-    sample.clear();
     m_summary_needs_update = true;
     return ret;
 }

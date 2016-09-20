@@ -213,7 +213,7 @@ namespace UTJ
                 if(m_stream.usdDirectVBUpdate)
                 {
                     m_ctxVB.resource = m_umesh.GetNativeVertexBufferPtr(0);
-                    m_ctxIB.resource = m_umesh.GetNativeIndexBufferPtr();
+                    //m_ctxIB.resource = m_umesh.GetNativeIndexBufferPtr();
                 }
 #endif
             }

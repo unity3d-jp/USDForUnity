@@ -7,7 +7,42 @@
 
 namespace usdi {
 
-typedef std::vector<char, AlignedAllocator<char, 0x20>> TempBuffer;
+class TempBuffer
+{
+public:
+    TempBuffer() {}
+    TempBuffer(const TempBuffer& v) = delete;
+    TempBuffer& operator=(const TempBuffer& v) = delete;
+
+    ~TempBuffer()
+    {
+        clear();
+    }
+
+    void* data() { return m_data; }
+    size_t size() const { return m_size; }
+
+    void resize(size_t s)
+    {
+        if (s > m_capacity) {
+            clear();
+            m_data = AlignedMalloc(s, 0x20);
+            m_capacity = s;
+        }
+        m_size = s;
+    }
+
+    void clear()
+    {
+        AlignedFree(m_data);
+        m_size = m_capacity = 0;
+    }
+
+private:
+    void *m_data = nullptr;
+    size_t m_size = 0;
+    size_t m_capacity = 0;
+};
 
 TempBuffer& GetTemporaryBuffer()
 {
@@ -34,6 +69,7 @@ static void WriteVertices(VertexT *dst, const usdi::MeshData& src);
 template<class VertexT>
 static void WriteVertices(TempBuffer& buf, const usdi::MeshData& src);
 
+#undef usdiEnableISPC
 #ifdef usdiEnableISPC
 
 template<>
@@ -143,18 +179,24 @@ struct VertexUpdateTask
         auto& buf = GetTemporaryBuffer();
 
         if (m_ctx_vb->data_ptr) {
-            if (m_mesh_data->uvs) { WriteVertices<vertex_v3n3u2>(buf, *m_mesh_data); }
-            else { WriteVertices<vertex_v3n3>(buf, *m_mesh_data); }
+            if (m_mesh_data->uvs) {
+                WriteVertices<vertex_v3n3u2>(buf, *m_mesh_data);
+            }
+            else {
+                WriteVertices<vertex_v3n3>(buf, *m_mesh_data);
+            }
             memcpy(m_ctx_vb->data_ptr, buf.data(), buf.size());
         }
 
-        if (m_ctx_ib->data_ptr) {
+        if (m_ctx_ib->data_ptr && m_mesh_data->indices_triangulated) {
             // need to convert 32 bit IB -> 16 bit IB...
             using index_t = uint16_t;
-            index_t *indices = (index_t*)m_ctx_ib->data_ptr;
+            buf.resize(sizeof(index_t) * m_mesh_data->num_indices_triangulated);
+            index_t *indices = (index_t*)buf.data();
             for (int i = 0; i < m_mesh_data->num_indices_triangulated; ++i) {
                 indices[i] = (index_t)m_mesh_data->indices_triangulated[i];
             }
+            memcpy(m_ctx_ib->data_ptr, buf.data(), buf.size());
         }
     }
 

@@ -63,7 +63,6 @@ bool Points::readSample(PointsData& dst, Time t_)
         auto& sample = m_sample;
         if (m_prev_time != t_) {
             m_prev_time = t_;
-            sample.clear();
 
             m_points.GetPointsAttr().Get(&sample.points, t);
             m_points.GetVelocitiesAttr().Get(&sample.velocities, t);
