@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "usdiInternal.h"
+#include "usdiSIMD.h"
 #include "HandleBasedVector.h"
 #include "GraphicsInterface/GraphicsInterface.h"
 

@@ -3,6 +3,7 @@
 #include "usdiSchema.h"
 #include "usdiXform.h"
 #include "usdiPoints.h"
+#include "usdiSIMD.h"
 
 namespace usdi {
 
@@ -58,24 +59,31 @@ bool Points::readSample(PointsData& dst, Time t_)
     auto t = UsdTimeCode(t_);
     const auto& conf = getImportConfig();
 
-    auto& sample = m_sample;
-    if (m_prev_time != t_) {
-        m_prev_time = t_;
-        sample.clear();
+    {
+        auto& sample = m_sample;
+        if (m_prev_time != t_) {
+            m_prev_time = t_;
+            sample.clear();
 
-        m_points.GetPointsAttr().Get(&sample.points, t);
-        m_points.GetVelocitiesAttr().Get(&sample.velocities, t);
+            m_points.GetPointsAttr().Get(&sample.points, t);
+            m_points.GetVelocitiesAttr().Get(&sample.velocities, t);
+
+            if (conf.swap_handedness) {
+                InvertX((float3*)sample.points.data(), sample.points.size());
+                InvertX((float3*)sample.velocities.data(), sample.velocities.size());
+            }
+            if (conf.scale != 1.0f) {
+                Scale((float3*)sample.points.data(), conf.scale, sample.points.size());
+                Scale((float3*)sample.velocities.data(), conf.scale, sample.velocities.size());
+            }
+        }
     }
 
 
+    const auto& sample = m_sample;
     dst.num_points = sample.points.size();
     if (dst.points) {
         memcpy(dst.points, &sample.points[0], sizeof(float3) * dst.num_points);
-        if (conf.swap_handedness) {
-            for (uint i = 0; i < dst.num_points; ++i) {
-                dst.points[i].x *= -1.0f;
-            }
-        }
     }
     if (dst.velocities) {
         if (sample.velocities.size() != dst.num_points) {
@@ -83,11 +91,6 @@ bool Points::readSample(PointsData& dst, Time t_)
         }
         else {
             memcpy(dst.velocities, &sample.velocities[0], sizeof(float3) * dst.num_points);
-            if (conf.swap_handedness) {
-                for (uint i = 0; i < dst.num_points; ++i) {
-                    dst.velocities[i].x *= -1.0f;
-                }
-            }
         }
     }
 

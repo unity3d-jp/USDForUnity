@@ -4,6 +4,7 @@
 #include "usdiSchema.h"
 #include "usdiXform.h"
 #include "usdiMesh.h"
+#include "usdiSIMD.h"
 
 namespace usdi {
 
@@ -54,6 +55,7 @@ static inline void TriangulateIndices(int *triangulated, const CountArray &count
         }
     }
 }
+
 
 void MeshSample::clear()
 {
@@ -138,6 +140,19 @@ bool Mesh::readSample(MeshData& dst, Time t_)
             if (m_attr_uv) {
                 m_attr_uv->get(&sample.uvs, t_);
             }
+            if (m_num_indices_triangulated == 0 || getSummary().topology_variance == TopologyVariance::Heterogenous) {
+                m_num_indices_triangulated = GetTriangulatedIndexCount(sample.counts);
+            }
+
+            if (conf.swap_handedness) {
+                InvertX((float3*)sample.points.data(), sample.points.size());
+                InvertX((float3*)sample.velocities.data(), sample.velocities.size());
+                InvertX((float3*)sample.normals.data(), sample.normals.size());
+            }
+            if (conf.scale != 1.0f) {
+                Scale((float3*)sample.points.data(), conf.scale, sample.points.size());
+                Scale((float3*)sample.velocities.data(), conf.scale, sample.velocities.size());
+            }
         }
     }
 
@@ -148,39 +163,12 @@ bool Mesh::readSample(MeshData& dst, Time t_)
     dst.num_indices = sample.indices.size();
     if (dst.points && !sample.points.empty()) {
         memcpy(dst.points, sample.points.data(), sizeof(float3) * dst.num_points);
-        if (conf.swap_handedness) {
-            for (uint i = 0; i < dst.num_points; ++i) {
-                dst.points[i].x *= -1.0f;
-            }
-        }
-        if (conf.scale != 1.0f) {
-            float s = conf.scale;
-            for (uint i = 0; i < dst.num_points; ++i) {
-                dst.points[i] *= s;
-            }
-        }
     }
     if (dst.velocities && !sample.velocities.empty()) {
         memcpy(dst.velocities, sample.velocities.data(), sizeof(float3) * dst.num_points);
-        if (conf.swap_handedness) {
-            for (uint i = 0; i < dst.num_points; ++i) {
-                dst.velocities[i].x *= -1.0f;
-            }
-        }
-        if (conf.scale != 1.0f) {
-            float s = conf.scale;
-            for (uint i = 0; i < dst.num_points; ++i) {
-                dst.velocities[i] *= s;
-            }
-        }
     }
     if (dst.normals && !sample.normals.empty()) {
         memcpy(dst.normals, sample.normals.data(), sizeof(float3) * dst.num_points);
-        if (conf.swap_handedness) {
-            for (uint i = 0; i < dst.num_points; ++i) {
-                dst.normals[i].x *= -1.0f;
-            }
-        }
     }
     if (dst.uvs && !sample.uvs.empty()) {
         memcpy(dst.uvs, sample.uvs.data(), sizeof(float2) * dst.num_points);
@@ -193,7 +181,7 @@ bool Mesh::readSample(MeshData& dst, Time t_)
     }
 
     if (conf.triangulate) {
-        dst.num_indices_triangulated = GetTriangulatedIndexCount(sample.counts);
+        dst.num_indices_triangulated = m_num_indices_triangulated;
         if (dst.indices_triangulated) {
             TriangulateIndices(dst.indices_triangulated, sample.counts, &sample.indices, conf.swap_faces);
         }
@@ -212,39 +200,27 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
     if (src.points) {
         sample.points.assign((GfVec3f*)src.points, (GfVec3f*)src.points + src.num_points);
         if (conf.swap_handedness) {
-            for (auto& v : sample.points) {
-                v[0] *= -1.0f;
-            }
+            InvertX((float3*)sample.points.data(), sample.points.size());
         }
         if (conf.scale != 1.0f) {
-            float s = conf.scale;
-            for (auto& v : sample.points) {
-                (float3&)v *= s;
-            }
+            Scale((float3*)sample.points.data(), conf.scale, sample.points.size());
         }
     }
 
     if (src.velocities) {
         sample.points.assign((GfVec3f*)src.velocities, (GfVec3f*)src.velocities + src.num_points);
         if (conf.swap_handedness) {
-            for (auto& v : sample.velocities) {
-                v[0] *= -1.0f;
-            }
+            InvertX((float3*)sample.velocities.data(), sample.velocities.size());
         }
         if (conf.scale != 1.0f) {
-            float s = conf.scale;
-            for (auto& v : sample.velocities) {
-                (float3&)v *= s;
-            }
+            Scale((float3*)sample.velocities.data(), conf.scale, sample.velocities.size());
         }
     }
 
     if (src.normals) {
         sample.normals.assign((GfVec3f*)src.normals, (GfVec3f*)src.normals + src.num_points);
         if (conf.swap_handedness) {
-            for (auto& v : sample.normals) {
-                v[0] *= -1.0f;
-            }
+            InvertX((float3*)sample.normals.data(), sample.normals.size());
         }
     }
 

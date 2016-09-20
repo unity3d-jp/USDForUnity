@@ -45,6 +45,9 @@
     <ClInclude Include="usdi\HandleBasedVector.h">
       <Filter>usdi</Filter>
     </ClInclude>
+    <ClInclude Include="usdi\usdiSIMD.h">
+      <Filter>usdi</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="usdi\pch.cpp">

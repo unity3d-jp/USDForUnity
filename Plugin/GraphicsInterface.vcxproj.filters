@@ -4,6 +4,9 @@
     <Filter Include="GraphicsInterface">
       <UniqueIdentifier>{43f41a03-e172-47f9-a63f-afa377c6b7c1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Vertex">
+      <UniqueIdentifier>{d11536f0-c563-4cf9-bebe-d37e3fd4b8c6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GraphicsInterface\giInternal.h">
@@ -47,5 +50,10 @@
     <ClCompile Include="GraphicsInterface\giInternal.cpp">
       <Filter>GraphicsInterface</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Vertex\InterleaveVertices.ispc">
+      <Filter>Vertex</Filter>
+    </None>
   </ItemGroup>
 </Project>

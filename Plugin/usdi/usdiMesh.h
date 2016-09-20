@@ -41,6 +41,7 @@ private:
     mutable Time        m_prev_time = DBL_MIN;
     mutable bool        m_summary_needs_update = true;
     mutable MeshSummary m_summary;
+    mutable int         m_num_indices_triangulated = 0;
 };
 
 } // namespace usdi

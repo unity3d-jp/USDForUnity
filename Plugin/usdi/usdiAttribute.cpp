@@ -214,7 +214,7 @@ private:
     mutable T m_buf;
 };
 
-// vector attribute impl
+// array attribute impl
 template<class V>
 class TAttribute<VtArray<V>> : public Attribute
 {
