@@ -27,6 +27,42 @@ struct vertex_v3n3u2
     float2 u;
 };
 
+template<class VertexT>
+static void WriteVertices(const usdi::MeshData& src, std::vector<char>& buf);
+
+#undef usdiEnableISPC
+
+#ifdef usdiEnableISPC
+
+template<>
+static void WriteVertices<vertex_v3n3>(const usdi::MeshData& src, std::vector<char>& buf)
+{
+    using vertex_t = vertex_v3n3;
+    buf.resize(sizeof(vertex_t) * src.num_points);
+
+    ispc::InterleaveVerticesV3N3(
+        (ispc::vertex_v3n3u2*)&buf[0],
+        (ispc::float3*)src.points,
+        (ispc::float3*)src.normals,
+        src.num_points);
+}
+
+template<>
+static void WriteVertices<vertex_v3n3u2>(const usdi::MeshData& src, std::vector<char>& buf)
+{
+    using vertex_t = vertex_v3n3u2;
+    buf.resize(sizeof(vertex_t) * src.num_points);
+
+    ispc::InterleaveVerticesV3N3U2(
+        (ispc::vertex_v3n3u2*)&buf[0],
+        (ispc::float3*)src.points,
+        (ispc::float3*)src.normals,
+        (ispc::float2*)src.uvs,
+        src.num_points);
+}
+
+#else
+
 template<class VertexT> static inline void WriteVertex(const usdi::MeshData& src, VertexT *dst, int i);
 
 template<> static inline void WriteVertex(const usdi::MeshData& src, vertex_v3n3 *dst, int i)
@@ -54,6 +90,7 @@ static void WriteVertices(const usdi::MeshData& src, std::vector<char>& buf)
         WriteVertex(src, dst, i);
     }
 }
+#endif
 
 
 struct MapContext : gi::MapContext {};
@@ -87,7 +124,7 @@ struct VertexUpdateTask
     {
         auto ifs = gi::GetGraphicsInterface();
         ifs->mapBuffer(*m_ctx_vb);
-        if (m_mesh_data->indices) {
+        if (m_mesh_data->indices_triangulated) {
             ifs->mapBuffer(*m_ctx_ib);
         }
     }

@@ -219,8 +219,8 @@ usdiAPI bool             usdiCameraWriteSample(usdi::Camera *cam, const usdi::Ca
 usdiAPI usdi::Mesh*      usdiAsMesh(usdi::Schema *schema); // dynamic cast to Mesh
 usdiAPI usdi::Mesh*      usdiCreateMesh(usdi::Context *ctx, usdi::Schema *parent, const char *name);
 usdiAPI void             usdiMeshGetSummary(usdi::Mesh *mesh, usdi::MeshSummary *dst);
-usdiAPI bool             usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t);
-usdiAPI bool             usdiMeshReadSampleAsync(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t);
+usdiAPI bool             usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t, bool copy);
+usdiAPI bool             usdiMeshReadSampleAsync(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t, bool copy);
 usdiAPI bool             usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t);
 usdiAPI bool             usdiMeshWriteSampleAsync(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t);
 

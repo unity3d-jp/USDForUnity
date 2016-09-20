@@ -62,9 +62,10 @@ void MeshSample::clear()
     points.clear();
     velocities.clear();
     normals.clear();
+    uvs.clear();
     counts.clear();
     indices.clear();
-    uvs.clear();
+    indices_triangulated.clear();
 }
 
 
@@ -121,7 +122,7 @@ const MeshSummary& Mesh::getSummary() const
     return m_summary;
 }
 
-bool Mesh::readSample(MeshData& dst, Time t_)
+bool Mesh::readSample(MeshData& dst, Time t_, bool copy)
 {
     auto t = UsdTimeCode(t_);
     const auto& conf = getImportConfig();
@@ -142,6 +143,10 @@ bool Mesh::readSample(MeshData& dst, Time t_)
             }
             if (m_num_indices_triangulated == 0 || getSummary().topology_variance == TopologyVariance::Heterogenous) {
                 m_num_indices_triangulated = GetTriangulatedIndexCount(sample.counts);
+                if (conf.triangulate) {
+                    sample.indices_triangulated.resize(m_num_indices_triangulated);
+                    TriangulateIndices(sample.indices_triangulated.data(), sample.counts, &sample.indices, conf.swap_faces);
+                }
             }
 
             if (conf.swap_handedness) {
@@ -161,30 +166,38 @@ bool Mesh::readSample(MeshData& dst, Time t_)
     dst.num_points = sample.points.size();
     dst.num_counts = sample.counts.size();
     dst.num_indices = sample.indices.size();
-    if (dst.points && !sample.points.empty()) {
-        memcpy(dst.points, sample.points.data(), sizeof(float3) * dst.num_points);
-    }
-    if (dst.velocities && !sample.velocities.empty()) {
-        memcpy(dst.velocities, sample.velocities.data(), sizeof(float3) * dst.num_points);
-    }
-    if (dst.normals && !sample.normals.empty()) {
-        memcpy(dst.normals, sample.normals.data(), sizeof(float3) * dst.num_points);
-    }
-    if (dst.uvs && !sample.uvs.empty()) {
-        memcpy(dst.uvs, sample.uvs.data(), sizeof(float2) * dst.num_points);
-    }
-    if (dst.counts && !sample.counts.empty()) {
-        memcpy(dst.counts, sample.counts.data(), sizeof(int) * dst.num_counts);
-    }
-    if (dst.indices && !sample.indices.empty()) {
-        memcpy(dst.indices, sample.indices.data(), sizeof(int) * dst.num_indices);
-    }
-
-    if (conf.triangulate) {
-        dst.num_indices_triangulated = m_num_indices_triangulated;
-        if (dst.indices_triangulated) {
-            TriangulateIndices(dst.indices_triangulated, sample.counts, &sample.indices, conf.swap_faces);
+    dst.num_indices_triangulated = m_num_indices_triangulated;
+    if (copy) {
+        if (dst.points && !sample.points.empty()) {
+            memcpy(dst.points, sample.points.data(), sizeof(float3) * dst.num_points);
         }
+        if (dst.velocities && !sample.velocities.empty()) {
+            memcpy(dst.velocities, sample.velocities.data(), sizeof(float3) * dst.num_points);
+        }
+        if (dst.normals && !sample.normals.empty()) {
+            memcpy(dst.normals, sample.normals.data(), sizeof(float3) * dst.num_points);
+        }
+        if (dst.uvs && !sample.uvs.empty()) {
+            memcpy(dst.uvs, sample.uvs.data(), sizeof(float2) * dst.num_points);
+        }
+        if (dst.counts && !sample.counts.empty()) {
+            memcpy(dst.counts, sample.counts.data(), sizeof(int) * dst.num_counts);
+        }
+        if (dst.indices && !sample.indices.empty()) {
+            memcpy(dst.indices, sample.indices.data(), sizeof(int) * dst.num_indices);
+        }
+        if (conf.triangulate && dst.indices_triangulated && !sample.indices_triangulated.empty()) {
+            memcpy(dst.indices_triangulated, sample.indices_triangulated.data(), sizeof(int) * m_num_indices_triangulated);
+        }
+    }
+    else {
+        dst.points = (float3*)sample.points.data();
+        dst.velocities = (float3*)sample.velocities.data();
+        dst.normals = (float3*)sample.normals.data();
+        dst.uvs = (float2*)sample.uvs.data();
+        dst.counts = (int*)sample.counts.data();
+        dst.indices = (int*)sample.indices.data();
+        dst.indices_triangulated = (int*)sample.indices_triangulated.data();
     }
 
     return dst.num_points > 0;

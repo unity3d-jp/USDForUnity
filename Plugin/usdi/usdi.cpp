@@ -292,17 +292,17 @@ usdiAPI void usdiMeshGetSummary(usdi::Mesh *mesh, usdi::MeshSummary *dst)
     *dst = mesh->getSummary();
 }
 
-usdiAPI bool usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t)
+usdiAPI bool usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t, bool copy)
 {
     usdiTraceFunc();
     if (!mesh || !dst) return false;
-    return mesh->readSample(*dst, t);
+    return mesh->readSample(*dst, t, copy);
 }
-usdiAPI bool usdiMeshReadSampleAsync(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t)
+usdiAPI bool usdiMeshReadSampleAsync(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t, bool copy)
 {
     usdiTraceFunc();
     if (!mesh || !dst) return false;
-    usdi:: g_read_tasks.run([=]() { mesh->readSample(*dst, t); });
+    usdi:: g_read_tasks.run([=]() { mesh->readSample(*dst, t, copy); });
     return true;
 }
 

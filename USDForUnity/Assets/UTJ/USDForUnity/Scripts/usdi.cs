@@ -307,8 +307,8 @@ namespace UTJ
         [DllImport ("usdi")] public static extern Mesh          usdiAsMesh(Schema schema);
         [DllImport ("usdi")] public static extern Mesh          usdiCreateMesh(Context ctx, Schema parent, string name);
         [DllImport ("usdi")] public static extern void          usdiMeshGetSummary(Mesh mesh, ref MeshSummary dst);
-        [DllImport ("usdi")] public static extern Bool          usdiMeshReadSample(Mesh mesh, ref MeshData dst, double t);
-        [DllImport ("usdi")] public static extern Bool          usdiMeshReadSampleAsync(Mesh mesh, ref MeshData dst, double t);
+        [DllImport ("usdi")] public static extern Bool          usdiMeshReadSample(Mesh mesh, ref MeshData dst, double t, Bool copy);
+        [DllImport ("usdi")] public static extern Bool          usdiMeshReadSampleAsync(Mesh mesh, ref MeshData dst, double t, Bool copy);
         [DllImport ("usdi")] public static extern Bool          usdiMeshWriteSample(Mesh mesh, ref MeshData src, double t);
         [DllImport ("usdi")] public static extern Bool          usdiMeshWriteSampleAsync(Mesh mesh, ref MeshData src, double t);
 

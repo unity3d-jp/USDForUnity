@@ -11,6 +11,7 @@ struct MeshSample
     VtArray<GfVec2f> uvs;
     VtArray<int>     counts;
     VtArray<int>     indices;
+    VtArray<int>     indices_triangulated;
 
     void clear();
 };
@@ -27,7 +28,7 @@ public:
     UsdGeomMesh&        getUSDSchema() override;
 
     const MeshSummary&  getSummary() const;
-    bool                readSample(MeshData& dst, Time t);
+    bool                readSample(MeshData& dst, Time t, bool copy);
     bool                writeSample(const MeshData& src, Time t);
 
 private:

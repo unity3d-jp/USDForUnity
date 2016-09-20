@@ -114,7 +114,7 @@ namespace UTJ
         void usdiAllocateMeshData(double t)
         {
             usdi.MeshData md = default(usdi.MeshData);
-            usdi.usdiMeshReadSample(m_mesh, ref md, t);
+            usdi.usdiMeshReadSample(m_mesh, ref md, t, true);
 
             // skip if already allocated
             if (m_prevVertexCount == md.num_points &&
@@ -158,15 +158,16 @@ namespace UTJ
 
         void usdiReadMeshData(double t)
         {
+            bool copyVertexData = !m_directVBUpdate;
 #if UNITY_EDITOR
             if (m_stream.usdForceSingleThread)
             {
-                usdi.usdiMeshReadSample(m_mesh, ref m_meshData, t);
+                usdi.usdiMeshReadSample(m_mesh, ref m_meshData, t, copyVertexData);
             }
             else
 #endif
             {
-                usdi.usdiMeshReadSampleAsync(m_mesh, ref m_meshData, t);
+                usdi.usdiMeshReadSampleAsync(m_mesh, ref m_meshData, t, copyVertexData);
             }
 
 
