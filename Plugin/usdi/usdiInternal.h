@@ -17,6 +17,8 @@
 
 #include "usdi.h"
 
+#define usdiInvalidTime DBL_MIN
+
 namespace usdi {
 
 void LogImpl(int level, const char *format, ...);

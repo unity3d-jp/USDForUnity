@@ -99,8 +99,7 @@ UsdGeomMesh& Mesh::getUSDSchema()
 
 void Mesh::updateSummary() const
 {
-    m_summary_needs_update = false;
-
+    getTimeRange(m_summary.start, m_summary.end);
     m_summary.has_uvs = m_attr_uv && m_attr_uv->hasValue();
     m_summary.has_normals = m_mesh.GetNormalsAttr().HasValue();
     m_summary.has_velocities = m_mesh.GetVelocitiesAttr().HasValue();
@@ -118,16 +117,16 @@ const MeshSummary& Mesh::getSummary() const
 {
     if (m_summary_needs_update) {
         updateSummary();
+        m_summary_needs_update = false;
     }
     return m_summary;
 }
 
 void Mesh::updateSample(Time t_)
 {
-    if (m_prev_time == t_) {
-        return;
-    }
+    if (!needsUpdate(t_)) { return; }
     super::updateSample(t_);
+
 
     auto t = UsdTimeCode(t_);
     const auto& conf = getImportConfig();

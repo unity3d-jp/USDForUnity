@@ -146,6 +146,12 @@ namespace UTJ
             }
         };
 
+
+        public struct XformSummary
+        {
+            public double start, end;
+        };
+
         public struct XformData
         {
             public enum Flags
@@ -181,6 +187,12 @@ namespace UTJ
             }
         }
 
+
+        public struct CameraSummary
+        {
+            public double start, end;
+        };
+
         public struct CameraData
         {
             public float near_clipping_plane;
@@ -213,10 +225,7 @@ namespace UTJ
 
         public struct MeshSummary
         {
-            public uint peak_num_points;
-            public uint peak_num_counts;
-            public uint peak_num_indices;
-            public uint peak_num_indices_triangulated;
+            public double start, end;
             public TopologyVariance topology_variance;
             public Bool has_normals;
             public Bool has_uvs;
@@ -249,6 +258,7 @@ namespace UTJ
 
         public struct PointsSummary
         {
+            public double start, end;
             public int peak_num_points;
             public Bool has_velocities;
         };

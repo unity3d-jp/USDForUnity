@@ -44,6 +44,28 @@ void Schema::init()
         m_dbg_typename = getTypeName();
 #endif
     }
+
+    {
+        // get start & end time
+        double lower = 0.0, upper = 0.0;
+        bool first = true;
+        for (auto& a : m_attributes) {
+            double l, u;
+            if (a->getTimeRange(l, u)) {
+                if (first) {
+                    lower = l;
+                    upper = u;
+                    first = false;
+                }
+                else {
+                    lower = std::min(lower, l);
+                    upper = std::max(upper, u);
+                }
+            }
+        }
+        m_time_start = lower;
+        m_time_end = upper;
+    }
 }
 
 Schema::~Schema()
@@ -85,6 +107,13 @@ Attribute* Schema::createAttribute(const char *name, AttributeType type)
 const char* Schema::getPath() const         { return m_prim.GetPath().GetText(); }
 const char* Schema::getName() const         { return m_prim.GetName().GetText(); }
 const char* Schema::getTypeName() const     { return m_prim.GetTypeName().GetText(); }
+
+void Schema::getTimeRange(Time& start, Time& end) const
+{
+    start = m_time_start;
+    end = m_time_end;
+}
+
 UsdPrim     Schema::getUSDPrim() const      { return m_prim; }
 UsdTyped    Schema::getUSDSchema() const    { return const_cast<Schema*>(this)->getUSDSchema(); }
 
@@ -102,6 +131,17 @@ void Schema::updateSample(Time t)
 
 const ImportConfig& Schema::getImportConfig() const { return m_ctx->getImportConfig(); }
 const ExportConfig& Schema::getExportConfig() const { return m_ctx->getExportConfig(); }
+
+bool Schema::needsUpdate(Time t) const
+{
+    if (m_prev_time != usdiInvalidTime) {
+        if (t == m_prev_time) { return false; }
+        if ((t <= m_time_start && m_prev_time <= m_time_start) || (t >= m_time_end && m_prev_time >= m_time_end)) {
+            return false;
+        }
+    }
+    return true;
+}
 
 void Schema::addChild(Schema *child)
 {

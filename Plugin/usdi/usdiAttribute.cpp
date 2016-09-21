@@ -148,18 +148,33 @@ Attribute::Attribute(Schema *parent, UsdAttribute usdattr)
     m_dbg_name = getName();
     m_dbg_typename = getTypeName();
 #endif
+    if (m_usdattr && m_usdattr.GetNumTimeSamples() > 0) {
+        bool dummy;
+        m_usdattr.GetBracketingTimeSamples(DBL_MIN, &m_time_start, &m_time_start, &dummy);
+        m_usdattr.GetBracketingTimeSamples(DBL_MAX, &m_time_end, &m_time_end, &dummy);
+    }
 }
 
 Attribute::~Attribute()
 {
 }
-
+UsdAttribute Attribute::getUSDAttribute() const { return m_usdattr; }
 Schema*     Attribute::getParent() const    { return m_parent; }
 const char* Attribute::getName() const      { return m_usdattr.GetName().GetText(); }
 const char* Attribute::getTypeName() const  { return m_usdattr.GetTypeName().GetAsToken().GetText(); }
 bool        Attribute::isArray() const      { return (int)getType() >= (int)AttributeType::UnknownArray; }
 bool        Attribute::hasValue() const     { return m_usdattr.HasValue(); }
 size_t      Attribute::getNumSamples() const{ return m_usdattr.GetNumTimeSamples(); }
+
+bool Attribute::getTimeRange(Time& start, Time& end)
+{
+    if (m_time_start != usdiInvalidTime && m_time_end != usdiInvalidTime) {
+        start = m_time_start;
+        end = m_time_end;
+        return true;
+    }
+    return false;
+}
 
 
 // scalar attribute impl

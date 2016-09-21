@@ -8,12 +8,14 @@ public:
     Attribute(Schema *parent, UsdAttribute usdattr);
     virtual ~Attribute();
 
+    UsdAttribute getUSDAttribute() const;
     Schema*     getParent() const;
     const char* getName() const;
     const char* getTypeName() const;
     bool        isArray() const;
     bool        hasValue() const;
     size_t      getNumSamples() const;
+    bool        getTimeRange(Time& start, Time& end);
 
     virtual AttributeType   getType() const = 0;
     virtual size_t          getArraySize(Time t) const = 0; // always 1 if scalar
@@ -29,7 +31,8 @@ public:
 protected:
     Schema *m_parent = nullptr;
     UsdAttribute m_usdattr;
-    mutable Time m_prev_time = DBL_MIN;
+    Time m_time_start = usdiInvalidTime, m_time_end = usdiInvalidTime;
+    mutable Time m_prev_time = usdiInvalidTime;
 #ifdef usdiDebug
     const char *m_dbg_name = nullptr;
     const char *m_dbg_typename = nullptr;

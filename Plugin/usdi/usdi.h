@@ -101,6 +101,12 @@ struct ExportConfig
     bool swap_faces = true;
 };
 
+
+struct XformSummary
+{
+    Time start = 0.0, end = 0.0;
+};
+
 struct XformData
 {
     enum class Flags {
@@ -121,6 +127,12 @@ struct XformData
     float3 scale = { 1.0f, 1.0f, 1.0f };
 };
 
+
+struct CameraSummary
+{
+    Time start = 0.0, end = 0.0;
+};
+
 struct CameraData
 {
     float near_clipping_plane = 0.3f;
@@ -136,10 +148,7 @@ struct CameraData
 
 struct MeshSummary
 {
-    uint                peak_num_points = 0;
-    uint                peak_num_counts = 0;
-    uint                peak_num_indices = 0;
-    uint                peak_num_indices_triangulated = 0;
+    Time                start = 0.0, end = 0.0;
     TopologyVariance    topology_variance = TopologyVariance::Constant;
     bool                has_normals = false;
     bool                has_uvs = false;
@@ -167,8 +176,9 @@ struct MeshData
 
 struct PointsSummary
 {
-    uint                peak_num_points = 0;
-    bool                has_velocities = false;
+    Time    start = 0.0, end = 0.0;
+    uint    peak_num_points = 0;
+    bool    has_velocities = false;
 };
 
 struct PointsData
@@ -221,12 +231,14 @@ usdiAPI usdi::Attribute* usdiCreateAttribute(usdi::Schema *schema, const char *n
 // Xform interface
 usdiAPI usdi::Xform*     usdiAsXform(usdi::Schema *schema); // dynamic cast to Xform
 usdiAPI usdi::Xform*     usdiCreateXform(usdi::Context *ctx, usdi::Schema *parent, const char *name);
+usdiAPI void             usdiXformGetSummary(usdi::Xform *xf, usdi::XformSummary *dst);
 usdiAPI bool             usdiXformReadSample(usdi::Xform *xf, usdi::XformData *dst, usdi::Time t);
 usdiAPI bool             usdiXformWriteSample(usdi::Xform *xf, const usdi::XformData *src, usdi::Time t);
 
 // Camera interface
 usdiAPI usdi::Camera*    usdiAsCamera(usdi::Schema *schema); // dynamic cast to Camera
 usdiAPI usdi::Camera*    usdiCreateCamera(usdi::Context *ctx, usdi::Schema *parent, const char *name);
+usdiAPI void             usdiCameraGetSummary(usdi::Camera *cam, usdi::CameraSummary *dst);
 usdiAPI bool             usdiCameraReadSample(usdi::Camera *cam, usdi::CameraData *dst, usdi::Time t);
 usdiAPI bool             usdiCameraWriteSample(usdi::Camera *cam, const usdi::CameraData *src, usdi::Time t);
 

@@ -19,6 +19,7 @@ Points::Points(Context *ctx, Schema *parent, const UsdGeomPoints& points)
     , m_points(points)
 {
     usdiLogTrace("Points::Points(): %s\n", getPath());
+    getTimeRange(m_summary.start, m_summary.end);
 }
 
 Points::Points(Context *ctx, Schema *parent, const char *name)
@@ -55,9 +56,7 @@ const PointsSummary& Points::getSummary() const
 
 void Points::updateSample(Time t_)
 {
-    if (m_prev_time == t_) {
-        return;
-    }
+    if (!needsUpdate(t_)) { return; }
     super::updateSample(t_);
 
     auto t = UsdTimeCode(t_);

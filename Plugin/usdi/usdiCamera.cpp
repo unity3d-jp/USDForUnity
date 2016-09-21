@@ -12,6 +12,7 @@ Camera::Camera(Context *ctx, Schema *parent, const UsdGeomCamera& cam)
     , m_cam(cam)
 {
     usdiLogTrace("Camera::Camera(): %s\n", getPath());
+    getTimeRange(m_summary.start, m_summary.end);
 }
 
 Camera::Camera(Context *ctx, Schema *parent, const char *name)
@@ -32,11 +33,14 @@ UsdGeomCamera& Camera::getUSDSchema()
 }
 
 
+const usdi::CameraSummary& Camera::getSummary() const
+{
+    return m_summary;
+}
+
 void Camera::updateSample(Time t_)
 {
-    if (m_prev_time == t_) {
-        return;
-    }
+    if (!needsUpdate(t_)) { return; }
     super::updateSample(t_);
 
     auto t = UsdTimeCode(t_);

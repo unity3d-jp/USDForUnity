@@ -90,6 +90,7 @@ Xform::Xform(Context *ctx, Schema *parent, const UsdGeomXformable& xf)
     , m_xf(xf)
 {
     usdiLogTrace("Xform::Xform(): %s\n", getPath());
+    getTimeRange(m_summary.start, m_summary.end);
 }
 
 Xform::Xform(Context *ctx, Schema *parent, const char *name, const char *type)
@@ -109,9 +110,15 @@ UsdGeomXformable& Xform::getUSDSchema()
     return m_xf;
 }
 
+const XformSummary& Xform::getSummary() const
+{
+    return m_summary;
+}
+
 void Xform::updateSample(Time t_)
 {
-    if (m_prev_time == t_) {
+    if (!needsUpdate(t_)) {
+        m_sample.flags = (m_sample.flags & ~(int)XformData::Flags::UpdatedMask);
         return;
     }
     super::updateSample(t_);

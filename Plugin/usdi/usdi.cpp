@@ -241,6 +241,13 @@ usdiAPI usdi::Xform* usdiCreateXform(usdi::Context *ctx, usdi::Schema *parent, c
     return new usdi::Xform(ctx, parent, name);
 }
 
+usdiAPI void usdiXformGetSummary(usdi::Xform *xf, usdi::XformSummary *dst)
+{
+    usdiTraceFunc();
+    if (!xf || !dst) return;
+    *dst = xf->getSummary();
+}
+
 usdiAPI bool usdiXformReadSample(usdi::Xform *xf, usdi::XformData *dst, usdi::Time t)
 {
     usdiTraceFunc();
@@ -271,6 +278,13 @@ usdiAPI usdi::Camera* usdiCreateCamera(usdi::Context *ctx, usdi::Schema *parent,
     if (!ctx) { usdiLogWarning("usdiCreateCamera(): ctx must be set\n"); return nullptr; }
     if (!name) { usdiLogWarning("usdiCreateCamera(): name must be set\n"); return nullptr; }
     return new usdi::Camera(ctx, parent, name);
+}
+
+usdiAPI void usdiCameraGetSummary(usdi::Camera *cam, usdi::CameraSummary *dst)
+{
+    usdiTraceFunc();
+    if (!cam || !dst) return;
+    *dst = cam->getSummary();
 }
 
 usdiAPI bool usdiCameraReadSample(usdi::Camera *cam, usdi::CameraData *dst, usdi::Time t)

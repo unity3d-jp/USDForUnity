@@ -13,6 +13,7 @@ public:
     UsdGeomXformable&   getUSDSchema() override;
     void                updateSample(Time t) override;
 
+    const XformSummary& getSummary() const;
     bool                readSample(XformData& dst, Time t);
     bool                writeSample(const XformData& src, Time t);
 
@@ -24,6 +25,7 @@ private:
     UsdGeomXformOps     m_write_ops;
 
     XformData           m_sample;
+    mutable XformSummary m_summary;
 };
 
 } // namespace usdi
