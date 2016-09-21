@@ -35,7 +35,7 @@ typedef unsigned int handle_t; // async handle
 struct float2 { float x, y; };
 struct float3 { float x, y, z; };
 struct float4 { float x, y, z, w; };
-struct quaternion { float x, y, z, w; };
+struct quatf { float x, y, z, w; };
 struct float3x3 { float3 v[3]; };
 struct float4x4 { float4 v[4]; };
 struct MapContext;
@@ -103,8 +103,21 @@ struct ExportConfig
 
 struct XformData
 {
+    enum class Flags {
+        TypeMask        = 0xf,
+        TypeTRS         = 0x1,
+        TypeMatrix      = 0x2,
+
+        UpdatedMask     = 0xf0,
+        UpdatedPosition = 0x10,
+        UpdatedRotation = 0x20,
+        UpdatedScale    = 0x40,
+        UpdatedMatrix   = 0x80,
+    };
+
+    int flags = 0;
     float3 position = { 0.0f, 0.0f, 0.0f};
-    quaternion rotation = { 0.0f, 0.0f, 0.0f, 1.0f };
+    quatf rotation = { 0.0f, 0.0f, 0.0f, 1.0f };
     float3 scale = { 1.0f, 1.0f, 1.0f };
 };
 

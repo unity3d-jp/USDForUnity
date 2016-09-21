@@ -148,6 +148,20 @@ namespace UTJ
 
         public struct XformData
         {
+            public enum Flags
+            {
+                TypeMask        = 0xf,
+                TypeTRS         = 0x1,
+                TypeMatrix      = 0x2,
+
+                UpdatedMask     = 0xf0,
+                UpdatedPosition = 0x10,
+                UpdatedRotation = 0x20,
+                UpdatedScale    = 0x40,
+                UpdatedMatrix   = 0x80,
+            };
+
+            public int flags;
             public Vector3     position;
             public Quaternion  rotation;
             public Vector3     scale;
@@ -158,6 +172,7 @@ namespace UTJ
                 {
                     return new XformData
                     {
+                        flags = 0,
                         position = Vector3.zero,
                         rotation = Quaternion.identity,
                         scale = Vector3.one,
@@ -277,6 +292,9 @@ namespace UTJ
         [DllImport ("usdi")] public static extern void          usdiSetExportConfig(Context ctx, ref ExportConfig conf);
         [DllImport ("usdi")] public static extern void          usdiGetExportConfig(Context ctx, ref ExportConfig conf);
         [DllImport ("usdi")] public static extern Schema        usdiGetRoot(Context ctx);
+
+        [DllImport ("usdi")] public static extern void          usdiUpdateAllSamples(Context ctx, double t);
+        [DllImport ("usdi")] public static extern void          usdiUpdateAllSamplesAsync(Context ctx, double t);
 
         // Schema interface
         [DllImport ("usdi")] public static extern int           usdiGetID(Schema schema);

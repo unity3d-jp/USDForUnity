@@ -8,7 +8,7 @@
 
 namespace usdi {
 
-static quaternion EulerToQuaternion(const float3& euler, UsdGeomXformOp::Type order)
+static quatf EulerToQuaternion(const float3& euler, UsdGeomXformOp::Type order)
 {
     float cX = std::cos(euler.x / 2.0f);
     float sX = std::sin(euler.x / 2.0f);
@@ -16,9 +16,9 @@ static quaternion EulerToQuaternion(const float3& euler, UsdGeomXformOp::Type or
     float sY = std::sin(euler.y / 2.0f);
     float cZ = std::cos(euler.z / 2.0f);
     float sZ = std::sin(euler.z / 2.0f);
-    quaternion qX = { sX, 0.0f, 0.0f, cX };
-    quaternion qY = { 0.0f, sY, 0.0f, cY };
-    quaternion qZ = { 0.0f, 0.0f, sZ, cZ };
+    quatf qX = { sX, 0.0f, 0.0f, cX };
+    quatf qY = { 0.0f, sY, 0.0f, cY };
+    quatf qZ = { 0.0f, 0.0f, sZ, cZ };
 
     switch (order) {
     case UsdGeomXformOp::TypeRotateXYZ: return (qZ * qY) * qX;
@@ -34,7 +34,7 @@ static quaternion EulerToQuaternion(const float3& euler, UsdGeomXformOp::Type or
 static float Clamp(float v, float vmin, float vmax) { return std::min<float>(std::max<float>(v, vmin), vmax); }
 static float Saturate(float v) { return Clamp(v, -1.0f, 1.0f); }
 
-static float3 QuaternionToEulerZXY(const quaternion& q)
+static float3 QuaternionToEulerZXY(const quatf& q)
 {
     float d[] = {
         q.x*q.x, q.x*q.y, q.x*q.z, q.x*q.w,
@@ -79,7 +79,7 @@ static float3 QuaternionToEulerZXY(const quaternion& q)
     }
 }
 
-static void SwapHandedness(quaternion& q)
+static void SwapHandedness(quatf& q)
 {
     q = {q.x, -q.y, -q.z, q.w};
 }
@@ -118,11 +118,8 @@ void Xform::updateSample(Time t_)
 
     auto t = UsdTimeCode(t_);
     const auto& conf = getImportConfig();
+    auto prev = m_sample;
     auto& dst = m_sample;
-
-    dst.position = { 0.0f, 0.0f, 0.0f };
-    dst.rotation = { 0.0f, 0.0f, 0.0f, 1.0f };
-    dst.scale = { 1.0f, 1.0f, 1.0f };
 
     if (m_read_ops.empty()) {
         bool reset_stack = false;
@@ -175,6 +172,18 @@ void Xform::updateSample(Time t_)
         }
         }
     }
+
+    int update_flags = 0;
+    if (!NearEqual(prev.position, dst.position)) {
+        update_flags |= (int)XformData::Flags::UpdatedPosition;
+    }
+    if (!NearEqual(prev.rotation, dst.rotation)) {
+        update_flags |= (int)XformData::Flags::UpdatedRotation;
+    }
+    if (!NearEqual(prev.scale, dst.scale)) {
+        update_flags |= (int)XformData::Flags::UpdatedScale;
+    }
+    dst.flags = (dst.flags & ~(int)XformData::Flags::UpdatedMask) | update_flags;
 }
 
 bool Xform::readSample(XformData& dst, Time t)

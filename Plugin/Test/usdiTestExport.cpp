@@ -6,7 +6,7 @@
 using usdi::float2;
 using usdi::float3;
 using usdi::float4;
-using usdi::quaternion;
+using usdi::quatf;
 
 
 template<class T>
@@ -64,7 +64,7 @@ void TestAttributes(usdi::Schema *schema)
         AddAttribute(schema, "float4_scalar", usdi::AttributeType::Float4, v);
     }
     {
-        quaternion v = { 1.23f, 2.34f, 3.45f, 4.56f };
+        quatf v = { 1.23f, 2.34f, 3.45f, 4.56f };
         AddAttribute(schema, "quaternion_scalar", usdi::AttributeType::Quaternion, v);
     }
     {
@@ -97,7 +97,7 @@ void TestAttributes(usdi::Schema *schema)
         AddAttribute(schema, "float4_array", usdi::AttributeType::Float4Array, v);
     }
     {
-        quaternion v[] = { { 1.23f, 2.34f, 3.45f, 4.56f } ,{ 5.67f, 6.78f, 7.89f, 8.90f } ,{ 9.01f, 0.12f, 1.23f, 2.34f } };
+        quatf v[] = { { 1.23f, 2.34f, 3.45f, 4.56f } ,{ 5.67f, 6.78f, 7.89f, 8.90f } ,{ 9.01f, 0.12f, 1.23f, 2.34f } };
         AddAttribute(schema, "quaternion_array", usdi::AttributeType::QuaternionArray, v);
     }
     {

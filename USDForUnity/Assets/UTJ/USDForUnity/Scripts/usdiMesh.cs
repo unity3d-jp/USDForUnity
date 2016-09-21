@@ -254,8 +254,6 @@ namespace UTJ
         {
             base.usdiUpdate(time);
 
-            if(!m_mesh) { return; }
-
             switch (m_meshSummary.topology_variance) {
                 case usdi.TopologyVariance.Constant:
                     if(m_frame == 0 && m_umeshIsEmpty)

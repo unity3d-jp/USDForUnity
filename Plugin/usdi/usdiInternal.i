@@ -1,5 +1,19 @@
 namespace usdi {
 
+inline bool NearEqual(float a, float b)
+{
+    const float epsilon = 0.00001f;
+    return std::abs(a - b) < epsilon;
+}
+inline bool NearEqual(const float3& a, const float3& b)
+{
+    return NearEqual(a.x, b.x) && NearEqual(a.y, b.y) && NearEqual(a.z, b.z);
+}
+inline bool NearEqual(const quatf& a, const quatf& b)
+{
+    return NearEqual(a.x, b.x) && NearEqual(a.y, b.y) && NearEqual(a.z, b.z) && NearEqual(a.w, b.w);
+}
+
 inline float2 operator*(const float2& l, float r)
 {
     return{ l.x*r, l.y*r };
@@ -15,12 +29,12 @@ inline float4 operator*(const float4& l, float r)
     return{ l.x*r, l.y*r, l.z*r, l.w*r };
 }
 
-inline quaternion operator*(const quaternion& l, float r)
+inline quatf operator*(const quatf& l, float r)
 {
     return{ l.x*r, l.y*r, l.z*r, l.w*r };
 }
 
-inline quaternion operator*(const quaternion& l, const quaternion& r)
+inline quatf operator*(const quatf& l, const quatf& r)
 {
     return{
         l.w*r.x + l.x*r.w + l.y*r.z - l.z*r.y,
@@ -55,7 +69,7 @@ inline float4& operator*=(float4& l, float r)
     return l;
 }
 
-inline quaternion& operator*=(quaternion& l, float r)
+inline quatf& operator*=(quatf& l, float r)
 {
     l.x *= r;
     l.y *= r;

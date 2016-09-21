@@ -8,8 +8,8 @@ namespace UTJ
     {
         #region fields
         usdi.Xform      m_xf;
-        usdi.XformData  m_xfData;
-        Transform       m_trans;
+        usdi.XformData m_xfData = usdi.XformData.default_value;
+        Transform m_trans;
         #endregion
 
         #region impl
@@ -36,11 +36,18 @@ namespace UTJ
 
         public override void usdiUpdate(double time)
         {
-            if (!m_xf) { return; }
-
-            m_trans.localPosition = m_xfData.position;
-            m_trans.localRotation = m_xfData.rotation;
-            m_trans.localScale = m_xfData.scale;
+            if((m_xfData.flags & (int)usdi.XformData.Flags.UpdatedPosition) != 0)
+            {
+                m_trans.localPosition = m_xfData.position;
+            }
+            if ((m_xfData.flags & (int)usdi.XformData.Flags.UpdatedRotation) != 0)
+            {
+                m_trans.localRotation = m_xfData.rotation;
+            }
+            if ((m_xfData.flags & (int)usdi.XformData.Flags.UpdatedScale) != 0)
+            {
+                m_trans.localScale = m_xfData.scale;
+            }
         }
         #endregion
     }

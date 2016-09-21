@@ -8,7 +8,7 @@ typedef unsigned int uint;
 using usdi::float2;
 using usdi::float3;
 using usdi::float4;
-using usdi::quaternion;
+using usdi::quatf;
 
 template<class T> void P(T v);
 template<> void P<byte>(byte v) { printf("0x%02X", v); }
@@ -18,7 +18,7 @@ template<> void P<float>(float v) { printf("%.3f", v); }
 template<> void P<float2>(float2 v) { printf("(%.3f, %.3f)", v.x, v.y); }
 template<> void P<float3>(float3 v) { printf("(%.3f, %.3f, %.3f)", v.x, v.y, v.z); }
 template<> void P<float4>(float4 v) { printf("(%.3f, %.3f, %.3f, %.3f)", v.x, v.y, v.z, v.w); }
-template<> void P<quaternion>(quaternion v) { printf("(%.3f, %.3f, %.3f, %.3f)", v.x, v.y, v.z, v.w); }
+template<> void P<quatf>(quatf v) { printf("(%.3f, %.3f, %.3f, %.3f)", v.x, v.y, v.z, v.w); }
 template<> void P<const char*>(const char* v) { printf("\"%s\"", v); }
 
 
@@ -68,7 +68,7 @@ void InspectAttribute(usdi::Attribute *attr)
         ImplScalar(Float2, float2);
         ImplScalar(Float3, float3);
         ImplScalar(Float4, float4);
-        ImplScalar(Quaternion, quaternion);
+        ImplScalar(Quaternion, quatf);
         ImplScalar(Token, const char*);
         ImplScalar(String, const char*);
 
@@ -79,7 +79,7 @@ void InspectAttribute(usdi::Attribute *attr)
         ImplVector(Float2, float2);
         ImplVector(Float3, float3);
         ImplVector(Float4, float4);
-        ImplVector(Quaternion, quaternion);
+        ImplVector(Quaternion, quatf);
         ImplVector(Token, const char*);
         ImplVector(String, const char*);
     }

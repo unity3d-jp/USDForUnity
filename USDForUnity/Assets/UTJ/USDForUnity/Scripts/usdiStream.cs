@@ -221,6 +221,7 @@ namespace UTJ
             if (t == m_prevUpdateTime) { return; }
 
             usdiApplyImportConfig();
+            usdi.usdiUpdateAllSamples(m_ctx, t);
 
             // update all elements
             int c = m_elements.Count;
