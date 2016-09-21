@@ -69,7 +69,6 @@ static void WriteVertices(VertexT *dst, const usdi::MeshData& src);
 template<class VertexT>
 static void WriteVertices(TempBuffer& buf, const usdi::MeshData& src);
 
-#undef usdiEnableISPC
 #ifdef usdiEnableISPC
 
 template<>
