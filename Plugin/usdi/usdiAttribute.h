@@ -8,6 +8,7 @@ public:
     Attribute(Schema *parent, UsdAttribute usdattr);
     virtual ~Attribute();
 
+    Schema*     getParent() const;
     const char* getName() const;
     const char* getTypeName() const;
     bool        isArray() const;
@@ -26,8 +27,13 @@ public:
     virtual bool            setBuffered(const void *src, size_t size, Time t) = 0;
 
 protected:
-    Schema *m_parent;
+    Schema *m_parent = nullptr;
     UsdAttribute m_usdattr;
+    mutable Time m_prev_time = DBL_MIN;
+#ifdef usdiDebug
+    const char *m_dbg_name = nullptr;
+    const char *m_dbg_typename = nullptr;
+#endif
 };
 
 Attribute* WrapExistingAttribute(Schema *parent, UsdAttribute usd);

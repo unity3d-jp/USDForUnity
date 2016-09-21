@@ -109,10 +109,17 @@ UsdGeomXformable& Xform::getUSDSchema()
     return m_xf;
 }
 
-bool Xform::readSample(XformData& dst, Time t_)
+void Xform::updateSample(Time t_)
 {
+    if (m_prev_time == t_) {
+        return;
+    }
+    super::updateSample(t_);
+
     auto t = UsdTimeCode(t_);
     const auto& conf = getImportConfig();
+    auto& dst = m_sample;
+
     dst.position = { 0.0f, 0.0f, 0.0f };
     dst.rotation = { 0.0f, 0.0f, 0.0f, 1.0f };
     dst.scale = { 1.0f, 1.0f, 1.0f };
@@ -168,7 +175,13 @@ bool Xform::readSample(XformData& dst, Time t_)
         }
         }
     }
-    return ret;
+}
+
+bool Xform::readSample(XformData& dst, Time t)
+{
+    updateSample(t);
+    dst = m_sample;
+    return true;
 }
 
 

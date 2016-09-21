@@ -189,6 +189,8 @@ usdiAPI void             usdiGetImportConfig(usdi::Context *ctx, usdi::ImportCon
 usdiAPI void             usdiSetExportConfig(usdi::Context *ctx, const usdi::ExportConfig *conf);
 usdiAPI void             usdiGetExportConfig(usdi::Context *ctx, usdi::ExportConfig *conf);
 usdiAPI usdi::Schema*    usdiGetRoot(usdi::Context *ctx);
+usdiAPI void             usdiUpdateAllSamples(usdi::Context *ctx, usdi::Time t);
+usdiAPI void             usdiUpdateAllSamplesAsync(usdi::Context *ctx, usdi::Time t);
 
 // Schema interface
 usdiAPI int              usdiGetID(usdi::Schema *schema);
@@ -234,6 +236,7 @@ usdiAPI bool             usdiPointsWriteSample(usdi::Points *points, const usdi:
 usdiAPI bool             usdiPointsWriteSampleAsync(usdi::Points *points, const usdi::PointsData *src, usdi::Time t);
 
 // Attribute interface
+usdiAPI usdi::Schema*        usdiAttrGetParent(usdi::Attribute *attr);
 usdiAPI const char*          usdiAttrGetName(usdi::Attribute *attr);
 usdiAPI const char*          usdiAttrGetTypeName(usdi::Attribute *attr);
 usdiAPI usdi::AttributeType  usdiAttrGetType(usdi::Attribute *attr);

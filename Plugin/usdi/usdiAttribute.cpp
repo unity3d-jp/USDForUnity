@@ -142,13 +142,19 @@ struct AttrArgs<VtArray<SdfAssetPath>>
 
 
 Attribute::Attribute(Schema *parent, UsdAttribute usdattr)
-    : m_usdattr(usdattr)
+    : m_parent(parent), m_usdattr(usdattr)
 {
+#ifdef usdiDebug
+    m_dbg_name = getName();
+    m_dbg_typename = getTypeName();
+#endif
 }
 
 Attribute::~Attribute()
 {
 }
+
+Schema*     Attribute::getParent() const    { return m_parent; }
 const char* Attribute::getName() const      { return m_usdattr.GetName().GetText(); }
 const char* Attribute::getTypeName() const  { return m_usdattr.GetTypeName().GetAsToken().GetText(); }
 bool        Attribute::isArray() const      { return (int)getType() >= (int)AttributeType::UnknownArray; }
@@ -281,7 +287,6 @@ public:
 
 private:
     mutable T m_buf;
-    mutable Time m_prev_time = DBL_MIN;
 };
 
 

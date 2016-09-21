@@ -31,18 +31,22 @@ UsdGeomCamera& Camera::getUSDSchema()
     return m_cam;
 }
 
-bool Camera::readSample(CameraData& dst, Time t_)
-{
-    auto t = UsdTimeCode(t_);
-    const auto& conf = getImportConfig();
 
+void Camera::updateSample(Time t_)
+{
+    if (m_prev_time == t_) {
+        return;
+    }
+    super::updateSample(t_);
+
+    auto t = UsdTimeCode(t_);
+    auto& dst = m_sample;
     {
         GfVec2f range;
         m_cam.GetClippingRangeAttr().Get(&range, t);
         dst.near_clipping_plane = range[0];
         dst.far_clipping_plane = range[1];
     }
-
     {
         float focal_length;
         float focus_distance;
@@ -60,7 +64,12 @@ bool Camera::readSample(CameraData& dst, Time t_)
         dst.focal_length = focal_length;
         dst.aperture = vertical_aperture;
     }
+}
 
+bool Camera::readSample(CameraData& dst, Time t)
+{
+    updateSample(t);
+    dst = m_sample;
     return true;
 }
 

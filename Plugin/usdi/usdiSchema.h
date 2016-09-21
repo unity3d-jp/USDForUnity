@@ -28,6 +28,8 @@ public:
     UsdTyped            getUSDSchema() const;
     virtual UsdTyped&   getUSDSchema() = 0;
 
+    virtual void        updateSample(Time t);
+
 public: // for internal use
     void addChild(Schema *child);
     std::string makePath(const char *name);
@@ -46,6 +48,11 @@ protected:
     Children    m_children;
     Attributes  m_attributes;
     int         m_id = 0;
+    Time        m_prev_time = DBL_MIN;
+#ifdef usdiDebug
+    const char *m_dbg_path = nullptr;
+    const char *m_dbg_typename = nullptr;
+#endif
 };
 
 } // namespace usdi

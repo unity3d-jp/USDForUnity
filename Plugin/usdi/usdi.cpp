@@ -57,6 +57,7 @@ usdiAPI void usdiWaitAsyncWrite()
 }
 
 
+// Context interface
 
 usdiAPI usdi::Context* usdiCreateContext()
 {
@@ -131,6 +132,19 @@ usdiAPI usdi::Schema* usdiGetRoot(usdi::Context *ctx)
     return ctx->getRootNode();
 }
 
+usdiAPI void usdiUpdateAllSamples(usdi::Context *ctx, usdi::Time t)
+{
+    if (!ctx) return;
+    ctx->updateAllSamples(t);
+}
+usdiAPI void usdiUpdateAllSamplesAsync(usdi::Context *ctx, usdi::Time t)
+{
+    if (!ctx) return;
+    usdi::g_read_tasks.run([=]() { ctx->updateAllSamples(t); });
+}
+
+
+// Schema interface
 
 usdiAPI int usdiGetID(usdi::Schema *schema)
 {
@@ -210,6 +224,8 @@ usdiAPI usdi::Attribute* usdiCreateAttribute(usdi::Schema *schema, const char *n
 }
 
 
+// Xform interface
+
 usdiAPI usdi::Xform* usdiAsXform(usdi::Schema *schema)
 {
     usdiTraceFunc();
@@ -240,6 +256,8 @@ usdiAPI bool usdiXformWriteSample(usdi::Xform *xf, const usdi::XformData *src, u
 }
 
 
+// Camera interface
+
 usdiAPI usdi::Camera* usdiAsCamera(usdi::Schema *schema)
 {
     usdiTraceFunc();
@@ -269,6 +287,8 @@ usdiAPI bool usdiCameraWriteSample(usdi::Camera *cam, const usdi::CameraData *sr
     return cam->writeSample(*src, t);
 }
 
+
+// Mesh interface
 
 usdiAPI usdi::Mesh* usdiAsMesh(usdi::Schema *schema)
 {
@@ -321,6 +341,8 @@ usdiAPI bool usdiMeshWriteSampleAsync(usdi::Mesh *mesh, const usdi::MeshData *sr
 }
 
 
+// Points interface
+
 usdiAPI usdi::Points* usdiAsPoints(usdi::Schema *schema)
 {
     usdiTraceFunc();
@@ -372,6 +394,15 @@ usdiAPI bool usdiPointsWriteSampleAsync(usdi::Points *points, const usdi::Points
     return true;
 }
 
+
+// Attribute interface
+
+usdiAPI usdi::Schema* usdiAttrGetParent(usdi::Attribute *attr)
+{
+    usdiTraceFunc();
+    if (!attr) { return nullptr; }
+    return attr->getParent();
+}
 
 usdiAPI const char* usdiAttrGetName(usdi::Attribute *attr)
 {

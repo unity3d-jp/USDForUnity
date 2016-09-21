@@ -26,6 +26,8 @@ public:
     void                addSchema(Schema *schema);
     int                 generateID();
 
+    void                updateAllSamples(Time t);
+
 private:
     void    applyImportConfig();
     void    createNodeRecursive(Schema *parent, UsdPrim prim, int depth);

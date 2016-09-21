@@ -122,50 +122,54 @@ const MeshSummary& Mesh::getSummary() const
     return m_summary;
 }
 
-bool Mesh::readSample(MeshData& dst, Time t_, bool copy)
+void Mesh::updateSample(Time t_)
 {
+    if (m_prev_time == t_) {
+        return;
+    }
+    super::updateSample(t_);
+
     auto t = UsdTimeCode(t_);
     const auto& conf = getImportConfig();
+    MeshSample& sample = m_sample;
 
-    {
-        MeshSample& sample = m_sample;
-        if (m_prev_time != t_) {
-            m_prev_time = t_;
-
-            m_mesh.GetPointsAttr().Get(&sample.points, t);
-            m_mesh.GetVelocitiesAttr().Get(&sample.velocities, t);
-            m_mesh.GetNormalsAttr().Get(&sample.normals, t);
-            m_mesh.GetFaceVertexCountsAttr().Get(&sample.counts, t);
-            m_mesh.GetFaceVertexIndicesAttr().Get(&sample.indices, t);
-            if (m_attr_uv) {
-                m_attr_uv->get(&sample.uvs, t_);
-            }
-            if (m_num_indices_triangulated == 0 || getSummary().topology_variance == TopologyVariance::Heterogenous) {
-                m_num_indices_triangulated = GetTriangulatedIndexCount(sample.counts);
-                if (conf.triangulate) {
-                    sample.indices_triangulated.resize(m_num_indices_triangulated);
-                    TriangulateIndices(sample.indices_triangulated.data(), sample.counts, &sample.indices, conf.swap_faces);
-                }
-            }
-
-            if (conf.swap_handedness) {
-                InvertX((float3*)sample.points.data(), sample.points.size());
-                InvertX((float3*)sample.velocities.data(), sample.velocities.size());
-                InvertX((float3*)sample.normals.data(), sample.normals.size());
-            }
-            if (conf.scale != 1.0f) {
-                Scale((float3*)sample.points.data(), conf.scale, sample.points.size());
-                Scale((float3*)sample.velocities.data(), conf.scale, sample.velocities.size());
-            }
+    m_mesh.GetPointsAttr().Get(&sample.points, t);
+    m_mesh.GetVelocitiesAttr().Get(&sample.velocities, t);
+    m_mesh.GetNormalsAttr().Get(&sample.normals, t);
+    m_mesh.GetFaceVertexCountsAttr().Get(&sample.counts, t);
+    m_mesh.GetFaceVertexIndicesAttr().Get(&sample.indices, t);
+    if (m_attr_uv) {
+        m_attr_uv->get(&sample.uvs, t_);
+    }
+    if (m_num_indices_triangulated == 0 || getSummary().topology_variance == TopologyVariance::Heterogenous) {
+        m_num_indices_triangulated = GetTriangulatedIndexCount(sample.counts);
+        if (conf.triangulate) {
+            sample.indices_triangulated.resize(m_num_indices_triangulated);
+            TriangulateIndices(sample.indices_triangulated.data(), sample.counts, &sample.indices, conf.swap_faces);
         }
     }
 
+    if (conf.swap_handedness) {
+        InvertX((float3*)sample.points.data(), sample.points.size());
+        InvertX((float3*)sample.velocities.data(), sample.velocities.size());
+        InvertX((float3*)sample.normals.data(), sample.normals.size());
+    }
+    if (conf.scale != 1.0f) {
+        Scale((float3*)sample.points.data(), conf.scale, sample.points.size());
+        Scale((float3*)sample.velocities.data(), conf.scale, sample.velocities.size());
+    }
+}
+
+bool Mesh::readSample(MeshData& dst, Time t, bool copy)
+{
+    updateSample(t);
 
     const MeshSample& sample = m_sample;
     dst.num_points = sample.points.size();
     dst.num_counts = sample.counts.size();
     dst.num_indices = sample.indices.size();
     dst.num_indices_triangulated = m_num_indices_triangulated;
+
     if (copy) {
         if (dst.points && !sample.points.empty()) {
             memcpy(dst.points, sample.points.data(), sizeof(float3) * dst.num_points);
@@ -185,7 +189,7 @@ bool Mesh::readSample(MeshData& dst, Time t_, bool copy)
         if (dst.indices && !sample.indices.empty()) {
             memcpy(dst.indices, sample.indices.data(), sizeof(int) * dst.num_indices);
         }
-        if (conf.triangulate && dst.indices_triangulated && !sample.indices_triangulated.empty()) {
+        if (dst.indices_triangulated && !sample.indices_triangulated.empty()) {
             memcpy(dst.indices_triangulated, sample.indices_triangulated.data(), sizeof(int) * m_num_indices_triangulated);
         }
     }

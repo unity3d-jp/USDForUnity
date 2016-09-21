@@ -30,4 +30,9 @@ UsdTyped& Unknown::getUSDSchema()
 }
 
 
+void Unknown::updateSample(Time t)
+{
+    // nothing todo
+}
+
 } // namespace usdi

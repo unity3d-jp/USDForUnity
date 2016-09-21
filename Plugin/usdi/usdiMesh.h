@@ -26,6 +26,7 @@ public:
     ~Mesh() override;
 
     UsdGeomMesh&        getUSDSchema() override;
+    void                updateSample(Time t) override;
 
     const MeshSummary&  getSummary() const;
     bool                readSample(MeshData& dst, Time t, bool copy);
@@ -39,7 +40,6 @@ private:
     MeshSample          m_sample;
     Attribute           *m_attr_uv = nullptr;
 
-    mutable Time        m_prev_time = DBL_MIN;
     mutable bool        m_summary_needs_update = true;
     mutable MeshSummary m_summary;
     mutable int         m_num_indices_triangulated = 0;

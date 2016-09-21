@@ -39,6 +39,10 @@ void Schema::init()
                 m_attributes.emplace_back(ret);
             }
         }
+#ifdef usdiDebug
+        m_dbg_path = getPath();
+        m_dbg_typename = getTypeName();
+#endif
     }
 }
 
@@ -78,11 +82,23 @@ Attribute* Schema::createAttribute(const char *name, AttributeType type)
     return nullptr;
 }
 
-const char* Schema::getPath() const         { return getUSDPrim().GetPath().GetText(); }
-const char* Schema::getName() const         { return getUSDPrim().GetName().GetText(); }
-const char* Schema::getTypeName() const     { return getUSDPrim().GetTypeName().GetText(); }
+const char* Schema::getPath() const         { return m_prim.GetPath().GetText(); }
+const char* Schema::getName() const         { return m_prim.GetName().GetText(); }
+const char* Schema::getTypeName() const     { return m_prim.GetTypeName().GetText(); }
 UsdPrim     Schema::getUSDPrim() const      { return m_prim; }
 UsdTyped    Schema::getUSDSchema() const    { return const_cast<Schema*>(this)->getUSDSchema(); }
+
+void Schema::updateSample(Time t)
+{
+    if (t == m_prev_time) {
+        return;
+    }
+    m_prev_time = t;
+
+    //for (auto& a : m_attributes) {
+    //    a->updateSample(t);
+    //}
+}
 
 const ImportConfig& Schema::getImportConfig() const { return m_ctx->getImportConfig(); }
 const ExportConfig& Schema::getExportConfig() const { return m_ctx->getExportConfig(); }

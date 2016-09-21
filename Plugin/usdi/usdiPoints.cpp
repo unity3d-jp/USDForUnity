@@ -42,7 +42,6 @@ void Points::updateSummary() const
 {
     m_summary_needs_update = false;
     m_summary.has_velocities = m_points.GetVelocitiesAttr().HasValue();
-    //
 }
 
 
@@ -54,30 +53,33 @@ const PointsSummary& Points::getSummary() const
     return m_summary;
 }
 
-bool Points::readSample(PointsData& dst, Time t_, bool copy)
+void Points::updateSample(Time t_)
 {
+    if (m_prev_time == t_) {
+        return;
+    }
+    super::updateSample(t_);
+
     auto t = UsdTimeCode(t_);
     const auto& conf = getImportConfig();
 
-    {
-        auto& sample = m_sample;
-        if (m_prev_time != t_) {
-            m_prev_time = t_;
+    auto& sample = m_sample;
+    m_points.GetPointsAttr().Get(&sample.points, t);
+    m_points.GetVelocitiesAttr().Get(&sample.velocities, t);
 
-            m_points.GetPointsAttr().Get(&sample.points, t);
-            m_points.GetVelocitiesAttr().Get(&sample.velocities, t);
-
-            if (conf.swap_handedness) {
-                InvertX((float3*)sample.points.data(), sample.points.size());
-                InvertX((float3*)sample.velocities.data(), sample.velocities.size());
-            }
-            if (conf.scale != 1.0f) {
-                Scale((float3*)sample.points.data(), conf.scale, sample.points.size());
-                Scale((float3*)sample.velocities.data(), conf.scale, sample.velocities.size());
-            }
-        }
+    if (conf.swap_handedness) {
+        InvertX((float3*)sample.points.data(), sample.points.size());
+        InvertX((float3*)sample.velocities.data(), sample.velocities.size());
     }
+    if (conf.scale != 1.0f) {
+        Scale((float3*)sample.points.data(), conf.scale, sample.points.size());
+        Scale((float3*)sample.velocities.data(), conf.scale, sample.velocities.size());
+    }
+}
 
+bool Points::readSample(PointsData& dst, Time t, bool copy)
+{
+    updateSample(t);
 
     const auto& sample = m_sample;
     dst.num_points = sample.points.size();

@@ -11,6 +11,7 @@ public:
     ~Unknown() override;
 
     UsdTyped&   getUSDSchema() override;
+    void        updateSample(Time t) override;
 
 private:
     UsdTyped    m_typed;

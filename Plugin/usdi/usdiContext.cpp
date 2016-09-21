@@ -222,4 +222,13 @@ int Context::generateID()
     return ++m_id_seed;
 }
 
+void Context::updateAllSamples(Time t)
+{
+    tbb::parallel_for(tbb::blocked_range<size_t>(0, m_schemas.size()), [t, this](const auto& r) {
+        for (size_t i = r.begin(); i != r.end(); ++i) {
+            m_schemas[i]->updateSample(t);
+        }
+    }, tbb::auto_partitioner());
+}
+
 } // namespace usdi
