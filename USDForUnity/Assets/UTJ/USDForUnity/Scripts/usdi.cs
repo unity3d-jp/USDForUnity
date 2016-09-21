@@ -316,8 +316,10 @@ namespace UTJ
         [DllImport ("usdi")] public static extern Points        usdiAsPoints(Schema schema);
         [DllImport ("usdi")] public static extern Points        usdiCreatePoints(Context ctx, Schema parent, string name);
         [DllImport ("usdi")] public static extern void          usdiPointsGetSummary(Points points, ref PointsSummary dst);
-        [DllImport ("usdi")] public static extern Bool          usdiPointsReadSample(Points points, ref PointsData dst, double t);
+        [DllImport ("usdi")] public static extern Bool          usdiPointsReadSample(Points points, ref PointsData dst, double t, Bool copy);
+        [DllImport ("usdi")] public static extern Bool          usdiPointsReadSampleAsync(Points points, ref PointsData dst, double t, Bool copy);
         [DllImport ("usdi")] public static extern Bool          usdiPointsWriteSample(Points points, ref PointsData src, double t);
+        [DllImport ("usdi")] public static extern Bool          usdiPointsWriteSampleAsync(Points points, ref PointsData src, double t);
 
         // Attribute interface
         [DllImport ("usdi")] public static extern IntPtr        usdiAttrGetName(Attribute attr);

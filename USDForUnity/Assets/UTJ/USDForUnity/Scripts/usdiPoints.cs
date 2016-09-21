@@ -61,8 +61,8 @@ namespace UTJ
         {
             base.usdiAsyncUpdate(time);
 
-            usdi.PointsData tmp = default(usdi.PointsData);
-            usdi.usdiPointsReadSample(m_points, ref tmp, time);
+            usdi.PointsData tmp = usdi.PointsData.default_value;
+            usdi.usdiPointsReadSample(m_points, ref tmp, time, true);
 
             // allocate points data
             if (m_pointsData.num_points == tmp.num_points)
@@ -71,7 +71,7 @@ namespace UTJ
             }
             else
             {
-                m_pointsData = tmp;
+                m_pointsData.num_points = tmp.num_points;
 
                 m_positions = new Vector3[m_pointsData.num_points];
                 m_pointsData.points = usdi.GetArrayPtr(m_positions);
@@ -91,7 +91,7 @@ namespace UTJ
             // read points data
             if (m_pointsData.num_points > 0)
             {
-                usdi.usdiPointsReadSample(m_points, ref m_pointsData, time);
+                usdi.usdiPointsReadSampleAsync(m_points, ref m_pointsData, time, true);
                 if (m_attrRotations)
                 {
                     usdi.usdiAttrReadArraySample(m_attrRotations, m_ptrRotations, m_rotations.Length, time);

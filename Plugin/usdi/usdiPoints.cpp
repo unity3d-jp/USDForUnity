@@ -54,7 +54,7 @@ const PointsSummary& Points::getSummary() const
     return m_summary;
 }
 
-bool Points::readSample(PointsData& dst, Time t_)
+bool Points::readSample(PointsData& dst, Time t_, bool copy)
 {
     auto t = UsdTimeCode(t_);
     const auto& conf = getImportConfig();
@@ -81,16 +81,22 @@ bool Points::readSample(PointsData& dst, Time t_)
 
     const auto& sample = m_sample;
     dst.num_points = sample.points.size();
-    if (dst.points) {
-        memcpy(dst.points, &sample.points[0], sizeof(float3) * dst.num_points);
+    if (copy) {
+        if (dst.points) {
+            memcpy(dst.points, sample.points.data(), sizeof(float3) * dst.num_points);
+        }
+        if (dst.velocities) {
+            if (sample.velocities.size() != dst.num_points) {
+                usdiLogWarning("Points::readSample(): sample.points.size() != sample.velocities.size() !!\n");
+            }
+            else {
+                memcpy(dst.velocities, sample.velocities.data(), sizeof(float3) * dst.num_points);
+            }
+        }
     }
-    if (dst.velocities) {
-        if (sample.velocities.size() != dst.num_points) {
-            usdiLogWarning("Points::readSample(): num points != size of velocity!!\n");
-        }
-        else {
-            memcpy(dst.velocities, &sample.velocities[0], sizeof(float3) * dst.num_points);
-        }
+    else {
+        dst.points = (float3*)sample.points.data();
+        dst.velocities = (float3*)sample.velocities.data();
     }
 
     return dst.num_points > 0;

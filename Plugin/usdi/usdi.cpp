@@ -42,7 +42,7 @@ usdiAPI void usdiSetDebugLevel(int l)
     usdi::g_debug_level = l;
 }
 
-usdiAPI usdi::Time usdiGetDefaultTime()
+usdiAPI usdi::Time usdiDefaultTime()
 {
     return std::numeric_limits<double>::quiet_NaN();
 }
@@ -344,11 +344,18 @@ usdiAPI void usdiPointsGetSummary(usdi::Points *points, usdi::PointsSummary *dst
     *dst = points->getSummary();
 }
 
-usdiAPI bool usdiPointsReadSample(usdi::Points *points, usdi::PointsData *dst, usdi::Time t)
+usdiAPI bool usdiPointsReadSample(usdi::Points *points, usdi::PointsData *dst, usdi::Time t, bool copy)
 {
     usdiTraceFunc();
     if (!points || !dst) return false;
-    return points->readSample(*dst, t);
+    return points->readSample(*dst, t, copy);
+}
+usdiAPI bool usdiPointsReadSampleAsync(usdi::Points *points, usdi::PointsData *dst, usdi::Time t, bool copy)
+{
+    usdiTraceFunc();
+    if (!points || !dst) return false;
+    usdi::g_read_tasks.run([=]() { points->readSample(*dst, t, copy); });
+    return true;
 }
 
 usdiAPI bool usdiPointsWriteSample(usdi::Points *points, const usdi::PointsData *src, usdi::Time t)
@@ -356,6 +363,13 @@ usdiAPI bool usdiPointsWriteSample(usdi::Points *points, const usdi::PointsData 
     usdiTraceFunc();
     if (!points || !src) return false;
     return points->writeSample(*src, t);
+}
+usdiAPI bool usdiPointsWriteSampleAsync(usdi::Points *points, const usdi::PointsData *src, usdi::Time t)
+{
+    usdiTraceFunc();
+    if (!points || !src) return false;
+    usdi::g_write_tasks.run([=]() { points->writeSample(*src, t); });
+    return true;
 }
 
 

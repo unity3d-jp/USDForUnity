@@ -51,11 +51,11 @@ namespace UTJ
                 m_usd = usd;
             }
 
-            public override void Capture(double t)
+            public override void Capture(double t) // called from main thread
             {
                 // do nothing
             }
-            public override void Flush(double t)
+            public override void Flush(double t) // called from worker thread
             {
                 // do nothing
             }
@@ -101,7 +101,7 @@ namespace UTJ
                 }
             }
 
-            public override void Capture(double t)
+            public override void Capture(double t) // called from main thread
             {
                 if (m_target == null) { return; }
 
@@ -122,7 +122,7 @@ namespace UTJ
                 }
             }
 
-            public override void Flush(double t)
+            public override void Flush(double t) // called from worker thread
             {
                 if (m_target == null) { return; }
 
@@ -147,7 +147,7 @@ namespace UTJ
                 //target.GetComponent<usdiCameraExportConfig>();
             }
 
-            public override void Capture(double t)
+            public override void Capture(double t) // called from main thread
             {
                 base.Capture(t);
                 if (m_target == null) { return; }
@@ -161,7 +161,7 @@ namespace UTJ
                 //m_data.aspect_ratio = cparams.GetAspectRatio();
             }
 
-            public override void Flush(double t)
+            public override void Flush(double t) // called from worker thread
             {
                 base.Flush(t);
                 if (m_target == null) { return; }
@@ -246,7 +246,7 @@ namespace UTJ
                 }
             }
 
-            public override void Capture(double t)
+            public override void Capture(double t) // called from main thread
             {
                 base.Capture(t);
                 if (m_target == null) { return; }
@@ -261,7 +261,7 @@ namespace UTJ
                 }
             }
 
-            public override void Flush(double t)
+            public override void Flush(double t) // called from worker thread
             {
                 base.Flush(t);
                 if (m_target == null) { return; }
@@ -310,7 +310,7 @@ namespace UTJ
                 }
             }
 
-            public override void Capture(double t)
+            public override void Capture(double t) // called from main thread
             {
                 base.Capture(t);
                 if (m_target == null) { return; }
@@ -326,7 +326,7 @@ namespace UTJ
                 }
             }
 
-            public override void Flush(double t)
+            public override void Flush(double t) // called from worker thread
             {
                 base.Flush(t);
                 if (m_target == null) { return; }
@@ -343,7 +343,7 @@ namespace UTJ
         {
             ParticleSystem m_target;
             usdi.Attribute m_attr_rotatrions;
-            usdi.PointsData m_data;
+            usdi.PointsData m_data = usdi.PointsData.default_value;
 
             ParticleSystem.Particle[] m_buf_particles;
             Vector3[] m_buf_positions;
@@ -369,7 +369,7 @@ namespace UTJ
                 }
             }
 
-            public override void Capture(double t)
+            public override void Capture(double t) // called from main thread
             {
                 base.Capture(t);
                 if (m_target == null) { return; }
@@ -386,12 +386,14 @@ namespace UTJ
                     m_buf_particles = new ParticleSystem.Particle[count_max];
                     m_buf_positions = new Vector3[count_max];
                     m_buf_rotations = new Vector4[count_max];
+                    m_data.points = usdi.GetArrayPtr(m_buf_positions);
                 }
                 else if (m_buf_particles.Length != count_max)
                 {
                     Array.Resize(ref m_buf_particles, count_max);
                     Array.Resize(ref m_buf_positions, count_max);
                     Array.Resize(ref m_buf_rotations, count_max);
+                    m_data.points = usdi.GetArrayPtr(m_buf_positions);
                 }
 
                 // copy particle positions & rotations to buffer
@@ -409,12 +411,10 @@ namespace UTJ
                     }
                 }
 
-                m_data = usdi.PointsData.default_value;
-                m_data.points = usdi.GetArrayPtr(m_buf_positions);
                 m_data.num_points = count;
             }
 
-            public override void Flush(double t)
+            public override void Flush(double t) // called from worker thread
             {
                 base.Flush(t);
                 if (m_target == null) { return; }
@@ -444,7 +444,7 @@ namespace UTJ
                 m_target.Capture(t);
             }
 
-            public override void Flush(double t)
+            public override void Flush(double t) // called from worker thread
             {
                 base.Flush(t);
                 if (m_target == null) { return; }

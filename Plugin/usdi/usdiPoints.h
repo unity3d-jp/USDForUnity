@@ -22,7 +22,7 @@ public:
     UsdGeomPoints&          getUSDSchema() override;
 
     const PointsSummary&    getSummary() const;
-    bool                    readSample(PointsData& dst, Time t);
+    bool                    readSample(PointsData& dst, Time t, bool copy);
     bool                    writeSample(const PointsData& src, Time t);
 
 private:

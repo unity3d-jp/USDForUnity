@@ -173,7 +173,7 @@ struct PointsData
 extern "C" {
 
 usdiAPI void             usdiSetDebugLevel(int l);
-usdiAPI usdi::Time       usdiGetDefaultTime();
+usdiAPI usdi::Time       usdiDefaultTime();
 usdiAPI void             usdiWaitAsyncRead();
 usdiAPI void             usdiWaitAsyncWrite();
 
@@ -228,8 +228,10 @@ usdiAPI bool             usdiMeshWriteSampleAsync(usdi::Mesh *mesh, const usdi::
 usdiAPI usdi::Points*    usdiAsPoints(usdi::Schema *schema); // dynamic cast to Points
 usdiAPI usdi::Points*    usdiCreatePoints(usdi::Context *ctx, usdi::Schema *parent, const char *name);
 usdiAPI void             usdiPointsGetSummary(usdi::Points *points, usdi::PointsSummary *dst);
-usdiAPI bool             usdiPointsReadSample(usdi::Points *points, usdi::PointsData *dst, usdi::Time t);
+usdiAPI bool             usdiPointsReadSample(usdi::Points *points, usdi::PointsData *dst, usdi::Time t, bool copy);
+usdiAPI bool             usdiPointsReadSampleAsync(usdi::Points *points, usdi::PointsData *dst, usdi::Time t, bool copy);
 usdiAPI bool             usdiPointsWriteSample(usdi::Points *points, const usdi::PointsData *src, usdi::Time t);
+usdiAPI bool             usdiPointsWriteSampleAsync(usdi::Points *points, const usdi::PointsData *src, usdi::Time t);
 
 // Attribute interface
 usdiAPI const char*          usdiAttrGetName(usdi::Attribute *attr);
