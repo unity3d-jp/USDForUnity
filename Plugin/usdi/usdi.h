@@ -104,27 +104,35 @@ struct ExportConfig
 
 struct XformSummary
 {
+    enum class Type {
+        Unknown,
+        TRS,
+        Matrix,
+    };
+
     Time start = 0.0, end = 0.0;
+    Type type = Type::Unknown;
 };
 
 struct XformData
 {
     enum class Flags {
-        TypeMask        = 0xf,
-        TypeTRS         = 0x1,
-        TypeMatrix      = 0x2,
-
-        UpdatedMask     = 0xf0,
-        UpdatedPosition = 0x10,
-        UpdatedRotation = 0x20,
-        UpdatedScale    = 0x40,
-        UpdatedMatrix   = 0x80,
+        UpdatedMask     = 0xf,
+        UpdatedPosition = 0x1,
+        UpdatedRotation = 0x2,
+        UpdatedScale    = 0x4,
     };
 
     int flags = 0;
     float3 position = { 0.0f, 0.0f, 0.0f};
     quatf rotation = { 0.0f, 0.0f, 0.0f, 1.0f };
     float3 scale = { 1.0f, 1.0f, 1.0f };
+    float4x4 transform = {
+        1.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f
+    };
 };
 
 

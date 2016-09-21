@@ -69,7 +69,7 @@ void MeshSample::clear()
 }
 
 
-#define usdiUVAttrName "uv"
+#define usdiUVAttrName "primvars:uv"
 
 Mesh::Mesh(Context *ctx, Schema *parent, const UsdGeomMesh& mesh)
     : super(ctx, parent, UsdGeomXformable(mesh))

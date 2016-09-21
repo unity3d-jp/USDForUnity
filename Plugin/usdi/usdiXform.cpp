@@ -131,53 +131,96 @@ void Xform::updateSample(Time t_)
     if (m_read_ops.empty()) {
         bool reset_stack = false;
         m_read_ops = m_xf.GetOrderedXformOps(&reset_stack);
+
+        int translate = 0;
+        int rotation = 0;
+        int scale = 0;
+        int transform = 0;
+        for (auto& op : m_read_ops) {
+            switch (op.GetOpType()) {
+            case UsdGeomXformOp::TypeTranslate: ++translate; break;
+            case UsdGeomXformOp::TypeScale: ++scale; break;
+            case UsdGeomXformOp::TypeRotateXYZ: // 
+            case UsdGeomXformOp::TypeRotateXZY: // 
+            case UsdGeomXformOp::TypeRotateYXZ: // 
+            case UsdGeomXformOp::TypeRotateYZX: // 
+            case UsdGeomXformOp::TypeRotateZXY: // 
+            case UsdGeomXformOp::TypeRotateZYX: // fall through
+            case UsdGeomXformOp::TypeOrient:    ++rotation; break;
+            case UsdGeomXformOp::TypeTransform: ++transform; break;
+            }
+        }
+
+        if (transform == 0 && translate <= 1 && rotation <= 1 && scale <= 1) {
+            m_summary.type = XformSummary::Type::TRS;
+        }
+        else {
+            m_summary.type = XformSummary::Type::Matrix;
+        }
     }
 
-    bool ret = false;
-    for (auto& op : m_read_ops) {
-        switch (op.GetOpType()) {
-        case UsdGeomXformOp::TypeTranslate:
-        {
-            if (op.GetAs((GfVec3f*)&dst.position, t)) { ret = true; }
-            if (conf.swap_handedness) {
-                dst.position.x *= -1.0f;
+    if (m_summary.type == XformSummary::Type::TRS) {
+        for (auto& op : m_read_ops) {
+            switch (op.GetOpType()) {
+            case UsdGeomXformOp::TypeTranslate:
+            {
+                op.GetAs((GfVec3f*)&dst.position, t);
+                if (conf.swap_handedness) {
+                    dst.position.x *= -1.0f;
+                }
+                break;
             }
-            break;
-        }
-        case UsdGeomXformOp::TypeScale:
-        {
-            if (op.GetAs((GfVec3f*)&dst.scale, t)) { ret = true; }
-            break;
-        }
-        case UsdGeomXformOp::TypeOrient:
-        {
-            if (op.GetAs((GfQuatf*)&dst.rotation, t)) { ret = true; }
-            if (conf.swap_handedness) {
-                SwapHandedness(dst.rotation);
+            case UsdGeomXformOp::TypeScale:
+            {
+                op.GetAs((GfVec3f*)&dst.scale, t);
+                break;
             }
-            break;
-        }
-        case UsdGeomXformOp::TypeRotateXYZ: // 
-        case UsdGeomXformOp::TypeRotateXZY: // 
-        case UsdGeomXformOp::TypeRotateYXZ: // 
-        case UsdGeomXformOp::TypeRotateYZX: // 
-        case UsdGeomXformOp::TypeRotateZXY: // 
-        case UsdGeomXformOp::TypeRotateZYX: // fall through
-        {
-            float3 euler;
-            if (op.GetAs((GfVec3f*)&euler, t)) { ret = true; }
-            dst.rotation = EulerToQuaternion(euler * Deg2Rad, op.GetOpType());
-            if (conf.swap_handedness) {
-                SwapHandedness(dst.rotation);
+            case UsdGeomXformOp::TypeOrient:
+            {
+                op.GetAs((GfQuatf*)&dst.rotation, t);
+                if (conf.swap_handedness) {
+                    SwapHandedness(dst.rotation);
+                }
+                break;
             }
-            break;
+            case UsdGeomXformOp::TypeRotateXYZ: // 
+            case UsdGeomXformOp::TypeRotateXZY: // 
+            case UsdGeomXformOp::TypeRotateYXZ: // 
+            case UsdGeomXformOp::TypeRotateYZX: // 
+            case UsdGeomXformOp::TypeRotateZXY: // 
+            case UsdGeomXformOp::TypeRotateZYX: // fall through
+            {
+                float3 euler;
+                op.GetAs((GfVec3f*)&euler, t);
+                dst.rotation = EulerToQuaternion(euler * Deg2Rad, op.GetOpType());
+                if (conf.swap_handedness) {
+                    SwapHandedness(dst.rotation);
+                }
+                break;
+            }
+            case UsdGeomXformOp::TypeTransform:
+            {
+                // todo
+                break;
+            }
+            }
         }
-        case UsdGeomXformOp::TypeTransform:
-        {
-            // todo
-            break;
+    }
+    else {
+        GfMatrix4d result;
+        result.SetIdentity();
+        for (auto& op : m_read_ops) {
+            auto m = op.GetOpTransform(t);
+            result = m * result;
         }
-        }
+
+        GfTransform gft;
+        gft.SetMatrix(result);
+
+        m_sample.transform = (const float4x4&)GfMatrix4f(result);
+        m_sample.position = (const float3&)GfVec3f(gft.GetTranslation());
+        m_sample.rotation = (const quatf&)GfQuatf(gft.GetRotation().GetQuat());
+        m_sample.scale = (const float3&)GfVec3f(gft.GetScale());
     }
 
     int update_flags = 0;

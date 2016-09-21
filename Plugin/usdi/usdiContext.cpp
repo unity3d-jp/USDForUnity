@@ -186,7 +186,6 @@ const ImportConfig& Context::getImportConfig() const
 
 void Context::setImportConfig(const ImportConfig& v)
 {
-    usdiLogTrace("Context::setImportConfig()\n");
     m_import_config = v;
     applyImportConfig();
 }
@@ -198,7 +197,6 @@ const ExportConfig& Context::getExportConfig() const
 
 void Context::setExportConfig(const ExportConfig& v)
 {
-    usdiLogTrace("Context::setExportConfig()\n");
     m_export_config = v;
 }
 
@@ -224,11 +222,17 @@ int Context::generateID()
 
 void Context::updateAllSamples(Time t)
 {
+#ifdef usdiDebug
+    for (auto& s : m_schemas) {
+        s->updateSample(t);
+    }
+#else
     tbb::parallel_for(tbb::blocked_range<size_t>(0, m_schemas.size()), [t, this](const auto& r) {
         for (size_t i = r.begin(); i != r.end(); ++i) {
             m_schemas[i]->updateSample(t);
         }
     }, tbb::auto_partitioner());
+#endif
 }
 
 } // namespace usdi

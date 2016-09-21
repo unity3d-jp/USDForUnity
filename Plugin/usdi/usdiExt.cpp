@@ -220,14 +220,19 @@ public:
 
     void flush()
     {
+        m_flushing = true;
         for (auto& t : m_tasks) { t.map(); }
         tbb::parallel_for_each(m_tasks, [](auto& t) { t.copy(); });
         for (auto& t : m_tasks) { t.unmap(); }
         m_tasks.clear();
+        m_flushing = false;
     }
+
+    bool isFlushing() const { return m_flushing; }
 
 private:
     tasks_t m_tasks;
+    std::atomic_bool m_flushing = false;
 };
 
 std::mutex g_task_mutex;
@@ -241,6 +246,10 @@ extern "C" {
 usdiAPI bool usdiExtQueueVertexBufferUpdateTask(const usdi::MeshData *src, usdi::MapContext *ctxVB, usdi::MapContext *ctxIB)
 {
     usdiTraceFunc();
+    if (usdi::g_task_queues.isFlushing()) {
+        usdiLogWarning("usdiExtQueueVertexBufferUpdateTask(): task queue is flushing!!!\n");
+    }
+
     std::unique_lock<std::mutex> lock(usdi::g_task_mutex);
 
     if (!src || (!ctxVB && !ctxIB)) { return false; }

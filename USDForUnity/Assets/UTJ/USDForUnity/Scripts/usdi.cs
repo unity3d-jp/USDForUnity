@@ -149,28 +149,32 @@ namespace UTJ
 
         public struct XformSummary
         {
+            public enum Type
+            {
+                Unknown,
+                TRS,
+                Matrix,
+            }
+
             public double start, end;
+            public Type type;
         };
 
         public struct XformData
         {
             public enum Flags
             {
-                TypeMask        = 0xf,
-                TypeTRS         = 0x1,
-                TypeMatrix      = 0x2,
-
-                UpdatedMask     = 0xf0,
-                UpdatedPosition = 0x10,
-                UpdatedRotation = 0x20,
-                UpdatedScale    = 0x40,
-                UpdatedMatrix   = 0x80,
+                UpdatedMask     = 0xf,
+                UpdatedPosition = 0x1,
+                UpdatedRotation = 0x2,
+                UpdatedScale    = 0x4,
             };
 
             public int flags;
             public Vector3     position;
             public Quaternion  rotation;
             public Vector3     scale;
+            public Matrix4x4   transform;
 
             public static XformData default_value
             {
@@ -182,6 +186,7 @@ namespace UTJ
                         position = Vector3.zero,
                         rotation = Quaternion.identity,
                         scale = Vector3.one,
+                        transform = Matrix4x4.identity,
                     };
                 }
             }
