@@ -124,8 +124,8 @@ const MeshSummary& Mesh::getSummary() const
 
 void Mesh::updateSample(Time t_)
 {
-    if (!needsUpdate(t_)) { return; }
     super::updateSample(t_);
+    if (!needsUpdate()) { return; }
 
 
     auto t = UsdTimeCode(t_);
@@ -161,8 +161,6 @@ void Mesh::updateSample(Time t_)
 
 bool Mesh::readSample(MeshData& dst, Time t, bool copy)
 {
-    updateSample(t);
-
     const MeshSample& sample = m_sample;
     dst.num_points = sample.points.size();
     dst.num_counts = sample.counts.size();

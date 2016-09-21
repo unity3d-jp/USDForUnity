@@ -117,11 +117,11 @@ const XformSummary& Xform::getSummary() const
 
 void Xform::updateSample(Time t_)
 {
-    if (!needsUpdate(t_)) {
+    super::updateSample(t_);
+    if (!needsUpdate()) {
         m_sample.flags = (m_sample.flags & ~(int)XformData::Flags::UpdatedMask);
         return;
     }
-    super::updateSample(t_);
 
     auto t = UsdTimeCode(t_);
     const auto& conf = getImportConfig();
@@ -195,7 +195,6 @@ void Xform::updateSample(Time t_)
 
 bool Xform::readSample(XformData& dst, Time t)
 {
-    updateSample(t);
     dst = m_sample;
     return true;
 }

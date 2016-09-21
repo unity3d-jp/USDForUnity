@@ -318,6 +318,7 @@ namespace UTJ
         [DllImport ("usdi")] public static extern Attribute     usdiGetAttribute(Schema schema, int i);
         [DllImport ("usdi")] public static extern Attribute     usdiFindAttribute(Schema schema, string name);
         [DllImport ("usdi")] public static extern Attribute     usdiCreateAttribute(Schema schema, string name, AttributeType type);
+        [DllImport ("usdi")] public static extern Bool          usdiNeedsUpdate(Schema schema);
 
         // Xform interface
         [DllImport ("usdi")] public static extern Xform         usdiAsXform(Schema schema);

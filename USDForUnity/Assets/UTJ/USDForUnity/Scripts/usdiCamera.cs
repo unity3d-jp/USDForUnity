@@ -43,13 +43,14 @@ namespace UTJ
         public override void usdiAsyncUpdate(double time)
         {
             base.usdiAsyncUpdate(time);
+            if (!m_needsUpdate) { return; }
             usdi.usdiCameraReadSample(m_camera, ref m_cameraData, time);
         }
 
         public override void usdiUpdate(double time)
         {
+            if (!m_needsUpdate) { return; }
             base.usdiUpdate(time);
-            if (!m_camera) { return; }
 
             m_ucam.nearClipPlane = m_cameraData.near_clipping_plane;
             m_ucam.farClipPlane = m_cameraData.far_clipping_plane;

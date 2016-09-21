@@ -117,12 +117,21 @@ void Schema::getTimeRange(Time& start, Time& end) const
 UsdPrim     Schema::getUSDPrim() const      { return m_prim; }
 UsdTyped    Schema::getUSDSchema() const    { return const_cast<Schema*>(this)->getUSDSchema(); }
 
+bool Schema::needsUpdate() const
+{
+    return m_needs_update;
+}
+
 void Schema::updateSample(Time t)
 {
-    if (t == m_prev_time) {
-        return;
+    m_needs_update = true;
+    if (m_time_prev != usdiInvalidTime) {
+        if (t == m_time_prev) { m_needs_update = false; }
+        else if ((t <= m_time_start && m_time_prev <= m_time_start) || (t >= m_time_end && m_time_prev >= m_time_end)) {
+            m_needs_update = false;
+        }
     }
-    m_prev_time = t;
+    m_time_prev = t;
 
     //for (auto& a : m_attributes) {
     //    a->updateSample(t);
@@ -131,17 +140,6 @@ void Schema::updateSample(Time t)
 
 const ImportConfig& Schema::getImportConfig() const { return m_ctx->getImportConfig(); }
 const ExportConfig& Schema::getExportConfig() const { return m_ctx->getExportConfig(); }
-
-bool Schema::needsUpdate(Time t) const
-{
-    if (m_prev_time != usdiInvalidTime) {
-        if (t == m_prev_time) { return false; }
-        if ((t <= m_time_start && m_prev_time <= m_time_start) || (t >= m_time_end && m_prev_time >= m_time_end)) {
-            return false;
-        }
-    }
-    return true;
-}
 
 void Schema::addChild(Schema *child)
 {

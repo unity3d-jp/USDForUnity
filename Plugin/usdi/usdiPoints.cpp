@@ -56,8 +56,8 @@ const PointsSummary& Points::getSummary() const
 
 void Points::updateSample(Time t_)
 {
-    if (!needsUpdate(t_)) { return; }
     super::updateSample(t_);
+    if (!needsUpdate()) { return; }
 
     auto t = UsdTimeCode(t_);
     const auto& conf = getImportConfig();
@@ -78,8 +78,6 @@ void Points::updateSample(Time t_)
 
 bool Points::readSample(PointsData& dst, Time t, bool copy)
 {
-    updateSample(t);
-
     const auto& sample = m_sample;
     dst.num_points = sample.points.size();
     if (copy) {

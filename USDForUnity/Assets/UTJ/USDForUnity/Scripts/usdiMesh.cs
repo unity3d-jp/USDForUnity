@@ -224,6 +224,7 @@ namespace UTJ
         public override void usdiAsyncUpdate(double time)
         {
             base.usdiAsyncUpdate(time);
+            if (!m_needsUpdate) { return; }
 
             switch (m_meshSummary.topology_variance)
             {
@@ -252,6 +253,7 @@ namespace UTJ
 
         public override void usdiUpdate(double time)
         {
+            if (!m_needsUpdate) { return; }
             base.usdiUpdate(time);
 
             switch (m_meshSummary.topology_variance) {

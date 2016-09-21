@@ -40,8 +40,8 @@ const usdi::CameraSummary& Camera::getSummary() const
 
 void Camera::updateSample(Time t_)
 {
-    if (!needsUpdate(t_)) { return; }
     super::updateSample(t_);
+    if (!needsUpdate()) { return; }
 
     auto t = UsdTimeCode(t_);
     auto& dst = m_sample;
@@ -72,7 +72,6 @@ void Camera::updateSample(Time t_)
 
 bool Camera::readSample(CameraData& dst, Time t)
 {
-    updateSample(t);
     dst = m_sample;
     return true;
 }

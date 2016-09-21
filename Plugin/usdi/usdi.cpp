@@ -223,6 +223,13 @@ usdiAPI usdi::Attribute* usdiCreateAttribute(usdi::Schema *schema, const char *n
     return schema->createAttribute(name, type);
 }
 
+usdiAPI bool usdiNeedsUpdate(usdi::Schema *schema)
+{
+    usdiTraceFunc();
+    if (!schema) { return false; }
+    return schema->needsUpdate();
+}
+
 
 // Xform interface
 

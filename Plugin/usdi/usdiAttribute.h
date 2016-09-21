@@ -32,7 +32,7 @@ protected:
     Schema *m_parent = nullptr;
     UsdAttribute m_usdattr;
     Time m_time_start = usdiInvalidTime, m_time_end = usdiInvalidTime;
-    mutable Time m_prev_time = usdiInvalidTime;
+    mutable Time m_time_prev = usdiInvalidTime;
 #ifdef usdiDebug
     const char *m_dbg_name = nullptr;
     const char *m_dbg_typename = nullptr;

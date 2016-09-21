@@ -227,6 +227,7 @@ usdiAPI int              usdiGetNumAttributes(usdi::Schema *schema);
 usdiAPI usdi::Attribute* usdiGetAttribute(usdi::Schema *schema, int i);
 usdiAPI usdi::Attribute* usdiFindAttribute(usdi::Schema *schema, const char *name);
 usdiAPI usdi::Attribute* usdiCreateAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type);
+usdiAPI bool             usdiNeedsUpdate(usdi::Schema *schema);
 
 // Xform interface
 usdiAPI usdi::Xform*     usdiAsXform(usdi::Schema *schema); // dynamic cast to Xform

@@ -29,6 +29,7 @@ public:
     UsdTyped            getUSDSchema() const;
     virtual UsdTyped&   getUSDSchema() = 0;
 
+    bool                needsUpdate() const;
     virtual void        updateSample(Time t);
 
 public: // for internal use
@@ -43,7 +44,6 @@ protected:
     typedef std::unique_ptr<Attribute> AttributePtr;
     typedef std::vector<AttributePtr> Attributes;
 
-    bool needsUpdate(Time t) const;
 
     Context     *m_ctx;
     Schema      *m_parent;
@@ -52,7 +52,8 @@ protected:
     Attributes  m_attributes;
     int         m_id = 0;
     Time        m_time_start = usdiInvalidTime, m_time_end = usdiInvalidTime;
-    Time        m_prev_time = usdiInvalidTime;
+    Time        m_time_prev = usdiInvalidTime;
+    bool        m_needs_update = true;
 #ifdef usdiDebug
     const char *m_dbg_path = nullptr;
     const char *m_dbg_typename = nullptr;

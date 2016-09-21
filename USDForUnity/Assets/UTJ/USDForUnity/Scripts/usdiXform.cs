@@ -10,6 +10,7 @@ namespace UTJ
         usdi.Xform      m_xf;
         usdi.XformData m_xfData = usdi.XformData.default_value;
         Transform m_trans;
+        protected bool m_needsUpdate = true;
         #endregion
 
         #region impl
@@ -31,12 +32,13 @@ namespace UTJ
 
         public override void usdiAsyncUpdate(double time)
         {
+            m_needsUpdate = usdi.usdiNeedsUpdate(m_xf);
             usdi.usdiXformReadSample(m_xf, ref m_xfData, time);
         }
 
         public override void usdiUpdate(double time)
         {
-            if((m_xfData.flags & (int)usdi.XformData.Flags.UpdatedPosition) != 0)
+            if ((m_xfData.flags & (int)usdi.XformData.Flags.UpdatedPosition) != 0)
             {
                 m_trans.localPosition = m_xfData.position;
             }

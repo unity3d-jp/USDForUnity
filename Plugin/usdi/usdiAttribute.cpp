@@ -259,8 +259,8 @@ public:
     AttributeType getType() const override { return Traits::attr_type; }
     size_t getArraySize(Time t) const override
     {
-        if (t != m_prev_time) {
-            m_prev_time = t;
+        if (t != m_time_prev) {
+            m_time_prev = t;
             get(m_buf, t);
         }
         return m_buf.size();
@@ -284,8 +284,8 @@ public:
     bool getBuffered(void *dst, size_t size, Time t) const override
     {
         if (!dst) { return false; }
-        if (t != m_prev_time) {
-            m_prev_time = t;
+        if (t != m_time_prev) {
+            m_time_prev = t;
             get(m_buf, t);
         }
         Args::load(m_buf, dst, size);
