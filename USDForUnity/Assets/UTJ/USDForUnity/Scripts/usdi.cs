@@ -109,6 +109,7 @@ namespace UTJ
             public Bool triangulate;
             public Bool swap_handedness;
             public Bool swap_faces;
+            public Bool split_mesh;
 
             public static ImportConfig default_value
             {
@@ -121,6 +122,7 @@ namespace UTJ
                         triangulate = true,
                         swap_handedness = true,
                         swap_faces = true,
+                        split_mesh = true,
                     };
                 }
             }
@@ -237,6 +239,15 @@ namespace UTJ
             public Bool has_velocities;
         };
 
+        public struct SplitedMeshData
+        {
+            public IntPtr   points;
+            public IntPtr   normals;
+            public IntPtr   uvs;
+            public IntPtr   indices_triangulated;
+            public int      num_points;
+        };
+
         public struct MeshData
         {
             public IntPtr   points;
@@ -247,10 +258,13 @@ namespace UTJ
             public IntPtr   indices;
             public IntPtr   indices_triangulated;
 
+            public IntPtr   splits;
+
             public int      num_points;
             public int      num_counts;
             public int      num_indices;
             public int      num_indices_triangulated;
+            public int      num_splits;
 
             public static MeshData default_value
             {

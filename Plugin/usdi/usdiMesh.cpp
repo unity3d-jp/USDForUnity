@@ -8,6 +8,7 @@
 
 namespace usdi {
 
+const int MaxVertices = 65000;
 
 template<class CountArray>
 static inline uint GetTriangulatedIndexCount(const CountArray &counts)
@@ -56,17 +57,6 @@ static inline void TriangulateIndices(int *triangulated, const CountArray &count
     }
 }
 
-
-void MeshSample::clear()
-{
-    points.clear();
-    velocities.clear();
-    normals.clear();
-    uvs.clear();
-    counts.clear();
-    indices.clear();
-    indices_triangulated.clear();
-}
 
 
 #define usdiUVAttrName "primvars:uv"
@@ -165,6 +155,57 @@ void Mesh::updateSample(Time t_)
         Scale((float3*)sample.points.data(), conf.scale, sample.points.size());
         Scale((float3*)sample.velocities.data(), conf.scale, sample.velocities.size());
     }
+
+
+    // mesh split
+
+    bool needs_split = false;
+    if (conf.split_mesh) {
+        needs_split =
+            sample.points.size() > MaxVertices ||
+            (!sample.uvs.empty() && sample.points.size() != sample.uvs.size()) ||
+            (!sample.normals.empty() && sample.points.size() != sample.normals.size());
+    }
+    if (!needs_split) { return; }
+
+    int num_splits = CeilDiv(m_num_indices_triangulated, MaxVertices);
+    m_splits.resize(num_splits);
+
+    for (int nth = 0; nth < num_splits; ++nth) {
+        auto& sms = m_splits[nth];
+        int ibegin = MaxVertices * nth;
+        int iend = std::min<int>(MaxVertices * (nth+1), m_num_indices_triangulated);
+        int isize = iend - ibegin;
+
+        {
+            sms.indices.resize(isize);
+            for (int i = 0; i < isize; ++i) {
+                sms.indices[i] = i;
+            }
+        }
+        {
+            sms.points.resize(isize);
+            for (int i = 0; i < isize; ++i) {
+                int ii = ibegin + i;
+                sms.points[i] = sample.points[sample.indices_triangulated[ii]];
+            }
+        }
+        if (!sample.normals.empty()) {
+            sms.normals.resize(isize);
+            for (int i = 0; i < isize; ++i) {
+                int ii = ibegin + i;
+                sms.normals[i] = sample.points[sample.indices_triangulated[ii]];
+            }
+        }
+        if (!sample.uvs.empty()) {
+            sms.uvs.resize(isize);
+            for (int i = 0; i < isize; ++i) {
+                int ii = ibegin + i;
+                sms.uvs[i] = sample.uvs[sample.indices_triangulated[ii]];
+            }
+
+        }
+    }
 }
 
 bool Mesh::readSample(MeshData& dst, Time t, bool copy)
@@ -176,6 +217,7 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
     dst.num_counts = sample.counts.size();
     dst.num_indices = sample.indices.size();
     dst.num_indices_triangulated = m_num_indices_triangulated;
+    dst.num_splits = m_splits.size();
 
     if (copy) {
         if (dst.points && !sample.points.empty()) {
@@ -199,6 +241,26 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
         if (dst.indices_triangulated && !sample.indices_triangulated.empty()) {
             memcpy(dst.indices_triangulated, sample.indices_triangulated.data(), sizeof(int) * m_num_indices_triangulated);
         }
+
+        if (dst.splits) {
+            for (int i = 0; i < dst.num_splits; ++i) {
+                const auto& ssrc = m_splits[i];
+                auto& sdst = dst.splits[i];
+                sdst.num_points = ssrc.points.size();
+                if (sdst.indices && !ssrc.indices.empty()) {
+                    memcpy(sdst.indices, ssrc.indices.data(), sizeof(int) * sdst.num_points);
+                }
+                if (sdst.points && !ssrc.points.empty()) {
+                    memcpy(sdst.points, ssrc.points.data(), sizeof(float3) * sdst.num_points);
+                }
+                if (sdst.normals && !ssrc.normals.empty()) {
+                    memcpy(sdst.normals, ssrc.normals.data(), sizeof(float3) * sdst.num_points);
+                }
+                if (sdst.uvs && !ssrc.uvs.empty()) {
+                    memcpy(sdst.uvs, ssrc.uvs.data(), sizeof(float2) * sdst.num_points);
+                }
+            }
+        }
     }
     else {
         dst.points = (float3*)sample.points.data();
@@ -208,6 +270,26 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
         dst.counts = (int*)sample.counts.data();
         dst.indices = (int*)sample.indices.data();
         dst.indices_triangulated = (int*)sample.indices_triangulated.data();
+
+        if (dst.splits) {
+            for (int i = 0; i < dst.num_splits; ++i) {
+                const auto& ssrc = m_splits[i];
+                auto& sdst = dst.splits[i];
+                sdst.num_points = ssrc.points.size();
+                if (sdst.indices && !ssrc.indices.empty()) {
+                    sdst.indices = (int*)ssrc.indices.cdata();
+                }
+                if (sdst.points && !ssrc.points.empty()) {
+                    sdst.points = (float3*)ssrc.points.cdata();
+                }
+                if (sdst.normals && !ssrc.normals.empty()) {
+                    sdst.normals = (float3*)ssrc.normals.cdata();
+                }
+                if (sdst.uvs && !ssrc.uvs.empty()) {
+                    sdst.uvs = (float2*)ssrc.uvs.cdata();
+                }
+            }
+        }
     }
 
     return dst.num_points > 0;

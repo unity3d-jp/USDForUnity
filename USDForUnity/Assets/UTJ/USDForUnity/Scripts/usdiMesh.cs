@@ -1,5 +1,5 @@
 using System;
-using System.Runtime.InteropServices;
+using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 #if UNITY_EDITOR
@@ -18,7 +18,6 @@ namespace UTJ
 
         Mesh m_umesh;
         Vector3[] m_positions;
-        Vector3[] m_velocities;
         Vector3[] m_normals;
         Vector2[] m_uvs;
         int[] m_indices;
@@ -27,11 +26,24 @@ namespace UTJ
         int m_prevIndexCount;
         int m_frame;
 
+        List<usdiSplitMesh> m_children;
+        usdi.SplitedMeshData[] m_splitedData;
+
         // for Unity 5.5 or later
         bool m_directVBUpdate;
         usdi.MapContext m_ctxVB;
         usdi.MapContext m_ctxIB;
         #endregion
+
+
+
+        #region properties
+        public usdi.Mesh usdiObject { get { return m_mesh; } }
+        public usdi.MeshSummary meshSummary { get { return m_meshSummary; } }
+        public usdi.MeshData meshData { get { return m_meshData; } }
+        public bool directVBUpdate { get { return m_directVBUpdate; } }
+        #endregion
+
 
 
         #region impl
@@ -159,7 +171,7 @@ namespace UTJ
         void usdiReadMeshData(double t)
         {
             // todo: update heterogenous mesh if possible
-            m_directVBUpdate = m_stream.usdDirectVBUpdate &&
+            m_directVBUpdate = m_stream.directVBUpdate &&
                 m_meshSummary.topology_variance == usdi.TopologyVariance.Homogenous &&
                 m_ctxVB.resource != IntPtr.Zero;
             bool copyVertexData = !m_directVBUpdate;
@@ -210,7 +222,7 @@ namespace UTJ
                 m_umeshIsEmpty = m_umesh.vertexCount == 0;
                 m_umesh.UploadMeshData(close);
 #if UNITY_5_5_OR_NEWER
-                if(m_stream.usdDirectVBUpdate)
+                if(m_stream.directVBUpdate)
                 {
                     m_ctxVB.resource = m_umesh.GetNativeVertexBufferPtr(0);
                     //m_ctxIB.resource = m_umesh.GetNativeIndexBufferPtr();

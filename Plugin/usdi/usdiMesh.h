@@ -3,6 +3,14 @@
 namespace usdi {
 
 
+struct SplitedMeshSample
+{
+    VtArray<GfVec3f> points;
+    VtArray<GfVec3f> normals;
+    VtArray<GfVec2f> uvs;
+    VtArray<int>     indices;
+};
+
 struct MeshSample
 {
     VtArray<GfVec3f> points;
@@ -12,8 +20,6 @@ struct MeshSample
     VtArray<int>     counts;
     VtArray<int>     indices;
     VtArray<int>     indices_triangulated;
-
-    void clear();
 };
 
 
@@ -38,6 +44,7 @@ private:
 private:
     UsdGeomMesh         m_mesh;
     MeshSample          m_sample;
+    std::vector<SplitedMeshSample> m_splits;
     Attribute           *m_attr_uv = nullptr;
 
     mutable bool        m_summary_needs_update = true;

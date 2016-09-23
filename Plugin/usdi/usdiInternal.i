@@ -14,6 +14,13 @@ inline bool NearEqual(const quatf& a, const quatf& b)
     return NearEqual(a.x, b.x) && NearEqual(a.y, b.y) && NearEqual(a.z, b.z) && NearEqual(a.w, b.w);
 }
 
+
+template<class Int>
+inline Int CeilDiv(Int v, Int d)
+{
+    return v / d + (v % d == 0 ? 0 : 1);
+}
+
 inline float2 operator*(const float2& l, float r)
 {
     return{ l.x*r, l.y*r };

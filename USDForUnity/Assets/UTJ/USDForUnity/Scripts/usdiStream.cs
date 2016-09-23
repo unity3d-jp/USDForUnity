@@ -63,7 +63,7 @@ namespace UTJ
             get { return m_timeScale; }
             set { m_timeScale = value; }
         }
-        public bool usdDirectVBUpdate { get { return m_directVBUpdate; } }
+        public bool directVBUpdate { get { return m_directVBUpdate; } }
 #if UNITY_EDITOR
         public bool usdForceSingleThread { get { return m_forceSingleThread; } }
 #endif
@@ -170,6 +170,7 @@ namespace UTJ
             conf.triangulate = true;
             conf.swap_handedness = m_importOptions.swapHandedness;
             conf.swap_faces = m_importOptions.swapFaces;
+            conf.split_mesh = true;
             usdi.usdiSetImportConfig(m_ctx, ref conf);
         }
 

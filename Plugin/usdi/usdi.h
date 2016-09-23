@@ -92,6 +92,7 @@ struct ImportConfig
     bool triangulate = true;
     bool swap_handedness = true;
     bool swap_faces = true;
+    bool split_mesh = false;
 };
 
 struct ExportConfig
@@ -163,6 +164,15 @@ struct MeshSummary
     bool                has_velocities = false;
 };
 
+struct SplitedMeshData
+{
+    float3  *points = nullptr;
+    float3  *normals = nullptr;
+    float2  *uvs = nullptr;
+    int     *indices = nullptr;
+    uint    num_points = 0;
+};
+
 struct MeshData
 {
     // these pointers can be null (in this case, just be ignored).
@@ -175,10 +185,13 @@ struct MeshData
     int     *indices = nullptr;
     int     *indices_triangulated = nullptr;
 
+    SplitedMeshData *splits = nullptr;
+
     uint    num_points = 0;
     uint    num_counts = 0;
     uint    num_indices = 0;
     uint    num_indices_triangulated = 0;
+    uint    num_splits = 0;
 };
 
 
