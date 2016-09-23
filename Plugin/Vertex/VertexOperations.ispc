@@ -182,9 +182,9 @@ export void InterleaveVerticesV3N3(
 
             uniform float<8> n2 = nv[i3+2];
             uniform float<8> _5 = {p2[1], n1[7], n2[0], n2[1], p2[2], p2[3], p2[4], n2[2]};
-            dv[5] = _5;
+            dv[4] = _5;
             uniform float<8> _6 = {n2[3], n2[4], p2[5], p2[6], p2[7], n2[5], n2[6], n2[7]};
-            dv[6] = _6;
+            dv[5] = _6;
         }
         for(uniform int i=num_loops*8; i < num; ++i) {
             dst[i].p = p[i];
