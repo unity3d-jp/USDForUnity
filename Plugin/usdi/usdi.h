@@ -274,8 +274,8 @@ usdiAPI usdi::Schema*        usdiAttrGetParent(usdi::Attribute *attr);
 usdiAPI const char*          usdiAttrGetName(usdi::Attribute *attr);
 usdiAPI const char*          usdiAttrGetTypeName(usdi::Attribute *attr);
 usdiAPI usdi::AttributeType  usdiAttrGetType(usdi::Attribute *attr);
-usdiAPI int                  usdiAttrGetArraySize(usdi::Attribute *attr, usdi::Time t); // always 1 if attr is scalar
 usdiAPI int                  usdiAttrGetNumSamples(usdi::Attribute *attr);
+usdiAPI int                  usdiAttrGetArraySize(usdi::Attribute *attr, usdi::Time t); // always 1 if attr is scalar
 usdiAPI bool                 usdiAttrReadSample(usdi::Attribute *attr, void *dst, usdi::Time t);
 usdiAPI bool                 usdiAttrReadArraySample(usdi::Attribute *attr, void *dst, int size, usdi::Time t);
 usdiAPI bool                 usdiAttrWriteSample(usdi::Attribute *attr, const void *src, usdi::Time t);

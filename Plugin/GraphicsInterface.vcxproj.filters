@@ -52,8 +52,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Vertex\InterleaveVertices.ispc">
+    <CustomBuild Include="Vertex\VertexOperations.ispc">
       <Filter>Vertex</Filter>
-    </None>
+    </CustomBuild>
   </ItemGroup>
 </Project>

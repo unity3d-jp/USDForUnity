@@ -8,31 +8,29 @@ public:
     Attribute(Schema *parent, UsdAttribute usdattr);
     virtual ~Attribute();
 
-    UsdAttribute getUSDAttribute() const;
-    Schema*     getParent() const;
-    const char* getName() const;
-    const char* getTypeName() const;
-    bool        isArray() const;
-    bool        hasValue() const;
-    size_t      getNumSamples() const;
-    bool        getTimeRange(Time& start, Time& end);
+    UsdAttribute    getUSDAttribute() const;
+    Schema*         getParent() const;
+    const char*     getName() const;
+    const char*     getTypeName() const;
+    AttributeType   getType() const;
+    bool            isConstant() const;
+    bool            hasValue() const;
+    size_t          getNumSamples() const;
+    bool            getTimeRange(Time& start, Time& end);
 
-    virtual AttributeType   getType() const = 0;
-    virtual size_t          getArraySize(Time t) const = 0; // always 1 if scalar
-
-    // if attribute is array type, *** get()/set() assume dst/src is VtArray<T>*. not T* ***
-    // if you want to pass raw pointer, you can use getBuffered()/setBuffered().
-    // if attribute is scalar, get()/set() assume dst/src is T* and getBuffered()/setBuffered() just redirect to get()/set().
-    virtual bool            get(void *dst, Time t) const = 0;
-    virtual bool            set(const void *src, Time t) = 0;
-    virtual bool            getBuffered(void *dst, size_t size, Time t) const = 0;
-    virtual bool            setBuffered(const void *src, size_t size, Time t) = 0;
+    virtual void    updateSample(Time t) = 0;
+    virtual size_t  getArraySize(Time t) = 0; // always 1 if scalar
+    virtual bool    get(void *dst, size_t size, Time t) = 0;
+    virtual bool    set(const void *src, size_t size, Time t) = 0;
+    virtual bool    getImmediate(void *dst, Time t) = 0;
+    virtual bool    setImmediate(const void *src, Time t) = 0;
 
 protected:
     Schema *m_parent = nullptr;
     UsdAttribute m_usdattr;
+    AttributeType m_type;
     Time m_time_start = usdiInvalidTime, m_time_end = usdiInvalidTime;
-    mutable Time m_time_prev = usdiInvalidTime;
+    Time m_time_prev = usdiInvalidTime;
 #ifdef usdiDebug
     const char *m_dbg_name = nullptr;
     const char *m_dbg_typename = nullptr;

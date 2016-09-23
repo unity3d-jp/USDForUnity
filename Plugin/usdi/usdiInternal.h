@@ -1,5 +1,9 @@
 #pragma once
 
+// options
+//#define usdiDbgForceSingleThread
+
+
 #define usdiImpl
 
 #define usdiLogError(...)       usdi::LogImpl(1, "usdi error: " __VA_ARGS__)

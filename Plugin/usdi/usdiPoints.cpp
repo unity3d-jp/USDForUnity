@@ -78,6 +78,8 @@ void Points::updateSample(Time t_)
 
 bool Points::readSample(PointsData& dst, Time t, bool copy)
 {
+    if (t != m_time_prev) { updateSample(t); }
+
     const auto& sample = m_sample;
     dst.num_points = sample.points.size();
     if (copy) {

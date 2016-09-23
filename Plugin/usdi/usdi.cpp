@@ -446,13 +446,6 @@ usdiAPI usdi::AttributeType usdiAttrGetType(usdi::Attribute *attr)
     return attr->getType();
 }
 
-usdiAPI int usdiAttrGetArraySize(usdi::Attribute *attr, usdi::Time t)
-{
-    usdiTraceFunc();
-    if (!attr) { return 0; }
-    return (int)attr->getArraySize(t);
-}
-
 usdiAPI int usdiAttrGetNumSamples(usdi::Attribute *attr)
 {
     usdiTraceFunc();
@@ -460,32 +453,39 @@ usdiAPI int usdiAttrGetNumSamples(usdi::Attribute *attr)
     return (int)attr->getNumSamples();
 }
 
+usdiAPI int usdiAttrGetArraySize(usdi::Attribute *attr, usdi::Time t)
+{
+    usdiTraceFunc();
+    if (!attr) { return 0; }
+    return (int)attr->getArraySize(t);
+}
+
 usdiAPI bool usdiAttrReadSample(usdi::Attribute *attr, void *dst, usdi::Time t)
 {
     usdiTraceFunc();
     if (!attr) { return false; }
-    return attr->getBuffered(dst, 1, t);
+    return attr->get(dst, 1, t);
 }
 
 usdiAPI bool usdiAttrReadArraySample(usdi::Attribute *attr, void *dst, int size, usdi::Time t)
 {
     usdiTraceFunc();
     if (!attr) { return false; }
-    return attr->getBuffered(dst, size, t);
+    return attr->get(dst, size, t);
 }
 
 usdiAPI bool usdiAttrWriteSample(usdi::Attribute *attr, const void *src, usdi::Time t)
 {
     usdiTraceFunc();
     if (!attr) { return false; }
-    return attr->setBuffered(src, 1, t);
+    return attr->set(src, 1, t);
 }
 
 usdiAPI bool usdiAttrWriteArraySample(usdi::Attribute *attr, const void *src, int size, usdi::Time t)
 {
     usdiTraceFunc();
     if (!attr) { return false; }
-    return attr->setBuffered(src, size, t);
+    return attr->set(src, size, t);
 }
 
 } // extern "C"

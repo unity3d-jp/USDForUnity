@@ -238,6 +238,8 @@ void Xform::updateSample(Time t_)
 
 bool Xform::readSample(XformData& dst, Time t)
 {
+    if (t != m_time_prev) { updateSample(t); }
+
     dst = m_sample;
     return true;
 }

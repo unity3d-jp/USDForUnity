@@ -35,6 +35,7 @@ public:
     void clear()
     {
         AlignedFree(m_data);
+        m_data = nullptr;
         m_size = m_capacity = 0;
     }
 
@@ -222,7 +223,11 @@ public:
     {
         m_flushing = true;
         for (auto& t : m_tasks) { t.map(); }
+#ifdef usdiDbgForceSingleThread
+        for (auto& t : m_tasks) { t.copy(); }
+#else
         tbb::parallel_for_each(m_tasks, [](auto& t) { t.copy(); });
+#endif
         for (auto& t : m_tasks) { t.unmap(); }
         m_tasks.clear();
         m_flushing = false;

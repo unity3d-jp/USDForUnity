@@ -70,13 +70,21 @@ void MeshSample::clear()
 
 
 #define usdiUVAttrName "primvars:uv"
+#define usdiUVAttrName2 "uv"
 
 Mesh::Mesh(Context *ctx, Schema *parent, const UsdGeomMesh& mesh)
     : super(ctx, parent, UsdGeomXformable(mesh))
     , m_mesh(mesh)
 {
     usdiLogTrace("Mesh::Mesh(): %s\n", getPath());
-    m_attr_uv = createAttribute(usdiUVAttrName, AttributeType::Float2Array);
+
+    m_attr_uv = findAttribute(usdiUVAttrName);
+    if (!m_attr_uv) {
+        m_attr_uv = findAttribute(usdiUVAttrName2);
+    }
+    if (!m_attr_uv) {
+        m_attr_uv = createAttribute(usdiUVAttrName, AttributeType::Float2Array);
+    }
 }
 
 Mesh::Mesh(Context *ctx, Schema *parent, const char *name)
@@ -138,7 +146,7 @@ void Mesh::updateSample(Time t_)
     m_mesh.GetFaceVertexCountsAttr().Get(&sample.counts, t);
     m_mesh.GetFaceVertexIndicesAttr().Get(&sample.indices, t);
     if (m_attr_uv) {
-        m_attr_uv->get(&sample.uvs, t_);
+        m_attr_uv->getImmediate(&sample.uvs, t_);
     }
     if (m_num_indices_triangulated == 0 || getSummary().topology_variance == TopologyVariance::Heterogenous) {
         m_num_indices_triangulated = GetTriangulatedIndexCount(sample.counts);
@@ -161,6 +169,8 @@ void Mesh::updateSample(Time t_)
 
 bool Mesh::readSample(MeshData& dst, Time t, bool copy)
 {
+    if (t != m_time_prev) { updateSample(t); }
+
     const MeshSample& sample = m_sample;
     dst.num_points = sample.points.size();
     dst.num_counts = sample.counts.size();
@@ -284,7 +294,7 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
         m_mesh.GetFaceVertexIndicesAttr().Set(sample.indices, t);
     }
     if (src.uvs && m_attr_uv) {
-        m_attr_uv->set(&sample.uvs, t_);
+        m_attr_uv->setImmediate(&sample.uvs, t_);
     }
 
     m_summary_needs_update = true;

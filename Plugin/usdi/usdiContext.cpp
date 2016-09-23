@@ -222,7 +222,7 @@ int Context::generateID()
 
 void Context::updateAllSamples(Time t)
 {
-#ifdef usdiDebug
+#ifdef usdiDbgForceSingleThread
     for (auto& s : m_schemas) {
         s->updateSample(t);
     }

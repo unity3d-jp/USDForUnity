@@ -148,6 +148,7 @@ Attribute::Attribute(Schema *parent, UsdAttribute usdattr)
     m_dbg_name = getName();
     m_dbg_typename = getTypeName();
 #endif
+
     if (m_usdattr && m_usdattr.GetNumTimeSamples() > 0) {
         bool dummy;
         m_usdattr.GetBracketingTimeSamples(DBL_MIN, &m_time_start, &m_time_start, &dummy);
@@ -158,13 +159,15 @@ Attribute::Attribute(Schema *parent, UsdAttribute usdattr)
 Attribute::~Attribute()
 {
 }
-UsdAttribute Attribute::getUSDAttribute() const { return m_usdattr; }
-Schema*     Attribute::getParent() const    { return m_parent; }
-const char* Attribute::getName() const      { return m_usdattr.GetName().GetText(); }
-const char* Attribute::getTypeName() const  { return m_usdattr.GetTypeName().GetAsToken().GetText(); }
-bool        Attribute::isArray() const      { return (int)getType() >= (int)AttributeType::UnknownArray; }
-bool        Attribute::hasValue() const     { return m_usdattr.HasValue(); }
-size_t      Attribute::getNumSamples() const{ return m_usdattr.GetNumTimeSamples(); }
+
+UsdAttribute    Attribute::getUSDAttribute() const  { return m_usdattr; }
+Schema*         Attribute::getParent() const        { return m_parent; }
+const char*     Attribute::getName() const          { return m_usdattr.GetName().GetText(); }
+const char*     Attribute::getTypeName() const      { return m_usdattr.GetTypeName().GetAsToken().GetText(); }
+AttributeType   Attribute::getType() const          { return m_type; }
+bool            Attribute::isConstant() const       { return !m_usdattr.ValueMightBeTimeVarying(); }
+bool            Attribute::hasValue() const         { return m_usdattr.HasValue(); }
+size_t          Attribute::getNumSamples() const    { return m_usdattr.GetNumTimeSamples(); }
 
 bool Attribute::getTimeRange(Time& start, Time& end)
 {
@@ -189,6 +192,7 @@ public:
     TAttribute(Schema *parent, UsdAttribute usdattr)
         : super(parent, usdattr)
     {
+        m_type = Traits::attr_type;
         usdiLogTrace("Attribute::Attribute(): %s (%s)\n", getName(), getTypeName());
     }
 
@@ -197,42 +201,47 @@ public:
         usdiLogTrace("Attribute::~Attribute()\n");
     }
 
-    AttributeType getType() const override { return Traits::attr_type; }
-    size_t getArraySize(Time t) const override { return 1; }
 
-    bool get(T& dst, Time t) const { return m_usdattr.Get(&dst, t); }
-    bool set(const T& src, Time t) { return m_usdattr.Set(src, t); }
-
-    bool get(void *dst, Time t) const override
+    void updateSample(Time t) override
     {
-        if (!dst) { return false; }
-        return get(*(T*)dst, t);
+        if (t != m_time_prev) {
+            m_time_prev = t;
+            m_usdattr.Get(&m_sample, t);
+        }
     }
 
-    bool set(const void *src, Time t) override
-    {
-        if (!src) { return false; }
-        return set(*(const T*)src, t);
-    }
+    size_t getArraySize(Time t) override { return 1; }
 
-    bool getBuffered(void *dst, size_t size, Time t) const override
+    bool get(void *dst, size_t size, Time t) override
     {
-        if (!dst) { return false; }
-        get(m_buf, t);
-        Args::load(m_buf, dst, size);
+        updateSample(t);
+        Args::load(m_sample, dst, size);
         return true;
     }
 
-    bool setBuffered(const void *src, size_t size, Time t) override
+    bool getImmediate(void *dst, Time t) override
+    {
+        if (!dst) { return false; }
+        return m_usdattr.Get((T*)dst, t);
+    }
+
+
+    bool set(const void *src, size_t size, Time t) override
     {
         if (!src) { return false; }
-        Args::store(m_buf, src, size);
-        set(m_buf, t);
+        Args::store(m_sample, src, size);
+        m_usdattr.Set(m_sample, t);
         return true;
+    }
+
+    bool setImmediate(const void *src, Time t) override
+    {
+        if (!src) { return false; }
+        return m_usdattr.Set(*(const T*)src, t);
     }
 
 private:
-    mutable T m_buf;
+    T m_sample;
 };
 
 // array attribute impl
@@ -248,6 +257,7 @@ public:
     TAttribute(Schema *parent, UsdAttribute usdattr)
         : super(parent, usdattr)
     {
+        m_type = Traits::attr_type;
         usdiLogTrace("Attribute::Attribute(): %s (%s)\n", getName(), getTypeName());
     }
 
@@ -256,52 +266,51 @@ public:
         usdiLogTrace("Attribute::~Attribute()\n");
     }
 
-    AttributeType getType() const override { return Traits::attr_type; }
-    size_t getArraySize(Time t) const override
+    void updateSample(Time t) override
     {
         if (t != m_time_prev) {
             m_time_prev = t;
-            get(m_buf, t);
+            m_usdattr.Get(&m_sample, t);
         }
-        return m_buf.size();
     }
 
-    bool get(T& dst, Time t) const { return m_usdattr.Get(&dst, t); }
-    bool set(const T& src, Time t) { return m_usdattr.Set(src, t); }
+    size_t getArraySize(Time t) override
+    {
+        updateSample(t);
+        return m_sample.size();
+    }
 
-    bool get(void *dst, Time t) const override
+    bool get(void *dst, size_t size, Time t) override
     {
         if (!dst) { return false; }
-        return get(*(T*)dst, t);
-    }
-
-    bool set(const void *src, Time t) override
-    {
-        if (!src) { return false; }
-        return set(*(const T*)src, t);
-    }
-
-    bool getBuffered(void *dst, size_t size, Time t) const override
-    {
-        if (!dst) { return false; }
-        if (t != m_time_prev) {
-            m_time_prev = t;
-            get(m_buf, t);
-        }
-        Args::load(m_buf, dst, size);
+        updateSample(t);
+        Args::load(m_sample, dst, size);
         return true;
     }
 
-    bool setBuffered(const void *src, size_t size, Time t) override
+    bool getImmediate(void *dst, Time t) override
+    {
+        if (!dst) { return false; }
+        return m_usdattr.Get((VtArray<V>*)dst, t);
+    }
+
+
+    bool set(const void *src, size_t size, Time t) override
     {
         if (!src) { return false; }
-        Args::store(m_buf, src, size);
-        set(m_buf, t);
+        Args::store(m_sample, src, size);
+        m_usdattr.Set(m_sample, t);
         return true;
+    }
+
+    bool setImmediate(const void *src, Time t) override
+    {
+        if (!src) { return false; }
+        return m_usdattr.Set(*(const VtArray<V>*)src, t);
     }
 
 private:
-    mutable T m_buf;
+    VtArray<V> m_sample;
 };
 
 
