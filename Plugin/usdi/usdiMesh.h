@@ -49,6 +49,7 @@ private:
 
     mutable bool        m_summary_needs_update = true;
     mutable MeshSummary m_summary;
+    mutable int         m_num_indices = 0;
     mutable int         m_num_indices_triangulated = 0;
 };
 

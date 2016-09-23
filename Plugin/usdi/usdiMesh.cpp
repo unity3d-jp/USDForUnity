@@ -10,16 +10,18 @@ namespace usdi {
 
 const int MaxVertices = 65000;
 
-template<class CountArray>
-static inline uint GetTriangulatedIndexCount(const CountArray &counts)
+static inline void CountIndices(const VtArray<int> &counts, int& count, int& count_triangulated)
 {
-    uint r = 0;
+    int c = 0, ct = 0;
     size_t num_faces = counts.size();
     for (size_t fi = 0; fi < num_faces; ++fi)
     {
-        r += (counts[fi] - 2) * 3;
+        auto f = counts[fi];
+        c += f;
+        ct += (f - 2) * 3;
     }
-    return r;
+    count = c;
+    count_triangulated = ct;
 }
 
 template<class CountArray, class IndexArray>
@@ -120,6 +122,27 @@ const MeshSummary& Mesh::getSummary() const
     return m_summary;
 }
 
+
+template<class T>
+static void CopyWithIndices(VtArray<T>& dst, VtArray<T>& src, const VtArray<int>& indices, int beg, int end, bool expand)
+{
+    if (src.empty()) { return; }
+
+    int size = end - beg;
+    dst.resize(size);
+
+    if (expand) {
+        for (int i = 0; i < size; ++i) {
+            dst[i] = src[indices[beg + i]];
+        }
+    }
+    else {
+        for (int i = 0; i < size; ++i) {
+            dst[i] = src[beg + i];
+        }
+    }
+}
+
 void Mesh::updateSample(Time t_)
 {
     super::updateSample(t_);
@@ -139,7 +162,7 @@ void Mesh::updateSample(Time t_)
         m_attr_uv->getImmediate(&sample.uvs, t_);
     }
     if (m_num_indices_triangulated == 0 || getSummary().topology_variance == TopologyVariance::Heterogenous) {
-        m_num_indices_triangulated = GetTriangulatedIndexCount(sample.counts);
+        CountIndices(sample.counts, m_num_indices, m_num_indices_triangulated);
         if (conf.triangulate) {
             sample.indices_triangulated.resize(m_num_indices_triangulated);
             TriangulateIndices(sample.indices_triangulated.data(), sample.counts, &sample.indices, conf.swap_faces);
@@ -159,12 +182,13 @@ void Mesh::updateSample(Time t_)
 
     // mesh split
 
+    bool positions_are_expanded = sample.points.size() == m_num_indices;
+    bool normals_are_expanded = sample.normals.size() == m_num_indices;
+    bool uvs_are_expanded = sample.uvs.size() == m_num_indices;
+
     bool needs_split = false;
     if (conf.split_mesh) {
-        needs_split =
-            sample.points.size() > MaxVertices ||
-            (!sample.uvs.empty() && sample.points.size() != sample.uvs.size()) ||
-            (!sample.normals.empty() && sample.points.size() != sample.normals.size());
+        needs_split = sample.points.size() > MaxVertices || positions_are_expanded || normals_are_expanded || uvs_are_expanded;
     }
     if (!needs_split) { return; }
 
@@ -179,32 +203,11 @@ void Mesh::updateSample(Time t_)
 
         {
             sms.indices.resize(isize);
-            for (int i = 0; i < isize; ++i) {
-                sms.indices[i] = i;
-            }
+            for (int i = 0; i < isize; ++i) { sms.indices[i] = i; }
         }
-        {
-            sms.points.resize(isize);
-            for (int i = 0; i < isize; ++i) {
-                int ii = ibegin + i;
-                sms.points[i] = sample.points[sample.indices_triangulated[ii]];
-            }
-        }
-        if (!sample.normals.empty()) {
-            sms.normals.resize(isize);
-            for (int i = 0; i < isize; ++i) {
-                int ii = ibegin + i;
-                sms.normals[i] = sample.points[sample.indices_triangulated[ii]];
-            }
-        }
-        if (!sample.uvs.empty()) {
-            sms.uvs.resize(isize);
-            for (int i = 0; i < isize; ++i) {
-                int ii = ibegin + i;
-                sms.uvs[i] = sample.uvs[sample.indices_triangulated[ii]];
-            }
-
-        }
+        CopyWithIndices(sms.points, sample.points, sample.indices_triangulated, ibegin, iend, !positions_are_expanded);
+        CopyWithIndices(sms.normals, sample.normals, sample.indices_triangulated, ibegin, iend, !normals_are_expanded);
+        CopyWithIndices(sms.uvs, sample.uvs, sample.indices_triangulated, ibegin, iend, !uvs_are_expanded);
     }
 }
 
@@ -221,25 +224,25 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
 
     if (copy) {
         if (dst.points && !sample.points.empty()) {
-            memcpy(dst.points, sample.points.data(), sizeof(float3) * dst.num_points);
+            memcpy(dst.points, sample.points.cdata(), sizeof(float3) * dst.num_points);
         }
         if (dst.velocities && !sample.velocities.empty()) {
-            memcpy(dst.velocities, sample.velocities.data(), sizeof(float3) * dst.num_points);
+            memcpy(dst.velocities, sample.velocities.cdata(), sizeof(float3) * dst.num_points);
         }
         if (dst.normals && !sample.normals.empty()) {
-            memcpy(dst.normals, sample.normals.data(), sizeof(float3) * dst.num_points);
+            memcpy(dst.normals, sample.normals.cdata(), sizeof(float3) * dst.num_points);
         }
         if (dst.uvs && !sample.uvs.empty()) {
-            memcpy(dst.uvs, sample.uvs.data(), sizeof(float2) * dst.num_points);
+            memcpy(dst.uvs, sample.uvs.cdata(), sizeof(float2) * dst.num_points);
         }
         if (dst.counts && !sample.counts.empty()) {
-            memcpy(dst.counts, sample.counts.data(), sizeof(int) * dst.num_counts);
+            memcpy(dst.counts, sample.counts.cdata(), sizeof(int) * dst.num_counts);
         }
         if (dst.indices && !sample.indices.empty()) {
-            memcpy(dst.indices, sample.indices.data(), sizeof(int) * dst.num_indices);
+            memcpy(dst.indices, sample.indices.cdata(), sizeof(int) * dst.num_indices);
         }
         if (dst.indices_triangulated && !sample.indices_triangulated.empty()) {
-            memcpy(dst.indices_triangulated, sample.indices_triangulated.data(), sizeof(int) * m_num_indices_triangulated);
+            memcpy(dst.indices_triangulated, sample.indices_triangulated.cdata(), sizeof(int) * m_num_indices_triangulated);
         }
 
         if (dst.splits) {
@@ -248,28 +251,28 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
                 auto& sdst = dst.splits[i];
                 sdst.num_points = ssrc.points.size();
                 if (sdst.indices && !ssrc.indices.empty()) {
-                    memcpy(sdst.indices, ssrc.indices.data(), sizeof(int) * sdst.num_points);
+                    memcpy(sdst.indices, ssrc.indices.cdata(), sizeof(int) * sdst.num_points);
                 }
                 if (sdst.points && !ssrc.points.empty()) {
-                    memcpy(sdst.points, ssrc.points.data(), sizeof(float3) * sdst.num_points);
+                    memcpy(sdst.points, ssrc.points.cdata(), sizeof(float3) * sdst.num_points);
                 }
                 if (sdst.normals && !ssrc.normals.empty()) {
-                    memcpy(sdst.normals, ssrc.normals.data(), sizeof(float3) * sdst.num_points);
+                    memcpy(sdst.normals, ssrc.normals.cdata(), sizeof(float3) * sdst.num_points);
                 }
                 if (sdst.uvs && !ssrc.uvs.empty()) {
-                    memcpy(sdst.uvs, ssrc.uvs.data(), sizeof(float2) * sdst.num_points);
+                    memcpy(sdst.uvs, ssrc.uvs.cdata(), sizeof(float2) * sdst.num_points);
                 }
             }
         }
     }
     else {
-        dst.points = (float3*)sample.points.data();
-        dst.velocities = (float3*)sample.velocities.data();
-        dst.normals = (float3*)sample.normals.data();
-        dst.uvs = (float2*)sample.uvs.data();
-        dst.counts = (int*)sample.counts.data();
-        dst.indices = (int*)sample.indices.data();
-        dst.indices_triangulated = (int*)sample.indices_triangulated.data();
+        dst.points = (float3*)sample.points.cdata();
+        dst.velocities = (float3*)sample.velocities.cdata();
+        dst.normals = (float3*)sample.normals.cdata();
+        dst.uvs = (float2*)sample.uvs.cdata();
+        dst.counts = (int*)sample.counts.cdata();
+        dst.indices = (int*)sample.indices.cdata();
+        dst.indices_triangulated = (int*)sample.indices_triangulated.cdata();
 
         if (dst.splits) {
             for (int i = 0; i < dst.num_splits; ++i) {

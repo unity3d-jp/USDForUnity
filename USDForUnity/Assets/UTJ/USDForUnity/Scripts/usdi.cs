@@ -244,7 +244,7 @@ namespace UTJ
             public IntPtr   points;
             public IntPtr   normals;
             public IntPtr   uvs;
-            public IntPtr   indices_triangulated;
+            public IntPtr   indices;
             public int      num_points;
         };
 
