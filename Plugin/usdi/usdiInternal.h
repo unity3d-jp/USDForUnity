@@ -19,6 +19,13 @@
     #define usdiTraceFunc(...)
 #endif
 
+#ifdef usdiWithVTune
+    #define usdiVTuneScope(Name)    static usdi::VTuneTask s_vtune_scope_##Name(#Name); usdi::VTuneScope _scope_##Name(s_vtune_scope_##Name);
+#else
+    #define usdiVTuneScope(...)
+#endif
+
+
 #include "usdi.h"
 
 #define usdiInvalidTime DBL_MIN
@@ -32,6 +39,28 @@ struct TraceFuncImpl
     TraceFuncImpl(const char *func);
     ~TraceFuncImpl();
 };
+
+#ifdef usdiWithVTune
+class VTuneTask
+{
+public:
+    VTuneTask(const char *label);
+    ~VTuneTask();
+    void begin();
+    void end();
+private:
+    __itt_string_handle *m_name = nullptr;
+};
+
+class VTuneScope
+{
+public:
+    VTuneScope(VTuneTask& parent) : m_parent(parent) { m_parent.begin(); }
+    ~VTuneScope() { m_parent.end(); }
+private:
+    VTuneTask& m_parent;
+};
+#endif
 
 extern const float Rad2Deg;
 extern const float Deg2Rad;

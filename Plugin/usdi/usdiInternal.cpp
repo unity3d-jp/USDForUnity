@@ -44,4 +44,33 @@ TraceFuncImpl::~TraceFuncImpl()
 const float Deg2Rad = float(M_PI) / 180.0f;
 const float Rad2Deg = 180.0f / float(M_PI);
 
+
+#ifdef usdiWithVTune
+__itt_domain* GetVTuneDomain()
+{
+    static __itt_domain *s_vtune_domain = __itt_domain_create("usdi");
+    s_vtune_domain->flags = 1;
+    return s_vtune_domain;
+}
+
+VTuneTask::VTuneTask(const char *label)
+{
+    m_name = __itt_string_handle_create(label);
+}
+
+VTuneTask::~VTuneTask()
+{
+}
+
+void VTuneTask::begin()
+{
+    __itt_task_begin(GetVTuneDomain(), __itt_null, __itt_null, m_name);
+}
+
+void VTuneTask::end()
+{
+    __itt_task_end(GetVTuneDomain());
+}
+#endif
+
 } // namespace usdi

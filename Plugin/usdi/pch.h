@@ -49,6 +49,11 @@
 #include "pxr/base/gf/matrix4f.h"
 #include "pxr/usd/ar/resolver.h"
 
+//#define usdiWithVTune
+#ifdef usdiWithVTune
+    #include "ittnotify.h"
+#endif
+
 namespace usdi {
     class Context;
     class Attribute;
