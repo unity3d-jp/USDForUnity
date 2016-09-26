@@ -32,6 +32,8 @@
     #define BUILD_COMPONENT_SRC_PREFIX "pxr/"
     #define BUILD_OPTLEVEL_OPT
     #define TF_NO_GNU_EXT
+
+    #define USD_ENABLE_CACHED_NEW
 #endif
 
 #include "pxr/usd/usd/modelAPI.h"

@@ -8,20 +8,20 @@
 
 namespace usdi {
 
-const int MaxVertices = 65000;
+const int usdiMaxVertices = 65000;
 
-static inline void CountIndices(const VtArray<int> &counts, int& count, int& count_triangulated)
+static inline void CountIndices(const VtArray<int> &counts, int& num_indices, int& num_indices_triangulated)
 {
-    int c = 0, ct = 0;
+    int reti = 0, rett = 0;
     size_t num_faces = counts.size();
     for (size_t fi = 0; fi < num_faces; ++fi)
     {
         auto f = counts[fi];
-        c += f;
-        ct += (f - 2) * 3;
+        reti += f;
+        rett += (f - 2) * 3;
     }
-    count = c;
-    count_triangulated = ct;
+    num_indices = reti;
+    num_indices_triangulated = rett;
 }
 
 template<class CountArray, class IndexArray>
@@ -188,17 +188,17 @@ void Mesh::updateSample(Time t_)
 
     bool needs_split = false;
     if (conf.split_mesh) {
-        needs_split = sample.points.size() > MaxVertices || positions_are_expanded || normals_are_expanded || uvs_are_expanded;
+        needs_split = sample.points.size() > usdiMaxVertices || positions_are_expanded || normals_are_expanded || uvs_are_expanded;
     }
     if (!needs_split) { return; }
 
-    int num_splits = CeilDiv(m_num_indices_triangulated, MaxVertices);
+    int num_splits = CeilDiv(m_num_indices_triangulated, usdiMaxVertices);
     m_splits.resize(num_splits);
 
     for (int nth = 0; nth < num_splits; ++nth) {
         auto& sms = m_splits[nth];
-        int ibegin = MaxVertices * nth;
-        int iend = std::min<int>(MaxVertices * (nth+1), m_num_indices_triangulated);
+        int ibegin = usdiMaxVertices * nth;
+        int iend = std::min<int>(usdiMaxVertices * (nth+1), m_num_indices_triangulated);
         int isize = iend - ibegin;
 
         {
