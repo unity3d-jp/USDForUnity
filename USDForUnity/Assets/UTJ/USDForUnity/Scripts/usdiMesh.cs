@@ -377,7 +377,27 @@ namespace UTJ
 
             ++m_frame;
         }
+        #endregion
+
+
+        #region callbacks
+        static int s_nth_OnWillRenderObject = 0;
+
+        void Update()
+        {
+            s_nth_OnWillRenderObject = 0;
+        }
+
+        void OnWillRenderObject()
+        {
+            ++s_nth_OnWillRenderObject;
+
+            if(s_nth_OnWillRenderObject == 1)
+            {
+                GL.IssuePluginEvent(usdi.usdiGetRenderEventFunc(), 0);
+            }
+        }
+        #endregion
     }
-    #endregion
 
 }

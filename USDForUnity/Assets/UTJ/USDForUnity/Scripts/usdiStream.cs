@@ -308,7 +308,7 @@ namespace UTJ
             // make sure all previous tasks are finished
             if (s_updateCount == 1 && m_directVBUpdate)
             {
-                usdi.usdiExtFlushTaskQueue(0);
+                usdi.usdiExtClearTaskQueue(0);
             }
 
             // kick async update tasks
@@ -349,12 +349,6 @@ namespace UTJ
             if (s_lateupdateCount == 1)
             {
                 usdi.usdiWaitAsyncRead();
-
-                // kick VB update tasks
-                if(m_directVBUpdate)
-                {
-                    GL.IssuePluginEvent(usdi.usdiGetRenderEventFunc(), 0);
-                }
             }
 
             usdiUpdate(m_time);

@@ -297,6 +297,7 @@ usdiAPI bool                 usdiAttrWriteArraySample(usdi::Attribute *attr, con
 // ext
 usdiAPI bool            usdiExtQueueVertexBufferUpdateTask(const usdi::MeshData *src, usdi::MapContext *ctxVB, usdi::MapContext *ctxIB);
 usdiAPI bool            usdiExtFlushTaskQueue(usdi::handle_t queue);
+usdiAPI bool            usdiExtClearTaskQueue(usdi::handle_t queue);
 
 } // extern "C"
 

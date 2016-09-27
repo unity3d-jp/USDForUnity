@@ -235,6 +235,11 @@ public:
 
     bool isFlushing() const { return m_flushing; }
 
+    void clear()
+    {
+        m_tasks.clear();
+    }
+
 private:
     tasks_t m_tasks;
     std::atomic_bool m_flushing = false;
@@ -269,6 +274,16 @@ usdiAPI bool usdiExtFlushTaskQueue(usdi::handle_t hq)
     std::unique_lock<std::mutex> lock(usdi::g_task_mutex);
 
     usdi::g_task_queues.flush();
+    return true;
+}
+
+usdiAPI bool usdiExtClearTaskQueue(usdi::handle_t hq)
+{
+    usdiTraceFunc();
+    usdiVTuneScope("usdiExtClearTaskQueue");
+    std::unique_lock<std::mutex> lock(usdi::g_task_mutex);
+
+    usdi::g_task_queues.clear();
     return true;
 }
 
