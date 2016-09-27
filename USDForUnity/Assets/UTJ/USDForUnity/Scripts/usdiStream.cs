@@ -34,6 +34,7 @@ namespace UTJ
         bool m_isCompiling = false;
 #endif
         [SerializeField] bool m_directVBUpdate = true;
+        [SerializeField] bool m_deferredUpdate = false;
 
         usdi.Context m_ctx;
         List<usdiElement> m_elements = new List<usdiElement>();
@@ -41,8 +42,6 @@ namespace UTJ
         ManualResetEvent m_eventAsyncUpdate = new ManualResetEvent(true);
 
         static int s_enableCount;
-        static int s_updateCount;
-        static int s_lateupdateCount;
         #endregion
 
 
@@ -64,6 +63,7 @@ namespace UTJ
             set { m_timeScale = value; }
         }
         public bool directVBUpdate { get { return m_directVBUpdate; } }
+        public bool deferredUpdate { get { return m_deferredUpdate; } }
 #if UNITY_EDITOR
         public bool usdForceSingleThread { get { return m_forceSingleThread; } }
 #endif
@@ -203,6 +203,10 @@ namespace UTJ
         {
             if(m_ctx)
             {
+                usdiWaitAsyncUpdateTask();
+                usdi.usdiWaitAsyncRead();
+                usdi.usdiExtClearTaskQueue(0);
+
                 int c = m_elements.Count;
                 for (int i = 0; i < c; ++i)
                 {
@@ -245,6 +249,58 @@ namespace UTJ
 
             m_prevUpdateTime = t;
         }
+
+
+        static int s_nth_usdiKickAsyncUpdateTask;
+        static int s_nth_usdiWaitAsyncUpdateTask;
+
+        void usdiKickAsyncUpdateTask()
+        {
+            ++s_nth_usdiKickAsyncUpdateTask;
+            s_nth_usdiWaitAsyncUpdateTask = 0;
+
+            // make sure all previous tasks are finished
+            if (s_nth_usdiKickAsyncUpdateTask == 1)
+            {
+                usdi.usdiExtClearTaskQueue(0);
+            }
+
+            // kick async update tasks
+#if UNITY_EDITOR
+            if (m_forceSingleThread)
+            {
+                usdiAsyncUpdate(m_time);
+            }
+            else
+#endif
+            {
+                m_eventAsyncUpdate.Reset();
+                ThreadPool.QueueUserWorkItem((object state) =>
+                {
+                    try
+                    {
+                        usdiAsyncUpdate(m_time);
+                    }
+                    finally
+                    {
+                        m_eventAsyncUpdate.Set();
+                    }
+                });
+            }
+        }
+
+        void usdiWaitAsyncUpdateTask()
+        {
+            ++s_nth_usdiWaitAsyncUpdateTask;
+            s_nth_usdiKickAsyncUpdateTask = 0;
+
+            m_eventAsyncUpdate.WaitOne();
+            if (s_nth_usdiWaitAsyncUpdateTask == 1)
+            {
+                usdi.usdiWaitAsyncRead();
+            }
+        }
+
         #endregion
 
 
@@ -289,9 +345,6 @@ namespace UTJ
 
         void Update()
         {
-            s_lateupdateCount = 0;
-            ++s_updateCount;
-
 #if UNITY_EDITOR
             if (EditorApplication.isCompiling && !m_isCompiling)
             {
@@ -305,52 +358,15 @@ namespace UTJ
             }
 #endif
 
-            // make sure all previous tasks are finished
-            if (s_updateCount == 1 && m_directVBUpdate)
+            if (!m_deferredUpdate)
             {
-                usdi.usdiExtClearTaskQueue(0);
-            }
-
-            // kick async update tasks
-#if UNITY_EDITOR
-            if (m_forceSingleThread)
-            {
-                usdiAsyncUpdate(m_time);
-            }
-            else
-#endif
-            {
-                m_eventAsyncUpdate.Reset();
-                ThreadPool.QueueUserWorkItem((object state) =>
-                {
-                    try
-                    {
-                        usdiAsyncUpdate(m_time);
-                    }
-                    finally
-                    {
-                        m_eventAsyncUpdate.Set();
-                    }
-                });
+                usdiKickAsyncUpdateTask();
             }
         }
 
         void LateUpdate()
         {
-            ++s_lateupdateCount;
-            if(s_lateupdateCount == s_enableCount)
-            {
-                s_updateCount = 0;
-            }
-
-            // wait usdiAsyncUpdate() to complete
-            m_eventAsyncUpdate.WaitOne();
-
-            if (s_lateupdateCount == 1)
-            {
-                usdi.usdiWaitAsyncRead();
-            }
-
+            usdiWaitAsyncUpdateTask();
             usdiUpdate(m_time);
 
 #if UNITY_EDITOR
@@ -358,6 +374,11 @@ namespace UTJ
 #endif
             {
                 m_time += Time.deltaTime * m_timeScale;
+            }
+
+            if(m_deferredUpdate)
+            {
+                usdiKickAsyncUpdateTask();
             }
         }
         #endregion

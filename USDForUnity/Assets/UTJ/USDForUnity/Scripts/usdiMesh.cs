@@ -9,18 +9,55 @@ using UnityEditor;
 namespace UTJ
 {
 
+    [ExecuteInEditMode]
     public class usdiMesh : usdiXform
     {
+        class MeshBuffer
+        {
+            public Vector3[] positions;
+            public Vector3[] normals;
+            public Vector2[] uvs;
+            public int[] indices;
+
+            public void Allocate(ref usdi.MeshSummary summary, ref usdi.MeshData md)
+            {
+                {
+                    positions = new Vector3[md.num_points];
+                    md.points = usdi.GetArrayPtr(positions);
+                }
+                if (summary.has_normals)
+                {
+                    normals = new Vector3[md.num_points];
+                    md.normals = usdi.GetArrayPtr(normals);
+                }
+                if (summary.has_uvs)
+                {
+                    uvs = new Vector2[md.num_points];
+                    md.uvs = usdi.GetArrayPtr(uvs);
+                }
+                {
+                    indices = new int[md.num_indices_triangulated];
+                    md.indices_triangulated = usdi.GetArrayPtr(indices);
+                }
+            }
+
+            public void Clear()
+            {
+                positions = null;
+                normals = null;
+                uvs = null;
+                indices = null;
+            }
+        }
+
+
         #region fields
         usdi.Mesh m_mesh;
         usdi.MeshData m_meshData;
         usdi.MeshSummary m_meshSummary;
+        MeshBuffer m_buf = new MeshBuffer();
 
         Mesh m_umesh;
-        Vector3[] m_positions;
-        Vector3[] m_normals;
-        Vector2[] m_uvs;
-        int[] m_indices;
         bool m_umeshIsEmpty;
         int m_prevVertexCount;
         int m_prevIndexCount;
@@ -200,24 +237,7 @@ namespace UTJ
             }
             else
             {
-                {
-                    m_positions = new Vector3[m_meshData.num_points];
-                    m_meshData.points = usdi.GetArrayPtr(m_positions);
-                }
-                if (m_meshSummary.has_normals)
-                {
-                    m_normals = new Vector3[m_meshData.num_points];
-                    m_meshData.normals = usdi.GetArrayPtr(m_normals);
-                }
-                if (m_meshSummary.has_uvs)
-                {
-                    m_uvs = new Vector2[m_meshData.num_points];
-                    m_meshData.uvs = usdi.GetArrayPtr(m_uvs);
-                }
-                {
-                    m_indices = new int[m_meshData.num_indices_triangulated];
-                    m_meshData.indices_triangulated = usdi.GetArrayPtr(m_indices);
-                }
+                m_buf.Allocate(ref m_meshSummary, ref m_meshData);
             }
         }
 
@@ -228,10 +248,7 @@ namespace UTJ
                 m_children[i].usdiFreeMeshData(ref m_splitedData[i]);
             }
 
-            m_positions = null;
-            m_normals = null;
-            m_uvs = null;
-            m_indices = null;
+            m_buf.Clear();
 
             m_meshData.points = IntPtr.Zero;
             m_meshData.normals = IntPtr.Zero;
@@ -279,19 +296,19 @@ namespace UTJ
                 }
                 else
                 {
-                    m_umesh.vertices = m_positions;
+                    m_umesh.vertices = m_buf.positions;
                     if (m_meshSummary.has_normals)
                     {
-                        m_umesh.normals = m_normals;
+                        m_umesh.normals = m_buf.normals;
                     }
                     if (m_meshSummary.has_uvs)
                     {
-                        m_umesh.uv = m_uvs;
+                        m_umesh.uv = m_buf.uvs;
                     }
 
                     if (topology)
                     {
-                        m_umesh.SetIndices(m_indices, MeshTopology.Triangles, 0);
+                        m_umesh.SetIndices(m_buf.indices, MeshTopology.Triangles, 0);
 
                         if (!m_meshSummary.has_normals)
                         {
