@@ -20,7 +20,7 @@
 #endif
 
 #ifdef usdiWithVTune
-    #define usdiVTuneScope(Name)    static usdi::VTuneTask s_vtune_scope_##Name(#Name); usdi::VTuneScope _scope_##Name(s_vtune_scope_##Name);
+    #define usdiVTuneScope(Name)    static usdi::VTuneTask s_vtune_task_##__LINE__(Name); usdi::VTuneScope _vtune_scope_##__LINE__(s_vtune_task_##__LINE__);
 #else
     #define usdiVTuneScope(...)
 #endif

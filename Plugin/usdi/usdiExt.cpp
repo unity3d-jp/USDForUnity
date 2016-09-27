@@ -265,7 +265,7 @@ usdiAPI bool usdiExtQueueVertexBufferUpdateTask(const usdi::MeshData *src, usdi:
 usdiAPI bool usdiExtFlushTaskQueue(usdi::handle_t hq)
 {
     usdiTraceFunc();
-    usdiVTuneScope(usdiExtFlushTaskQueue);
+    usdiVTuneScope("usdiExtFlushTaskQueue");
     std::unique_lock<std::mutex> lock(usdi::g_task_mutex);
 
     usdi::g_task_queues.flush();
