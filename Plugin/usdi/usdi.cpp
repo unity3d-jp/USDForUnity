@@ -139,6 +139,7 @@ usdiAPI usdi::Schema* usdiGetRoot(usdi::Context *ctx)
 
 usdiAPI void usdiUpdateAllSamples(usdi::Context *ctx, usdi::Time t)
 {
+    usdiTraceFunc();
     if (!ctx) return;
 
     usdiVTuneScope("usdiUpdateAllSamples");
@@ -146,6 +147,7 @@ usdiAPI void usdiUpdateAllSamples(usdi::Context *ctx, usdi::Time t)
 }
 usdiAPI void usdiUpdateAllSamplesAsync(usdi::Context *ctx, usdi::Time t)
 {
+    usdiTraceFunc();
     if (!ctx) return;
 
     usdi::g_read_tasks.run([=]() {

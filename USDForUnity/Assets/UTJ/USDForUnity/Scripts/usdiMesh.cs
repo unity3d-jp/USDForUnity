@@ -53,7 +53,7 @@ namespace UTJ
 
         #region fields
         usdi.Mesh m_mesh;
-        usdi.MeshData m_meshData;
+        usdi.MeshData m_meshData, m_taskMmeshData;
         usdi.MeshSummary m_meshSummary;
         MeshBuffer m_buf = new MeshBuffer();
 
@@ -264,22 +264,25 @@ namespace UTJ
                 m_ctxVB.resource != IntPtr.Zero;
             bool copyVertexData = !m_directVBUpdate;
 
-#if UNITY_EDITOR
-            if (m_stream.usdForceSingleThread)
-            {
-                usdi.usdiMeshReadSample(m_mesh, ref m_meshData, t, copyVertexData);
-            }
-            else
-#endif
-            {
-                usdi.usdiMeshReadSampleAsync(m_mesh, ref m_meshData, t, copyVertexData);
-            }
-
-
             if (m_directVBUpdate)
             {
-                m_meshData.indices_triangulated = IntPtr.Zero;
-                usdi.usdiExtQueueVertexBufferUpdateTask(ref m_meshData, ref m_ctxVB, ref m_ctxIB);
+                usdi.usdiMeshReadSample(m_mesh, ref m_meshData, t, copyVertexData);
+                m_taskMmeshData = m_meshData;
+                m_taskMmeshData.indices_triangulated = IntPtr.Zero;
+                usdi.usdiExtQueueVertexBufferUpdateTask(ref m_taskMmeshData, ref m_ctxVB, ref m_ctxIB);
+            }
+            else
+            {
+#if UNITY_EDITOR
+                if (m_stream.usdForceSingleThread)
+                {
+                    usdi.usdiMeshReadSample(m_mesh, ref m_meshData, t, copyVertexData);
+                }
+                else
+#endif
+                {
+                    usdi.usdiMeshReadSampleAsync(m_mesh, ref m_meshData, t, copyVertexData);
+                }
             }
         }
 
@@ -411,7 +414,6 @@ namespace UTJ
 
             if(s_nth_OnWillRenderObject == 1)
             {
-                GL.IssuePluginEvent(usdi.usdiGetRenderEventFunc(), 0);
             }
         }
         #endregion

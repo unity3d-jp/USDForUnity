@@ -151,7 +151,23 @@ void Mesh::updateSample(Time t_)
 
     auto t = UsdTimeCode(t_);
     const auto& conf = getImportConfig();
-    MeshSample& sample = m_sample;
+
+    if (!m_front_sample) {
+        m_front_sample = &m_sample[0];
+        m_front_splits = &m_splits[0];
+    }
+    else {
+        if (m_front_sample == &m_sample[0]) {
+            m_front_sample = &m_sample[1];
+            m_front_splits = &m_splits[1];
+        }
+        else {
+            m_front_sample = &m_sample[0];
+            m_front_splits = &m_splits[0];
+        }
+    }
+    auto& sample = *m_front_sample;
+    auto& splits = *m_front_splits;
 
     m_mesh.GetPointsAttr().Get(&sample.points, t);
     m_mesh.GetVelocitiesAttr().Get(&sample.velocities, t);
@@ -193,10 +209,10 @@ void Mesh::updateSample(Time t_)
     if (!needs_split) { return; }
 
     int num_splits = CeilDiv(m_num_indices_triangulated, usdiMaxVertices);
-    m_splits.resize(num_splits);
+    splits.resize(num_splits);
 
     for (int nth = 0; nth < num_splits; ++nth) {
-        auto& sms = m_splits[nth];
+        auto& sms = splits[nth];
         int ibegin = usdiMaxVertices * nth;
         int iend = std::min<int>(usdiMaxVertices * (nth+1), m_num_indices_triangulated);
         int isize = iend - ibegin;
@@ -215,12 +231,16 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
 {
     if (t != m_time_prev) { updateSample(t); }
 
-    const MeshSample& sample = m_sample;
+    if (!m_front_sample) { return false; }
+
+    const auto& sample = *m_front_sample;
+    const auto& splits = *m_front_splits;
+
     dst.num_points = sample.points.size();
     dst.num_counts = sample.counts.size();
     dst.num_indices = sample.indices.size();
     dst.num_indices_triangulated = m_num_indices_triangulated;
-    dst.num_splits = m_splits.size();
+    dst.num_splits = splits.size();
 
     if (copy) {
         if (dst.points && !sample.points.empty()) {
@@ -247,7 +267,7 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
 
         if (dst.splits) {
             for (int i = 0; i < dst.num_splits; ++i) {
-                const auto& ssrc = m_splits[i];
+                const auto& ssrc = splits[i];
                 auto& sdst = dst.splits[i];
                 sdst.num_points = ssrc.points.size();
                 if (sdst.indices && !ssrc.indices.empty()) {
@@ -276,7 +296,7 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
 
         if (dst.splits) {
             for (int i = 0; i < dst.num_splits; ++i) {
-                const auto& ssrc = m_splits[i];
+                const auto& ssrc = splits[i];
                 auto& sdst = dst.splits[i];
                 sdst.num_points = ssrc.points.size();
                 if (sdst.indices && !ssrc.indices.empty()) {
@@ -303,7 +323,7 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
     auto t = UsdTimeCode(t_);
     const auto& conf = getExportConfig();
 
-    MeshSample& sample = m_sample;
+    MeshSample& sample = m_sample[0];
 
     if (src.points) {
         sample.points.assign((GfVec3f*)src.points, (GfVec3f*)src.points + src.num_points);

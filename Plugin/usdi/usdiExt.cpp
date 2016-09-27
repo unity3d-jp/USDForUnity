@@ -245,45 +245,65 @@ private:
     std::atomic_bool m_flushing = false;
 };
 
-std::mutex g_task_mutex;
-VertexUpdateTaskQueue g_task_queues;
+std::mutex g_task_mutex[2];
+VertexUpdateTaskQueue g_task_queues[2];
 
 } // namespace usdi
 
 
 extern "C" {
 
+int g_task_index = 0;
+
+usdiAPI int usdiExtGetTaskIndex()
+{
+    usdiTraceFunc();
+    return g_task_index;
+}
+
+usdiAPI int usdiExtIncrementTaskIndex()
+{
+    usdiTraceFunc();
+    return g_task_index++;
+}
+
 usdiAPI bool usdiExtQueueVertexBufferUpdateTask(const usdi::MeshData *src, usdi::MapContext *ctxVB, usdi::MapContext *ctxIB)
 {
     usdiTraceFunc();
-    if (usdi::g_task_queues.isFlushing()) {
+
+    int i = g_task_index & 1;
+
+    if (usdi::g_task_queues[i].isFlushing()) {
         usdiLogWarning("usdiExtQueueVertexBufferUpdateTask(): task queue is flushing!!!\n");
     }
-
-    std::unique_lock<std::mutex> lock(usdi::g_task_mutex);
+    std::unique_lock<std::mutex> lock(usdi::g_task_mutex[i]);
 
     if (!src || (!ctxVB && !ctxIB)) { return false; }
-    usdi::g_task_queues.push(usdi::VertexUpdateTask(src, ctxVB, ctxIB));
+    usdi::g_task_queues[i].push(usdi::VertexUpdateTask(src, ctxVB, ctxIB));
     return true;
 }
 
-usdiAPI bool usdiExtFlushTaskQueue(usdi::handle_t hq)
+usdiAPI bool usdiExtFlushTaskQueue(int handle)
 {
     usdiTraceFunc();
     usdiVTuneScope("usdiExtFlushTaskQueue");
-    std::unique_lock<std::mutex> lock(usdi::g_task_mutex);
 
-    usdi::g_task_queues.flush();
+    int i = handle & 1;
+    std::unique_lock<std::mutex> lock(usdi::g_task_mutex[i]);
+
+    usdi::g_task_queues[i].flush();
     return true;
 }
 
-usdiAPI bool usdiExtClearTaskQueue(usdi::handle_t hq)
+usdiAPI bool usdiExtClearTaskQueue(int handle)
 {
     usdiTraceFunc();
     usdiVTuneScope("usdiExtClearTaskQueue");
-    std::unique_lock<std::mutex> lock(usdi::g_task_mutex);
 
-    usdi::g_task_queues.clear();
+    int i = handle & 1;
+    std::unique_lock<std::mutex> lock(usdi::g_task_mutex[i]);
+
+    usdi::g_task_queues[i].clear();
     return true;
 }
 

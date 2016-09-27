@@ -21,6 +21,8 @@ namespace UTJ
     [ExecuteInEditMode]
     public class usdiStream : MonoBehaviour
     {
+        static List<usdiStream> s_instances = new List<usdiStream>();
+
         #region fields 
         [SerializeField] string m_path;
         [SerializeField] usdiImportOptions m_importOptions = new usdiImportOptions();
@@ -34,14 +36,12 @@ namespace UTJ
         bool m_isCompiling = false;
 #endif
         [SerializeField] bool m_directVBUpdate = true;
-        [SerializeField] bool m_deferredUpdate = false;
+        [SerializeField] bool m_deferredUpdate = true;
 
         usdi.Context m_ctx;
         List<usdiElement> m_elements = new List<usdiElement>();
         double m_prevUpdateTime = Double.NaN;
         ManualResetEvent m_eventAsyncUpdate = new ManualResetEvent(true);
-
-        static int s_enableCount;
         #endregion
 
 
@@ -206,6 +206,7 @@ namespace UTJ
                 usdiWaitAsyncUpdateTask();
                 usdi.usdiWaitAsyncRead();
                 usdi.usdiExtClearTaskQueue(0);
+                usdi.usdiExtClearTaskQueue(1);
 
                 int c = m_elements.Count;
                 for (int i = 0; i < c; ++i)
@@ -251,19 +252,14 @@ namespace UTJ
         }
 
 
-        static int s_nth_usdiKickAsyncUpdateTask;
-        static int s_nth_usdiWaitAsyncUpdateTask;
-
         void usdiKickAsyncUpdateTask()
         {
-            ++s_nth_usdiKickAsyncUpdateTask;
-            s_nth_usdiWaitAsyncUpdateTask = 0;
+            //// make sure all previous tasks are finished
+            //if (usdiIsFirst())
+            //{
+            //    usdi.usdiExtClearTaskQueue(usdi.usdiExtGetTaskIndex() - 1);
+            //}
 
-            // make sure all previous tasks are finished
-            if (s_nth_usdiKickAsyncUpdateTask == 1)
-            {
-                usdi.usdiExtClearTaskQueue(0);
-            }
 
             // kick async update tasks
 #if UNITY_EDITOR
@@ -291,14 +287,7 @@ namespace UTJ
 
         void usdiWaitAsyncUpdateTask()
         {
-            ++s_nth_usdiWaitAsyncUpdateTask;
-            s_nth_usdiKickAsyncUpdateTask = 0;
-
             m_eventAsyncUpdate.WaitOne();
-            if (s_nth_usdiWaitAsyncUpdateTask == 1)
-            {
-                usdi.usdiWaitAsyncRead();
-            }
         }
 
         #endregion
@@ -317,20 +306,18 @@ namespace UTJ
 
         void OnEnable()
         {
-            ++s_enableCount;
-            //Debug.Log("usdiStream: s_enableCount = " + s_enableCount);
+            s_instances.Add(this);
         }
 
         void OnDisable()
         {
-            --s_enableCount;
-            //Debug.Log("usdiStream: s_enableCount = " + s_enableCount);
 #if UNITY_EDITOR
             if (!EditorApplication.isPlaying && EditorApplication.isPlayingOrWillChangePlaymode)
             {
                 usdiUnload();
             }
 #endif
+            s_instances.Remove(this);
         }
 
         void OnDestroy()
@@ -343,8 +330,14 @@ namespace UTJ
             usdiUnload();
         }
 
+
+        static int s_nth_Update;
+        static int s_nth_LateUpdate;
+
         void Update()
         {
+            ++s_nth_Update;
+            s_nth_LateUpdate = 0;
 #if UNITY_EDITOR
             if (EditorApplication.isCompiling && !m_isCompiling)
             {
@@ -366,17 +359,33 @@ namespace UTJ
 
         void LateUpdate()
         {
+            ++s_nth_LateUpdate;
+            s_nth_Update = 0;
+
             usdiWaitAsyncUpdateTask();
+            if (s_nth_LateUpdate == 1)
+            {
+                usdi.usdiWaitAsyncRead();
+                if(m_directVBUpdate)
+                {
+                    for(int i=0; i<s_instances.Count; ++i)
+                    {
+                        s_instances[i].usdiWaitAsyncUpdateTask();
+                    }
+                    GL.IssuePluginEvent(usdi.usdiGetRenderEventFunc(), usdi.usdiExtIncrementTaskIndex());
+                }
+            }
+
             usdiUpdate(m_time);
 
 #if UNITY_EDITOR
-            if(Application.isPlaying)
+            if (Application.isPlaying)
 #endif
             {
                 m_time += Time.deltaTime * m_timeScale;
             }
 
-            if(m_deferredUpdate)
+            if (m_deferredUpdate)
             {
                 usdiKickAsyncUpdateTask();
             }

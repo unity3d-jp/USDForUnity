@@ -21,7 +21,7 @@ UnityPluginUnload()
 
 static void UNITY_INTERFACE_API UnityRenderEventFunc(int eventID)
 {
-    usdiExtFlushTaskQueue((usdi::handle_t)eventID);
+    usdiExtFlushTaskQueue(eventID);
 }
 
 extern "C" UNITY_INTERFACE_EXPORT 

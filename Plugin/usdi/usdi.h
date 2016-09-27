@@ -295,9 +295,11 @@ usdiAPI bool                 usdiAttrWriteSample(usdi::Attribute *attr, const vo
 usdiAPI bool                 usdiAttrWriteArraySample(usdi::Attribute *attr, const void *src, int size, usdi::Time t);
 
 // ext
+usdiAPI int             usdiExtGetTaskIndex();
+usdiAPI int             usdiExtIncrementTaskIndex();
 usdiAPI bool            usdiExtQueueVertexBufferUpdateTask(const usdi::MeshData *src, usdi::MapContext *ctxVB, usdi::MapContext *ctxIB);
-usdiAPI bool            usdiExtFlushTaskQueue(usdi::handle_t queue);
-usdiAPI bool            usdiExtClearTaskQueue(usdi::handle_t queue);
+usdiAPI bool            usdiExtFlushTaskQueue(int handle);
+usdiAPI bool            usdiExtClearTaskQueue(int handle);
 
 } // extern "C"
 

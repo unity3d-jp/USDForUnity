@@ -42,9 +42,11 @@ private:
     void updateSummary() const;
 
 private:
+    typedef std::vector<SplitedMeshSample> SplitedMeshSamples;
+
     UsdGeomMesh         m_mesh;
-    MeshSample          m_sample;
-    std::vector<SplitedMeshSample> m_splits;
+    MeshSample          m_sample[2], *m_front_sample = nullptr;
+    SplitedMeshSamples  m_splits[2], *m_front_splits = nullptr;
     Attribute           *m_attr_uv = nullptr;
 
     mutable bool        m_summary_needs_update = true;
