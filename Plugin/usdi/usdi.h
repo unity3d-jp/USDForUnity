@@ -93,6 +93,7 @@ struct ImportConfig
     bool swap_handedness = true;
     bool swap_faces = true;
     bool split_mesh = false;
+    bool double_buffering = false;
 };
 
 struct ExportConfig

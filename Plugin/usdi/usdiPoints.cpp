@@ -62,7 +62,20 @@ void Points::updateSample(Time t_)
     auto t = UsdTimeCode(t_);
     const auto& conf = getImportConfig();
 
-    auto& sample = m_sample;
+    // swap front sample
+    if (!m_front_sample) {
+        m_front_sample = &m_sample[0];
+    }
+    else if (conf.double_buffering) {
+        if (m_front_sample == &m_sample[0]) {
+            m_front_sample = &m_sample[1];
+        }
+        else {
+            m_front_sample = &m_sample[0];
+        }
+    }
+    auto& sample = *m_front_sample;
+
     m_points.GetPointsAttr().Get(&sample.points, t);
     m_points.GetVelocitiesAttr().Get(&sample.velocities, t);
 
@@ -80,7 +93,9 @@ bool Points::readSample(PointsData& dst, Time t, bool copy)
 {
     if (t != m_time_prev) { updateSample(t); }
 
-    const auto& sample = m_sample;
+    if (!m_front_sample) { return false; }
+    const auto& sample = *m_front_sample;
+
     dst.num_points = sample.points.size();
     if (copy) {
         if (dst.points) {

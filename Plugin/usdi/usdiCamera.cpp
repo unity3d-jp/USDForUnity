@@ -44,12 +44,14 @@ void Camera::updateSample(Time t_)
     if (!needsUpdate()) { return; }
 
     auto t = UsdTimeCode(t_);
-    auto& dst = m_sample;
+    const auto& conf = getImportConfig();
+    auto& sample = m_sample;
+
     {
         GfVec2f range;
         m_cam.GetClippingRangeAttr().Get(&range, t);
-        dst.near_clipping_plane = range[0];
-        dst.far_clipping_plane = range[1];
+        sample.near_clipping_plane = range[0];
+        sample.far_clipping_plane = range[1];
     }
     {
         float focal_length;
@@ -62,11 +64,11 @@ void Camera::updateSample(Time t_)
         m_cam.GetVerticalApertureAttr().Get(&vertical_aperture, t);
         m_cam.GetHorizontalApertureAttr().Get(&horizontal_aperture, t);
 
-        dst.field_of_view = 2.0f * atanf(vertical_aperture / (2.0f * focal_length)) * Rad2Deg;
-        dst.aspect_ratio = float(horizontal_aperture / vertical_aperture);
-        dst.focus_distance = focus_distance;
-        dst.focal_length = focal_length;
-        dst.aperture = vertical_aperture;
+        sample.field_of_view = 2.0f * atanf(vertical_aperture / (2.0f * focal_length)) * Rad2Deg;
+        sample.aspect_ratio = float(horizontal_aperture / vertical_aperture);
+        sample.focus_distance = focus_distance;
+        sample.focal_length = focal_length;
+        sample.aperture = vertical_aperture;
     }
 }
 

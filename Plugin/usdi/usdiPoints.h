@@ -31,7 +31,7 @@ private:
 
 private:
     UsdGeomPoints           m_points;
-    PointsSample            m_sample;
+    PointsSample            m_sample[2], *m_front_sample = nullptr;
 
     mutable bool            m_summary_needs_update = true;
     mutable PointsSummary   m_summary;

@@ -171,6 +171,7 @@ namespace UTJ
             conf.swap_handedness = m_importOptions.swapHandedness;
             conf.swap_faces = m_importOptions.swapFaces;
             conf.split_mesh = true;
+            conf.double_buffering = m_deferredUpdate;
             usdi.usdiSetImportConfig(m_ctx, ref conf);
         }
 

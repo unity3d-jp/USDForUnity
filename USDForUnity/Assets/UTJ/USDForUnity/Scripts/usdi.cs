@@ -110,6 +110,7 @@ namespace UTJ
             public Bool swap_handedness;
             public Bool swap_faces;
             public Bool split_mesh;
+            public Bool double_buffering;
 
             public static ImportConfig default_value
             {
@@ -123,6 +124,7 @@ namespace UTJ
                         swap_handedness = true,
                         swap_faces = true,
                         split_mesh = true,
+                        double_buffering = false,
                     };
                 }
             }

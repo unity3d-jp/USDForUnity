@@ -125,8 +125,9 @@ void Xform::updateSample(Time t_)
 
     auto t = UsdTimeCode(t_);
     const auto& conf = getImportConfig();
-    auto prev = m_sample;
-    auto& dst = m_sample;
+
+    auto& sample = m_sample;
+    auto prev = sample;
 
     if (m_read_ops.empty()) {
         bool reset_stack = false;
@@ -164,22 +165,22 @@ void Xform::updateSample(Time t_)
             switch (op.GetOpType()) {
             case UsdGeomXformOp::TypeTranslate:
             {
-                op.GetAs((GfVec3f*)&dst.position, t);
+                op.GetAs((GfVec3f*)&sample.position, t);
                 if (conf.swap_handedness) {
-                    dst.position.x *= -1.0f;
+                    sample.position.x *= -1.0f;
                 }
                 break;
             }
             case UsdGeomXformOp::TypeScale:
             {
-                op.GetAs((GfVec3f*)&dst.scale, t);
+                op.GetAs((GfVec3f*)&sample.scale, t);
                 break;
             }
             case UsdGeomXformOp::TypeOrient:
             {
-                op.GetAs((GfQuatf*)&dst.rotation, t);
+                op.GetAs((GfQuatf*)&sample.rotation, t);
                 if (conf.swap_handedness) {
-                    SwapHandedness(dst.rotation);
+                    SwapHandedness(sample.rotation);
                 }
                 break;
             }
@@ -192,9 +193,9 @@ void Xform::updateSample(Time t_)
             {
                 float3 euler;
                 op.GetAs((GfVec3f*)&euler, t);
-                dst.rotation = EulerToQuaternion(euler * Deg2Rad, op.GetOpType());
+                sample.rotation = EulerToQuaternion(euler * Deg2Rad, op.GetOpType());
                 if (conf.swap_handedness) {
-                    SwapHandedness(dst.rotation);
+                    SwapHandedness(sample.rotation);
                 }
                 break;
             }
@@ -217,23 +218,23 @@ void Xform::updateSample(Time t_)
         GfTransform gft;
         gft.SetMatrix(result);
 
-        m_sample.transform = (const float4x4&)GfMatrix4f(result);
-        m_sample.position = (const float3&)GfVec3f(gft.GetTranslation());
-        m_sample.rotation = (const quatf&)GfQuatf(gft.GetRotation().GetQuat());
-        m_sample.scale = (const float3&)GfVec3f(gft.GetScale());
+        sample.transform = (const float4x4&)GfMatrix4f(result);
+        sample.position = (const float3&)GfVec3f(gft.GetTranslation());
+        sample.rotation = (const quatf&)GfQuatf(gft.GetRotation().GetQuat());
+        sample.scale = (const float3&)GfVec3f(gft.GetScale());
     }
 
     int update_flags = 0;
-    if (!NearEqual(prev.position, dst.position)) {
+    if (!NearEqual(prev.position, sample.position)) {
         update_flags |= (int)XformData::Flags::UpdatedPosition;
     }
-    if (!NearEqual(prev.rotation, dst.rotation)) {
+    if (!NearEqual(prev.rotation, sample.rotation)) {
         update_flags |= (int)XformData::Flags::UpdatedRotation;
     }
-    if (!NearEqual(prev.scale, dst.scale)) {
+    if (!NearEqual(prev.scale, sample.scale)) {
         update_flags |= (int)XformData::Flags::UpdatedScale;
     }
-    dst.flags = (dst.flags & ~(int)XformData::Flags::UpdatedMask) | update_flags;
+    sample.flags = (sample.flags & ~(int)XformData::Flags::UpdatedMask) | update_flags;
 }
 
 bool Xform::readSample(XformData& dst, Time t)

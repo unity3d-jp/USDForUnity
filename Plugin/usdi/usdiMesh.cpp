@@ -152,11 +152,12 @@ void Mesh::updateSample(Time t_)
     auto t = UsdTimeCode(t_);
     const auto& conf = getImportConfig();
 
+    // swap front sample
     if (!m_front_sample) {
         m_front_sample = &m_sample[0];
         m_front_splits = &m_splits[0];
     }
-    else {
+    else if(conf.double_buffering) {
         if (m_front_sample == &m_sample[0]) {
             m_front_sample = &m_sample[1];
             m_front_splits = &m_splits[1];
