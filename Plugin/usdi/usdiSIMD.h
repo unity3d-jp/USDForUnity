@@ -97,26 +97,74 @@ public:
     }
 };
 
-static inline void InvertX(float3 *dst, size_t num)
-{
-#ifdef usdiEnableISPC
-    ispc::InvertXF3((ispc::float3*)dst, (int)num);
-#else
-    for (size_t i = 0; i < num; ++i) {
-        dst[i].x *= -1.0f;
-    }
-#endif
-}
 
-static inline void Scale(float3 *dst, float s, size_t num)
+class TempBuffer
 {
-#ifdef usdiEnableISPC
-    ispc::ScaleF((float*)dst, s, (int)num*3);
-#else
-    for (size_t i = 0; i < num; ++i) {
-        dst[i] *= s;
+public:
+    TempBuffer() {}
+    TempBuffer(const TempBuffer& v) = delete;
+    TempBuffer& operator=(const TempBuffer& v) = delete;
+
+    ~TempBuffer()
+    {
+        clear();
     }
-#endif
+
+    size_t size() const { return m_size; }
+    void* data() { return m_data; }
+    const void* data() const { return m_data; }
+    const void* cdata() const { return m_data; }
+
+    void resize(size_t s)
+    {
+        if (s > m_capacity) {
+            clear();
+            m_data = AlignedMalloc(s, 0x20);
+            m_capacity = s;
+        }
+        m_size = s;
+    }
+
+    void clear()
+    {
+        AlignedFree(m_data);
+        m_data = nullptr;
+        m_size = m_capacity = 0;
+    }
+
+private:
+    void *m_data = nullptr;
+    size_t m_size = 0;
+    size_t m_capacity = 0;
+};
+
+TempBuffer& GetTemporaryBuffer();
+void InvertX(float3 *dst, size_t num);
+void Scale(float3 *dst, float s, size_t num);
+void ComputeBounds(const float3 *p, size_t num, float3& o_min, float3& o_max);
+
+
+struct vertex_v3n3
+{
+    float3 p;
+    float3 n;
+};
+
+struct vertex_v3n3u2
+{
+    float3 p;
+    float3 n;
+    float2 u;
+};
+
+template<class VertexT> void WriteVertices(VertexT *dst, const MeshData& src);
+
+template<class VertexT>
+inline void WriteVertices(TempBuffer& buf, const MeshData& src)
+{
+    using vertex_t = VertexT;
+    buf.resize(sizeof(vertex_t) * src.num_points);
+    WriteVertices((VertexT*)buf.data(), src);
 }
 
 } // namespace usdi

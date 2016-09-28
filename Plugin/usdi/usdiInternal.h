@@ -1,7 +1,5 @@
 #pragma once
 
-// options
-//#define usdiDbgForceSingleThread
 
 
 #define usdiImpl
@@ -19,7 +17,7 @@
     #define usdiTraceFunc(...)
 #endif
 
-#ifdef usdiWithVTune
+#ifdef usdiDbgVTune
     #define usdiVTuneScope(Name)    static usdi::VTuneTask s_vtune_task_##__LINE__(Name); usdi::VTuneScope _vtune_scope_##__LINE__(s_vtune_task_##__LINE__);
 #else
     #define usdiVTuneScope(...)
@@ -40,7 +38,7 @@ struct TraceFuncImpl
     ~TraceFuncImpl();
 };
 
-#ifdef usdiWithVTune
+#ifdef usdiDbgVTune
 class VTuneTask
 {
 public:
@@ -66,6 +64,8 @@ extern const float Rad2Deg;
 extern const float Deg2Rad;
 
 float2 operator*(const float2& l, float r);
+float3 operator+(const float3& l, const float3& r);
+float3 operator-(const float3& l, const float3& r);
 float3 operator*(const float3& l, float r);
 float4 operator*(const float4& l, float r);
 quatf operator*(const quatf& l, float r);

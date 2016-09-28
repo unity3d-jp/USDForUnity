@@ -248,6 +248,17 @@ namespace UTJ
             public IntPtr   uvs;
             public IntPtr   indices;
             public int      num_points;
+
+            public Vector3  center;
+            public Vector3  extents;
+
+            public static SplitedMeshData default_value
+            {
+                get
+                {
+                    return default(SplitedMeshData);
+                }
+            }
         };
 
         public struct MeshData
@@ -267,6 +278,9 @@ namespace UTJ
             public int      num_indices;
             public int      num_indices_triangulated;
             public int      num_splits;
+
+            public Vector3  center;
+            public Vector3  extents;
 
             public static MeshData default_value
             {

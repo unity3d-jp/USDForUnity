@@ -26,6 +26,14 @@ inline float2 operator*(const float2& l, float r)
     return{ l.x*r, l.y*r };
 }
 
+inline float3 operator+(const float3& l, const float3& r)
+{
+    return{ l.x + r.x, l.y + r.y, l.z + r.z };
+}
+inline float3 operator-(const float3& l, const float3& r)
+{
+    return{ l.x - r.x, l.y - r.y, l.z - r.z };
+}
 inline float3 operator*(const float3& l, float r)
 {
     return{ l.x*r, l.y*r, l.z*r };

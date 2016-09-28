@@ -1,4 +1,10 @@
-﻿#include <vector>
+﻿
+// debug options
+//#define usdiDbgForceSingleThread
+//#define usdiDbgVTune
+
+
+#include <vector>
 #include <string>
 #include <map>
 #include <memory>
@@ -49,8 +55,7 @@
 #include "pxr/base/gf/matrix4f.h"
 #include "pxr/usd/ar/resolver.h"
 
-#define usdiWithVTune
-#ifdef usdiWithVTune
+#ifdef usdiDbgVTune
     #include "ittnotify.h"
 #endif
 

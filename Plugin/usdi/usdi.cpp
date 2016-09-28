@@ -29,7 +29,7 @@
     #pragma comment(lib, "usdGeom.lib")
     #pragma comment(lib, "vt.lib")
     #pragma comment(lib, "work.lib")
-    #ifdef usdiWithVTune
+    #ifdef usdiDbgVTune
         #pragma comment(lib, "libittnotify.lib")
     #endif
 #endif

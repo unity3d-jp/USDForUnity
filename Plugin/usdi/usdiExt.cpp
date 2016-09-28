@@ -7,134 +7,8 @@
 
 namespace usdi {
 
-class TempBuffer
-{
-public:
-    TempBuffer() {}
-    TempBuffer(const TempBuffer& v) = delete;
-    TempBuffer& operator=(const TempBuffer& v) = delete;
-
-    ~TempBuffer()
-    {
-        clear();
-    }
-
-    void* data() { return m_data; }
-    size_t size() const { return m_size; }
-
-    void resize(size_t s)
-    {
-        if (s > m_capacity) {
-            clear();
-            m_data = AlignedMalloc(s, 0x20);
-            m_capacity = s;
-        }
-        m_size = s;
-    }
-
-    void clear()
-    {
-        AlignedFree(m_data);
-        m_data = nullptr;
-        m_size = m_capacity = 0;
-    }
-
-private:
-    void *m_data = nullptr;
-    size_t m_size = 0;
-    size_t m_capacity = 0;
-};
-
-TempBuffer& GetTemporaryBuffer()
-{
-    static thread_local TempBuffer s_buf;
-    return s_buf;
-}
 
 
-struct vertex_v3n3
-{
-    float3 p;
-    float3 n;
-};
-
-struct vertex_v3n3u2
-{
-    float3 p;
-    float3 n;
-    float2 u;
-};
-
-template<class VertexT>
-static void WriteVertices(VertexT *dst, const usdi::MeshData& src);
-template<class VertexT>
-static void WriteVertices(TempBuffer& buf, const usdi::MeshData& src);
-
-#ifdef usdiEnableISPC
-
-template<>
-static void WriteVertices(vertex_v3n3 *dst, const usdi::MeshData& src)
-{
-    ispc::InterleaveVerticesV3N3(
-        (ispc::vertex_v3n3*)dst,
-        (ispc::float3*)src.points,
-        (ispc::float3*)src.normals,
-        src.num_points);
-}
-
-template<>
-static void WriteVertices(vertex_v3n3u2 *dst, const usdi::MeshData& src)
-{
-    ispc::InterleaveVerticesV3N3U2(
-        (ispc::vertex_v3n3u2*)dst,
-        (ispc::float3*)src.points,
-        (ispc::float3*)src.normals,
-        (ispc::float2*)src.uvs,
-        src.num_points);
-}
-
-template<class VertexT>
-static void WriteVertices(TempBuffer& buf, const usdi::MeshData& src)
-{
-    using vertex_t = VertexT;
-    buf.resize(sizeof(vertex_t) * src.num_points);
-    WriteVertices((VertexT*)buf.data(), src);
-}
-
-#else
-
-template<class VertexT> static inline void WriteVertex(VertexT *dst, const usdi::MeshData& src, int i);
-
-template<> static inline void WriteVertex(vertex_v3n3 *dst, const usdi::MeshData& src, int i)
-{
-    dst[i].p = src.points[i];
-    dst[i].n = src.normals[i];
-}
-
-template<> static inline void WriteVertex(vertex_v3n3u2 *dst, const usdi::MeshData& src, int i)
-{
-    dst[i].p = src.points[i];
-    dst[i].n = src.normals[i];
-    dst[i].u = src.uvs[i];
-}
-
-template<class VertexT>
-static void WriteVertices(VertexT *dst, const usdi::MeshData& src)
-{
-    for (int i = 0; i < src.num_points; ++i) {
-        WriteVertex(dst, src, i);
-    }
-}
-
-template<class VertexT>
-static void WriteVertices(TempBuffer& buf, const usdi::MeshData& src)
-{
-    using vertex_t = VertexT;
-    buf.resize(sizeof(vertex_t) * src.num_points);
-    vertex_t *dst = (vertex_t*)buf.data();
-    WriteVertices((VertexT*)buf.data(), src);
-}
-#endif
 
 
 struct MapContext : gi::MapContext {};
@@ -185,18 +59,18 @@ struct VertexUpdateTask
             else {
                 WriteVertices<vertex_v3n3>(buf, *m_mesh_data);
             }
-            memcpy(m_ctx_vb->data_ptr, buf.data(), buf.size());
+            memcpy(m_ctx_vb->data_ptr, buf.cdata(), buf.size());
         }
 
         if (m_ctx_ib->data_ptr && m_mesh_data->indices_triangulated) {
             // need to convert 32 bit IB -> 16 bit IB...
             using index_t = uint16_t;
             buf.resize(sizeof(index_t) * m_mesh_data->num_indices_triangulated);
-            index_t *indices = (index_t*)buf.data();
+            index_t *indices = (index_t*)buf.cdata();
             for (int i = 0; i < m_mesh_data->num_indices_triangulated; ++i) {
                 indices[i] = (index_t)m_mesh_data->indices_triangulated[i];
             }
-            memcpy(m_ctx_ib->data_ptr, buf.data(), buf.size());
+            memcpy(m_ctx_ib->data_ptr, buf.cdata(), buf.size());
         }
     }
 

@@ -172,6 +172,9 @@ struct SplitedMeshData
     float2  *uvs = nullptr;
     int     *indices = nullptr;
     uint    num_points = 0;
+
+    float3  center = { 0.0f, 0.0f, 0.0f };
+    float3  extents = { 0.0f, 0.0f, 0.0f };
 };
 
 struct MeshData
@@ -193,6 +196,9 @@ struct MeshData
     uint    num_indices = 0;
     uint    num_indices_triangulated = 0;
     uint    num_splits = 0;
+
+    float3  center = { 0.0f, 0.0f, 0.0f };
+    float3  extents = { 0.0f, 0.0f, 0.0f };
 };
 
 

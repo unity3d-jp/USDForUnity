@@ -45,7 +45,7 @@ const float Deg2Rad = float(M_PI) / 180.0f;
 const float Rad2Deg = 180.0f / float(M_PI);
 
 
-#ifdef usdiWithVTune
+#ifdef usdiDbgVTune
 __itt_domain* GetVTuneDomain()
 {
     static __itt_domain *s_vtune_domain = __itt_domain_create("usdi");

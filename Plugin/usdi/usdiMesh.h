@@ -9,6 +9,8 @@ struct SplitedMeshSample
     VtArray<GfVec3f> normals;
     VtArray<GfVec2f> uvs;
     VtArray<int>     indices;
+    float3           bounds_min = {}, bounds_max = {};
+    float3           center = {}, extents = {};
 };
 
 struct MeshSample
@@ -20,6 +22,8 @@ struct MeshSample
     VtArray<int>     counts;
     VtArray<int>     indices;
     VtArray<int>     indices_triangulated;
+    float3           bounds_min = {}, bounds_max = {};
+    float3           center = {}, extents = {};
 };
 
 

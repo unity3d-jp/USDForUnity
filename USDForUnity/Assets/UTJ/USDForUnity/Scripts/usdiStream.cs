@@ -352,7 +352,11 @@ namespace UTJ
             }
 #endif
 
-            if (!m_deferredUpdate)
+            if (!m_deferredUpdate
+#if UNITY_EDITOR
+                || !EditorApplication.isPlaying
+#endif
+                )
             {
                 usdiKickAsyncUpdateTask();
             }
@@ -380,13 +384,17 @@ namespace UTJ
             usdiUpdate(m_time);
 
 #if UNITY_EDITOR
-            if (Application.isPlaying)
+            if (EditorApplication.isPlaying)
 #endif
             {
                 m_time += Time.deltaTime * m_timeScale;
             }
 
-            if (m_deferredUpdate)
+            if (m_deferredUpdate
+#if UNITY_EDITOR
+                && EditorApplication.isPlaying
+#endif
+                )
             {
                 usdiKickAsyncUpdateTask();
             }

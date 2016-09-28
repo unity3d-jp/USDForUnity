@@ -196,6 +196,10 @@ void Mesh::updateSample(Time t_)
         Scale((float3*)sample.velocities.data(), conf.scale, sample.velocities.size());
     }
 
+    ComputeBounds((float3*)sample.points.cdata(), sample.points.size(), sample.bounds_min, sample.bounds_max);
+    sample.center = (sample.bounds_min + sample.bounds_max) * 0.5f;
+    sample.extents = sample.bounds_max - sample.bounds_min;
+
 
     // mesh split
 
@@ -225,6 +229,10 @@ void Mesh::updateSample(Time t_)
         CopyWithIndices(sms.points, sample.points, sample.indices_triangulated, ibegin, iend, !positions_are_expanded);
         CopyWithIndices(sms.normals, sample.normals, sample.indices_triangulated, ibegin, iend, !normals_are_expanded);
         CopyWithIndices(sms.uvs, sample.uvs, sample.indices_triangulated, ibegin, iend, !uvs_are_expanded);
+
+        ComputeBounds((float3*)sms.points.cdata(), sms.points.size(), sms.bounds_min, sms.bounds_max);
+        sms.center = (sms.bounds_min + sms.bounds_max) * 0.5f;
+        sms.extents = sms.bounds_max - sms.bounds_min;
     }
 }
 
@@ -242,6 +250,8 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
     dst.num_indices = sample.indices.size();
     dst.num_indices_triangulated = m_num_indices_triangulated;
     dst.num_splits = splits.size();
+    dst.center = sample.center;
+    dst.extents = sample.extents;
 
     if (copy) {
         if (dst.points && !sample.points.empty()) {
@@ -271,6 +281,9 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
                 const auto& ssrc = splits[i];
                 auto& sdst = dst.splits[i];
                 sdst.num_points = ssrc.points.size();
+                sdst.center = ssrc.center;
+                sdst.extents = ssrc.extents;
+
                 if (sdst.indices && !ssrc.indices.empty()) {
                     memcpy(sdst.indices, ssrc.indices.cdata(), sizeof(int) * sdst.num_points);
                 }

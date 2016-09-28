@@ -288,7 +288,10 @@ namespace UTJ
 
         void usdiUpdateMeshData(double t, bool topology, bool close)
         {
-            if (!m_directVBUpdate)
+            if (m_directVBUpdate)
+            {
+            }
+            else
             {
                 if (m_meshData.num_splits != 0)
                 {
@@ -329,8 +332,9 @@ namespace UTJ
                     }
 #endif
                 }
-
             }
+            m_umesh.bounds = new Bounds(m_meshData.center, m_meshData.extents);
+
             m_prevVertexCount = m_meshData.num_points;
             m_prevIndexCount = m_meshData.num_indices_triangulated;
         }
@@ -415,6 +419,17 @@ namespace UTJ
             if(s_nth_OnWillRenderObject == 1)
             {
             }
+        }
+
+        void OnDrawGizmos()
+        {
+            if (!enabled || m_umesh == null) return;
+            var t = GetComponent<Transform>();
+            var b = m_umesh.bounds;
+            Gizmos.color = Color.cyan;
+            Gizmos.matrix = t.localToWorldMatrix;
+            Gizmos.DrawWireCube(b.center, b.extents * 2.0f);
+            Gizmos.matrix = Matrix4x4.identity;
         }
         #endregion
     }
