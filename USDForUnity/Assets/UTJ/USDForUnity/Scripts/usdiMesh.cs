@@ -405,32 +405,17 @@ namespace UTJ
 
 
         #region callbacks
-        static int s_nth_OnWillRenderObject = 0;
-
-        void Update()
-        {
-            s_nth_OnWillRenderObject = 0;
-        }
-
-        void OnWillRenderObject()
-        {
-            ++s_nth_OnWillRenderObject;
-
-            if(s_nth_OnWillRenderObject == 1)
-            {
-            }
-        }
-
-        void OnDrawGizmos()
-        {
-            if (!enabled || m_umesh == null) return;
-            var t = GetComponent<Transform>();
-            var b = m_umesh.bounds;
-            Gizmos.color = Color.cyan;
-            Gizmos.matrix = t.localToWorldMatrix;
-            Gizmos.DrawWireCube(b.center, b.extents * 2.0f);
-            Gizmos.matrix = Matrix4x4.identity;
-        }
+        //// bounds debug
+        //void OnDrawGizmos()
+        //{
+        //    if (!enabled || m_umesh == null) return;
+        //    var t = GetComponent<Transform>();
+        //    var b = m_umesh.bounds;
+        //    Gizmos.color = Color.cyan;
+        //    Gizmos.matrix = t.localToWorldMatrix;
+        //    Gizmos.DrawWireCube(b.center, b.extents * 2.0f);
+        //    Gizmos.matrix = Matrix4x4.identity;
+        //}
         #endregion
     }
 
