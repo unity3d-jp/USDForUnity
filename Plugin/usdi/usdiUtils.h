@@ -4,9 +4,6 @@
 
 namespace usdi {
 
-void* AlignedMalloc(size_t size, size_t alignment);
-void  AlignedFree(void *addr);
-
 
 template<class T, size_t Alignment = 0x20>
 class raw_vector

@@ -11,15 +11,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="usdiTestImport.cpp" />
+    <ClCompile Include="MeshUtilsTest.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\usdi.vcxproj">
-      <Project>{08361722-5520-47ac-a0c2-31e8a062b73f}</Project>
+    <ProjectReference Include="..\MeshUtils.vcxproj">
+      <Project>{fd3fe1ff-abe5-40db-b867-144e9dd9b23c}</Project>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{B0B40791-0679-4CFC-AF9F-CD547CCE6161}</ProjectGuid>
+    <ProjectGuid>{458B449B-E7CA-4D59-AB73-704F224E6CDF}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
   </PropertyGroup>

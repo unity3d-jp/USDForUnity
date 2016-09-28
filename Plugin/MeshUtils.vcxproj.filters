@@ -4,10 +4,13 @@
     <ClInclude Include="MeshUtils\MeshUtils.h">
       <Filter>MeshUtils</Filter>
     </ClInclude>
-    <ClInclude Include="MeshUtils\vector.h">
+    <ClInclude Include="MeshUtils\pch.h">
       <Filter>MeshUtils</Filter>
     </ClInclude>
-    <ClInclude Include="C:\SSD\Projects\USDForUnity\Plugin\MeshUtils\pch.h">
+    <ClInclude Include="MeshUtils\muVector.h">
+      <Filter>MeshUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshUtils\muAllocator.h">
       <Filter>MeshUtils</Filter>
     </ClInclude>
   </ItemGroup>
@@ -20,7 +23,10 @@
     <ClCompile Include="MeshUtils\MeshUtils.cpp">
       <Filter>MeshUtils</Filter>
     </ClCompile>
-    <ClCompile Include="C:\SSD\Projects\USDForUnity\Plugin\MeshUtils\pch.cpp">
+    <ClCompile Include="MeshUtils\pch.cpp">
+      <Filter>MeshUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshUtils\muAllocator.cpp">
       <Filter>MeshUtils</Filter>
     </ClCompile>
   </ItemGroup>

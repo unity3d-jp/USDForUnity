@@ -19,12 +19,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="C:\SSD\Projects\USDForUnity\Plugin\MeshUtils\pch.h" />
+    <ClInclude Include="MeshUtils\muAllocator.h" />
+    <ClInclude Include="MeshUtils\muVector.h" />
+    <ClInclude Include="MeshUtils\pch.h" />
     <ClInclude Include="MeshUtils\MeshUtils.h" />
-    <ClInclude Include="MeshUtils\vector.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="C:\SSD\Projects\USDForUnity\Plugin\MeshUtils\pch.cpp">
+    <ClCompile Include="MeshUtils\muAllocator.cpp" />
+    <ClCompile Include="MeshUtils\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

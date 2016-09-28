@@ -11,7 +11,7 @@ void InvertX_Generic(float3 *dst, size_t num)
     }
 }
 
-void Scale_Generice(float3 *dst, float s, size_t num)
+void Scale_Generic(float3 *dst, float s, size_t num)
 {
     for (size_t i = 0; i < num; ++i) {
         dst[i] *= s;

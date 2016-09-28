@@ -1,6 +1,7 @@
 #pragma once
 
-#include "vector.h"
+#include "muVector.h"
+#include "muAllocator.h"
 
 namespace mu {
 
@@ -60,7 +61,7 @@ void CopyWithIndices(DataArray& dst, const DataArray& src, const IndexArray& ind
 void InvertX_Generic(float3 *dst, size_t num);
 void InvertX_ISPC(float3 *dst, size_t num);
 
-void Scale_Generice(float3 *dst, float s, size_t num);
+void Scale_Generic(float3 *dst, float s, size_t num);
 void Scale_ISPC(float3 *dst, float s, size_t num);
 
 void ComputeBounds_Generic(const float3 *p, size_t num, float3& o_min, float3& o_max);

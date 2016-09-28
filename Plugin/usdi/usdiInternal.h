@@ -24,7 +24,7 @@
 #endif
 
 
-#include "MeshUtils/vector.h"
+#include "MeshUtils/muVector.h"
 namespace usdi {
     using namespace mu;
 } // namespace usdi
