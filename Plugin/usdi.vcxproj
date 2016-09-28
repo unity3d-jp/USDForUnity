@@ -13,7 +13,6 @@
   <ItemGroup>
     <ClInclude Include="usdi\HandleBasedVector.h" />
     <ClInclude Include="usdi\pch.h" />
-    <ClInclude Include="usdi\usdiSIMD.h" />
     <ClInclude Include="usdi\usdiAttribute.h" />
     <ClInclude Include="usdi\usdiCamera.h" />
     <ClInclude Include="usdi\usdiContext.h" />
@@ -41,15 +40,12 @@
     <ClCompile Include="usdi\usdi.cpp" />
     <ClCompile Include="usdi\usdiPoints.cpp" />
     <ClCompile Include="usdi\usdiSchema.cpp" />
-    <ClCompile Include="usdi\usdiSIMD.cpp" />
     <ClCompile Include="usdi\usdiUnknown.cpp" />
+    <ClCompile Include="usdi\usdiUtils.cpp" />
     <ClCompile Include="usdi\usdiXform.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="usdi\usdiInternal.i" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="GraphicsInterface.vcxproj">

@@ -225,13 +225,13 @@ void Xform::updateSample(Time t_)
     }
 
     int update_flags = 0;
-    if (!NearEqual(prev.position, sample.position)) {
+    if (!near_equal(prev.position, sample.position)) {
         update_flags |= (int)XformData::Flags::UpdatedPosition;
     }
-    if (!NearEqual(prev.rotation, sample.rotation)) {
+    if (!near_equal(prev.rotation, sample.rotation)) {
         update_flags |= (int)XformData::Flags::UpdatedRotation;
     }
-    if (!NearEqual(prev.scale, sample.scale)) {
+    if (!near_equal(prev.scale, sample.scale)) {
         update_flags |= (int)XformData::Flags::UpdatedScale;
     }
     sample.flags = (sample.flags & ~(int)XformData::Flags::UpdatedMask) | update_flags;

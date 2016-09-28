@@ -17,6 +17,10 @@
 
 namespace usdi {
 
+typedef unsigned char byte;
+typedef unsigned int uint;
+typedef unsigned int handle_t; // async handle
+struct MapContext;
 #ifndef usdiImpl
     // force make convertible
     class Context {};
@@ -26,19 +30,15 @@ namespace usdi {
     class Camera : public Xform {};
     class Mesh : public Xform {};
     class Points : public Xform {};
+
+    struct float2 { float x, y; };
+    struct float3 { float x, y, z; };
+    struct float4 { float x, y, z, w; };
+    struct quatf { float x, y, z, w; };
+    struct float3x3 { float3 v[3]; };
+    struct float4x4 { float4 v[4]; };
 #endif
 
-
-typedef unsigned char byte;
-typedef unsigned int uint;
-typedef unsigned int handle_t; // async handle
-struct float2 { float x, y; };
-struct float3 { float x, y, z; };
-struct float4 { float x, y, z, w; };
-struct quatf { float x, y, z, w; };
-struct float3x3 { float3 v[3]; };
-struct float4x4 { float4 v[4]; };
-struct MapContext;
 
 enum class InterpolationType
 {

@@ -4,7 +4,7 @@
     <Filter Include="GraphicsInterface">
       <UniqueIdentifier>{43f41a03-e172-47f9-a63f-afa377c6b7c1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Vertex">
+    <Filter Include="MeshUtils">
       <UniqueIdentifier>{d11536f0-c563-4cf9-bebe-d37e3fd4b8c6}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -20,6 +20,12 @@
     </ClInclude>
     <ClInclude Include="GraphicsInterface\giUnityPluginImpl.h">
       <Filter>GraphicsInterface</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshUtils\MeshUtils.h">
+      <Filter>MeshUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshUtils\vector.h">
+      <Filter>MeshUtils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -50,10 +56,13 @@
     <ClCompile Include="GraphicsInterface\giInternal.cpp">
       <Filter>GraphicsInterface</Filter>
     </ClCompile>
+    <ClCompile Include="MeshUtils\MeshUtils.cpp">
+      <Filter>MeshUtils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="Vertex\VertexOperations.ispc">
-      <Filter>Vertex</Filter>
+    <CustomBuild Include="MeshUtils\MeshUtilsCore.ispc">
+      <Filter>MeshUtils</Filter>
     </CustomBuild>
   </ItemGroup>
 </Project>

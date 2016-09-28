@@ -3,7 +3,7 @@
 #include "usdiSchema.h"
 #include "usdiXform.h"
 #include "usdiPoints.h"
-#include "usdiSIMD.h"
+#include "usdiUtils.h"
 
 namespace usdi {
 

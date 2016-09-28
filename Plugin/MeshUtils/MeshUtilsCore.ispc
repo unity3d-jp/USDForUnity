@@ -114,7 +114,7 @@ export void ScaleF(uniform float dst[], uniform const float scale, uniform const
 
 // interleave vertices
 
-export void InterleaveVerticesV3N3(
+export void InterleaveV3N3(
     uniform vertex_v3n3 dst[],
     uniform const float3 p[],
     uniform const float3 n[],
@@ -193,7 +193,7 @@ export void InterleaveVerticesV3N3(
     }
 }
 
-export void InterleaveVerticesV3N3U2(
+export void InterleaveV3N3U2(
     uniform vertex_v3n3u2 dst[],
     uniform const float3 p[],
     uniform const float3 n[],

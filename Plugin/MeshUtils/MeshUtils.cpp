@@ -1,32 +1,12 @@
 #include "pch.h"
-#include "usdiInternal.h"
-#include "usdiSIMD.h"
+#include "MeshUtils.h"
+#include "MeshUtilsCore.h"
 
-namespace usdi {
-
-void* AlignedMalloc(size_t size, size_t alignment)
-{
-    size_t mask = alignment - 1;
-    size = (size + mask) & (~mask);
-    return _mm_malloc(size, alignment);
-}
-
-void AlignedFree(void *addr)
-{
-    _mm_free(addr);
-}
-
-
-
-TempBuffer& GetTemporaryBuffer()
-{
-    static thread_local TempBuffer s_buf;
-    return s_buf;
-}
+namespace mu {
 
 void InvertX(float3 *dst, size_t num)
 {
-#ifdef usdiEnableISPC
+#ifdef muUseISPC
     ispc::InvertXF3((ispc::float3*)dst, (int)num);
 #else
     for (size_t i = 0; i < num; ++i) {
@@ -37,7 +17,7 @@ void InvertX(float3 *dst, size_t num)
 
 void Scale(float3 *dst, float s, size_t num)
 {
-#ifdef usdiEnableISPC
+#ifdef muUseISPC
     ispc::ScaleF((float*)dst, s, (int)num * 3);
 #else
     for (size_t i = 0; i < num; ++i) {
@@ -50,8 +30,8 @@ void ComputeBounds(const float3 *p, size_t num, float3& o_min, float3& o_max)
 {
     if (num == 0) { return; }
 
-#ifdef usdiEnableISPC
-    ispc::ComputeBounds((ispc::float3*)p, num, (ispc::float3&)o_min, (ispc::float3&)o_max);
+#ifdef muUseISPC
+    ispc::ComputeBounds((ispc::float3*)p, (int)num, (ispc::float3&)o_min, (ispc::float3&)o_max);
 #else
     float3 rmin = p[0], rmax = p[0];
     for (size_t i = 1; i < num; ++i) {
@@ -68,9 +48,9 @@ void ComputeBounds(const float3 *p, size_t num, float3& o_min, float3& o_max)
 #endif
 }
 
-void CalculateNormals(float3 *on, const float3 *p, const int *indices, size_t num_points, size_t num_indices)
+void CalculateNormals(float3 *dst, const float3 *p, const int *indices, size_t num_points, size_t num_indices)
 {
-    memset(on, 0, sizeof(float3)*num_points);
+    memset(dst, 0, sizeof(float3)*num_points);
 
     for (size_t i = 0; i < num_indices; i += 3)
     {
@@ -78,50 +58,50 @@ void CalculateNormals(float3 *on, const float3 *p, const int *indices, size_t nu
         int i1 = indices[i + 1];
         int i2 = indices[i + 2];
         float3 n = cross(p[i1] - p[i0], p[i2] - p[i0]);
-        on[i0] += n;
-        on[i1] += n;
-        on[i2] += n;
+        dst[i0] += n;
+        dst[i1] += n;
+        dst[i2] += n;
     }
 
     for (size_t i = 0; i < num_points; ++i) {
-        on[i] = normalize(on[i]);
+        dst[i] = normalize(dst[i]);
     }
 }
 
-#ifdef usdiEnableISPC
+#ifdef muUseISPC
 
 template<>
-void WriteVertices(vertex_v3n3 *dst, const MeshData& src)
+void Interleave(vertex_v3n3 *dst, const vertex_v3n3::source_t& src, size_t num)
 {
-    ispc::InterleaveVerticesV3N3(
+    ispc::InterleaveV3N3(
         (ispc::vertex_v3n3*)dst,
         (ispc::float3*)src.points,
         (ispc::float3*)src.normals,
-        src.num_points);
+        (int)num);
 }
 
 template<>
-void WriteVertices(vertex_v3n3u2 *dst, const MeshData& src)
+void Interleave(vertex_v3n3u2 *dst, const vertex_v3n3u2::source_t& src, size_t num)
 {
-    ispc::InterleaveVerticesV3N3U2(
+    ispc::InterleaveV3N3U2(
         (ispc::vertex_v3n3u2*)dst,
         (ispc::float3*)src.points,
         (ispc::float3*)src.normals,
         (ispc::float2*)src.uvs,
-        src.num_points);
+        (int)num);
 }
 
 #else
 
-template<class VertexT> static inline void WriteVertex(VertexT *dst, const MeshData& src, int i);
+template<class VertexT> static inline void InterleaveNth(VertexT *dst, const typename VertexT::source_t& src, size_t i);
 
-template<> static inline void WriteVertex(vertex_v3n3 *dst, const MeshData& src, int i)
+template<> static inline void InterleaveNth(vertex_v3n3 *dst, const vertex_v3n3::source_t& src, size_t i)
 {
     dst[i].p = src.points[i];
     dst[i].n = src.normals[i];
 }
 
-template<> static inline void WriteVertex(vertex_v3n3u2 *dst, const MeshData& src, int i)
+template<> static inline void InterleaveNth(vertex_v3n3u2 *dst, const vertex_v3n3u2::source_t& src, size_t i)
 {
     dst[i].p = src.points[i];
     dst[i].n = src.normals[i];
@@ -129,15 +109,15 @@ template<> static inline void WriteVertex(vertex_v3n3u2 *dst, const MeshData& sr
 }
 
 template<class VertexT>
-void WriteVertices(VertexT *dst, const MeshData& src)
+void Interleave(VertexT *dst, const typename VertexT::source_t& src, size_t num)
 {
-    for (int i = 0; i < src.num_points; ++i) {
-        WriteVertex(dst, src, i);
+    for (size_t i = 0; i < num; ++i) {
+        InterleaveNth(dst, src, i);
     }
 }
 
-template void WriteVertices(vertex_v3n3 *dst, const MeshData& src);
-template void WriteVertices(vertex_v3n3u2 *dst, const MeshData& src);
+template void Interleave(vertex_v3n3 *dst, const vertex_v3n3::source_t& src, size_t num);
+template void Interleave(vertex_v3n3u2 *dst, const vertex_v3n3u2::source_t& src, size_t num);
 #endif
 
-} // namespace usdi
+} // namespace mu

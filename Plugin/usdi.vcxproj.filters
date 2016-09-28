@@ -36,16 +36,13 @@
     <ClInclude Include="usdi\usdiUnknown.h">
       <Filter>usdi</Filter>
     </ClInclude>
-    <ClInclude Include="usdi\usdiUtils.h">
-      <Filter>usdi</Filter>
-    </ClInclude>
     <ClInclude Include="usdi\usdiAttribute.h">
       <Filter>usdi</Filter>
     </ClInclude>
     <ClInclude Include="usdi\HandleBasedVector.h">
       <Filter>usdi</Filter>
     </ClInclude>
-    <ClInclude Include="usdi\usdiSIMD.h">
+    <ClInclude Include="usdi\usdiUtils.h">
       <Filter>usdi</Filter>
     </ClInclude>
   </ItemGroup>
@@ -89,16 +86,11 @@
     <ClCompile Include="usdi\UnityPlugin.cpp">
       <Filter>usdi</Filter>
     </ClCompile>
-    <ClCompile Include="usdi\usdiSIMD.cpp">
+    <ClCompile Include="usdi\usdiUtils.cpp">
       <Filter>usdi</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="usdi\usdiInternal.i">
-      <Filter>usdi</Filter>
-    </None>
   </ItemGroup>
 </Project>

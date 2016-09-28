@@ -1,25 +1,37 @@
-namespace usdi {
+#pragma once
 
-inline bool NearEqual(float a, float b)
+#include <cmath>
+
+namespace mu {
+
+struct float2 { float x, y; };
+struct float3 { float x, y, z; };
+struct float4 { float x, y, z, w; };
+struct quatf { float x, y, z, w; };
+struct float3x3 { float3 v[3]; };
+struct float4x4 { float4 v[4]; };
+
+
+inline bool near_equal(float a, float b)
 {
     const float epsilon = 0.00001f;
     return std::abs(a - b) < epsilon;
 }
-inline bool NearEqual(const float3& a, const float3& b)
+inline bool near_equal(const float3& a, const float3& b)
 {
-    return NearEqual(a.x, b.x) && NearEqual(a.y, b.y) && NearEqual(a.z, b.z);
+    return near_equal(a.x, b.x) && near_equal(a.y, b.y) && near_equal(a.z, b.z);
 }
-inline bool NearEqual(const quatf& a, const quatf& b)
+inline bool near_equal(const quatf& a, const quatf& b)
 {
-    return NearEqual(a.x, b.x) && NearEqual(a.y, b.y) && NearEqual(a.z, b.z) && NearEqual(a.w, b.w);
+    return near_equal(a.x, b.x) && near_equal(a.y, b.y) && near_equal(a.z, b.z) && near_equal(a.w, b.w);
 }
-
 
 template<class Int>
-inline Int CeilDiv(Int v, Int d)
+inline Int ceildiv(Int v, Int d)
 {
     return v / d + (v % d == 0 ? 0 : 1);
 }
+
 
 inline float2 operator*(const float2& l, float r)
 {
@@ -40,7 +52,7 @@ inline float3 operator*(const float3& l, float r)
 }
 inline float3 operator/(const float3& l, float r)
 {
-    return{ l.x/r, l.y/r, l.z/r };
+    return{ l.x / r, l.y / r, l.z / r };
 }
 
 inline float4 operator*(const float4& l, float r)
@@ -122,7 +134,6 @@ inline float3 cross(const float3& l, const float3& r)
         l.y * r.z - l.z * r.y,
         l.z * r.x - l.x * r.z,
         l.x * r.y - l.y * r.x };
-
 }
 
-} // namespace
+} // namespace mu

@@ -4,7 +4,7 @@
 #include "usdiSchema.h"
 #include "usdiXform.h"
 #include "usdiMesh.h"
-#include "usdiSIMD.h"
+#include "usdiUtils.h"
 
 namespace usdi {
 
@@ -123,26 +123,6 @@ const MeshSummary& Mesh::getSummary() const
 }
 
 
-template<class T>
-static void CopyWithIndices(VtArray<T>& dst, VtArray<T>& src, const VtArray<int>& indices, int beg, int end, bool expand)
-{
-    if (src.empty()) { return; }
-
-    int size = end - beg;
-    dst.resize(size);
-
-    if (expand) {
-        for (int i = 0; i < size; ++i) {
-            dst[i] = src[indices[beg + i]];
-        }
-    }
-    else {
-        for (int i = 0; i < size; ++i) {
-            dst[i] = src[beg + i];
-        }
-    }
-}
-
 void Mesh::updateSample(Time t_)
 {
     super::updateSample(t_);
@@ -242,7 +222,7 @@ void Mesh::updateSample(Time t_)
     }
     if (!needs_split) { return; }
 
-    int num_splits = CeilDiv(m_num_indices_triangulated, usdiMaxVertices);
+    int num_splits = ceildiv(m_num_indices_triangulated, usdiMaxVertices);
     splits.resize(num_splits);
 
     for (int nth = 0; nth < num_splits; ++nth) {

@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "usdiInternal.h"
-#include "usdiSIMD.h"
+#include "usdiUtils.h"
 #include "HandleBasedVector.h"
 #include "GraphicsInterface/GraphicsInterface.h"
 
@@ -54,10 +54,14 @@ struct VertexUpdateTask
 
         if (m_ctx_vb->data_ptr) {
             if (m_mesh_data->uvs) {
-                WriteVertices<vertex_v3n3u2>(buf, *m_mesh_data);
+                using vertex_t = vertex_v3n3u2;
+                vertex_t::source_t src = { m_mesh_data->points, m_mesh_data->normals, m_mesh_data->uvs };
+                InterleaveBuffered(buf, src, (size_t)m_mesh_data->num_points);
             }
             else {
-                WriteVertices<vertex_v3n3>(buf, *m_mesh_data);
+                using vertex_t = vertex_v3n3;
+                vertex_t::source_t src = { m_mesh_data->points, m_mesh_data->normals };
+                InterleaveBuffered(buf, src, (size_t)m_mesh_data->num_points);
             }
             memcpy(m_ctx_vb->data_ptr, buf.cdata(), buf.size());
         }
