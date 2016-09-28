@@ -38,6 +38,10 @@ inline float3 operator*(const float3& l, float r)
 {
     return{ l.x*r, l.y*r, l.z*r };
 }
+inline float3 operator/(const float3& l, float r)
+{
+    return{ l.x/r, l.y/r, l.z/r };
+}
 
 inline float4 operator*(const float4& l, float r)
 {
@@ -67,6 +71,14 @@ inline float2& operator*=(float2& l, float r)
     return l;
 }
 
+inline float3& operator+=(float3& l, const float3& r)
+{
+    l.x += r.x;
+    l.y += r.y;
+    l.z += r.z;
+    return l;
+}
+
 inline float3& operator*=(float3& l, float r)
 {
     l.x *= r;
@@ -91,6 +103,26 @@ inline quatf& operator*=(quatf& l, float r)
     l.z *= r;
     l.w *= r;
     return l;
+}
+
+inline float dot(const float3& l, const float3& r)
+{
+    return l.x*r.x + l.y*r.y + l.z*r.z;
+}
+
+inline float3 normalize(const float3& l)
+{
+    float d = 1.0f / std::sqrt(dot(l, l));
+    return l * d;
+}
+
+inline float3 cross(const float3& l, const float3& r)
+{
+    return{
+        l.y * r.z - l.z * r.y,
+        l.z * r.x - l.x * r.z,
+        l.x * r.y - l.y * r.x };
+
 }
 
 } // namespace

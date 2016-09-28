@@ -67,13 +67,19 @@ float2 operator*(const float2& l, float r);
 float3 operator+(const float3& l, const float3& r);
 float3 operator-(const float3& l, const float3& r);
 float3 operator*(const float3& l, float r);
+float3 operator/(const float3& l, float r);
 float4 operator*(const float4& l, float r);
 quatf operator*(const quatf& l, float r);
 quatf operator*(const quatf& l, const quatf& r);
 float2& operator*=(float2& l, float r);
+float3& operator+=(float3& l, const float3& r);
 float3& operator*=(float3& l, float r);
 float4& operator*=(float4& l, float r);
 quatf& operator*=(quatf& l, float r);
+
+float dot(const float3& l, const float3& r);
+float3 normalize(const float3& l);
+float3 cross(const float3& l, const float3& r);
 
 } // namespace usdi
 

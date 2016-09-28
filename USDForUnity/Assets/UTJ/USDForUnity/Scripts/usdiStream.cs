@@ -12,6 +12,7 @@ namespace UTJ
     public class usdiImportOptions
     {
         public usdi.InterpolationType interpolation = usdi.InterpolationType.Linear;
+        public usdi.NormalCalculationType normalCalculation = usdi.NormalCalculationType.WhenMissing;
         public float scale = 1.0f;
         public bool swapHandedness = true;
         public bool swapFaces = true;
@@ -166,6 +167,7 @@ namespace UTJ
         {
             usdi.ImportConfig conf;
             conf.interpolation = m_importOptions.interpolation;
+            conf.normal_calculation = m_importOptions.normalCalculation;
             conf.scale = m_importOptions.scale;
             conf.triangulate = true;
             conf.swap_handedness = m_importOptions.swapHandedness;

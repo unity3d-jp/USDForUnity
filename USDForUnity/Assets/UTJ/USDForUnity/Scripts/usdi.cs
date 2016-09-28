@@ -91,6 +91,13 @@ namespace UTJ
             Linear,
         };
 
+        public enum NormalCalculationType
+        {
+            Never,
+            WhenMissing,
+            Always,
+        };
+
         public enum TopologyVariance
         {
             Constant, // both vertices and topologies are constant
@@ -105,6 +112,7 @@ namespace UTJ
         public struct ImportConfig
         {
             public InterpolationType interpolation;
+            public NormalCalculationType normal_calculation;
             public float scale;
             public Bool triangulate;
             public Bool swap_handedness;
@@ -119,6 +127,7 @@ namespace UTJ
                     return new ImportConfig
                     {
                         interpolation = InterpolationType.Linear,
+                        normal_calculation = NormalCalculationType.WhenMissing,
                         scale = 1.0f,
                         triangulate = true,
                         swap_handedness = true,

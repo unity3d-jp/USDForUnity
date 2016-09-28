@@ -172,30 +172,59 @@ void Mesh::updateSample(Time t_)
 
     m_mesh.GetPointsAttr().Get(&sample.points, t);
     m_mesh.GetVelocitiesAttr().Get(&sample.velocities, t);
-    m_mesh.GetNormalsAttr().Get(&sample.normals, t);
     m_mesh.GetFaceVertexCountsAttr().Get(&sample.counts, t);
     m_mesh.GetFaceVertexIndicesAttr().Get(&sample.indices, t);
     if (m_attr_uv) {
         m_attr_uv->getImmediate(&sample.uvs, t_);
     }
-    if (m_num_indices_triangulated == 0 || getSummary().topology_variance == TopologyVariance::Heterogenous) {
-        CountIndices(sample.counts, m_num_indices, m_num_indices_triangulated);
-        if (conf.triangulate) {
-            sample.indices_triangulated.resize(m_num_indices_triangulated);
-            TriangulateIndices(sample.indices_triangulated.data(), sample.counts, &sample.indices, conf.swap_faces);
-        }
-    }
 
+    // apply swap_handedness and scale
     if (conf.swap_handedness) {
         InvertX((float3*)sample.points.data(), sample.points.size());
         InvertX((float3*)sample.velocities.data(), sample.velocities.size());
-        InvertX((float3*)sample.normals.data(), sample.normals.size());
     }
     if (conf.scale != 1.0f) {
         Scale((float3*)sample.points.data(), conf.scale, sample.points.size());
         Scale((float3*)sample.velocities.data(), conf.scale, sample.velocities.size());
     }
 
+    // normals
+    bool needs_calculate_normals = conf.normal_calculation == NormalCalculationType::Always;
+    if (!needs_calculate_normals) {
+        if (m_mesh.GetNormalsAttr().Get(&sample.normals, t)) {
+            if (conf.swap_handedness) {
+                InvertX((float3*)sample.normals.data(), sample.normals.size());
+            }
+        }
+        else if (conf.normal_calculation == NormalCalculationType::WhenMissing) {
+            needs_calculate_normals = true;
+        }
+    }
+
+    // indices
+    if (m_num_indices_triangulated == 0 || getSummary().topology_variance == TopologyVariance::Heterogenous) {
+        CountIndices(sample.counts, m_num_indices, m_num_indices_triangulated);
+        if (conf.triangulate || needs_calculate_normals) {
+            sample.indices_triangulated.resize(m_num_indices_triangulated);
+            TriangulateIndices(sample.indices_triangulated.data(), sample.counts, &sample.indices, conf.swap_faces);
+        }
+    }
+    else if (sample.indices_triangulated.size() != m_sample[0].indices_triangulated.size()) {
+        sample.indices_triangulated = m_sample[0].indices_triangulated;
+    }
+
+    // calculate normals if needed
+    if (needs_calculate_normals) {
+        sample.normals.resize(sample.points.size());
+        CalculateNormals((float3*)sample.normals.data(), (const float3*)sample.points.cdata(), sample.indices_triangulated.cdata(),
+            sample.points.size(), sample.indices_triangulated.size());
+    }
+    else if (sample.normals.size() != sample.points.size()) {
+        sample.normals.resize(sample.points.size());
+        memset(sample.normals.data(), 0, sizeof(float3)*sample.normals.size());
+    }
+
+    // bounds
     ComputeBounds((float3*)sample.points.cdata(), sample.points.size(), sample.bounds_min, sample.bounds_max);
     sample.center = (sample.bounds_min + sample.bounds_max) * 0.5f;
     sample.extents = sample.bounds_max - sample.bounds_min;

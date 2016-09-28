@@ -142,6 +142,7 @@ TempBuffer& GetTemporaryBuffer();
 void InvertX(float3 *dst, size_t num);
 void Scale(float3 *dst, float s, size_t num);
 void ComputeBounds(const float3 *p, size_t num, float3& o_min, float3& o_max);
+void CalculateNormals(float3 *n, const float3 *p, const int *indices, size_t num_points, size_t num_indices);
 
 
 struct vertex_v3n3

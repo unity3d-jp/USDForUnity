@@ -46,6 +46,13 @@ enum class InterpolationType
     Linear,
 };
 
+enum class NormalCalculationType
+{
+    Never,
+    WhenMissing,
+    Always,
+};
+
 enum class AttributeType
 {
     Unknown,
@@ -88,6 +95,7 @@ typedef double Time;
 struct ImportConfig
 {
     InterpolationType interpolation = InterpolationType::Linear;
+    NormalCalculationType normal_calculation = NormalCalculationType::WhenMissing;
     float scale = 1.0f;
     bool triangulate = true;
     bool swap_handedness = true;

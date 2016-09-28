@@ -68,6 +68,26 @@ void ComputeBounds(const float3 *p, size_t num, float3& o_min, float3& o_max)
 #endif
 }
 
+void CalculateNormals(float3 *on, const float3 *p, const int *indices, size_t num_points, size_t num_indices)
+{
+    memset(on, 0, sizeof(float3)*num_points);
+
+    for (size_t i = 0; i < num_indices; i += 3)
+    {
+        int i0 = indices[i + 0];
+        int i1 = indices[i + 1];
+        int i2 = indices[i + 2];
+        float3 n = cross(p[i1] - p[i0], p[i2] - p[i0]);
+        on[i0] += n;
+        on[i1] += n;
+        on[i2] += n;
+    }
+
+    for (size_t i = 0; i < num_points; ++i) {
+        on[i] = normalize(on[i]);
+    }
+}
+
 #ifdef usdiEnableISPC
 
 template<>

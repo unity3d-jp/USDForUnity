@@ -235,6 +235,9 @@ namespace UTJ
                 m_target = target;
                 m_mesh_buffer = new MeshBuffer();
 
+                m_captureNormals = exporter.m_captureMeshNormals;
+                m_captureUVs = exporter.m_captureMeshUVs;
+
                 var conf = target.GetComponent<usdiMeshExportConfig>();
                 if(conf != null)
                 {
@@ -298,6 +301,9 @@ namespace UTJ
                 {
                     base.scale = false;
                 }
+
+                m_captureNormals = exporter.m_captureMeshNormals;
+                m_captureUVs = exporter.m_captureMeshUVs;
 
                 var conf = target.GetComponent<usdiMeshExportConfig>();
                 if (conf != null)
@@ -488,6 +494,9 @@ namespace UTJ
         public bool m_captureParticleSystem = true;
         public bool m_captureCamera = true;
         public bool m_customCapturer = true;
+        [Space(8)]
+        public bool m_captureMeshNormals = true;
+        public bool m_captureMeshUVs = true;
 
         [Header("Capture Setting")]
 
