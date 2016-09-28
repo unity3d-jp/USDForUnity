@@ -281,3 +281,115 @@ export void InterleaveVerticesV3N3U2(
         }
     }
 }
+
+
+export void ComputeBounds(
+    uniform const float3 p[],
+    uniform const int num,
+    uniform float3& o_min, uniform float3& o_max)
+{
+    if(num == 0) { return; }
+
+    uniform float3 rmin = p[0], rmax = p[0];
+
+    if(programCount == 4) { // SSE
+        const uniform int num_loops = num / 4;
+        if(num_loops > 2) {
+            const uniform float<4> * uniform pv = (uniform float<4>* uniform)p;
+            uniform float<4> tmin[3] = {pv[0], pv[1], pv[2]};
+            uniform float<4> tmax[3] = {pv[0], pv[1], pv[2]};
+
+            for(uniform int i=1; i < num_loops; ++i) {
+                uniform const int i3 = i*3;
+
+                prefetch_l1(&pv[i3+3]);
+
+                float _0 = pv[i3+0][programIndex];
+                float _1 = pv[i3+1][programIndex];
+                float _2 = pv[i3+2][programIndex];
+                tmin[0][programIndex] = min(tmin[0][programIndex], _0);
+                tmin[1][programIndex] = min(tmin[1][programIndex], _1);
+                tmin[2][programIndex] = min(tmin[2][programIndex], _2);
+                tmax[0][programIndex] = max(tmax[0][programIndex], _0);
+                tmax[1][programIndex] = max(tmax[1][programIndex], _1);
+                tmax[2][programIndex] = max(tmax[2][programIndex], _2);
+            }
+
+            rmin.x = min(min(tmin[0][0], tmin[0][3]), min(tmin[1][2], tmin[2][1]));
+            rmin.y = min(min(tmin[0][1], tmin[1][0]), min(tmin[1][3], tmin[2][2]));
+            rmin.z = min(min(tmin[0][2], tmin[1][1]), min(tmin[2][0], tmin[2][3]));
+
+            rmax.x = max(max(tmax[0][0], tmax[0][3]), max(tmax[1][2], tmax[2][1]));
+            rmax.y = max(max(tmax[0][1], tmax[1][0]), max(tmax[1][3], tmax[2][2]));
+            rmax.z = max(max(tmax[0][2], tmax[1][1]), max(tmax[2][0], tmax[2][3]));
+        }
+
+        for(uniform int i=num_loops*4; i < num; ++i) {
+            uniform float3 _ = p[i];
+            rmin.x = min(rmin.x, _.x);
+            rmin.y = min(rmin.y, _.y);
+            rmin.z = min(rmin.z, _.z);
+            rmax.x = max(rmax.x, _.x);
+            rmax.y = max(rmax.y, _.y);
+            rmax.z = max(rmax.z, _.z);
+        }
+    }
+    else if(programCount == 8) { // AVX
+        const uniform int num_loops = num / 8;
+        if(num_loops > 2) {
+            const uniform float<8> * uniform pv = (uniform float<8>* uniform)p;
+            uniform float<8> tmin[3] = {pv[0], pv[1], pv[2]};
+            uniform float<8> tmax[3] = {pv[0], pv[1], pv[2]};
+
+            for(uniform int i=1; i < num_loops; ++i) {
+                uniform const int i3 = i*3;
+
+                prefetch_l1(&pv[i3+3]);
+                prefetch_l1(&pv[i3+5]);
+
+                float _0 = pv[i3+0][programIndex];
+                float _1 = pv[i3+1][programIndex];
+                float _2 = pv[i3+2][programIndex];
+                tmin[0][programIndex] = min(tmin[0][programIndex], _0);
+                tmin[1][programIndex] = min(tmin[1][programIndex], _1);
+                tmin[2][programIndex] = min(tmin[2][programIndex], _2);
+                tmax[0][programIndex] = max(tmax[0][programIndex], _0);
+                tmax[1][programIndex] = max(tmax[1][programIndex], _1);
+                tmax[2][programIndex] = max(tmax[2][programIndex], _2);
+            }
+
+            rmin.x = min(
+                min(min(tmin[0][0], tmin[0][3]), min(tmin[0][6], tmin[1][1])),
+                min(min(tmin[1][4], tmin[1][7]), min(tmin[2][2], tmin[2][5])));
+            rmin.y = min(
+                min(min(tmin[0][1], tmin[0][4]), min(tmin[0][7], tmin[1][2])),
+                min(min(tmin[1][5], tmin[2][0]), min(tmin[2][3], tmin[2][6])));
+            rmin.z = min(
+                min(min(tmin[0][2], tmin[0][5]), min(tmin[1][0], tmin[1][3])),
+                min(min(tmin[1][6], tmin[2][1]), min(tmin[2][4], tmin[2][7])));
+
+            rmax.x = max(
+                max(max(tmax[0][0], tmax[0][3]), max(tmax[0][6], tmax[1][1])),
+                max(max(tmax[1][4], tmax[1][7]), max(tmax[2][2], tmax[2][5])));
+            rmax.y = max(
+                max(max(tmax[0][1], tmax[0][4]), max(tmax[0][7], tmax[1][2])),
+                max(max(tmax[1][5], tmax[2][0]), max(tmax[2][3], tmax[2][6])));
+            rmax.z = max(
+                max(max(tmax[0][2], tmax[0][5]), max(tmax[1][0], tmax[1][3])),
+                max(max(tmax[1][6], tmax[2][1]), max(tmax[2][4], tmax[2][7])));
+        }
+
+        for(uniform int i=num_loops*8; i < num; ++i) {
+            uniform float3 _ = p[i];
+            rmin.x = min(rmin.x, _.x);
+            rmin.y = min(rmin.y, _.y);
+            rmin.z = min(rmin.z, _.z);
+            rmax.x = max(rmax.x, _.x);
+            rmax.y = max(rmax.y, _.y);
+            rmax.z = max(rmax.z, _.z);
+        }
+    }
+
+    o_min = rmin;
+    o_max = rmax;
+}
