@@ -4,20 +4,6 @@
 //#define usdiDbgVTune
 
 
-#include <vector>
-#include <string>
-#include <map>
-#include <memory>
-#include <algorithm>
-#include <thread>
-#include <mutex>
-#include <future>
-#include <functional>
-#include <atomic>
-#include <cstdarg>
-#include <cmath>
-#include <cctype>
-
 #ifdef _MSC_VER
     #define and     &&
     #define and_eq  &=
@@ -32,6 +18,7 @@
     #define xor_eq  ^=
 #endif
 #ifdef _WIN32
+    #define _CRT_SECURE_NO_WARNINGS
     #define BOOST_PYTHON_STATIC_LIB
     #define NOMINMAX
 
@@ -41,6 +28,20 @@
 
     #define USD_ENABLE_CACHED_NEW
 #endif
+
+#include <vector>
+#include <string>
+#include <map>
+#include <memory>
+#include <algorithm>
+#include <thread>
+#include <mutex>
+#include <future>
+#include <functional>
+#include <atomic>
+#include <cstdarg>
+#include <cmath>
+#include <cctype>
 
 #include "pxr/usd/usd/modelAPI.h"
 #include "pxr/usd/usd/timeCode.h"

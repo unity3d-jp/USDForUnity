@@ -8,6 +8,7 @@ namespace mu {
 void InvertX(float3 *dst, size_t num);
 void Scale(float3 *dst, float s, size_t num);
 void ComputeBounds(const float3 *p, size_t num, float3& o_min, float3& o_max);
+void Normalize(float3 *dst, size_t num);
 void CalculateNormals(float3 *dst, const float3 *p, const int *indices, size_t num_points, size_t num_indices);
 
 struct vertex_v3n3;
@@ -53,6 +54,26 @@ void CopyWithIndices(DataArray& dst, const DataArray& src, const IndexArray& ind
 
 
 
+// ------------------------------------------------------------
+// internal
+// ------------------------------------------------------------
+void InvertX_Generic(float3 *dst, size_t num);
+void InvertX_ISPC(float3 *dst, size_t num);
+
+void Scale_Generice(float3 *dst, float s, size_t num);
+void Scale_ISPC(float3 *dst, float s, size_t num);
+
+void ComputeBounds_Generic(const float3 *p, size_t num, float3& o_min, float3& o_max);
+void ComputeBounds_ISPC(const float3 *p, size_t num, float3& o_min, float3& o_max);
+
+void Normalize_Generic(float3 *dst, size_t num);
+void Normalize_ISPC(float3 *dst, size_t num);
+
+void CalculateNormals_Generic(float3 *dst, const float3 *p, const int *indices, size_t num_points, size_t num_indices);
+void CalculateNormals_ISPC(float3 *dst, const float3 *p, const int *indices, size_t num_points, size_t num_indices);
+
+template<class VertexT> void Interleave_Generic(VertexT *dst, const typename VertexT::source_t& src, size_t num);
+template<class VertexT> void Interleave_ISPC(VertexT *dst, const typename VertexT::source_t& src, size_t num);
 
 // ------------------------------------------------------------
 // impl

@@ -71,7 +71,7 @@ struct VertexUpdateTask
             using index_t = uint16_t;
             buf.resize(sizeof(index_t) * m_mesh_data->num_indices_triangulated);
             index_t *indices = (index_t*)buf.cdata();
-            for (int i = 0; i < m_mesh_data->num_indices_triangulated; ++i) {
+            for (size_t i = 0; i < m_mesh_data->num_indices_triangulated; ++i) {
                 indices[i] = (index_t)m_mesh_data->indices_triangulated[i];
             }
             memcpy(m_ctx_ib->data_ptr, buf.cdata(), buf.size());

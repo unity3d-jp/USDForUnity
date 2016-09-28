@@ -19,29 +19,32 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GraphicsInterface\giInternal.h" />
-    <ClInclude Include="GraphicsInterface\giUnityPluginImpl.h" />
-    <ClInclude Include="GraphicsInterface\GraphicsInterface.h" />
-    <ClInclude Include="GraphicsInterface\pch.h" />
+    <ClInclude Include="C:\SSD\Projects\USDForUnity\Plugin\MeshUtils\pch.h" />
+    <ClInclude Include="MeshUtils\MeshUtils.h" />
+    <ClInclude Include="MeshUtils\vector.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="GraphicsInterface\giInternal.cpp" />
-    <ClCompile Include="GraphicsInterface\giUnityPluginImpl.cpp" />
-    <ClCompile Include="GraphicsInterface\GraphicsInterface.cpp" />
-    <ClCompile Include="GraphicsInterface\GraphicsInterfaceD3D11.cpp" />
-    <ClCompile Include="GraphicsInterface\GraphicsInterfaceD3D12.cpp" />
-    <ClCompile Include="GraphicsInterface\GraphicsInterfaceD3D9.cpp" />
-    <ClCompile Include="GraphicsInterface\GraphicsInterfaceOpenGL.cpp" />
-    <ClCompile Include="GraphicsInterface\GraphicsInterfaceVulkan.cpp" />
-    <ClCompile Include="GraphicsInterface\pch.cpp">
+    <ClCompile Include="C:\SSD\Projects\USDForUnity\Plugin\MeshUtils\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Master|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="MeshUtils\MeshUtils.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="MeshUtils\MeshUtilsCore.ispc">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">External\ispc %(FullPath) -o $(IntDir)%(Filename).obj -h $(IntDir)%(Filename).h --target=sse2,sse4,avx --arch=x86-64 --opt=fast-masked-vload --opt=fast-math --opt=force-aligned-memory
+copy $(IntDir)%(Filename).h %(RelativeDir)</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Master|x64'">External\ispc %(FullPath) -o $(IntDir)%(Filename).obj -h $(IntDir)%(Filename).h --target=sse2,sse4,avx --arch=x86-64 --opt=fast-masked-vload --opt=fast-math --opt=force-aligned-memory
+copy $(IntDir)%(Filename).h %(RelativeDir)</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)%(Filename).obj;$(IntDir)%(Filename)_sse2.obj;$(IntDir)%(Filename)_sse4.obj;$(IntDir)%(Filename)_avx.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Master|x64'">$(IntDir)%(Filename).obj;$(IntDir)%(Filename)_sse2.obj;$(IntDir)%(Filename)_sse4.obj;$(IntDir)%(Filename)_avx.obj</Outputs>
+    </CustomBuild>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{29751262-3A23-4CF5-9DEC-8D11AFF02599}</ProjectGuid>
+    <ProjectGuid>{FD3FE1FF-ABE5-40DB-B867-144E9DD9B23C}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
@@ -177,7 +180,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>muUseISPC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -293,7 +296,7 @@
     <ClCompile>
       <Optimization>Full</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>muUseISPC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader>Use</PrecompiledHeader>

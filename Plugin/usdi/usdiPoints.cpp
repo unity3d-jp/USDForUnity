@@ -96,7 +96,7 @@ bool Points::readSample(PointsData& dst, Time t, bool copy)
     if (!m_front_sample) { return false; }
     const auto& sample = *m_front_sample;
 
-    dst.num_points = sample.points.size();
+    dst.num_points = (uint)sample.points.size();
     if (copy) {
         if (dst.points) {
             memcpy(dst.points, sample.points.data(), sizeof(float3) * dst.num_points);

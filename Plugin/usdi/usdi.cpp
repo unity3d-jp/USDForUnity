@@ -212,7 +212,7 @@ usdiAPI int usdiGetNumAttributes(usdi::Schema *schema)
 {
     usdiTraceFunc();
     if (!schema) { return 0; }
-    return schema->getNumAttributes();
+    return (int)schema->getNumAttributes();
 }
 
 usdiAPI usdi::Attribute* usdiGetAttribute(usdi::Schema *schema, int i)
