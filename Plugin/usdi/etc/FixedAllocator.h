@@ -26,4 +26,10 @@ private:
 void* FixedMalloc(size_t size);
 void  FixedFree(size_t size, void *addr);
 
+
+#define usdiDefineCachedOperatorNew(T, BlockSize)\
+        static usdi::FixedAllocator& getAllocator() { static usdi::FixedAllocator s_impl(sizeof(T), BlockSize); return s_impl; }\
+        void* operator new (size_t) { return getAllocator().Allocate(); }\
+        void operator delete (void* addr) { getAllocator().Free(addr); }
+
 } // namespace usdi

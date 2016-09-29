@@ -317,6 +317,7 @@ usdiAPI bool                 usdiAttrWriteArraySample(usdi::Attribute *attr, con
 
 namespace usdi {
     struct MapContext;
+    typedef void(*TaskFunc)(void*);
 } // namespace usdi
 
 extern "C" {
@@ -326,6 +327,10 @@ usdiAPI int             usdiExtIncrementTaskIndex();
 usdiAPI bool            usdiExtQueueVertexBufferUpdateTask(const usdi::MeshData *src, usdi::MapContext *ctxVB, usdi::MapContext *ctxIB);
 usdiAPI bool            usdiExtFlushTaskQueue(int handle);
 usdiAPI bool            usdiExtClearTaskQueue(int handle);
+
+usdiAPI usdi::handle_t  usdiExtTaskRun(usdi::TaskFunc func, void *arg);
+usdiAPI bool            usdiExtTaskIsRunning(usdi::handle_t h);
+usdiAPI void            usdiExtTaskWait(usdi::handle_t h);
 
 } // extern "C"
 

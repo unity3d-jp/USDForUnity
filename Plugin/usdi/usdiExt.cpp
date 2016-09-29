@@ -1,47 +1,43 @@
 #include "pch.h"
 #include "usdiInternal.h"
-#include "usdiUtils.h"
-#include "GraphicsInterface/GraphicsInterface.h"
 #include "ext/usdiExtTask.h"
 
 
 namespace usdi {
 
-std::mutex g_task_mutex[2];
-VertexUpdateTaskQueue g_task_queues[2];
+int g_vtx_task_index = 0;
+VertexUpdateTaskQueue g_vtx_task_queues[2];
+
+TaskGroup g_task_group;
 
 } // namespace usdi
 
 
 extern "C" {
 
-int g_task_index = 0;
-
 usdiAPI int usdiExtGetTaskIndex()
 {
     usdiTraceFunc();
-    return g_task_index;
+    return usdi::g_vtx_task_index;
 }
 
 usdiAPI int usdiExtIncrementTaskIndex()
 {
     usdiTraceFunc();
-    return g_task_index++;
+    return usdi::g_vtx_task_index++;
 }
 
 usdiAPI bool usdiExtQueueVertexBufferUpdateTask(const usdi::MeshData *src, usdi::MapContext *ctxVB, usdi::MapContext *ctxIB)
 {
     usdiTraceFunc();
 
-    int i = g_task_index & 1;
+    int i = usdi::g_vtx_task_index & 1;
 
-    if (usdi::g_task_queues[i].isFlushing()) {
+    if (usdi::g_vtx_task_queues[i].isFlushing()) {
         usdiLogWarning("usdiExtQueueVertexBufferUpdateTask(): task queue is flushing!!!\n");
     }
-    std::unique_lock<std::mutex> lock(usdi::g_task_mutex[i]);
-
     if (!src || (!ctxVB && !ctxIB)) { return false; }
-    usdi::g_task_queues[i].push(usdi::VertexUpdateTask(src, ctxVB, ctxIB));
+    usdi::g_vtx_task_queues[i].push(usdi::VertexUpdateTask(src, ctxVB, ctxIB));
     return true;
 }
 
@@ -51,9 +47,7 @@ usdiAPI bool usdiExtFlushTaskQueue(int handle)
     usdiVTuneScope("usdiExtFlushTaskQueue");
 
     int i = handle & 1;
-    std::unique_lock<std::mutex> lock(usdi::g_task_mutex[i]);
-
-    usdi::g_task_queues[i].flush();
+    usdi::g_vtx_task_queues[i].flush();
     return true;
 }
 
@@ -63,10 +57,25 @@ usdiAPI bool usdiExtClearTaskQueue(int handle)
     usdiVTuneScope("usdiExtClearTaskQueue");
 
     int i = handle & 1;
-    std::unique_lock<std::mutex> lock(usdi::g_task_mutex[i]);
-
-    usdi::g_task_queues[i].clear();
+    usdi::g_vtx_task_queues[i].clear();
     return true;
+}
+
+
+
+usdiAPI usdi::handle_t usdiExtTaskRun(usdi::TaskFunc func, void *arg)
+{
+    return usdi::g_task_group.run(func, arg);
+}
+
+usdiAPI bool usdiExtTaskIsRunning(usdi::handle_t h)
+{
+    return usdi::g_task_group.isRunning(h);
+}
+
+usdiAPI void usdiExtTaskWait(usdi::handle_t h)
+{
+    usdi::g_task_group.wait(h);
 }
 
 } // extern "C"

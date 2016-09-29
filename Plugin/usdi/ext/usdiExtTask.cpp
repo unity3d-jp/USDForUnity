@@ -74,11 +74,15 @@ void VertexUpdateTask::unmap()
 
 void VertexUpdateTaskQueue::push(const VertexUpdateTask& t)
 {
+    lock_t l(m_mutex);
     m_tasks.push_back(t);
 }
 
 void VertexUpdateTaskQueue::flush()
 {
+    lock_t l(m_mutex);
+
+
     m_flushing = true;
     for (auto& t : m_tasks) { t.map(); }
 #ifdef usdiDbgForceSingleThread
@@ -98,6 +102,61 @@ bool VertexUpdateTaskQueue::isFlushing() const
 
 void VertexUpdateTaskQueue::clear()
 {
+    lock_t l(m_mutex);
     m_tasks.clear();
 }
+
+
+
+TaskGroup::TaskGroup()
+{
+}
+
+TaskGroup::~TaskGroup()
+{
+    waitAll();
+}
+
+handle_t TaskGroup::run(TaskFunc tf, void *arg)
+{
+    lock_t l(m_mutex);
+
+    auto *ptr = new Task(tf);
+    handle_t ret = m_tasks.push(TaskPtr(ptr));
+    ptr->mutex.lock();
+    m_group.run([ptr, arg]() {
+        ptr->func(arg);
+        ptr->mutex.unlock();
+    });
+
+    return ret;
+}
+
+bool TaskGroup::isRunning(handle_t h)
+{
+    lock_t l(m_mutex);
+    auto* ptr = m_tasks.get(h).get();
+    if (ptr && ptr->mutex.try_lock()) {
+        ptr->mutex.unlock();
+        return true;
+    }
+    return false;
+}
+
+void TaskGroup::wait(handle_t h)
+{
+    lock_t l(m_mutex);
+    auto t = m_tasks.pull(h);
+    if (t) {
+        t->mutex.lock();
+    }
+}
+
+void TaskGroup::waitAll()
+{
+    lock_t l(m_mutex);
+    m_group.wait();
+    // todo: clear container
+}
+
 } // namespace usdi

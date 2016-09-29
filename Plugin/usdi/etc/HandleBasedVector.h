@@ -12,6 +12,8 @@ public:
     typedef std::vector<value_t> values_t;
     typedef std::vector<handle_t> handles_t;
 
+    static const handle_t null_handle = 0;
+
     HandleBasedVector()
     {
         // 0th element is "null"
@@ -27,7 +29,7 @@ public:
         handle_t ret = 0;
         if (m_handles.empty()) {
             ret = (handle_t)m_values.size();
-            m_values.emplace_back(v);
+            m_values.push_back(v);
         }
         else {
             ret = m_handles.back();
@@ -37,9 +39,24 @@ public:
         return ret;
     }
 
+    handle_t push(value_t&& v)
+    {
+        handle_t ret = 0;
+        if (m_handles.empty()) {
+            ret = (handle_t)m_values.size();
+            m_values.push_back(std::move(v));
+        }
+        else {
+            ret = m_handles.back();
+            m_handles.pop_back();
+            m_values[ret] = std::move(v);
+        }
+        return ret;
+    }
+
     bool valid(handle_t h) const
     {
-        return h != 0 && h < m_values.size();
+        return h != null_handle && h < m_values.size();
     }
 
     value_t& get(handle_t h)
@@ -54,9 +71,14 @@ public:
 
     value_t pull(handle_t h)
     {
-        m_handles.push_back(h);
+        if (h != null_handle) {
+            m_handles.push_back(h);
+        }
         return std::move(m_values[h]);
     }
+
+    size_t size_values() const { return m_values.size(); }
+    size_t size_handles() const { return m_handles.size(); }
 
 private:
     values_t m_values;
