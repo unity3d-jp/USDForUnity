@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClInclude Include="usdi\etc\FixedAllocator.h" />
     <ClInclude Include="usdi\etc\HandleBasedVector.h" />
+    <ClInclude Include="usdi\etc\Hook.h" />
     <ClInclude Include="usdi\etc\RawVector.h" />
     <ClInclude Include="usdi\ext\usdiExtTask.h" />
     <ClInclude Include="usdi\pch.h" />
@@ -30,6 +31,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="usdi\etc\FixedAllocator.cpp" />
+    <ClCompile Include="usdi\etc\Hook.cpp" />
     <ClCompile Include="usdi\ext\usdiExtTask.cpp" />
     <ClCompile Include="usdi\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

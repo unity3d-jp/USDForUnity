@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 #include "usdiInternal.h"
 #include "ext/usdiExtTask.h"
 
@@ -65,17 +65,50 @@ usdiAPI bool usdiExtClearTaskQueue(int handle)
 
 usdiAPI usdi::handle_t usdiExtTaskRun(usdi::TaskFunc func, void *arg)
 {
+    usdiTraceFunc();
+
     return usdi::g_task_group.run(func, arg);
 }
 
 usdiAPI bool usdiExtTaskIsRunning(usdi::handle_t h)
 {
+    usdiTraceFunc();
+
     return usdi::g_task_group.isRunning(h);
 }
 
 usdiAPI void usdiExtTaskWait(usdi::handle_t h)
 {
+    usdiTraceFunc();
+
     usdi::g_task_group.wait(h);
 }
 
 } // extern "C"
+
+
+#ifdef _WIN32
+#include "etc/Hook.h"
+
+// redirect mono_thread_suspend_all_other_threads to mono_thread_abort_all_other_threads to avoid that
+// Mono wait TBB worker threads forever...
+
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+{
+    if (fdwReason == DLL_PROCESS_ATTACH) {
+        auto mono = ::GetModuleHandleA("mono.dll");
+        if (mono) {
+            auto mono_thread_suspend_all_other_threads = (void (*)())::GetProcAddress(mono, "mono_thread_suspend_all_other_threads");
+            auto mono_thread_abort_all_other_threads = (void(*)())::GetProcAddress(mono, "mono_thread_abort_all_other_threads");
+            if (mono_thread_suspend_all_other_threads && mono_thread_abort_all_other_threads) {
+                DWORD old_flag;
+                size_t size = 14;
+                auto r = ::VirtualProtect(mono_thread_suspend_all_other_threads, size, PAGE_READWRITE, &old_flag);
+                usdi::EmitJumpInstruction(mono_thread_suspend_all_other_threads, mono_thread_abort_all_other_threads);
+                ::VirtualProtect(mono_thread_suspend_all_other_threads, size, old_flag, &old_flag);
+            }
+        }
+    }
+    return TRUE;
+}
+#endif // _WIN32

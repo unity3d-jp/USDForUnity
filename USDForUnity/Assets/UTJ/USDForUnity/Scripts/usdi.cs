@@ -406,6 +406,8 @@ namespace UTJ
         [DllImport ("usdi")] public static extern Bool          usdiAttrWriteArraySample(Attribute attr, IntPtr src, int size, double t);
 
 
+
+        // ext
         public struct MapContext
         {
             public IntPtr dataPtr;
@@ -423,6 +425,11 @@ namespace UTJ
         [DllImport("usdi")] public static extern Bool usdiExtFlushTaskQueue(int handle);
         [DllImport("usdi")] public static extern Bool usdiExtClearTaskQueue(int handle);
 
+        public delegate void usdiTaskFunc(IntPtr arg);
+        [DllImport("usdi")] public static extern int  usdiExtTaskRun(usdiTaskFunc func, IntPtr arg);
+        [DllImport("usdi")] public static extern bool usdiExtTaskIsRunning(int handle);
+        [DllImport("usdi")] public static extern void usdiExtTaskWait(int handle);
+
 
         public static string S(IntPtr cstring) { return Marshal.PtrToStringAnsi(cstring); }
         public static IntPtr GetArrayPtr(Array v) { return v == null ? IntPtr.Zero : Marshal.UnsafeAddrOfPinnedArrayElement(v, 0); }
@@ -436,4 +443,5 @@ namespace UTJ
             usdi.SetEnv("PXR_PLUGINPATH_NAME", usdPluginDir);
         }
     }
+
 }

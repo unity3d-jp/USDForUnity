@@ -60,6 +60,9 @@
     <ClInclude Include="usdi\ext\usdiExtTask.h">
       <Filter>usdi\ext</Filter>
     </ClInclude>
+    <ClInclude Include="usdi\etc\Hook.h">
+      <Filter>usdi\etc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="usdi\pch.cpp">
@@ -109,6 +112,9 @@
     </ClCompile>
     <ClCompile Include="usdi\ext\usdiExtTask.cpp">
       <Filter>usdi\ext</Filter>
+    </ClCompile>
+    <ClCompile Include="usdi\etc\Hook.cpp">
+      <Filter>usdi\etc</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

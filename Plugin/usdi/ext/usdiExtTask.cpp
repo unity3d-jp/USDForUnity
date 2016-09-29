@@ -119,11 +119,14 @@ TaskGroup::~TaskGroup()
 
 handle_t TaskGroup::run(TaskFunc tf, void *arg)
 {
-    lock_t l(m_mutex);
-
     auto *ptr = new Task(tf);
-    handle_t ret = m_tasks.push(TaskPtr(ptr));
     ptr->mutex.lock();
+
+    handle_t ret = 0;
+    {
+        lock_t l(m_mutex);
+        ret = m_tasks.push(TaskPtr(ptr));
+    }
     m_group.run([ptr, arg]() {
         ptr->func(arg);
         ptr->mutex.unlock();
@@ -134,8 +137,13 @@ handle_t TaskGroup::run(TaskFunc tf, void *arg)
 
 bool TaskGroup::isRunning(handle_t h)
 {
-    lock_t l(m_mutex);
-    auto* ptr = m_tasks.get(h).get();
+    if (h == 0) { return false; }
+
+    Task *ptr = nullptr;
+    {
+        lock_t l(m_mutex);
+        ptr = m_tasks.get(h).get();
+    }
     if (ptr && ptr->mutex.try_lock()) {
         ptr->mutex.unlock();
         return true;
@@ -145,8 +153,13 @@ bool TaskGroup::isRunning(handle_t h)
 
 void TaskGroup::wait(handle_t h)
 {
-    lock_t l(m_mutex);
-    auto t = m_tasks.pull(h);
+    if (h == 0) { return; }
+
+    TaskPtr t;
+    {
+        lock_t l(m_mutex);
+        t = m_tasks.pull(h);
+    }
     if (t) {
         t->mutex.lock();
     }

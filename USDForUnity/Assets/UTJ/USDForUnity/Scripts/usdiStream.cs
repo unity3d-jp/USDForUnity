@@ -42,7 +42,8 @@ namespace UTJ
         usdi.Context m_ctx;
         List<usdiElement> m_elements = new List<usdiElement>();
         double m_prevUpdateTime = Double.NaN;
-        ManualResetEvent m_eventAsyncUpdate = new ManualResetEvent(true);
+        usdi.usdiTaskFunc m_taskFunc;
+        int m_taskHandle = 0;
         #endregion
 
 
@@ -257,13 +258,6 @@ namespace UTJ
 
         void usdiKickAsyncUpdateTask()
         {
-            //// make sure all previous tasks are finished
-            //if (usdiIsFirst())
-            //{
-            //    usdi.usdiExtClearTaskQueue(usdi.usdiExtGetTaskIndex() - 1);
-            //}
-
-
             // kick async update tasks
 #if UNITY_EDITOR
             if (m_forceSingleThread)
@@ -273,24 +267,24 @@ namespace UTJ
             else
 #endif
             {
-                m_eventAsyncUpdate.Reset();
-                ThreadPool.QueueUserWorkItem((object state) =>
-                {
-                    try
-                    {
-                        usdiAsyncUpdate(m_time);
-                    }
-                    finally
-                    {
-                        m_eventAsyncUpdate.Set();
-                    }
-                });
+                if(m_taskFunc == null) { m_taskFunc = usdiAsyncTask; }
+                m_taskHandle = usdi.usdiExtTaskRun(m_taskFunc, IntPtr.Zero);
             }
+        }
+
+        void usdiAsyncTask(IntPtr arg)
+        {
+            try
+            {
+                usdiAsyncUpdate(m_time);
+            }
+            finally { }
         }
 
         void usdiWaitAsyncUpdateTask()
         {
-            m_eventAsyncUpdate.WaitOne();
+            usdi.usdiExtTaskWait(m_taskHandle);
+            m_taskHandle = 0;
         }
 
         #endregion
