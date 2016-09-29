@@ -21,7 +21,9 @@ inline bool near_equal(const std::vector<T>& a, const std::vector<T>& b)
     if (a.size() != b.size()) { return false; }
 
     for (size_t i = 0; i < a.size(); ++i) {
-        if (!near_equal(a[i], b[i])) { return false; }
+        if (!near_equal(a[i], b[i])) {
+            return false;
+        }
     }
     return true;
 }
@@ -30,9 +32,19 @@ template<class T, size_t S>
 inline bool near_equal(const T (&a)[S], const T (&b)[S])
 {
     for (size_t i = 0; i < S; ++i) {
-        if (!near_equal(a[i], b[i])) { return false; }
+        if (!near_equal(a[i], b[i])) {
+            return false;
+        }
     }
     return true;
+}
+
+typedef uint64_t ns;
+
+ns now()
+{
+    using namespace std::chrono;
+    return duration_cast<nanoseconds>(steady_clock::now().time_since_epoch()).count();
 }
 
 
@@ -46,75 +58,154 @@ std::vector<float3> GenerateTestData(size_t num, float cycle, float scale)
 }
 
 
+
+#define NumTestData (1024*1024*8)
+#define NumTry 16
+
 void Test_InvertX()
 {
-    auto data1 = GenerateTestData(1024 * 1024, 0.1f, 1.0f);
+    auto data1 = GenerateTestData(NumTestData, 0.1f, 1.0f);
     auto data2 = data1;
 
-    InvertX_Generic(data1.data(), data1.size());
-    InvertX_ISPC(data2.data(), data2.size());
-    auto result = near_equal(data1, data2);
+    ns elapsed1 = 0;
+    ns elapsed2 = 0;
+    bool result = false;
+
+    for (int i = 0; i < NumTry; ++i) {
+        auto start = now();
+        InvertX_Generic(data1.data(), data1.size());
+        elapsed1 += now() - start;
+        start = now();
+        InvertX_ISPC(data2.data(), data2.size());
+        elapsed2 += now() - start;
+
+        result = near_equal(data1, data2);
+        if (!result) { break; }
+    }
 
     printf("Test_InvertX: %s\n", result ? "succeeded" : "failed");
+    printf("    InvertX_Generic(): avg. %f ms\n", float(elapsed1 / NumTry) / 1000000.0f);
+    printf("    InvertX_ISPC(): avg. %f ms\n", float(elapsed2 / NumTry) / 1000000.0f);
+    printf("\n");
 }
 
 
 void Test_Scale()
 {
-    auto data1 = GenerateTestData(1024 * 1024, 0.1f, 1.0f);
+    auto data1 = GenerateTestData(NumTestData, 0.1f, 1.0f);
     auto data2 = data1;
     auto scale = 12.345f;
 
-    Scale_Generic(data1.data(), scale, data1.size());
-    Scale_ISPC(data2.data(), scale, data2.size());
-    auto result = near_equal(data1, data2);
+    ns elapsed1 = 0;
+    ns elapsed2 = 0;
+    bool result = false;
+
+    for (int i = 0; i < NumTry; ++i) {
+        auto start = now();
+        Scale_Generic(data1.data(), scale, data1.size());
+        elapsed1 += now() - start;
+        start = now();
+        Scale_ISPC(data2.data(), scale, data2.size());
+        elapsed2 += now() - start;
+
+        result = near_equal(data1, data2);
+        if (!result) { break; }
+    }
 
     printf("Test_Scale: %s\n", result ? "succeeded" : "failed");
+    printf("    Scale_Generic(): avg. %f ms\n", float(elapsed1 / NumTry) / 1000000.0f);
+    printf("    Scale_ISPC(): avg. %f ms\n", float(elapsed2 / NumTry) / 1000000.0f);
+    printf("\n");
 }
 
 
 void Test_ComputeBounds()
 {
-    auto data = GenerateTestData(1024 * 1024, 0.1f, 1.0f);
+    auto data = GenerateTestData(NumTestData, 0.1f, 1.0f);
     float3 bounds1[2];
     float3 bounds2[2];
 
-    ComputeBounds_Generic(data.data(), data.size(), bounds1[0], bounds1[1]);
-    ComputeBounds_ISPC(data.data(), data.size(), bounds2[0], bounds2[1]);
-    auto result = near_equal(bounds1, bounds2);
+    ns elapsed1 = 0;
+    ns elapsed2 = 0;
+    bool result = false;
+
+    for (int i = 0; i < NumTry; ++i) {
+        auto start = now();
+        ComputeBounds_Generic(data.data(), data.size(), bounds1[0], bounds1[1]);
+        elapsed1 += now() - start;
+        start = now();
+        ComputeBounds_ISPC(data.data(), data.size(), bounds2[0], bounds2[1]);
+        elapsed2 += now() - start;
+
+        result = near_equal(bounds1, bounds2);
+        if (!result) { break; }
+    }
 
     printf("Test_ComputeBounds: %s\n", result ? "succeeded" : "failed");
+    printf("    ComputeBounds_Generic(): avg. %f ms\n", float(elapsed1 / NumTry) / 1000000.0f);
+    printf("    ComputeBounds_ISPC(): avg. %f ms\n", float(elapsed2 / NumTry) / 1000000.0f);
+    printf("\n");
 }
 
 
 void Test_Normalize()
 {
-    auto data1 = GenerateTestData(1024 * 1024, 0.1f, 1.0f);
+    auto data1 = GenerateTestData(NumTestData, 0.1f, 1.0f);
     auto data2 = data1;
 
-    Normalize_Generic(data1.data(), data1.size());
-    Normalize_ISPC(data2.data(), data2.size());
-    auto result = near_equal(data1, data2);
+    ns elapsed1 = 0;
+    ns elapsed2 = 0;
+    bool result = false;
+
+    for (int i = 0; i < NumTry; ++i) {
+        auto start = now();
+        Normalize_Generic(data1.data(), data1.size());
+        elapsed1 += now() - start;
+        start = now();
+        Normalize_ISPC(data2.data(), data2.size());
+        elapsed2 += now() - start;
+
+        result = near_equal(data1, data2);
+        if (!result) { break; }
+    }
 
     printf("Test_Normalize: %s\n", result ? "succeeded" : "failed");
+    printf("    Normalize_Generic(): avg. %f ms\n", float(elapsed1 / NumTry) / 1000000.0f);
+    printf("    Normalize_ISPC(): avg. %f ms\n", float(elapsed2 / NumTry) / 1000000.0f);
+    printf("\n");
 }
 
 
 void Test_CalculateNormals()
 {
-    auto points = GenerateTestData(1024 * 1024, 0.1f, 1.0f);
+    auto points = GenerateTestData(NumTestData, 0.1f, 1.0f);
     std::vector<int> indices;
     indices.resize(points.size());
     for (size_t i = 0; i < indices.size(); ++i) { indices[i] = (int)i; }
 
-    std::vector<float3> normals1; normals1.resize(points.size());
-    std::vector<float3> normals2; normals2.resize(points.size());
+    ns elapsed1 = 0;
+    ns elapsed2 = 0;
+    bool result = false;
 
-    CalculateNormals_Generic(normals1.data(), points.data(), indices.data(), points.size(), indices.size());
-    CalculateNormals_ISPC(normals2.data(), points.data(), indices.data(), points.size(), indices.size());
-    auto result = near_equal(normals1, normals2);
+    for (int i = 0; i < NumTry; ++i) {
+        std::vector<float3> normals1; normals1.resize(points.size());
+        std::vector<float3> normals2; normals2.resize(points.size());
+
+        auto start = now();
+        CalculateNormals_Generic(normals1.data(), points.data(), indices.data(), points.size(), indices.size());
+        elapsed1 += now() - start;
+        start = now();
+        CalculateNormals_ISPC(normals2.data(), points.data(), indices.data(), points.size(), indices.size());
+        elapsed2 += now() - start;
+
+        result = near_equal(normals1, normals2);
+        if (!result) { break; }
+    }
 
     printf("Test_CalculateNormals: %s\n", result ? "succeeded" : "failed");
+    printf("    CalculateNormals_Generic(): avg. %f ms\n", float(elapsed1 / NumTry) / 1000000.0f);
+    printf("    CalculateNormals_ISPC(): avg. %f ms\n", float(elapsed2 / NumTry) / 1000000.0f);
+    printf("\n");
 }
 
 
@@ -125,4 +216,5 @@ int main(int argc, char *argv[])
     Test_ComputeBounds();
     Test_Normalize();
     Test_CalculateNormals();
+    exit(0);
 }

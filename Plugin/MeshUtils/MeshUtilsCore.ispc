@@ -1,4 +1,5 @@
 #define C programCount
+#define C3 (programCount*3)
 #define I programIndex
 
 typedef unsigned int16 half;
@@ -69,16 +70,9 @@ export void InvertXF3(uniform float3 dst[], uniform const int num)
         uniform float * uniform fv = (uniform float * uniform)dst;
         for(uniform int i=0; i < num_loops; ++i) {
             uniform int i3 = i*3;
-
-            float _0 = fv[C*(i3+0) + I];
-            float _1 = fv[C*(i3+1) + I];
-            float _2 = fv[C*(i3+2) + I];
-            _0 *= _c[0][I];
-            _1 *= _c[1][I];
-            _2 *= _c[2][I];
-            fv[C*(i3+0) + I] = _0;
-            fv[C*(i3+1) + I] = _1;
-            fv[C*(i3+2) + I] = _2;
+            fv[C*(i3+0) + I] = fv[C*(i3+0) + I] * _c[0][I];
+            fv[C*(i3+1) + I] = fv[C*(i3+1) + I] * _c[1][I];
+            fv[C*(i3+2) + I] = fv[C*(i3+2) + I] * _c[2][I];
         }
     }
 
@@ -91,7 +85,20 @@ export void InvertXF3(uniform float3 dst[], uniform const int num)
 // apply scale to every elements
 export void ScaleF(uniform float dst[], uniform const float scale, uniform const int num)
 {
-    foreach(i=0 ... num) {
+    const uniform int num_loops = num / (C*4);
+
+    {
+        uniform float * uniform fv = (uniform float * uniform)dst;
+        for(uniform int i=0; i < num_loops; ++i) {
+            uniform int i4 = i*4;
+            fv[C*(i4+0) + I] = fv[C*(i4+0) + I] * scale;
+            fv[C*(i4+1) + I] = fv[C*(i4+1) + I] * scale;
+            fv[C*(i4+2) + I] = fv[C*(i4+2) + I] * scale;
+            fv[C*(i4+3) + I] = fv[C*(i4+3) + I] * scale;
+        }
+    }
+
+    for(uniform int i=num_loops*(C*4); i < num; ++i) {
         dst[i] *= scale;
     }
 }
@@ -119,13 +126,15 @@ export void ComputeBounds(
             uniform const int i3 = i*3;
 
             float _0 = fv[C*(i3+0) + I];
-            float _1 = fv[C*(i3+1) + I];
-            float _2 = fv[C*(i3+2) + I];
             tmin[0][I] = min(tmin[0][I], _0);
-            tmin[1][I] = min(tmin[1][I], _1);
-            tmin[2][I] = min(tmin[2][I], _2);
             tmax[0][I] = max(tmax[0][I], _0);
+
+            float _1 = fv[C*(i3+1) + I];
+            tmin[1][I] = min(tmin[1][I], _1);
             tmax[1][I] = max(tmax[1][I], _1);
+
+            float _2 = fv[C*(i3+2) + I];
+            tmin[2][I] = min(tmin[2][I], _2);
             tmax[2][I] = max(tmax[2][I], _2);
         }
 
