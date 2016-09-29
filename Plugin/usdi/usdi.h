@@ -20,7 +20,6 @@ namespace usdi {
 typedef unsigned char byte;
 typedef unsigned int uint;
 typedef unsigned int handle_t; // async handle
-struct MapContext;
 #ifndef usdiImpl
     // force make convertible
     class Context {};
@@ -309,7 +308,19 @@ usdiAPI bool                 usdiAttrReadArraySample(usdi::Attribute *attr, void
 usdiAPI bool                 usdiAttrWriteSample(usdi::Attribute *attr, const void *src, usdi::Time t);
 usdiAPI bool                 usdiAttrWriteArraySample(usdi::Attribute *attr, const void *src, int size, usdi::Time t);
 
+} // extern "C"
+
+
+
+
 // ext
+
+namespace usdi {
+    struct MapContext;
+} // namespace usdi
+
+extern "C" {
+
 usdiAPI int             usdiExtGetTaskIndex();
 usdiAPI int             usdiExtIncrementTaskIndex();
 usdiAPI bool            usdiExtQueueVertexBufferUpdateTask(const usdi::MeshData *src, usdi::MapContext *ctxVB, usdi::MapContext *ctxIB);

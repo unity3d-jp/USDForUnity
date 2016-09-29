@@ -187,10 +187,10 @@ void Test_CalculateNormals()
     ns elapsed2 = 0;
     bool result = false;
 
-    for (int i = 0; i < NumTry; ++i) {
-        std::vector<float3> normals1; normals1.resize(points.size());
-        std::vector<float3> normals2; normals2.resize(points.size());
+    std::vector<float3> normals1; normals1.resize(points.size());
+    std::vector<float3> normals2; normals2.resize(points.size());
 
+    for (int i = 0; i < NumTry; ++i) {
         auto start = now();
         CalculateNormals_Generic(normals1.data(), points.data(), indices.data(), points.size(), indices.size());
         elapsed1 += now() - start;
@@ -216,5 +216,8 @@ int main(int argc, char *argv[])
     Test_ComputeBounds();
     Test_Normalize();
     Test_CalculateNormals();
-    exit(0);
+
+    printf("done.\n");
+    char c;
+    scanf("%c", &c);
 }

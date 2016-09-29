@@ -4,6 +4,12 @@
     <Filter Include="usdi">
       <UniqueIdentifier>{5f7013fc-c08e-4f4b-8f68-d2c2bb5345e8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="usdi\etc">
+      <UniqueIdentifier>{eae8ff28-00af-4876-87bd-2751e8b00d4c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="usdi\ext">
+      <UniqueIdentifier>{422b0734-ae4f-43de-babb-439902cf9140}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="usdi\usdi.h">
@@ -39,11 +45,20 @@
     <ClInclude Include="usdi\usdiAttribute.h">
       <Filter>usdi</Filter>
     </ClInclude>
-    <ClInclude Include="usdi\HandleBasedVector.h">
-      <Filter>usdi</Filter>
-    </ClInclude>
     <ClInclude Include="usdi\usdiUtils.h">
       <Filter>usdi</Filter>
+    </ClInclude>
+    <ClInclude Include="usdi\etc\HandleBasedVector.h">
+      <Filter>usdi\etc</Filter>
+    </ClInclude>
+    <ClInclude Include="usdi\etc\RawVector.h">
+      <Filter>usdi\etc</Filter>
+    </ClInclude>
+    <ClInclude Include="usdi\etc\FixedAllocator.h">
+      <Filter>usdi\etc</Filter>
+    </ClInclude>
+    <ClInclude Include="usdi\ext\usdiExtTask.h">
+      <Filter>usdi\ext</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -88,6 +103,12 @@
     </ClCompile>
     <ClCompile Include="usdi\usdiUtils.cpp">
       <Filter>usdi</Filter>
+    </ClCompile>
+    <ClCompile Include="usdi\etc\FixedAllocator.cpp">
+      <Filter>usdi\etc</Filter>
+    </ClCompile>
+    <ClCompile Include="usdi\ext\usdiExtTask.cpp">
+      <Filter>usdi\ext</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
