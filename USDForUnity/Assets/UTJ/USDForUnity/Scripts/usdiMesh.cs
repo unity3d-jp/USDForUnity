@@ -62,6 +62,7 @@ namespace UTJ
         int m_prevVertexCount;
         int m_prevIndexCount;
         int m_frame;
+        double m_timeRead;
 
         List<usdiSplitMesh> m_children = new List<usdiSplitMesh>();
         usdi.SplitedMeshData[] m_splitedData;
@@ -203,7 +204,15 @@ namespace UTJ
         public override void usdiOnUnload()
         {
             base.usdiOnUnload();
+
+            if(m_asyncRead != null)
+            {
+                m_asyncRead.Wait();
+                m_asyncRead = null;
+            }
+
             m_mesh = default(usdi.Mesh);
+            m_buf.Clear();
         }
 
 
@@ -264,11 +273,10 @@ namespace UTJ
             m_directVBUpdate = m_stream.directVBUpdate &&
                 m_meshSummary.topology_variance == usdi.TopologyVariance.Homogenous &&
                 m_ctxVB.resource != IntPtr.Zero;
-            bool copyVertexData = !m_directVBUpdate;
 
             if (m_directVBUpdate)
             {
-                usdi.usdiMeshReadSample(m_mesh, ref m_meshData, t, copyVertexData);
+                usdi.usdiMeshReadSample(m_mesh, ref m_meshData, t, false);
                 m_taskMmeshData = m_meshData;
                 m_taskMmeshData.indices_triangulated = IntPtr.Zero;
                 usdi.usdiExtVtxTaskQueue(ref m_taskMmeshData, ref m_ctxVB, ref m_ctxIB);
@@ -278,21 +286,24 @@ namespace UTJ
 #if UNITY_EDITOR
                 if (m_stream.usdForceSingleThread)
                 {
-                    usdi.usdiMeshReadSample(m_mesh, ref m_meshData, t, copyVertexData);
+                    usdi.usdiMeshReadSample(m_mesh, ref m_meshData, t, true);
                 }
                 else
 #endif
                 {
-                    if(m_asyncRead == null)
+                    if (m_asyncRead == null)
                     {
-                        m_asyncRead = new usdi.Task((IntPtr)=> {
-                            try
+                        m_asyncRead = new usdi.Task(
+                            (var) =>
                             {
-                                usdi.usdiMeshReadSample(m_mesh, ref m_meshData, t, copyVertexData);
-                            }
-                            finally { }
-                        });
+                                try
+                                {
+                                    usdi.usdiMeshReadSample(m_mesh, ref m_meshData, m_timeRead, true);
+                                }
+                                finally { }
+                            }, "usdiMesh: " + usdi.usdiGetNameS(m_mesh));
                     }
+                    m_timeRead = t;
                     m_asyncRead.Run();
                 }
             }

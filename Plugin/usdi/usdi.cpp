@@ -36,8 +36,6 @@
 
 namespace usdi {
 extern int g_debug_level;
-tbb::task_group g_read_tasks;
-tbb::task_group g_write_tasks;
 } // namespace usdi
 
 extern "C" {
@@ -50,17 +48,6 @@ usdiAPI void usdiSetDebugLevel(int l)
 usdiAPI usdi::Time usdiDefaultTime()
 {
     return std::numeric_limits<double>::quiet_NaN();
-}
-
-usdiAPI void usdiWaitAsyncRead()
-{
-    usdiTraceFunc();
-    usdi::g_read_tasks.wait();
-}
-usdiAPI void usdiWaitAsyncWrite()
-{
-    usdiTraceFunc();
-    usdi::g_write_tasks.wait();
 }
 
 usdiAPI void usdiSetPluginPath(const char *path)
@@ -160,16 +147,6 @@ usdiAPI void usdiUpdateAllSamples(usdi::Context *ctx, usdi::Time t)
 
     usdiVTuneScope("usdiUpdateAllSamples");
     ctx->updateAllSamples(t);
-}
-usdiAPI void usdiUpdateAllSamplesAsync(usdi::Context *ctx, usdi::Time t)
-{
-    usdiTraceFunc();
-    if (!ctx) return;
-
-    usdi::g_read_tasks.run([=]() {
-        usdiVTuneScope("usdiUpdateAllSamplesAsync");
-        ctx->updateAllSamples(t);
-    });
 }
 
 
@@ -373,16 +350,6 @@ usdiAPI bool usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Tim
     usdiVTuneScope("usdiMeshReadSample");
     return mesh->readSample(*dst, t, copy);
 }
-usdiAPI bool usdiMeshReadSampleAsync(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t, bool copy)
-{
-    usdiTraceFunc();
-    if (!mesh || !dst) return false;
-    usdi:: g_read_tasks.run([=]() {
-        usdiVTuneScope("usdiMeshReadSampleAsync");
-        mesh->readSample(*dst, t, copy);
-    });
-    return true;
-}
 
 usdiAPI bool usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t)
 {
@@ -390,16 +357,6 @@ usdiAPI bool usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src, us
     if (!mesh || !src) return false;
     usdiVTuneScope("usdiMeshWriteSample");
     return mesh->writeSample(*src, t);
-}
-usdiAPI bool usdiMeshWriteSampleAsync(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t)
-{
-    usdiTraceFunc();
-    if (!mesh || !src) return false;
-    usdi::g_write_tasks.run([=]() {
-        usdiVTuneScope("usdiMeshWriteSampleAsync");
-        mesh->writeSample(*src, t);
-    });
-    return true;
 }
 
 
@@ -435,16 +392,6 @@ usdiAPI bool usdiPointsReadSample(usdi::Points *points, usdi::PointsData *dst, u
     usdiVTuneScope("usdiPointsReadSample");
     return points->readSample(*dst, t, copy);
 }
-usdiAPI bool usdiPointsReadSampleAsync(usdi::Points *points, usdi::PointsData *dst, usdi::Time t, bool copy)
-{
-    usdiTraceFunc();
-    if (!points || !dst) return false;
-    usdi::g_read_tasks.run([=]() {
-        usdiVTuneScope("usdiPointsReadSampleAsync");
-        points->readSample(*dst, t, copy);
-    });
-    return true;
-}
 
 usdiAPI bool usdiPointsWriteSample(usdi::Points *points, const usdi::PointsData *src, usdi::Time t)
 {
@@ -452,16 +399,6 @@ usdiAPI bool usdiPointsWriteSample(usdi::Points *points, const usdi::PointsData 
     if (!points || !src) return false;
     usdiVTuneScope("usdiPointsWriteSample");
     return points->writeSample(*src, t);
-}
-usdiAPI bool usdiPointsWriteSampleAsync(usdi::Points *points, const usdi::PointsData *src, usdi::Time t)
-{
-    usdiTraceFunc();
-    if (!points || !src) return false;
-    usdi::g_write_tasks.run([=]() {
-        usdiVTuneScope("usdiPointsWriteSampleAsync");
-        points->writeSample(*src, t);
-    });
-    return true;
 }
 
 

@@ -15,8 +15,10 @@ namespace UTJ
         Vector3[] m_positions;
         Vector3[] m_velocities;
         Vector4[] m_rotations;
-
         IntPtr m_ptrRotations;
+
+        usdi.Task m_asyncRead;
+        double m_timeRead;
         #endregion
 
 
@@ -44,6 +46,12 @@ namespace UTJ
         public override void usdiOnUnload()
         {
             base.usdiOnUnload();
+
+            if (m_asyncRead != null)
+            {
+                m_asyncRead.Wait();
+                m_asyncRead = null;
+            }
 
             m_points = default(usdi.Points);
             m_summary = default(usdi.PointsSummary);
@@ -92,10 +100,32 @@ namespace UTJ
             // read points data
             if (m_pointsData.num_points > 0)
             {
-                usdi.usdiPointsReadSampleAsync(m_points, ref m_pointsData, time, true);
-                if (m_attrRotations)
+
+#if UNITY_EDITOR
+                if (m_stream.usdForceSingleThread)
                 {
-                    usdi.usdiAttrReadArraySample(m_attrRotations, m_ptrRotations, m_rotations.Length, time);
+                    usdi.usdiPointsReadSample(m_points, ref m_pointsData, m_timeRead, true);
+                    if (m_attrRotations)
+                    {
+                        usdi.usdiAttrReadArraySample(m_attrRotations, m_ptrRotations, m_rotations.Length, m_timeRead);
+                    }
+                }
+                else
+#endif
+                {
+                    if (m_asyncRead == null)
+                    {
+                        m_asyncRead = new usdi.Task((var) =>
+                        {
+                            usdi.usdiPointsReadSample(m_points, ref m_pointsData, m_timeRead, true);
+                            if (m_attrRotations)
+                            {
+                                usdi.usdiAttrReadArraySample(m_attrRotations, m_ptrRotations, m_rotations.Length, m_timeRead);
+                            }
+                        }, "usdiPoints: " + usdi.usdiGetNameS(m_points));
+                    }
+                    m_timeRead = time;
+                    m_asyncRead.Run();
                 }
             }
         }
@@ -104,7 +134,16 @@ namespace UTJ
         {
             if (!m_needsUpdate) { return; }
             base.usdiUpdate(time);
+
+            if(m_asyncRead != null)
+            {
+                m_asyncRead.Wait();
+            }
         }
+        #endregion
+
+
+        #region callbacks
         #endregion
     }
 

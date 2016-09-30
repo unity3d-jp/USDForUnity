@@ -520,8 +520,10 @@ namespace UTJ
         float m_time;
         float m_elapsed;
         int m_frameCount;
-        ManualResetEvent m_eventFlush = new ManualResetEvent(true);
         int m_prevFrame = -1;
+
+        usdi.Task m_asyncFlush;
+        float m_timeFlush;
         #endregion
 
 
@@ -557,60 +559,6 @@ namespace UTJ
         }
 
 
-        public TransformCapturer CreateComponentCapturer(ComponentCapturer parent, Transform target)
-        {
-            usdiLog("usdiExporter: new TransformCapturer(\"" + target.name + "\"");
-
-            var cap = new TransformCapturer(this, parent, target);
-            m_capturers.Add(cap);
-            return cap;
-        }
-
-        public CameraCapturer CreateComponentCapturer(ComponentCapturer parent, Camera target)
-        {
-            usdiLog("usdiExporter: new CameraCapturer(\"" + target.name + "\"");
-
-            var cap = new CameraCapturer(this, parent, target);
-            m_capturers.Add(cap);
-            return cap;
-        }
-
-        public MeshCapturer CreateComponentCapturer(ComponentCapturer parent, MeshRenderer target)
-        {
-            usdiLog("usdiExporter: new MeshCapturer(\"" + target.name + "\"");
-
-            var cap = new MeshCapturer(this, parent, target);
-            m_capturers.Add(cap);
-            return cap;
-        }
-
-        public SkinnedMeshCapturer CreateComponentCapturer(ComponentCapturer parent, SkinnedMeshRenderer target)
-        {
-            usdiLog("usdiExporter: new SkinnedMeshCapturer(\"" + target.name + "\"");
-
-            var cap = new SkinnedMeshCapturer(this, parent, target);
-            m_capturers.Add(cap);
-            return cap;
-        }
-
-        public ParticleCapturer CreateComponentCapturer(ComponentCapturer parent, ParticleSystem target)
-        {
-            usdiLog("usdiExporter: new ParticleCapturer(\"" + target.name + "\"");
-
-            var cap = new ParticleCapturer(this, parent, target);
-            m_capturers.Add(cap);
-            return cap;
-        }
-
-        public CustomCapturerHandler CreateComponentCapturer(ComponentCapturer parent, usdiCustomComponentCapturer target)
-        {
-            usdiLog("usdiExporter: new CustomCapturerHandler(\"" + target.name + "\"");
-
-            target.CreateUSDObject(m_ctx, parent.usd);
-            var cap = new CustomCapturerHandler(this, parent, target);
-            m_capturers.Add(cap);
-            return cap;
-        }
 
         bool ShouldBeIgnored(Behaviour target)
         {
@@ -675,6 +623,7 @@ namespace UTJ
             return cn;
         }
 
+
         void SetupComponentCapturer(CaptureNode parent, CaptureNode node)
         {
             usdiLog("SetupComponentCapturer() " + node.trans.name);
@@ -685,27 +634,32 @@ namespace UTJ
 
             if (node.componentType == null)
             {
-                node.capturer = CreateComponentCapturer(parent_capturer, node.trans);
+                node.capturer = new TransformCapturer(this, parent_capturer, node.trans);
             }
             else if (node.componentType == typeof(Camera))
             {
-                node.capturer = CreateComponentCapturer(parent_capturer, node.trans.GetComponent<Camera>());
+                node.capturer = new CameraCapturer(this, parent_capturer, node.trans.GetComponent<Camera>());
             }
             else if (node.componentType == typeof(MeshRenderer))
             {
-                node.capturer = CreateComponentCapturer(parent_capturer, node.trans.GetComponent<MeshRenderer>());
+                node.capturer = new MeshCapturer(this, parent_capturer, node.trans.GetComponent<MeshRenderer>());
             }
             else if (node.componentType == typeof(SkinnedMeshRenderer))
             {
-                node.capturer = CreateComponentCapturer(parent_capturer, node.trans.GetComponent<SkinnedMeshRenderer>());
+                node.capturer = new SkinnedMeshCapturer(this, parent_capturer, node.trans.GetComponent<SkinnedMeshRenderer>());
             }
             else if (node.componentType == typeof(ParticleSystem))
             {
-                node.capturer = CreateComponentCapturer(parent_capturer, node.trans.GetComponent<ParticleSystem>());
+                node.capturer = new ParticleCapturer(this, parent_capturer, node.trans.GetComponent<ParticleSystem>());
             }
             else if (node.componentType == typeof(usdiCustomComponentCapturer))
             {
-                node.capturer = CreateComponentCapturer(parent_capturer, node.trans.GetComponent<usdiCustomComponentCapturer>());
+                node.capturer = new CustomCapturerHandler(this, parent_capturer, node.trans.GetComponent<usdiCustomComponentCapturer>());
+            }
+
+            if(node.capturer != null)
+            {
+                m_capturers.Add(node.capturer);
             }
 
             foreach (var c in node.children)
@@ -842,14 +796,17 @@ namespace UTJ
             }
         }
 
-        void WaitForFlush()
+        void WaitFlush()
         {
-            m_eventFlush.WaitOne();
+            if (m_asyncFlush != null)
+            {
+                m_asyncFlush.Wait();
+            }
         }
 
         void FlushUSD()
         {
-            WaitForFlush();
+            WaitFlush();
             usdi.usdiSave(m_ctx);
         }
 
@@ -864,7 +821,7 @@ namespace UTJ
             m_prevFrame = frame;
 
             // wait for complete previous flush
-            WaitForFlush();
+            WaitFlush();
 
             float begin_time = Time.realtimeSinceStartup;
 
@@ -883,19 +840,20 @@ namespace UTJ
             else
 #endif
             {
-                var time = m_time;
-                m_eventFlush.Reset();
-                ThreadPool.QueueUserWorkItem((object state) =>
+                if(m_asyncFlush == null)
                 {
-                    try
-                    {
-                        foreach (var c in m_capturers) { c.Flush(time); }
-                    }
-                    finally
-                    {
-                        m_eventFlush.Set();
-                    }
-                });
+                    m_asyncFlush = new usdi.Task((var) => {
+                        try
+                        {
+                            foreach (var c in m_capturers) { c.Flush(m_timeFlush); }
+                        }
+                        finally
+                        {
+                        }
+                    }, "usdiExporter: " + gameObject.name);
+                }
+                m_timeFlush = m_time;
+                m_asyncFlush.Run();
             }
 
             m_time += Time.deltaTime;

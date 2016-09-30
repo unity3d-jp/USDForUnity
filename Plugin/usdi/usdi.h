@@ -232,8 +232,6 @@ extern "C" {
 
 usdiAPI void             usdiSetDebugLevel(int l);
 usdiAPI usdi::Time       usdiDefaultTime();
-usdiAPI void             usdiWaitAsyncRead();
-usdiAPI void             usdiWaitAsyncWrite();
 
 usdiAPI void             usdiSetPluginPath(const char *path);
 
@@ -250,7 +248,6 @@ usdiAPI void             usdiSetExportConfig(usdi::Context *ctx, const usdi::Exp
 usdiAPI void             usdiGetExportConfig(usdi::Context *ctx, usdi::ExportConfig *conf);
 usdiAPI usdi::Schema*    usdiGetRoot(usdi::Context *ctx);
 usdiAPI void             usdiUpdateAllSamples(usdi::Context *ctx, usdi::Time t);
-usdiAPI void             usdiUpdateAllSamplesAsync(usdi::Context *ctx, usdi::Time t);
 
 // Schema interface
 usdiAPI int              usdiGetID(usdi::Schema *schema);
@@ -285,18 +282,14 @@ usdiAPI usdi::Mesh*      usdiAsMesh(usdi::Schema *schema); // dynamic cast to Me
 usdiAPI usdi::Mesh*      usdiCreateMesh(usdi::Context *ctx, usdi::Schema *parent, const char *name);
 usdiAPI void             usdiMeshGetSummary(usdi::Mesh *mesh, usdi::MeshSummary *dst);
 usdiAPI bool             usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t, bool copy);
-usdiAPI bool             usdiMeshReadSampleAsync(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t, bool copy);
 usdiAPI bool             usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t);
-usdiAPI bool             usdiMeshWriteSampleAsync(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t);
 
 // Points interface
 usdiAPI usdi::Points*    usdiAsPoints(usdi::Schema *schema); // dynamic cast to Points
 usdiAPI usdi::Points*    usdiCreatePoints(usdi::Context *ctx, usdi::Schema *parent, const char *name);
 usdiAPI void             usdiPointsGetSummary(usdi::Points *points, usdi::PointsSummary *dst);
 usdiAPI bool             usdiPointsReadSample(usdi::Points *points, usdi::PointsData *dst, usdi::Time t, bool copy);
-usdiAPI bool             usdiPointsReadSampleAsync(usdi::Points *points, usdi::PointsData *dst, usdi::Time t, bool copy);
 usdiAPI bool             usdiPointsWriteSample(usdi::Points *points, const usdi::PointsData *src, usdi::Time t);
-usdiAPI bool             usdiPointsWriteSampleAsync(usdi::Points *points, const usdi::PointsData *src, usdi::Time t);
 
 // Attribute interface
 usdiAPI usdi::Schema*        usdiAttrGetParent(usdi::Attribute *attr);
@@ -329,7 +322,7 @@ usdiAPI void            usdiExtVtxTaskEndQueing();
 usdiAPI void            usdiExtVtxTaskFlush();
 usdiAPI void            usdiExtVtxTaskClear();
 
-usdiAPI usdi::handle_t  usdiExtTaskCreate(usdi::TaskFunc func, void *arg);
+usdiAPI usdi::handle_t  usdiExtTaskCreate(usdi::TaskFunc func, void *arg, const char *dbg_name);
 usdiAPI void            usdiExtTaskDestroy(usdi::handle_t h);
 usdiAPI void            usdiExtTaskRun(usdi::handle_t h);
 usdiAPI bool            usdiExtTaskIsRunning(usdi::handle_t h);

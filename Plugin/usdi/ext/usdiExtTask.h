@@ -57,7 +57,7 @@ public:
 
     TaskManager();
     ~TaskManager();
-    handle_t createTask(TaskFunc task, void *arg);
+    handle_t createTask(TaskFunc task, void *arg, const char *name);
     void destroyTask(handle_t h);
     void run(handle_t h);
     bool isRunning(handle_t h);
@@ -69,8 +69,9 @@ private:
         TaskFunc func = nullptr;
         void *arg = nullptr;
         tbb::spin_mutex mutex;
+        std::string dbg_name;
 
-        Task(TaskFunc f, void *a) : func(f), arg(a) {}
+        Task(TaskFunc f, void *a, const char *n) : func(f), arg(a), dbg_name(n) {}
         usdiDefineCachedOperatorNew(Task, 128);
     };
     typedef std::unique_ptr<Task> TaskPtr;

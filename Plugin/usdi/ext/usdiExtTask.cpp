@@ -141,9 +141,9 @@ TaskManager::Task* TaskManager::getTask(handle_t h)
     return m_tasks.get(h).get();
 }
 
-handle_t TaskManager::createTask(TaskFunc func, void *arg)
+handle_t TaskManager::createTask(TaskFunc func, void *arg, const char *name)
 {
-    auto *ptr = new Task(func, arg);
+    auto *ptr = new Task(func, arg, name);
 
     handle_t ret = 0;
     {

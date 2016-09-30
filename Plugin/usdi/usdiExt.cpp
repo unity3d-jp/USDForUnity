@@ -45,10 +45,10 @@ usdiAPI void usdiExtVtxTaskClear()
 
 
 
-usdiAPI usdi::handle_t usdiExtTaskCreate(usdi::TaskFunc func, void *arg)
+usdiAPI usdi::handle_t usdiExtTaskCreate(usdi::TaskFunc func, void *arg, const char *name)
 {
     usdiTraceFunc();
-    return usdi::g_task_manager.createTask(func, arg);
+    return usdi::g_task_manager.createTask(func, arg, name);
 }
 
 usdiAPI void usdiExtTaskDestroy(usdi::handle_t h)

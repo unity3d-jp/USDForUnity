@@ -330,9 +330,6 @@ namespace UTJ
 
         [DllImport ("usdi")] public static extern IntPtr        usdiGetRenderEventFunc();
 
-        [DllImport ("usdi")] public static extern void          usdiWaitAsyncRead();
-        [DllImport ("usdi")] public static extern void          usdiWaitAsyncWrite();
-
         // Context interface
         [DllImport ("usdi")] public static extern Context       usdiCreateContext();
         [DllImport ("usdi")] public static extern void          usdiDestroyContext(Context ctx);
@@ -348,7 +345,6 @@ namespace UTJ
         [DllImport ("usdi")] public static extern Schema        usdiGetRoot(Context ctx);
 
         [DllImport ("usdi")] public static extern void          usdiUpdateAllSamples(Context ctx, double t);
-        [DllImport ("usdi")] public static extern void          usdiUpdateAllSamplesAsync(Context ctx, double t);
 
         // Schema interface
         [DllImport ("usdi")] public static extern int           usdiGetID(Schema schema);
@@ -363,6 +359,10 @@ namespace UTJ
         [DllImport ("usdi")] public static extern Attribute     usdiFindAttribute(Schema schema, string name);
         [DllImport ("usdi")] public static extern Attribute     usdiCreateAttribute(Schema schema, string name, AttributeType type);
         [DllImport ("usdi")] public static extern Bool          usdiNeedsUpdate(Schema schema);
+
+        public static string usdiGetPathS(Schema schema) { return Marshal.PtrToStringAnsi(usdiGetPath(schema)); }
+        public static string usdiGetNameS(Schema schema) { return Marshal.PtrToStringAnsi(usdiGetName(schema)); }
+        public static string usdiGetTypeNameS(Schema schema) { return Marshal.PtrToStringAnsi(usdiGetTypeName(schema)); }
 
         // Xform interface
         [DllImport ("usdi")] public static extern Xform         usdiAsXform(Schema schema);
@@ -381,18 +381,14 @@ namespace UTJ
         [DllImport ("usdi")] public static extern Mesh          usdiCreateMesh(Context ctx, Schema parent, string name);
         [DllImport ("usdi")] public static extern void          usdiMeshGetSummary(Mesh mesh, ref MeshSummary dst);
         [DllImport ("usdi")] public static extern Bool          usdiMeshReadSample(Mesh mesh, ref MeshData dst, double t, Bool copy);
-        [DllImport ("usdi")] public static extern Bool          usdiMeshReadSampleAsync(Mesh mesh, ref MeshData dst, double t, Bool copy);
         [DllImport ("usdi")] public static extern Bool          usdiMeshWriteSample(Mesh mesh, ref MeshData src, double t);
-        [DllImport ("usdi")] public static extern Bool          usdiMeshWriteSampleAsync(Mesh mesh, ref MeshData src, double t);
 
         // Points interface
         [DllImport ("usdi")] public static extern Points        usdiAsPoints(Schema schema);
         [DllImport ("usdi")] public static extern Points        usdiCreatePoints(Context ctx, Schema parent, string name);
         [DllImport ("usdi")] public static extern void          usdiPointsGetSummary(Points points, ref PointsSummary dst);
         [DllImport ("usdi")] public static extern Bool          usdiPointsReadSample(Points points, ref PointsData dst, double t, Bool copy);
-        [DllImport ("usdi")] public static extern Bool          usdiPointsReadSampleAsync(Points points, ref PointsData dst, double t, Bool copy);
         [DllImport ("usdi")] public static extern Bool          usdiPointsWriteSample(Points points, ref PointsData src, double t);
-        [DllImport ("usdi")] public static extern Bool          usdiPointsWriteSampleAsync(Points points, ref PointsData src, double t);
 
         // Attribute interface
         [DllImport ("usdi")] public static extern IntPtr        usdiAttrGetName(Attribute attr);
@@ -426,7 +422,7 @@ namespace UTJ
 
 
         public delegate void usdiTaskFunc(IntPtr arg);
-        [DllImport("usdi")] public static extern int  usdiExtTaskCreate(usdiTaskFunc func, IntPtr arg);
+        [DllImport("usdi")] public static extern int  usdiExtTaskCreate(usdiTaskFunc func, IntPtr arg, string dbg_name);
         [DllImport("usdi")] public static extern void usdiExtTaskDestroy(int handle);
         [DllImport("usdi")] public static extern void usdiExtTaskRun(int handle);
         [DllImport("usdi")] public static extern bool usdiExtTaskIsRunning(int handle);
@@ -438,10 +434,10 @@ namespace UTJ
             usdi.usdiTaskFunc func;
             int handle;
 
-            public Task(usdi.usdiTaskFunc f)
+            public Task(usdi.usdiTaskFunc f, string dbg_name = "")
             {
                 func = f;
-                handle = usdi.usdiExtTaskCreate(func, IntPtr.Zero);
+                handle = usdi.usdiExtTaskCreate(func, IntPtr.Zero, dbg_name);
             }
 
             ~Task()

@@ -207,7 +207,6 @@ namespace UTJ
             if(m_ctx)
             {
                 usdiWaitAsyncUpdateTask();
-                usdi.usdiWaitAsyncRead();
                 usdi.usdiExtVtxTaskClear(); // need to improve...
 
                 int c = m_elements.Count;
@@ -265,14 +264,18 @@ namespace UTJ
             else
 #endif
             {
-                if(m_asyncUpdate == null) { m_asyncUpdate = new usdi.Task(
-                    (IntPtr arg)=> {
-                        try
+                if(m_asyncUpdate == null)
+                {
+                    m_asyncUpdate = new usdi.Task(
+                        (var) =>
                         {
-                            usdiAsyncUpdate(m_time);
-                        }
-                        finally { }
-                    }); }
+                            try
+                            {
+                                usdiAsyncUpdate(m_time);
+                            }
+                            finally { }
+                        }, "usdiStream: " + gameObject.name);
+                }
                 m_asyncUpdate.Run();
             }
         }
