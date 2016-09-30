@@ -426,9 +426,45 @@ namespace UTJ
         [DllImport("usdi")] public static extern Bool usdiExtClearTaskQueue(int handle);
 
         public delegate void usdiTaskFunc(IntPtr arg);
-        [DllImport("usdi")] public static extern int  usdiExtTaskRun(usdiTaskFunc func, IntPtr arg);
+        [DllImport("usdi")] public static extern int  usdiExtTaskCreate(usdiTaskFunc func, IntPtr arg);
+        [DllImport("usdi")] public static extern void usdiExtTaskDestroy(int handle);
+        [DllImport("usdi")] public static extern void usdiExtTaskRun(int handle);
         [DllImport("usdi")] public static extern bool usdiExtTaskIsRunning(int handle);
         [DllImport("usdi")] public static extern void usdiExtTaskWait(int handle);
+
+
+        public class Task
+        {
+            usdi.usdiTaskFunc func;
+            int handle;
+
+            public Task(usdi.usdiTaskFunc f)
+            {
+                func = f;
+                handle = usdi.usdiExtTaskCreate(func, IntPtr.Zero);
+            }
+
+            ~Task()
+            {
+                usdi.usdiExtTaskDestroy(handle);
+            }
+
+            public void Run()
+            {
+                usdi.usdiExtTaskRun(handle);
+            }
+
+            public bool IsRunning()
+            {
+                return usdi.usdiExtTaskIsRunning(handle);
+            }
+
+            public void Wait()
+            {
+                usdi.usdiExtTaskWait(handle);
+            }
+        }
+
 
 
         public static string S(IntPtr cstring) { return Marshal.PtrToStringAnsi(cstring); }

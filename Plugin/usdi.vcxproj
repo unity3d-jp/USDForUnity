@@ -30,6 +30,7 @@
     <ClInclude Include="usdi\usdiXform.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="usdi\DllMain.cpp" />
     <ClCompile Include="usdi\etc\FixedAllocator.cpp" />
     <ClCompile Include="usdi\etc\Hook.cpp" />
     <ClCompile Include="usdi\ext\usdiExtTask.cpp" />

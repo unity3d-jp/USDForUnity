@@ -235,6 +235,8 @@ usdiAPI usdi::Time       usdiDefaultTime();
 usdiAPI void             usdiWaitAsyncRead();
 usdiAPI void             usdiWaitAsyncWrite();
 
+usdiAPI void             usdiSetPluginPath(const char *path);
+
 // Context interface
 usdiAPI usdi::Context*   usdiCreateContext();
 usdiAPI void             usdiDestroyContext(usdi::Context *ctx);
@@ -328,7 +330,9 @@ usdiAPI bool            usdiExtQueueVertexBufferUpdateTask(const usdi::MeshData 
 usdiAPI bool            usdiExtFlushTaskQueue(int handle);
 usdiAPI bool            usdiExtClearTaskQueue(int handle);
 
-usdiAPI usdi::handle_t  usdiExtTaskRun(usdi::TaskFunc func, void *arg);
+usdiAPI usdi::handle_t  usdiExtTaskCreate(usdi::TaskFunc func, void *arg);
+usdiAPI void            usdiExtTaskDestroy(usdi::handle_t h);
+usdiAPI void            usdiExtTaskRun(usdi::handle_t h);
 usdiAPI bool            usdiExtTaskIsRunning(usdi::handle_t h);
 usdiAPI void            usdiExtTaskWait(usdi::handle_t h);
 

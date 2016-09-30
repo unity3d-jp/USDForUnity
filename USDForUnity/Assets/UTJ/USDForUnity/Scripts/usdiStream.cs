@@ -42,8 +42,7 @@ namespace UTJ
         usdi.Context m_ctx;
         List<usdiElement> m_elements = new List<usdiElement>();
         double m_prevUpdateTime = Double.NaN;
-        usdi.usdiTaskFunc m_taskFunc;
-        int m_taskHandle = 0;
+        usdi.Task m_asyncUpdate;
         #endregion
 
 
@@ -267,24 +266,24 @@ namespace UTJ
             else
 #endif
             {
-                if(m_taskFunc == null) { m_taskFunc = usdiAsyncTask; }
-                m_taskHandle = usdi.usdiExtTaskRun(m_taskFunc, IntPtr.Zero);
+                if(m_asyncUpdate == null) { m_asyncUpdate = new usdi.Task(
+                    (IntPtr arg)=> {
+                        try
+                        {
+                            usdiAsyncUpdate(m_time);
+                        }
+                        finally { }
+                    }); }
+                m_asyncUpdate.Run();
             }
-        }
-
-        void usdiAsyncTask(IntPtr arg)
-        {
-            try
-            {
-                usdiAsyncUpdate(m_time);
-            }
-            finally { }
         }
 
         void usdiWaitAsyncUpdateTask()
         {
-            usdi.usdiExtTaskWait(m_taskHandle);
-            m_taskHandle = 0;
+            if(m_asyncUpdate != null)
+            {
+                m_asyncUpdate.Wait();
+            }
         }
 
         #endregion

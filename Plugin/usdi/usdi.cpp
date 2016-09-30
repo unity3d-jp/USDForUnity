@@ -54,13 +54,29 @@ usdiAPI usdi::Time usdiDefaultTime()
 
 usdiAPI void usdiWaitAsyncRead()
 {
+    usdiTraceFunc();
     usdi::g_read_tasks.wait();
 }
 usdiAPI void usdiWaitAsyncWrite()
 {
+    usdiTraceFunc();
     usdi::g_write_tasks.wait();
 }
 
+usdiAPI void usdiSetPluginPath(const char *path)
+{
+    usdiTraceFunc();
+
+    const char* env_name = "PXR_PLUGINPATH_NAME";
+#ifdef _WIN32
+    std::string tmp = env_name;
+    tmp += "=";
+    tmp += path;
+    ::_putenv(tmp.c_str());
+#else
+    ::setenv(env_name, path, 1);
+#endif
+}
 
 // Context interface
 

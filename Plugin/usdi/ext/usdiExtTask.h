@@ -46,29 +46,33 @@ private:
 
 
 
-class TaskGroup
+class TaskManager
 {
 public:
     typedef void (*TaskFunc)(void *);
 
-    TaskGroup();
-    ~TaskGroup();
-    handle_t run(TaskFunc task, void *arg);
+    TaskManager();
+    ~TaskManager();
+    handle_t createTask(TaskFunc task, void *arg);
+    void destroyTask(handle_t h);
+    void run(handle_t h);
     bool isRunning(handle_t h);
     void wait(handle_t h);
-    void waitAll();
 
 private:
     struct Task
     {
         TaskFunc func = nullptr;
+        void *arg = nullptr;
         tbb::spin_mutex mutex;
 
-        Task(TaskFunc f) : func(f) {}
+        Task(TaskFunc f, void *a) : func(f), arg(a) {}
         usdiDefineCachedOperatorNew(Task, 128);
     };
     typedef std::unique_ptr<Task> TaskPtr;
     typedef tbb::spin_mutex::scoped_lock lock_t;
+
+    Task* getTask(handle_t h);
 
     tbb::spin_mutex m_mutex;
     tbb::task_group m_group;

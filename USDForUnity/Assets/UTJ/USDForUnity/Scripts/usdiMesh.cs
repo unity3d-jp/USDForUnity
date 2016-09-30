@@ -66,6 +66,8 @@ namespace UTJ
         List<usdiSplitMesh> m_children = new List<usdiSplitMesh>();
         usdi.SplitedMeshData[] m_splitedData;
 
+        usdi.Task m_asyncRead;
+
         // for Unity 5.5 or later
         bool m_directVBUpdate;
         usdi.MapContext m_ctxVB;
@@ -281,7 +283,17 @@ namespace UTJ
                 else
 #endif
                 {
-                    usdi.usdiMeshReadSampleAsync(m_mesh, ref m_meshData, t, copyVertexData);
+                    if(m_asyncRead == null)
+                    {
+                        m_asyncRead = new usdi.Task((IntPtr)=> {
+                            try
+                            {
+                                usdi.usdiMeshReadSample(m_mesh, ref m_meshData, t, copyVertexData);
+                            }
+                            finally { }
+                        });
+                    }
+                    m_asyncRead.Run();
                 }
             }
         }
@@ -293,6 +305,11 @@ namespace UTJ
             }
             else
             {
+                if(m_asyncRead != null)
+                {
+                    m_asyncRead.Wait();
+                }
+
                 if (m_meshData.num_splits != 0)
                 {
                     for (int i = 0; i < m_children.Count; ++i)

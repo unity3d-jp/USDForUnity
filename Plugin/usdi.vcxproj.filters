@@ -115,6 +115,8 @@
     </ClCompile>
     <ClCompile Include="usdi\etc\Hook.cpp">
       <Filter>usdi\etc</Filter>
+    <ClCompile Include="usdi\DllMain.cpp">
+      <Filter>usdi</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

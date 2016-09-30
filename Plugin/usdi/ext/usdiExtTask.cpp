@@ -108,68 +108,79 @@ void VertexUpdateTaskQueue::clear()
 
 
 
-TaskGroup::TaskGroup()
+TaskManager::TaskManager()
 {
 }
 
-TaskGroup::~TaskGroup()
+TaskManager::~TaskManager()
 {
-    waitAll();
 }
 
-handle_t TaskGroup::run(TaskFunc tf, void *arg)
+TaskManager::Task* TaskManager::getTask(handle_t h)
 {
-    auto *ptr = new Task(tf);
-    ptr->mutex.lock();
+    lock_t l(m_mutex);
+    return m_tasks.get(h).get();
+}
+
+handle_t TaskManager::createTask(TaskFunc func, void *arg)
+{
+    auto *ptr = new Task(func, arg);
 
     handle_t ret = 0;
     {
         lock_t l(m_mutex);
         ret = m_tasks.push(TaskPtr(ptr));
     }
-    m_group.run([ptr, arg]() {
-        ptr->func(arg);
-        ptr->mutex.unlock();
-    });
-
     return ret;
 }
 
-bool TaskGroup::isRunning(handle_t h)
+void TaskManager::destroyTask(handle_t h)
 {
-    if (h == 0) { return false; }
-
-    Task *ptr = nullptr;
-    {
-        lock_t l(m_mutex);
-        ptr = m_tasks.get(h).get();
-    }
-    if (ptr && ptr->mutex.try_lock()) {
-        ptr->mutex.unlock();
-        return true;
-    }
-    return false;
+    lock_t l(m_mutex);
+    m_tasks.pull(h);
 }
 
-void TaskGroup::wait(handle_t h)
+void TaskManager::run(handle_t h)
 {
     if (h == 0) { return; }
 
-    TaskPtr t;
-    {
-        lock_t l(m_mutex);
-        t = m_tasks.pull(h);
+    Task *task = getTask(h);
+    if (!task) { return; }
+
+    task->mutex.lock();
+    m_group.run([task]() {
+        task->func(task->arg);
+        task->mutex.unlock();
+    });
+}
+
+bool TaskManager::isRunning(handle_t h)
+{
+    if (h == 0) { return false; }
+
+    Task *task = getTask(h);
+    if (!task) { return false; }
+
+    if (task->mutex.try_lock()) {
+        task->mutex.unlock();
+        return false;
     }
-    if (t) {
-        t->mutex.lock();
+    else {
+        return true;
     }
 }
 
-void TaskGroup::waitAll()
+void TaskManager::wait(handle_t h)
 {
-    lock_t l(m_mutex);
-    m_group.wait();
-    // todo: clear container
+    if (h == 0) { return; }
+
+    Task *task = getTask(h);
+    if (!task) { return; }
+
+    if (task) {
+        task->mutex.lock();
+        task->mutex.unlock();
+    }
 }
 
 } // namespace usdi
