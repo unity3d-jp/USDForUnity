@@ -72,38 +72,55 @@ void VertexUpdateTask::unmap()
 }
 
 
-void VertexUpdateTaskQueue::push(const VertexUpdateTask& t)
+
+void VertexUpdateTaskManager::queue(const VertexUpdateTask& t)
 {
-    lock_t l(m_mutex);
-    m_tasks.push_back(t);
+    lock_t l(m_mutex_queuing);
+    m_tasks_queing.push_back(t);
 }
 
-void VertexUpdateTaskQueue::flush()
+void VertexUpdateTaskManager::endQueing()
 {
-    lock_t l(m_mutex);
+    lock_t lq(m_mutex_queuing);
+    m_tasks_pending.swap(m_tasks_queing);
+    m_tasks_queing.clear();
+}
 
+void VertexUpdateTaskManager::flush()
+{
+    {
+        lock_t lq(m_mutex_queuing);
+        m_tasks_flushing.swap(m_tasks_pending);
+    }
+
+    lock_t lf(m_mutex_flusing);
+    if (m_tasks_flushing.empty()) { return; }
 
     m_flushing = true;
-    for (auto& t : m_tasks) { t.map(); }
+    for (auto& t : m_tasks_flushing) { t.map(); }
 #ifdef usdiDbgForceSingleThread
-    for (auto& t : m_tasks) { t.copy(); }
+    for (auto& t : m_tasks_flushing) { t.copy(); }
 #else
-    tbb::parallel_for_each(m_tasks, [](auto& t) { t.copy(); });
+    tbb::parallel_for_each(m_tasks_flushing, [](auto& t) { t.copy(); });
 #endif
-    for (auto& t : m_tasks) { t.unmap(); }
-    m_tasks.clear();
+    for (auto& t : m_tasks_flushing) { t.unmap(); }
+    m_tasks_flushing.clear();
     m_flushing = false;
 }
 
-bool VertexUpdateTaskQueue::isFlushing() const
+bool VertexUpdateTaskManager::isFlushing() const
 {
     return m_flushing;
 }
 
-void VertexUpdateTaskQueue::clear()
+void VertexUpdateTaskManager::clear()
 {
-    lock_t l(m_mutex);
-    m_tasks.clear();
+    lock_t lq(m_mutex_queuing);
+    lock_t lf(m_mutex_flusing);
+
+    m_tasks_queing.clear();
+    m_tasks_pending.clear();
+    m_tasks_flushing.clear();
 }
 
 
@@ -118,6 +135,8 @@ TaskManager::~TaskManager()
 
 TaskManager::Task* TaskManager::getTask(handle_t h)
 {
+    if (h == 0) { return nullptr; }
+
     lock_t l(m_mutex);
     return m_tasks.get(h).get();
 }
@@ -142,8 +161,6 @@ void TaskManager::destroyTask(handle_t h)
 
 void TaskManager::run(handle_t h)
 {
-    if (h == 0) { return; }
-
     Task *task = getTask(h);
     if (!task) { return; }
 
@@ -156,8 +173,6 @@ void TaskManager::run(handle_t h)
 
 bool TaskManager::isRunning(handle_t h)
 {
-    if (h == 0) { return false; }
-
     Task *task = getTask(h);
     if (!task) { return false; }
 
@@ -172,8 +187,6 @@ bool TaskManager::isRunning(handle_t h)
 
 void TaskManager::wait(handle_t h)
 {
-    if (h == 0) { return; }
-
     Task *task = getTask(h);
     if (!task) { return; }
 

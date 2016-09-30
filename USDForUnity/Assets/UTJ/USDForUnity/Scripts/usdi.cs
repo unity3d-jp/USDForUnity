@@ -419,11 +419,11 @@ namespace UTJ
             public Bool keepStagingResource;
         };
 
-        [DllImport("usdi")] public static extern int usdiExtGetTaskIndex();
-        [DllImport("usdi")] public static extern int usdiExtIncrementTaskIndex();
-        [DllImport("usdi")] public static extern Bool usdiExtQueueVertexBufferUpdateTask(ref MeshData data, ref MapContext ctxVB, ref MapContext ctxIB);
-        [DllImport("usdi")] public static extern Bool usdiExtFlushTaskQueue(int handle);
-        [DllImport("usdi")] public static extern Bool usdiExtClearTaskQueue(int handle);
+        [DllImport("usdi")] public static extern void usdiExtVtxTaskQueue(ref MeshData data, ref MapContext ctxVB, ref MapContext ctxIB);
+        [DllImport("usdi")] public static extern void usdiExtVtxTaskEndQueing();
+        [DllImport("usdi")] public static extern void usdiExtVtxTaskFlush();
+        [DllImport("usdi")] public static extern void usdiExtVtxTaskClear();
+
 
         public delegate void usdiTaskFunc(IntPtr arg);
         [DllImport("usdi")] public static extern int  usdiExtTaskCreate(usdiTaskFunc func, IntPtr arg);

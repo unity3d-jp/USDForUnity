@@ -208,8 +208,7 @@ namespace UTJ
             {
                 usdiWaitAsyncUpdateTask();
                 usdi.usdiWaitAsyncRead();
-                usdi.usdiExtClearTaskQueue(0);
-                usdi.usdiExtClearTaskQueue(1);
+                usdi.usdiExtVtxTaskClear(); // need to improve...
 
                 int c = m_elements.Count;
                 for (int i = 0; i < c; ++i)
@@ -365,14 +364,14 @@ namespace UTJ
             usdiWaitAsyncUpdateTask();
             if (s_nth_LateUpdate == 1)
             {
-                usdi.usdiWaitAsyncRead();
                 if(m_directVBUpdate)
                 {
                     for(int i=0; i<s_instances.Count; ++i)
                     {
                         s_instances[i].usdiWaitAsyncUpdateTask();
                     }
-                    GL.IssuePluginEvent(usdi.usdiGetRenderEventFunc(), usdi.usdiExtIncrementTaskIndex());
+                    usdi.usdiExtVtxTaskEndQueing();
+                    GL.IssuePluginEvent(usdi.usdiGetRenderEventFunc(), 0);
                 }
             }
 

@@ -324,11 +324,10 @@ namespace usdi {
 
 extern "C" {
 
-usdiAPI int             usdiExtGetTaskIndex();
-usdiAPI int             usdiExtIncrementTaskIndex();
-usdiAPI bool            usdiExtQueueVertexBufferUpdateTask(const usdi::MeshData *src, usdi::MapContext *ctxVB, usdi::MapContext *ctxIB);
-usdiAPI bool            usdiExtFlushTaskQueue(int handle);
-usdiAPI bool            usdiExtClearTaskQueue(int handle);
+usdiAPI void            usdiExtVtxTaskQueue(const usdi::MeshData *src, usdi::MapContext *ctxVB, usdi::MapContext *ctxIB);
+usdiAPI void            usdiExtVtxTaskEndQueing();
+usdiAPI void            usdiExtVtxTaskFlush();
+usdiAPI void            usdiExtVtxTaskClear();
 
 usdiAPI usdi::handle_t  usdiExtTaskCreate(usdi::TaskFunc func, void *arg);
 usdiAPI void            usdiExtTaskDestroy(usdi::handle_t h);

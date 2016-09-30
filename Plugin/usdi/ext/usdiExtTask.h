@@ -25,13 +25,14 @@ private:
     MapContext *m_ctx_ib;
 };
 
-class VertexUpdateTaskQueue
+class VertexUpdateTaskManager
 {
 public:
     typedef VertexUpdateTask task_t;
     typedef std::vector<VertexUpdateTask> tasks_t;
 
-    void push(const VertexUpdateTask& t);
+    void queue(const VertexUpdateTask& t);
+    void endQueing();
     void flush();
     bool isFlushing() const;
     void clear();
@@ -39,8 +40,11 @@ public:
 private:
     typedef tbb::spin_mutex::scoped_lock lock_t;
 
-    tbb::spin_mutex m_mutex;
-    tasks_t m_tasks;
+    tbb::spin_mutex m_mutex_queuing;
+    tbb::spin_mutex m_mutex_flusing;
+    tasks_t m_tasks_queing;
+    tasks_t m_tasks_pending;
+    tasks_t m_tasks_flushing;
     std::atomic_bool m_flushing = false;
 };
 

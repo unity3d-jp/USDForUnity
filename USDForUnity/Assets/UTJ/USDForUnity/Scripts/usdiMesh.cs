@@ -271,7 +271,7 @@ namespace UTJ
                 usdi.usdiMeshReadSample(m_mesh, ref m_meshData, t, copyVertexData);
                 m_taskMmeshData = m_meshData;
                 m_taskMmeshData.indices_triangulated = IntPtr.Zero;
-                usdi.usdiExtQueueVertexBufferUpdateTask(ref m_taskMmeshData, ref m_ctxVB, ref m_ctxIB);
+                usdi.usdiExtVtxTaskQueue(ref m_taskMmeshData, ref m_ctxVB, ref m_ctxIB);
             }
             else
             {

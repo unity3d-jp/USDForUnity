@@ -5,9 +5,7 @@
 
 namespace usdi {
 
-int g_vtx_task_index = 0;
-VertexUpdateTaskQueue g_vtx_task_queues[2];
-
+VertexUpdateTaskManager g_vtx_task_manager;
 TaskManager g_task_manager;
 
 } // namespace usdi
@@ -15,51 +13,35 @@ TaskManager g_task_manager;
 
 extern "C" {
 
-usdiAPI int usdiExtGetTaskIndex()
-{
-    usdiTraceFunc();
-    return usdi::g_vtx_task_index;
-}
-
-usdiAPI int usdiExtIncrementTaskIndex()
-{
-    usdiTraceFunc();
-    return usdi::g_vtx_task_index++;
-}
-
-usdiAPI bool usdiExtQueueVertexBufferUpdateTask(const usdi::MeshData *src, usdi::MapContext *ctxVB, usdi::MapContext *ctxIB)
+usdiAPI void usdiExtVtxTaskQueue(const usdi::MeshData *src, usdi::MapContext *ctxVB, usdi::MapContext *ctxIB)
 {
     usdiTraceFunc();
 
-    int i = usdi::g_vtx_task_index & 1;
-
-    if (usdi::g_vtx_task_queues[i].isFlushing()) {
-        usdiLogWarning("usdiExtQueueVertexBufferUpdateTask(): task queue is flushing!!!\n");
-    }
-    if (!src || (!ctxVB && !ctxIB)) { return false; }
-    usdi::g_vtx_task_queues[i].push(usdi::VertexUpdateTask(src, ctxVB, ctxIB));
-    return true;
+    if (!src || (!ctxVB && !ctxIB)) { return; }
+    return usdi::g_vtx_task_manager.queue(usdi::VertexUpdateTask(src, ctxVB, ctxIB));
 }
 
-usdiAPI bool usdiExtFlushTaskQueue(int handle)
+usdiAPI void usdiExtVtxTaskEndQueing()
+{
+    usdi::g_vtx_task_manager.endQueing();
+}
+
+usdiAPI void usdiExtVtxTaskFlush()
 {
     usdiTraceFunc();
     usdiVTuneScope("usdiExtFlushTaskQueue");
 
-    int i = handle & 1;
-    usdi::g_vtx_task_queues[i].flush();
-    return true;
+    usdi::g_vtx_task_manager.flush();
 }
 
-usdiAPI bool usdiExtClearTaskQueue(int handle)
+usdiAPI void usdiExtVtxTaskClear()
 {
     usdiTraceFunc();
-    usdiVTuneScope("usdiExtClearTaskQueue");
+    usdiVTuneScope("usdiExtFlushTaskQueue");
 
-    int i = handle & 1;
-    usdi::g_vtx_task_queues[i].clear();
-    return true;
+    usdi::g_vtx_task_manager.clear();
 }
+
 
 
 
