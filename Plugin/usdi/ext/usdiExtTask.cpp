@@ -5,122 +5,152 @@
 
 namespace usdi {
 
-VertexUpdateTask::VertexUpdateTask(const usdi::MeshData *mesh_data, MapContext *ctx_vb, MapContext *ctx_ib)
-    : m_mesh_data(mesh_data), m_ctx_vb(ctx_vb), m_ctx_ib(ctx_ib)
+VertexUpdateCommand::VertexUpdateCommand(const char *dbg_name)
+    : m_dbg_name(dbg_name)
 {
-    m_ctx_vb->mode = gi::MapMode::Write;
-    m_ctx_vb->type = gi::BufferType::Vertex;
-    m_ctx_vb->keep_staging_resource = true;
+    m_ctx_vb.mode = gi::MapMode::Write;
+    m_ctx_vb.type = gi::BufferType::Vertex;
+    m_ctx_vb.keep_staging_resource = true;
 
-    m_ctx_ib->mode = gi::MapMode::Write;
-    m_ctx_ib->type = gi::BufferType::Vertex;
-    m_ctx_ib->keep_staging_resource = true;
+    m_ctx_ib.mode = gi::MapMode::Write;
+    m_ctx_ib.type = gi::BufferType::Vertex;
+    m_ctx_ib.keep_staging_resource = true;
 }
 
-VertexUpdateTask::~VertexUpdateTask()
+VertexUpdateCommand::~VertexUpdateCommand()
 {
     auto ifs = gi::GetGraphicsInterface();
-    ifs->releaseStagingResource(*m_ctx_vb);
-    ifs->releaseStagingResource(*m_ctx_ib);
+    ifs->releaseStagingResource(m_ctx_vb);
+    ifs->releaseStagingResource(m_ctx_ib);
 }
 
-void VertexUpdateTask::map()
+void VertexUpdateCommand::update(const usdi::MeshData *mesh_data, void *vb, void *ib)
+{
+    m_mesh_data = *mesh_data;
+    m_ctx_vb.resource = vb;
+    m_ctx_ib.resource = ib;
+
+    m_dirty = true;
+}
+
+bool VertexUpdateCommand::isDirty() const
+{
+    return m_dirty;
+}
+
+void VertexUpdateCommand::map()
 {
     auto ifs = gi::GetGraphicsInterface();
-    ifs->mapBuffer(*m_ctx_vb);
-    if (m_mesh_data->indices_triangulated) {
-        ifs->mapBuffer(*m_ctx_ib);
+    ifs->mapBuffer(m_ctx_vb);
+    if (m_mesh_data.indices_triangulated) {
+        ifs->mapBuffer(m_ctx_ib);
     }
 }
 
-void VertexUpdateTask::copy()
+void VertexUpdateCommand::copy()
 {
     auto *ifs = gi::GetGraphicsInterface();
     auto& buf = GetTemporaryBuffer();
+    auto& mesh_data = m_mesh_data;
+    auto& ctx_vb = m_ctx_vb;
+    auto& ctx_ib = m_ctx_ib;
 
-    if (m_ctx_vb->data_ptr) {
-        if (m_mesh_data->uvs) {
+    if (ctx_vb.data_ptr) {
+        if (m_mesh_data.uvs) {
             using vertex_t = vertex_v3n3u2;
-            vertex_t::source_t src = { m_mesh_data->points, m_mesh_data->normals, m_mesh_data->uvs };
-            InterleaveBuffered(buf, src, (size_t)m_mesh_data->num_points);
+            vertex_t::source_t src = { m_mesh_data.points, m_mesh_data.normals, m_mesh_data.uvs };
+            InterleaveBuffered(buf, src, (size_t)mesh_data.num_points);
         }
         else {
             using vertex_t = vertex_v3n3;
-            vertex_t::source_t src = { m_mesh_data->points, m_mesh_data->normals };
-            InterleaveBuffered(buf, src, (size_t)m_mesh_data->num_points);
+            vertex_t::source_t src = { mesh_data.points, mesh_data.normals };
+            InterleaveBuffered(buf, src, (size_t)mesh_data.num_points);
         }
-        memcpy(m_ctx_vb->data_ptr, buf.cdata(), buf.size());
+        memcpy(ctx_vb.data_ptr, buf.cdata(), buf.size());
     }
 
-    if (m_ctx_ib->data_ptr && m_mesh_data->indices_triangulated) {
+    if (ctx_ib.data_ptr && mesh_data.indices_triangulated) {
         // need to convert 32 bit IB -> 16 bit IB...
         using index_t = uint16_t;
-        buf.resize(sizeof(index_t) * m_mesh_data->num_indices_triangulated);
+        buf.resize(sizeof(index_t) * mesh_data.num_indices_triangulated);
         index_t *indices = (index_t*)buf.cdata();
-        for (size_t i = 0; i < m_mesh_data->num_indices_triangulated; ++i) {
-            indices[i] = (index_t)m_mesh_data->indices_triangulated[i];
+        for (size_t i = 0; i < mesh_data.num_indices_triangulated; ++i) {
+            indices[i] = (index_t)mesh_data.indices_triangulated[i];
         }
-        memcpy(m_ctx_ib->data_ptr, buf.cdata(), buf.size());
+        memcpy(ctx_ib.data_ptr, buf.cdata(), buf.size());
     }
 }
 
-void VertexUpdateTask::unmap()
+void VertexUpdateCommand::unmap()
 {
     auto ifs = gi::GetGraphicsInterface();
-    ifs->unmapBuffer(*m_ctx_vb);
-    ifs->unmapBuffer(*m_ctx_ib);
+    ifs->unmapBuffer(m_ctx_vb);
+    ifs->unmapBuffer(m_ctx_ib);
+}
+
+void VertexUpdateCommand::clearDirty()
+{
+    m_dirty = false;
 }
 
 
-
-void VertexUpdateTaskManager::queue(const VertexUpdateTask& t)
+VertexUpdateCommand* VertexCommandManager::get(handle_t h)
 {
-    lock_t l(m_mutex_queuing);
-    m_tasks_queing.push_back(t);
+    return m_commands.get(h).get();
 }
 
-void VertexUpdateTaskManager::endQueing()
+handle_t VertexCommandManager::createCommand(const char *dbg_name)
 {
-    lock_t lq(m_mutex_queuing);
-    m_tasks_pending.swap(m_tasks_queing);
-    m_tasks_queing.clear();
+    lock_t l(m_mutex_processing);
+    return m_commands.push(CommandPtr(new Command(dbg_name)));
 }
 
-void VertexUpdateTaskManager::flush()
+void VertexCommandManager::destroyCommand(handle_t h)
 {
-    {
-        lock_t lq(m_mutex_queuing);
-        m_tasks_flushing.swap(m_tasks_pending);
+    lock_t l(m_mutex_processing);
+    m_commands.pull(h);
+}
+
+void VertexCommandManager::update(handle_t h, const usdi::MeshData *src, void *vb, void *ib)
+{
+    if (auto *cmd = get(h)) {
+        cmd->update(src, vb, ib);
+    }
+}
+
+void VertexCommandManager::process()
+{
+    lock_t l(m_mutex_processing);
+
+    auto& dirty = m_dirty_commands;
+    for (auto& t : m_commands.getValues()) {
+        if (t && t->isDirty()) {
+            dirty.push_back(t.get());
+        }
     }
 
-    lock_t lf(m_mutex_flusing);
-    if (m_tasks_flushing.empty()) { return; }
+    if (!dirty.empty()) {
+        for (auto& t : dirty) { t->map(); }
 
-    m_flushing = true;
-    for (auto& t : m_tasks_flushing) { t.map(); }
 #ifdef usdiDbgForceSingleThread
-    for (auto& t : m_tasks_flushing) { t.copy(); }
+        for (auto& t : dirty) { t->copy(); }
 #else
-    tbb::parallel_for_each(m_tasks_flushing, [](auto& t) { t.copy(); });
+        size_t grain = std::max<size_t>(dirty.size()/32, 1);
+        tbb::parallel_for(tbb::blocked_range<size_t>(0, dirty.size(), grain), [&dirty](const auto& r) {
+            for (size_t i = r.begin(); i != r.end(); ++i) {
+                dirty[i]->copy();
+            }
+        });
 #endif
-    for (auto& t : m_tasks_flushing) { t.unmap(); }
-    m_tasks_flushing.clear();
-    m_flushing = false;
+
+        for (auto& t : dirty) { t->unmap(); t->clearDirty(); }
+        dirty.clear();
+    }
 }
 
-bool VertexUpdateTaskManager::isFlushing() const
+void VertexCommandManager::wait()
 {
-    return m_flushing;
-}
-
-void VertexUpdateTaskManager::clear()
-{
-    lock_t lq(m_mutex_queuing);
-    lock_t lf(m_mutex_flusing);
-
-    m_tasks_queing.clear();
-    m_tasks_pending.clear();
-    m_tasks_flushing.clear();
+    lock_t l(m_mutex_processing);
 }
 
 

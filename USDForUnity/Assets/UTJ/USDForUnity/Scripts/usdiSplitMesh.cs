@@ -123,7 +123,7 @@ namespace UTJ
             data.indices = IntPtr.Zero;
         }
 
-        public void usdiUpdateMeshData(bool topology, bool close)
+        public void usdiUploadMeshData(bool topology, bool close)
         {
             if (!m_parent.directVBUpdate)
             {

@@ -77,8 +77,10 @@ public:
         return std::move(m_values[h]);
     }
 
-    size_t size_values() const { return m_values.size(); }
-    size_t size_handles() const { return m_handles.size(); }
+    values_t&           getValues()         { return m_values; }
+    const values_t&     getValues() const   { return m_values; }
+    handles_t&          getHandles()        { return m_handles; }
+    const handles_t&    getHandles() const  { return m_handles; }
 
 private:
     values_t m_values;

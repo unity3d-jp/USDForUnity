@@ -5,7 +5,7 @@
 
 namespace usdi {
 
-VertexUpdateTaskManager g_vtx_task_manager;
+VertexCommandManager g_vtx_task_manager;
 TaskManager g_task_manager;
 
 } // namespace usdi
@@ -13,33 +13,36 @@ TaskManager g_task_manager;
 
 extern "C" {
 
-usdiAPI void usdiExtVtxTaskQueue(const usdi::MeshData *src, usdi::MapContext *ctxVB, usdi::MapContext *ctxIB)
+usdiAPI usdi::handle_t usdiExtVtxCmdCreate(const char *dbg_name)
 {
     usdiTraceFunc();
-
-    if (!src || (!ctxVB && !ctxIB)) { return; }
-    return usdi::g_vtx_task_manager.queue(usdi::VertexUpdateTask(src, ctxVB, ctxIB));
+    return usdi::g_vtx_task_manager.createCommand(dbg_name);
 }
 
-usdiAPI void usdiExtVtxTaskEndQueing()
-{
-    usdi::g_vtx_task_manager.endQueing();
-}
-
-usdiAPI void usdiExtVtxTaskFlush()
+usdiAPI void usdiExtVtxCmdDestroy(usdi::handle_t h)
 {
     usdiTraceFunc();
-    usdiVTuneScope("usdiExtFlushTaskQueue");
-
-    usdi::g_vtx_task_manager.flush();
+    usdi::g_vtx_task_manager.destroyCommand(h);
 }
 
-usdiAPI void usdiExtVtxTaskClear()
+usdiAPI void usdiExtVtxCmdUpdate(usdi::handle_t h, const usdi::MeshData *src, void *vb, void *ib)
 {
     usdiTraceFunc();
-    usdiVTuneScope("usdiExtFlushTaskQueue");
+    usdi::g_vtx_task_manager.update(h, src, vb, ib);
+}
 
-    usdi::g_vtx_task_manager.clear();
+usdiAPI void usdiExtVtxCmdProcess()
+{
+    usdiTraceFunc();
+    usdiVTuneScope("usdiExtVtxCmdKick");
+    usdi::g_vtx_task_manager.process();
+}
+
+usdiAPI void usdiExtVtxCmdWait()
+{
+    usdiTraceFunc();
+    usdiVTuneScope("usdiExtVtxCmdKick");
+    usdi::g_vtx_task_manager.wait();
 }
 
 

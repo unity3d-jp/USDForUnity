@@ -37,7 +37,10 @@ public class USDTestMenu
 
     static usdiStream InstanciateUSD(string path, usdiImportOptions opt, Vector3 pos, Vector3 forward, double time)
     {
-        var usd = UTJ.usdiImportWindow.InstanciateUSD(path, opt, time);
+        var usd = UTJ.usdiImportWindow.InstanciateUSD(path, (stream) => {
+            stream.importOptions = opt;
+            stream.playTime = time;
+        } );
         var trans = usd.GetComponent<Transform>();
         if (trans)
         {

@@ -53,12 +53,16 @@ namespace UTJ
 
         #region fields
         usdi.Mesh m_mesh;
-        usdi.MeshData m_meshData, m_taskMmeshData;
+        usdi.MeshData m_meshData;
         usdi.MeshSummary m_meshSummary;
         MeshBuffer m_buf = new MeshBuffer();
 
+        Renderer m_renderer;
         Mesh m_umesh;
-        bool m_umeshIsEmpty;
+        bool m_needsAllocateMeshData;
+        bool m_needsUploadMeshData;
+
+        int m_meshVertexCount;
         int m_prevVertexCount;
         int m_prevIndexCount;
         int m_frame;
@@ -68,11 +72,11 @@ namespace UTJ
         usdi.SplitedMeshData[] m_splitedData;
 
         usdi.Task m_asyncRead;
+        usdi.VertexUpdateCommand m_vuCmd;
 
         // for Unity 5.5 or later
         bool m_directVBUpdate;
-        usdi.MapContext m_ctxVB;
-        usdi.MapContext m_ctxIB;
+        IntPtr m_VB, m_IB;
         #endregion
 
 
@@ -87,7 +91,7 @@ namespace UTJ
 
 
         #region impl
-        Mesh usdiAddMeshComponents()
+        Mesh usdiGetOrAddMeshComponents()
         {
             Mesh mesh = null;
 
@@ -191,8 +195,10 @@ namespace UTJ
             }
 
             usdi.usdiMeshGetSummary(m_mesh, ref m_meshSummary);
-            m_umesh = usdiAddMeshComponents();
-            m_umeshIsEmpty = m_umesh.vertexCount == 0;
+            m_umesh = usdiGetOrAddMeshComponents();
+            m_meshVertexCount = m_umesh.vertexCount;
+
+            m_renderer = GetComponent<MeshRenderer>();
 
             usdiGatherExistingSplits();
             for (int i = 0; i < m_children.Count; ++i)
@@ -216,6 +222,7 @@ namespace UTJ
         }
 
 
+        // async
         void usdiAllocateMeshData(double t)
         {
             usdi.MeshData md = default(usdi.MeshData);
@@ -227,7 +234,6 @@ namespace UTJ
             {
                 return;
             }
-
 
             m_meshData = md;
             if (m_meshData.num_splits != 0)
@@ -252,39 +258,17 @@ namespace UTJ
             }
         }
 
-        void usdiFreeMeshData()
-        {
-            for (int i = 0; i < m_children.Count; ++i)
-            {
-                m_children[i].usdiFreeMeshData(ref m_splitedData[i]);
-            }
-
-            m_buf.Clear();
-
-            m_meshData.points = IntPtr.Zero;
-            m_meshData.normals = IntPtr.Zero;
-            m_meshData.uvs = IntPtr.Zero;
-            m_meshData.indices_triangulated = IntPtr.Zero;
-        }
-
+        // async
         void usdiReadMeshData(double t)
         {
-            // todo: update heterogenous mesh if possible
-            m_directVBUpdate = m_stream.directVBUpdate &&
-                m_meshSummary.topology_variance == usdi.TopologyVariance.Homogenous &&
-                m_ctxVB.resource != IntPtr.Zero;
-
             if (m_directVBUpdate)
             {
                 usdi.usdiMeshReadSample(m_mesh, ref m_meshData, t, false);
-                m_taskMmeshData = m_meshData;
-                m_taskMmeshData.indices_triangulated = IntPtr.Zero;
-                usdi.usdiExtVtxTaskQueue(ref m_taskMmeshData, ref m_ctxVB, ref m_ctxIB);
             }
             else
             {
 #if UNITY_EDITOR
-                if (m_stream.usdForceSingleThread)
+                if (m_stream.forceSingleThread)
                 {
                     usdi.usdiMeshReadSample(m_mesh, ref m_meshData, t, true);
                 }
@@ -294,7 +278,7 @@ namespace UTJ
                     if (m_asyncRead == null)
                     {
                         m_asyncRead = new usdi.Task(
-                            (var) =>
+                            (arg) =>
                             {
                                 try
                                 {
@@ -303,128 +287,134 @@ namespace UTJ
                                 finally { }
                             }, "usdiMesh: " + usdi.usdiGetNameS(m_mesh));
                     }
-                    m_timeRead = t;
                     m_asyncRead.Run();
                 }
             }
         }
 
-        void usdiUpdateMeshData(double t, bool topology, bool close)
+        // sync
+        void usdiUploadMeshData(double t, bool topology, bool close)
         {
-            if (m_directVBUpdate)
+            if (m_directVBUpdate) { return; }
+
+            if (m_meshData.num_splits != 0)
             {
+                for (int i = 0; i < m_children.Count; ++i)
+                {
+                    m_children[i].usdiUploadMeshData(topology, close);
+                }
             }
             else
             {
-                if(m_asyncRead != null)
+                m_umesh.vertices = m_buf.positions;
+                if (m_meshSummary.has_normals)
                 {
-                    m_asyncRead.Wait();
+                    m_umesh.normals = m_buf.normals;
+                }
+                if (m_meshSummary.has_uvs)
+                {
+                    m_umesh.uv = m_buf.uvs;
                 }
 
-                if (m_meshData.num_splits != 0)
+                if (topology)
                 {
-                    for (int i = 0; i < m_children.Count; ++i)
+                    m_umesh.SetIndices(m_buf.indices, MeshTopology.Triangles, 0);
+
+                    if (!m_meshSummary.has_normals)
                     {
-                        m_children[i].usdiUpdateMeshData(topology, close);
+                        m_umesh.RecalculateNormals();
                     }
                 }
-                else
-                {
-                    m_umesh.vertices = m_buf.positions;
-                    if (m_meshSummary.has_normals)
-                    {
-                        m_umesh.normals = m_buf.normals;
-                    }
-                    if (m_meshSummary.has_uvs)
-                    {
-                        m_umesh.uv = m_buf.uvs;
-                    }
 
-                    if (topology)
-                    {
-                        m_umesh.SetIndices(m_buf.indices, MeshTopology.Triangles, 0);
+                m_umesh.UploadMeshData(close);
+                m_meshVertexCount = m_umesh.vertexCount;
 
-                        if (!m_meshSummary.has_normals)
-                        {
-                            m_umesh.RecalculateNormals();
-                        }
-                    }
-
-                    m_umeshIsEmpty = m_umesh.vertexCount == 0;
-                    m_umesh.UploadMeshData(close);
 #if UNITY_5_5_OR_NEWER
-                    if(m_stream.directVBUpdate)
-                    {
-                        m_ctxVB.resource = m_umesh.GetNativeVertexBufferPtr(0);
-                        //m_ctxIB.resource = m_umesh.GetNativeIndexBufferPtr();
-                    }
-#endif
+                if (m_stream.directVBUpdate)
+                {
+                    m_VB = m_umesh.GetNativeVertexBufferPtr(0);
+                    //m_IB = m_umesh.GetNativeIndexBufferPtr();
                 }
+#endif
             }
-            m_umesh.bounds = new Bounds(m_meshData.center, m_meshData.extents);
 
             m_prevVertexCount = m_meshData.num_points;
             m_prevIndexCount = m_meshData.num_indices_triangulated;
         }
 
+
+        // async
         public override void usdiAsyncUpdate(double time)
         {
             base.usdiAsyncUpdate(time);
-            if (!m_needsUpdate) { return; }
-
-            switch (m_meshSummary.topology_variance)
-            {
-                case usdi.TopologyVariance.Constant:
-                    if (m_frame == 0 && m_umeshIsEmpty)
-                    {
-                        usdiAllocateMeshData(time);
-                        usdiReadMeshData(time);
-                    }
-                    break;
-
-                case usdi.TopologyVariance.Homogenous:
-                    if (m_frame == 0)
-                    {
-                        usdiAllocateMeshData(time);
-                    }
-                    usdiReadMeshData(time);
-                    break;
-
-                case usdi.TopologyVariance.Heterogenous:
-                    usdiAllocateMeshData(time);
-                    usdiReadMeshData(time);
-                    break;
+            if (!m_needsUpdate) {
+                m_needsAllocateMeshData = false;
+                m_needsUploadMeshData = false;
+                return;
             }
+
+            m_timeRead = time;
+
+            m_needsAllocateMeshData =
+                m_meshVertexCount == 0 ||
+                (m_buf.positions == null && m_meshSummary.topology_variance != usdi.TopologyVariance.Constant) ||
+                m_meshSummary.topology_variance == usdi.TopologyVariance.Heterogenous;
+
+            m_needsUploadMeshData =
+                m_needsAllocateMeshData ||
+                m_meshSummary.topology_variance != usdi.TopologyVariance.Constant;
+
+            // todo: update heterogenous mesh if possible
+            m_directVBUpdate =
+                m_stream.directVBUpdate && !m_needsAllocateMeshData && m_VB != IntPtr.Zero &&
+                m_meshSummary.topology_variance == usdi.TopologyVariance.Homogenous;
+
+            if (m_needsAllocateMeshData) { usdiAllocateMeshData(time); }
+            if (m_needsUploadMeshData) { usdiReadMeshData(time); }
         }
 
+        // sync
         public override void usdiUpdate(double time)
         {
             if (!m_needsUpdate) { return; }
             base.usdiUpdate(time);
 
-            switch (m_meshSummary.topology_variance) {
-                case usdi.TopologyVariance.Constant:
-                    if(m_frame == 0 && m_umeshIsEmpty)
-                    {
-                        usdiUpdateMeshData(time, true, true);
-                        usdiFreeMeshData();
-                    }
-                    break;
+            if (m_asyncRead != null)
+            {
+                m_asyncRead.Wait();
+            }
 
-                case usdi.TopologyVariance.Homogenous:
-                    if (m_frame == 0)
-                    {
-                        usdiUpdateMeshData(time, true, false);
-                    }
-                    else
-                    {
-                        usdiUpdateMeshData(time, false, false);
-                    }
-                    break;
+            if(m_needsUploadMeshData)
+            {
+                m_umesh.bounds = new Bounds(m_meshData.center, m_meshData.extents);
+            }
 
-                case usdi.TopologyVariance.Heterogenous:
-                    usdiUpdateMeshData(time, true, false);
-                    break;
+            if (m_needsAllocateMeshData && m_frame == 0)
+            {
+                bool close = m_meshSummary.topology_variance == usdi.TopologyVariance.Constant;
+                usdiUploadMeshData(time, true, close);
+            }
+
+            bool active = isActiveAndEnabled && m_renderer.isVisible;
+            if (m_directVBUpdate)
+            {
+                if (m_vuCmd == null)
+                {
+                    m_vuCmd = new usdi.VertexUpdateCommand(usdi.usdiGetNameS(m_mesh));
+                }
+
+                if (active)
+                {
+                    m_vuCmd.Update(ref m_meshData, m_VB, m_IB);
+                }
+            }
+            else
+            {
+                if (active && m_needsUploadMeshData && m_frame > 1 && !m_directVBUpdate)
+                {
+                    bool updateIndices = m_meshSummary.topology_variance == usdi.TopologyVariance.Heterogenous;
+                    usdiUploadMeshData(m_timeRead, updateIndices, false);
+                }
             }
 
             ++m_frame;

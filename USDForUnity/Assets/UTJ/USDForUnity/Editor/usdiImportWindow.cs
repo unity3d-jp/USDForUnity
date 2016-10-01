@@ -10,6 +10,7 @@ namespace UTJ
         public string m_path;
         usdiImportOptions m_importOptions = new usdiImportOptions();
         double m_initialTime = 0.0;
+        bool m_forceSingleThread = false;
 
         public static void Open(string path)
         {
@@ -19,14 +20,13 @@ namespace UTJ
             window.Show();
         }
 
-        public static usdiStream InstanciateUSD(string path, usdiImportOptions opt, double initialTime = 0.0)
+        public static usdiStream InstanciateUSD(string path, Action<usdiStream> modifier)
         {
             var go = new GameObject();
             go.name = Path.GetFileNameWithoutExtension(path);
 
             var usd = go.AddComponent<usdiStream>();
-            usd.usdImportOptions = opt;
-            usd.usdTime = initialTime;
+            modifier.Invoke(usd);
             usd.usdiLoad(path);
             return usd;
         }
@@ -39,12 +39,17 @@ namespace UTJ
             m_importOptions.swapFaces = EditorGUILayout.Toggle("Swap Faces", m_importOptions.swapFaces);
             EditorGUILayout.Space();
             m_initialTime = EditorGUILayout.FloatField("Initial Time", (float)m_initialTime);
+            m_forceSingleThread = EditorGUILayout.Toggle("Force Single Thread", m_forceSingleThread);
 
             GUILayout.Space(10.0f);
 
             if (GUILayout.Button("Import"))
             {
-                var usd = InstanciateUSD(m_path, m_importOptions, m_initialTime);
+                var usd = InstanciateUSD(m_path, (stream) => {
+                    stream.importOptions = m_importOptions;
+                    stream.playTime = m_initialTime;
+                    stream.forceSingleThread = m_forceSingleThread;
+                });
                 Selection.activeGameObject = usd.gameObject;
                 Close();
             }

@@ -48,17 +48,17 @@ namespace UTJ
 
         #region properties
         public string usdPath { get { return m_path; } }
-        public usdiImportOptions usdImportOptions
+        public usdiImportOptions importOptions
         {
             get { return m_importOptions; }
             set { m_importOptions = value; }
         }
-        public double usdTime
+        public double playTime
         {
             get { return m_time; }
             set { m_time = value; }
         }
-        public double usdTimeScale
+        public double timeScale
         {
             get { return m_timeScale; }
             set { m_timeScale = value; }
@@ -66,7 +66,10 @@ namespace UTJ
         public bool directVBUpdate { get { return m_directVBUpdate; } }
         public bool deferredUpdate { get { return m_deferredUpdate; } }
 #if UNITY_EDITOR
-        public bool usdForceSingleThread { get { return m_forceSingleThread; } }
+        public bool forceSingleThread {
+            get { return m_forceSingleThread; }
+            set { m_forceSingleThread = value; }
+        }
 #endif
         #endregion
 
@@ -207,7 +210,7 @@ namespace UTJ
             if(m_ctx)
             {
                 usdiWaitAsyncUpdateTask();
-                usdi.usdiExtVtxTaskClear(); // need to improve...
+                m_asyncUpdate = null;
 
                 int c = m_elements.Count;
                 for (int i = 0; i < c; ++i)
@@ -222,6 +225,7 @@ namespace UTJ
             }
         }
 
+        // possibly called from non-main thread
         void usdiAsyncUpdate(double t)
         {
             // skip if update is not needed
@@ -264,10 +268,10 @@ namespace UTJ
             else
 #endif
             {
-                if(m_asyncUpdate == null)
+                if (m_asyncUpdate == null)
                 {
                     m_asyncUpdate = new usdi.Task(
-                        (var) =>
+                        (arg) =>
                         {
                             try
                             {
@@ -329,13 +333,8 @@ namespace UTJ
         }
 
 
-        static int s_nth_Update;
-        static int s_nth_LateUpdate;
-
         void Update()
         {
-            ++s_nth_Update;
-            s_nth_LateUpdate = 0;
 #if UNITY_EDITOR
             if (EditorApplication.isCompiling && !m_isCompiling)
             {
@@ -361,24 +360,13 @@ namespace UTJ
 
         void LateUpdate()
         {
-            ++s_nth_LateUpdate;
-            s_nth_Update = 0;
-
             usdiWaitAsyncUpdateTask();
-            if (s_nth_LateUpdate == 1)
-            {
-                if(m_directVBUpdate)
-                {
-                    for(int i=0; i<s_instances.Count; ++i)
-                    {
-                        s_instances[i].usdiWaitAsyncUpdateTask();
-                    }
-                    usdi.usdiExtVtxTaskEndQueing();
-                    GL.IssuePluginEvent(usdi.usdiGetRenderEventFunc(), 0);
-                }
-            }
-
             usdiUpdate(m_time);
+
+            if(m_directVBUpdate)
+            {
+                GL.IssuePluginEvent(usdi.usdiGetRenderEventFunc(), 0);
+            }
 
 #if UNITY_EDITOR
             if (EditorApplication.isPlaying)

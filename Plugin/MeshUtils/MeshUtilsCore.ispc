@@ -114,7 +114,7 @@ export void ComputeBounds(
     uniform float3 rmin = p[0], rmax = p[0];
 
     const uniform int num_loops = num / C;
-    if(num_loops > 2) {
+    if(num_loops > 1) {
         const uniform float * uniform fv = (const uniform float * uniform)p;
         uniform float tmin[3][C];
         uniform float tmax[3][C];

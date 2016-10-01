@@ -311,16 +311,16 @@ usdiAPI bool                 usdiAttrWriteArraySample(usdi::Attribute *attr, con
 // ext
 
 namespace usdi {
-    struct MapContext;
     typedef void(*TaskFunc)(void*);
 } // namespace usdi
 
 extern "C" {
 
-usdiAPI void            usdiExtVtxTaskQueue(const usdi::MeshData *src, usdi::MapContext *ctxVB, usdi::MapContext *ctxIB);
-usdiAPI void            usdiExtVtxTaskEndQueing();
-usdiAPI void            usdiExtVtxTaskFlush();
-usdiAPI void            usdiExtVtxTaskClear();
+usdiAPI usdi::handle_t  usdiExtVtxCmdCreate(const char *dbg_name);
+usdiAPI void            usdiExtVtxCmdDestroy(usdi::handle_t h);
+usdiAPI void            usdiExtVtxCmdUpdate(usdi::handle_t h, const usdi::MeshData *src, void *vb, void *ib);
+usdiAPI void            usdiExtVtxCmdProcess();
+usdiAPI void            usdiExtVtxCmdWait();
 
 usdiAPI usdi::handle_t  usdiExtTaskCreate(usdi::TaskFunc func, void *arg, const char *dbg_name);
 usdiAPI void            usdiExtTaskDestroy(usdi::handle_t h);

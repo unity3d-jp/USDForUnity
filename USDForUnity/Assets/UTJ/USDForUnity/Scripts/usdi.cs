@@ -415,10 +415,10 @@ namespace UTJ
             public Bool keepStagingResource;
         };
 
-        [DllImport("usdi")] public static extern void usdiExtVtxTaskQueue(ref MeshData data, ref MapContext ctxVB, ref MapContext ctxIB);
-        [DllImport("usdi")] public static extern void usdiExtVtxTaskEndQueing();
-        [DllImport("usdi")] public static extern void usdiExtVtxTaskFlush();
-        [DllImport("usdi")] public static extern void usdiExtVtxTaskClear();
+        [DllImport("usdi")] public static extern int  usdiExtVtxCmdCreate(string dbg_name);
+        [DllImport("usdi")] public static extern void usdiExtVtxCmdDestroy(int h);
+        [DllImport("usdi")] public static extern void usdiExtVtxCmdUpdate(int h, ref MeshData data, IntPtr vb, IntPtr ib);
+        [DllImport("usdi")] public static extern void usdiExtVtxCmdWait();
 
 
         public delegate void usdiTaskFunc(IntPtr arg);
@@ -429,35 +429,56 @@ namespace UTJ
         [DllImport("usdi")] public static extern void usdiExtTaskWait(int handle);
 
 
-        public class Task
+        public class VertexUpdateCommand
         {
-            usdi.usdiTaskFunc func;
             int handle;
 
-            public Task(usdi.usdiTaskFunc f, string dbg_name = "")
+            public VertexUpdateCommand(string dbg_name)
+            {
+                handle = usdiExtVtxCmdCreate(dbg_name);
+            }
+
+            ~VertexUpdateCommand()
+            {
+                usdiExtVtxCmdDestroy(handle);
+            }
+
+            public void Update(ref MeshData data, IntPtr vb, IntPtr ib)
+            {
+                usdiExtVtxCmdUpdate(handle, ref data, vb, ib);
+            }
+        }
+
+
+        public class Task
+        {
+            usdiTaskFunc func;
+            int handle;
+
+            public Task(usdiTaskFunc f, string dbg_name = "")
             {
                 func = f;
-                handle = usdi.usdiExtTaskCreate(func, IntPtr.Zero, dbg_name);
+                handle = usdiExtTaskCreate(func, IntPtr.Zero, dbg_name);
             }
 
             ~Task()
             {
-                usdi.usdiExtTaskDestroy(handle);
+                usdiExtTaskDestroy(handle);
             }
 
             public void Run()
             {
-                usdi.usdiExtTaskRun(handle);
+                usdiExtTaskRun(handle);
             }
 
             public bool IsRunning()
             {
-                return usdi.usdiExtTaskIsRunning(handle);
+                return usdiExtTaskIsRunning(handle);
             }
 
             public void Wait()
             {
-                usdi.usdiExtTaskWait(handle);
+                usdiExtTaskWait(handle);
             }
         }
 

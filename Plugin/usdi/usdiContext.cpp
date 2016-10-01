@@ -227,11 +227,12 @@ void Context::updateAllSamples(Time t)
         s->updateSample(t);
     }
 #else
-    tbb::parallel_for(tbb::blocked_range<size_t>(0, m_schemas.size()), [t, this](const auto& r) {
+    size_t grain = std::max<size_t>(m_schemas.size() / 32, 1);
+    tbb::parallel_for(tbb::blocked_range<size_t>(0, m_schemas.size(), grain), [t, this](const auto& r) {
         for (size_t i = r.begin(); i != r.end(); ++i) {
             m_schemas[i]->updateSample(t);
         }
-    }, tbb::auto_partitioner());
+    });
 #endif
 }
 

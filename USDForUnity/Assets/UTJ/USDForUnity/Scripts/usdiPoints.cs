@@ -102,7 +102,7 @@ namespace UTJ
             {
 
 #if UNITY_EDITOR
-                if (m_stream.usdForceSingleThread)
+                if (m_stream.forceSingleThread)
                 {
                     usdi.usdiPointsReadSample(m_points, ref m_pointsData, m_timeRead, true);
                     if (m_attrRotations)
