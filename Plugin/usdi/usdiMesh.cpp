@@ -176,8 +176,14 @@ void Mesh::updateSample(Time t_)
                 InvertX((float3*)sample.normals.data(), sample.normals.size());
             }
         }
-        else if (conf.normal_calculation == NormalCalculationType::WhenMissing) {
-            needs_calculate_normals = true;
+        else {
+            if (conf.normal_calculation == NormalCalculationType::WhenMissing) {
+                needs_calculate_normals = true;
+            }
+            else {
+                sample.normals.resize(sample.points.size());
+                memset(sample.normals.data(), 0, sizeof(float3)*sample.normals.size());
+            }
         }
     }
 
@@ -199,10 +205,6 @@ void Mesh::updateSample(Time t_)
         CalculateNormals((float3*)sample.normals.data(), (const float3*)sample.points.cdata(), sample.indices_triangulated.cdata(),
             sample.points.size(), sample.indices_triangulated.size());
     }
-    else if (sample.normals.size() != sample.points.size()) {
-        sample.normals.resize(sample.points.size());
-        memset(sample.normals.data(), 0, sizeof(float3)*sample.normals.size());
-    }
 
     // bounds
     ComputeBounds((float3*)sample.points.cdata(), sample.points.size(), sample.bounds_min, sample.bounds_max);
@@ -212,13 +214,13 @@ void Mesh::updateSample(Time t_)
 
     // mesh split
 
-    bool positions_are_expanded = sample.points.size() == m_num_indices;
+    bool points_are_expanded = sample.points.size() == m_num_indices;
     bool normals_are_expanded = sample.normals.size() == m_num_indices;
     bool uvs_are_expanded = sample.uvs.size() == m_num_indices;
 
     bool needs_split = false;
     if (conf.split_mesh) {
-        needs_split = sample.points.size() > usdiMaxVertices || positions_are_expanded || normals_are_expanded || uvs_are_expanded;
+        needs_split = sample.points.size() > usdiMaxVertices || points_are_expanded || normals_are_expanded || uvs_are_expanded;
     }
     if (!needs_split) { return; }
 
@@ -235,7 +237,7 @@ void Mesh::updateSample(Time t_)
             sms.indices.resize(isize);
             for (int i = 0; i < isize; ++i) { sms.indices[i] = i; }
         }
-        CopyWithIndices(sms.points, sample.points, sample.indices_triangulated, ibegin, iend, !positions_are_expanded);
+        CopyWithIndices(sms.points, sample.points, sample.indices_triangulated, ibegin, iend, !points_are_expanded);
         CopyWithIndices(sms.normals, sample.normals, sample.indices_triangulated, ibegin, iend, !normals_are_expanded);
         CopyWithIndices(sms.uvs, sample.uvs, sample.indices_triangulated, ibegin, iend, !uvs_are_expanded);
 
