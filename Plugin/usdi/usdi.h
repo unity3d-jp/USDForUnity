@@ -226,6 +226,20 @@ struct PointsData
     uint    num_points = 0;
 };
 
+
+struct AttributeSummary
+{
+    Time            start = 0.0, end = 0.0;
+    AttributeType   type = usdi::AttributeType::Unknown;
+    int             num_samples = 0;
+};
+
+struct AttributeData
+{
+    void    *data = nullptr;
+    int     num_elements = 0;
+};
+
 } // namespace usdi
 
 extern "C" {
@@ -296,13 +310,9 @@ usdiAPI bool             usdiPointsWriteSample(usdi::Points *points, const usdi:
 usdiAPI usdi::Schema*        usdiAttrGetParent(usdi::Attribute *attr);
 usdiAPI const char*          usdiAttrGetName(usdi::Attribute *attr);
 usdiAPI const char*          usdiAttrGetTypeName(usdi::Attribute *attr);
-usdiAPI usdi::AttributeType  usdiAttrGetType(usdi::Attribute *attr);
-usdiAPI int                  usdiAttrGetNumSamples(usdi::Attribute *attr);
-usdiAPI int                  usdiAttrGetArraySize(usdi::Attribute *attr, usdi::Time t); // always 1 if attr is scalar
-usdiAPI bool                 usdiAttrReadSample(usdi::Attribute *attr, void *dst, usdi::Time t);
-usdiAPI bool                 usdiAttrReadArraySample(usdi::Attribute *attr, void *dst, int size, usdi::Time t);
-usdiAPI bool                 usdiAttrWriteSample(usdi::Attribute *attr, const void *src, usdi::Time t);
-usdiAPI bool                 usdiAttrWriteArraySample(usdi::Attribute *attr, const void *src, int size, usdi::Time t);
+usdiAPI void                 usdiAttrGetSummary(usdi::Attribute *attr, usdi::AttributeSummary *dst);
+usdiAPI bool                 usdiAttrReadSample(usdi::Attribute *attr, usdi::AttributeData *dst, usdi::Time t, bool copy);
+usdiAPI bool                 usdiAttrWriteSample(usdi::Attribute *attr, const usdi::AttributeData *src, usdi::Time t);
 
 } // extern "C"
 
@@ -317,17 +327,20 @@ namespace usdi {
 
 extern "C" {
 
-usdiAPI usdi::handle_t  usdiExtVtxCmdCreate(const char *dbg_name);
-usdiAPI void            usdiExtVtxCmdDestroy(usdi::handle_t h);
-usdiAPI void            usdiExtVtxCmdUpdate(usdi::handle_t h, const usdi::MeshData *src, void *vb, void *ib);
-usdiAPI void            usdiExtVtxCmdProcess();
-usdiAPI void            usdiExtVtxCmdWait();
+usdiAPI usdi::handle_t  usdiVtxCmdCreate(const char *dbg_name);
+usdiAPI void            usdiVtxCmdDestroy(usdi::handle_t h);
+usdiAPI void            usdiVtxCmdUpdate(usdi::handle_t h, const usdi::MeshData *src, void *vb, void *ib);
+usdiAPI void            usdiVtxCmdProcess();
+usdiAPI void            usdiVtxCmdWait();
 
-usdiAPI usdi::handle_t  usdiExtTaskCreate(usdi::TaskFunc func, void *arg, const char *dbg_name);
-usdiAPI void            usdiExtTaskDestroy(usdi::handle_t h);
-usdiAPI void            usdiExtTaskRun(usdi::handle_t h);
-usdiAPI bool            usdiExtTaskIsRunning(usdi::handle_t h);
-usdiAPI void            usdiExtTaskWait(usdi::handle_t h);
+usdiAPI usdi::handle_t  usdiTaskCreate(usdi::TaskFunc func, void *arg, const char *dbg_name);
+usdiAPI void            usdiTaskDestroy(usdi::handle_t h);
+usdiAPI void            usdiTaskRun(usdi::handle_t h);
+usdiAPI bool            usdiTaskIsRunning(usdi::handle_t h);
+usdiAPI void            usdiTaskWait(usdi::handle_t h);
+usdiAPI usdi::handle_t  usdiTaskMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, const usdi::Time *t);
+usdiAPI usdi::handle_t  usdiTaskPointsReadSample(usdi::Points *points, usdi::PointsData *dst, const usdi::Time *t);
+usdiAPI usdi::handle_t  usdiTaskAttrReadArraySample(usdi::Attribute *attr, usdi::AttributeData *dst, const usdi::Time *t);
 
 } // extern "C"
 

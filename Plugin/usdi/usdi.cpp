@@ -433,53 +433,26 @@ usdiAPI const char* usdiAttrGetTypeName(usdi::Attribute *attr)
     return attr->getTypeName();
 }
 
-usdiAPI usdi::AttributeType usdiAttrGetType(usdi::Attribute *attr)
+usdiAPI void usdiAttrGetSummary(usdi::Attribute *attr, usdi::AttributeSummary *dst)
 {
     usdiTraceFunc();
-    if (!attr) { return usdi::AttributeType::Unknown; }
-    return attr->getType();
+    if (!attr) { return; }
+    *dst = attr->getSummary();
 }
 
-usdiAPI int usdiAttrGetNumSamples(usdi::Attribute *attr)
+usdiAPI bool usdiAttrReadSample(usdi::Attribute *attr, usdi::AttributeData *dst, usdi::Time t, bool copy)
 {
     usdiTraceFunc();
-    if (!attr) { return 0; }
-    return (int)attr->getNumSamples();
+    if (!attr || !dst) { return false; }
+    return attr->readSample(*dst, t, copy);
 }
 
-usdiAPI int usdiAttrGetArraySize(usdi::Attribute *attr, usdi::Time t)
+usdiAPI bool usdiAttrWriteSample(usdi::Attribute *attr, const usdi::AttributeData *src, usdi::Time t)
 {
     usdiTraceFunc();
-    if (!attr) { return 0; }
-    return (int)attr->getArraySize(t);
+    if (!attr || !src) { return false; }
+    return attr->writeSample(*src, t);
 }
 
-usdiAPI bool usdiAttrReadSample(usdi::Attribute *attr, void *dst, usdi::Time t)
-{
-    usdiTraceFunc();
-    if (!attr) { return false; }
-    return attr->get(dst, 1, t);
-}
-
-usdiAPI bool usdiAttrReadArraySample(usdi::Attribute *attr, void *dst, int size, usdi::Time t)
-{
-    usdiTraceFunc();
-    if (!attr) { return false; }
-    return attr->get(dst, size, t);
-}
-
-usdiAPI bool usdiAttrWriteSample(usdi::Attribute *attr, const void *src, usdi::Time t)
-{
-    usdiTraceFunc();
-    if (!attr) { return false; }
-    return attr->set(src, 1, t);
-}
-
-usdiAPI bool usdiAttrWriteArraySample(usdi::Attribute *attr, const void *src, int size, usdi::Time t)
-{
-    usdiTraceFunc();
-    if (!attr) { return false; }
-    return attr->set(src, size, t);
-}
 
 } // extern "C"

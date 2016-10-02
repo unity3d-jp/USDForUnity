@@ -350,6 +350,7 @@ namespace UTJ
             ParticleSystem m_target;
             usdi.Attribute m_attr_rotatrions;
             usdi.PointsData m_data = usdi.PointsData.default_value;
+            usdi.AttributeData m_dataRot;
 
             ParticleSystem.Particle[] m_buf_particles;
             Vector3[] m_buf_positions;
@@ -387,19 +388,26 @@ namespace UTJ
 #else
                     m_target.maxParticles;
 #endif
+                bool allocated = false;
                 if (m_buf_particles == null)
                 {
                     m_buf_particles = new ParticleSystem.Particle[count_max];
                     m_buf_positions = new Vector3[count_max];
                     m_buf_rotations = new Vector4[count_max];
-                    m_data.points = usdi.GetArrayPtr(m_buf_positions);
+                    allocated = true;
                 }
                 else if (m_buf_particles.Length != count_max)
                 {
                     Array.Resize(ref m_buf_particles, count_max);
                     Array.Resize(ref m_buf_positions, count_max);
                     Array.Resize(ref m_buf_rotations, count_max);
+                    allocated = true;
+                }
+
+                if (allocated)
+                {
                     m_data.points = usdi.GetArrayPtr(m_buf_positions);
+                    m_dataRot.data = usdi.GetArrayPtr(m_buf_rotations);
                 }
 
                 // copy particle positions & rotations to buffer
@@ -418,6 +426,7 @@ namespace UTJ
                 }
 
                 m_data.num_points = count;
+                m_dataRot.num_elements = count;
             }
 
             public override void Flush(double t) // called from worker thread
@@ -428,7 +437,7 @@ namespace UTJ
                 usdi.usdiPointsWriteSample(usdi.usdiAsPoints(m_usd), ref m_data, t);
                 if (m_captureRotations)
                 {
-                    usdi.usdiAttrWriteArraySample(m_attr_rotatrions, usdi.GetArrayPtr(m_buf_rotations), m_data.num_points, t);
+                    usdi.usdiAttrWriteSample(m_attr_rotatrions, ref m_dataRot, t);
                 }
             }
         }
@@ -842,7 +851,7 @@ namespace UTJ
             {
                 if(m_asyncFlush == null)
                 {
-                    m_asyncFlush = new usdi.Task((var) => {
+                    m_asyncFlush = new usdi.DelegateTask((var) => {
                         try
                         {
                             foreach (var c in m_capturers) { c.Flush(m_timeFlush); }

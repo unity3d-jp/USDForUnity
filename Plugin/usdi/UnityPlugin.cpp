@@ -21,7 +21,7 @@ UnityPluginUnload()
 
 static void UNITY_INTERFACE_API UnityRenderEventFunc(int eventID)
 {
-    usdiExtVtxCmdProcess();
+    usdiVtxCmdProcess();
 }
 
 extern "C" UNITY_INTERFACE_EXPORT 

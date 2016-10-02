@@ -18,10 +18,10 @@ public:
     size_t          getNumSamples() const;
     bool            getTimeRange(Time& start, Time& end);
 
+    AttributeSummary getSummary();
     virtual void    updateSample(Time t) = 0;
-    virtual size_t  getArraySize(Time t) = 0; // always 1 if scalar
-    virtual bool    get(void *dst, size_t size, Time t) = 0;
-    virtual bool    set(const void *src, size_t size, Time t) = 0;
+    virtual bool    readSample(AttributeData& dst, Time t, bool copy) = 0;
+    virtual bool    writeSample(const AttributeData& src, Time t) = 0;
     virtual bool    getImmediate(void *dst, Time t) = 0;
     virtual bool    setImmediate(const void *src, Time t) = 0;
 
@@ -31,6 +31,7 @@ protected:
     AttributeType m_type;
     Time m_time_start = usdiInvalidTime, m_time_end = usdiInvalidTime;
     Time m_time_prev = usdiInvalidTime;
+
 #ifdef usdiDebug
     const char *m_dbg_name = nullptr;
     const char *m_dbg_typename = nullptr;

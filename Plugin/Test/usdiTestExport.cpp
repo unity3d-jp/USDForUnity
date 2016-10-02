@@ -14,9 +14,13 @@ void AddAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType ty
 {
     usdi::Time t = 0.0;
     auto *attr = usdiCreateAttribute(schema, name, type);
+
+    usdi::AttributeData data;
+    data.data = (void*)&v;
+    data.num_elements = 1;
     for (int i = 0; i < 5; ++i) {
         t += 1.0 / 30.0;
-        usdiAttrWriteSample(attr, &v, t);
+        usdiAttrWriteSample(attr, &data, t);
     }
 }
 template<class T, size_t N>
@@ -24,19 +28,27 @@ void AddAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType ty
 {
     usdi::Time t = 0.0;
     auto *attr = usdiCreateAttribute(schema, name, type);
+
+    usdi::AttributeData data;
+    data.data = (void*)v;
+    data.num_elements = N;
     for (int i = 0; i < 5; ++i) {
         t += 1.0 / 30.0;
-        usdiAttrWriteArraySample(attr, v, N, t);
+        usdiAttrWriteSample(attr, &data, t);
     }
 }
 
-void AddAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type, const char *&v)
+void AddAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type, const void *&v)
 {
     usdi::Time t = 0.0;
     auto *attr = usdiCreateAttribute(schema, name, type);
+
+    usdi::AttributeData data;
+    data.data = (void*)v;
+    data.num_elements = 1;
     for (int i = 0; i < 5; ++i) {
         t += 1.0 / 30.0;
-        usdiAttrWriteSample(attr, v, t);
+        usdiAttrWriteSample(attr, &data, t);
     }
 }
 

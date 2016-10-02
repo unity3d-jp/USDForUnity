@@ -43,7 +43,8 @@ void InspectAttribute(usdi::Attribute *attr)
     case usdi::AttributeType::Enum:\
     {\
         Type buf;\
-        usdiAttrReadSample(attr, &buf, t);\
+        usdi::AttributeData data; data.data = (void*)&buf; data.num_elements = 1;\
+        usdiAttrReadSample(attr, &data, t, true);\
         P(buf);\
         break;\
     }
@@ -52,15 +53,23 @@ void InspectAttribute(usdi::Attribute *attr)
     case usdi::AttributeType::Enum##Array:\
     {\
         std::vector<Type> buf;\
-        buf.resize(usdiAttrGetArraySize(attr, t));\
-        usdiAttrReadArraySample(attr, &buf[0], buf.size(), t);\
+        usdi::AttributeData data;\
+        usdiAttrReadSample(attr, &data, t, true);\
+        buf.resize(data.num_elements);\
+        data.data = buf.data();\
+        data.num_elements = buf.size();\
+        usdiAttrReadSample(attr, &data, t, true); \
         P(buf);\
         break;\
     }
 
 
+    usdi::AttributeSummary summary;
+    usdiAttrGetSummary(attr, &summary);
     printf("    %s (%s): ", usdiAttrGetName(attr), usdiAttrGetTypeName(attr));
-    switch (usdiAttrGetType(attr)) {
+
+
+    switch (summary.type) {
         ImplScalar(Byte, byte);
         ImplScalar(Int, int);
         ImplScalar(UInt, uint);

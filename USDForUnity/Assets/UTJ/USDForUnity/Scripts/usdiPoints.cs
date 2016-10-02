@@ -8,14 +8,14 @@ namespace UTJ
     {
         #region fields
         usdi.Points     m_points;
+        usdi.Attribute  m_attrRot;
         usdi.PointsSummary m_summary = default(usdi.PointsSummary);
         usdi.PointsData m_pointsData;
-        usdi.Attribute  m_attrRotations;
+        usdi.AttributeData m_rotData;
 
         Vector3[] m_positions;
         Vector3[] m_velocities;
         Vector4[] m_rotations;
-        IntPtr m_ptrRotations;
 
         usdi.Task m_asyncRead;
         double m_timeRead;
@@ -40,7 +40,7 @@ namespace UTJ
                 return;
             }
             usdi.usdiPointsGetSummary(m_points, ref m_summary);
-            m_attrRotations = usdi.usdiFindAttribute(m_points, "rotations");
+            m_attrRot = usdi.usdiFindAttribute(m_points, "rotations");
         }
 
         public override void usdiOnUnload()
@@ -56,13 +56,12 @@ namespace UTJ
             m_points = default(usdi.Points);
             m_summary = default(usdi.PointsSummary);
             m_pointsData = default(usdi.PointsData);
-            m_attrRotations = default(usdi.Attribute);
+            m_attrRot = default(usdi.Attribute);
+            m_rotData = default(usdi.AttributeData);
 
             m_positions = null;
             m_velocities = null;
             m_rotations = null;
-
-            m_ptrRotations = default(IntPtr);
         }
 
         public override void usdiAsyncUpdate(double time)
@@ -90,10 +89,11 @@ namespace UTJ
                     m_velocities = new Vector3[m_pointsData.num_points];
                     m_pointsData.velocities = usdi.GetArrayPtr(m_velocities);
                 }
-                if (m_attrRotations)
+                if (m_attrRot)
                 {
                     m_rotations = new Vector4[m_pointsData.num_points];
-                    m_ptrRotations = usdi.GetArrayPtr(m_rotations);
+                    m_rotData.data = usdi.GetArrayPtr(m_rotations);
+                    m_rotData.num_elements = tmp.num_points;
                 }
             }
 
@@ -105,9 +105,9 @@ namespace UTJ
                 if (m_stream.forceSingleThread)
                 {
                     usdi.usdiPointsReadSample(m_points, ref m_pointsData, m_timeRead, true);
-                    if (m_attrRotations)
+                    if (m_attrRot)
                     {
-                        usdi.usdiAttrReadArraySample(m_attrRotations, m_ptrRotations, m_rotations.Length, m_timeRead);
+                        usdi.usdiAttrReadSample(m_attrRot, ref m_rotData, m_timeRead, true);
                     }
                 }
                 else
@@ -115,12 +115,12 @@ namespace UTJ
                 {
                     if (m_asyncRead == null)
                     {
-                        m_asyncRead = new usdi.Task((var) =>
+                        m_asyncRead = new usdi.DelegateTask((var) =>
                         {
                             usdi.usdiPointsReadSample(m_points, ref m_pointsData, m_timeRead, true);
-                            if (m_attrRotations)
+                            if (m_attrRot)
                             {
-                                usdi.usdiAttrReadArraySample(m_attrRotations, m_ptrRotations, m_rotations.Length, m_timeRead);
+                                usdi.usdiAttrReadSample(m_attrRot, ref m_rotData, m_timeRead, true);
                             }
                         }, "usdiPoints: " + usdi.usdiGetNameS(m_points));
                     }

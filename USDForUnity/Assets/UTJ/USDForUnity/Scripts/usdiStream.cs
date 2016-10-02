@@ -270,7 +270,7 @@ namespace UTJ
             {
                 if (m_asyncUpdate == null)
                 {
-                    m_asyncUpdate = new usdi.Task(
+                    m_asyncUpdate = new usdi.DelegateTask(
                         (arg) =>
                         {
                             try

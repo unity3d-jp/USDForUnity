@@ -52,24 +52,28 @@ struct AttrArgs
 {
     static void load(const T& s, void *a, size_t n) { *(T*)a = s; }
     static void store(T& s, const void *a, size_t n) { s = *(const T*)a; }
+    static void* address(T& s) { return &s; }
 };
 template<>
 struct AttrArgs<TfToken>
 {
     static void load(const TfToken& s, void *a, size_t n) { *(const char**)a = s.GetText(); }
     static void store(TfToken& s, const void *a, size_t n) { s = TfToken((const char*)a); }
+    static void* address(TfToken& s) { return (void*)s.GetText(); }
 };
 template<>
 struct AttrArgs<std::string>
 {
     static void load(const std::string& s, void *a, size_t n) { *(const char**)a = s.c_str(); }
     static void store(std::string& s, const void *a, size_t n) { s = std::string((const char*)a); }
+    static void* address(std::string& s) { return (void*)s.c_str(); }
 };
 template<>
 struct AttrArgs<SdfAssetPath>
 {
     static void load(const SdfAssetPath& s, void *a, size_t n) { *(const char**)a = s.GetAssetPath().c_str(); }
     static void store(SdfAssetPath& s, const void *a, size_t n) { s = SdfAssetPath((const char*)a); }
+    static void* address(SdfAssetPath& s) { return (void*)s.GetAssetPath().c_str(); }
 };
 
 template<class V>
@@ -83,6 +87,7 @@ struct AttrArgs<VtArray<V>>
     static void store(VtArray<V>& s, const void *a, size_t n) {
         s.assign((V*)a, (V*)a + n);
     }
+    static void* address(VtArray<V>& s) { return (void*)s.cdata(); }
 };
 template<>
 struct AttrArgs<VtArray<TfToken>>
@@ -101,6 +106,7 @@ struct AttrArgs<VtArray<TfToken>>
             s[i] = TfToken(src[i]);
         }
     }
+    static void* address(VtArray<TfToken>& s) { return (void*)s.cdata(); }
 };
 template<>
 struct AttrArgs<VtArray<std::string>>
@@ -119,6 +125,7 @@ struct AttrArgs<VtArray<std::string>>
             s[i] = std::string(src[i]);
         }
     }
+    static void* address(VtArray<std::string>& s) { return (void*)s.cdata(); }
 };
 template<>
 struct AttrArgs<VtArray<SdfAssetPath>>
@@ -137,6 +144,7 @@ struct AttrArgs<VtArray<SdfAssetPath>>
             s[i] = SdfAssetPath(src[i]);
         }
     }
+    static void* address(VtArray<SdfAssetPath>& s) { return (void*)s.cdata(); }
 };
 
 
@@ -179,6 +187,17 @@ bool Attribute::getTimeRange(Time& start, Time& end)
     return false;
 }
 
+AttributeSummary Attribute::getSummary()
+{
+    AttributeSummary ret;
+    ret.start = m_time_start;
+    ret.end = m_time_end;
+    ret.type = m_type;
+    ret.num_samples = (int)getNumSamples();
+    return ret;
+}
+
+
 
 // scalar attribute impl
 template<class T>
@@ -210,33 +229,36 @@ public:
         }
     }
 
-    size_t getArraySize(Time t) override { return 1; }
-
-    bool get(void *dst, size_t size, Time t) override
+    bool readSample(AttributeData& dst, Time t, bool copy) override
     {
         updateSample(t);
-        Args::load(m_sample, dst, size);
+
+        dst.num_elements = 1;
+        if (copy) {
+            if (dst.data) {
+                Args::load(m_sample, dst.data, 1);
+            }
+        }
+        else {
+            dst.data = Args::address(m_sample);
+        }
+        return true;
+    }
+
+    bool writeSample(const AttributeData& src, Time t) override
+    {
+        Args::store(m_sample, src.data, src.num_elements);
+        m_usdattr.Set(m_sample, t);
         return true;
     }
 
     bool getImmediate(void *dst, Time t) override
     {
-        if (!dst) { return false; }
         return m_usdattr.Get((T*)dst, t);
-    }
-
-
-    bool set(const void *src, size_t size, Time t) override
-    {
-        if (!src) { return false; }
-        Args::store(m_sample, src, size);
-        m_usdattr.Set(m_sample, t);
-        return true;
     }
 
     bool setImmediate(const void *src, Time t) override
     {
-        if (!src) { return false; }
         return m_usdattr.Set(*(const T*)src, t);
     }
 
@@ -274,38 +296,36 @@ public:
         }
     }
 
-    size_t getArraySize(Time t) override
+    bool readSample(AttributeData& dst, Time t, bool copy) override
     {
         updateSample(t);
-        return m_sample.size();
+
+        dst.num_elements = (int)m_sample.size();
+        if (copy) {
+            if (dst.data) {
+                Args::load(m_sample, dst.data, dst.num_elements);
+            }
+        }
+        else {
+            dst.data = Args::address(m_sample);
+        }
+        return true;
     }
 
-    bool get(void *dst, size_t size, Time t) override
+    bool writeSample(const AttributeData& src, Time t) override
     {
-        if (!dst) { return false; }
-        updateSample(t);
-        Args::load(m_sample, dst, size);
+        Args::store(m_sample, src.data, src.num_elements);
+        m_usdattr.Set(m_sample, t);
         return true;
     }
 
     bool getImmediate(void *dst, Time t) override
     {
-        if (!dst) { return false; }
         return m_usdattr.Get((VtArray<V>*)dst, t);
-    }
-
-
-    bool set(const void *src, size_t size, Time t) override
-    {
-        if (!src) { return false; }
-        Args::store(m_sample, src, size);
-        m_usdattr.Set(m_sample, t);
-        return true;
     }
 
     bool setImmediate(const void *src, Time t) override
     {
-        if (!src) { return false; }
         return m_usdattr.Set(*(const VtArray<V>*)src, t);
     }
 

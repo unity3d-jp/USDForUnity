@@ -323,6 +323,20 @@ namespace UTJ
             }
         }
 
+        public struct AttributeSummary
+        {
+            public double start, end;
+            public AttributeType type;
+            public int num_samples;
+        };
+
+        public struct AttributeData
+        {
+            public IntPtr data;
+            public int num_elements;
+        };
+
+
         [DllImport ("AddDLLSearchPath")] public static extern IntPtr GetModulePath();
         [DllImport ("AddDLLSearchPath")] public static extern void AddDLLSearchPath(IntPtr path);
         [DllImport ("AddDLLSearchPath")] public static extern void AddDLLSearchPath(string path);
@@ -394,13 +408,9 @@ namespace UTJ
         // Attribute interface
         [DllImport ("usdi")] public static extern IntPtr        usdiAttrGetName(Attribute attr);
         [DllImport ("usdi")] public static extern IntPtr        usdiAttrGetTypeName(Attribute attr);
-        [DllImport ("usdi")] public static extern AttributeType usdiAttrGetType(Attribute attr);
-        [DllImport ("usdi")] public static extern int           usdiAttrGetArraySize(Attribute attr, double t);
-        [DllImport ("usdi")] public static extern int           usdiAttrGetNumSamples(Attribute attr);
-        [DllImport ("usdi")] public static extern Bool          usdiAttrReadSample(Attribute attr, IntPtr dst, double t);
-        [DllImport ("usdi")] public static extern Bool          usdiAttrReadArraySample(Attribute attr, IntPtr dst, int size, double t);
-        [DllImport ("usdi")] public static extern Bool          usdiAttrWriteSample(Attribute attr, IntPtr src, double t);
-        [DllImport ("usdi")] public static extern Bool          usdiAttrWriteArraySample(Attribute attr, IntPtr src, int size, double t);
+        [DllImport ("usdi")] public static extern void          usdiAttrGetSummary(Attribute attr, ref AttributeSummary dst);
+        [DllImport ("usdi")] public static extern bool          usdiAttrReadSample(Attribute attr, ref AttributeData dst, double t, Bool copy);
+        [DllImport ("usdi")] public static extern bool          usdiAttrWriteSample(Attribute attr, ref AttributeData src, double t);
 
 
 
@@ -416,19 +426,21 @@ namespace UTJ
             public Bool keepStagingResource;
         };
 
-        [DllImport("usdi")] public static extern int  usdiExtVtxCmdCreate(string dbg_name);
-        [DllImport("usdi")] public static extern void usdiExtVtxCmdDestroy(int h);
-        [DllImport("usdi")] public static extern void usdiExtVtxCmdUpdate(int h, ref MeshData data, IntPtr vb, IntPtr ib);
-        [DllImport("usdi")] public static extern void usdiExtVtxCmdWait();
+        [DllImport("usdi")] public static extern int  usdiVtxCmdCreate(string dbg_name);
+        [DllImport("usdi")] public static extern void usdiVtxCmdDestroy(int h);
+        [DllImport("usdi")] public static extern void usdiVtxCmdUpdate(int h, ref MeshData data, IntPtr vb, IntPtr ib);
+        [DllImport("usdi")] public static extern void usdiVtxCmdWait();
 
 
         public delegate void usdiTaskFunc(IntPtr arg);
-        [DllImport("usdi")] public static extern int  usdiExtTaskCreate(usdiTaskFunc func, IntPtr arg, string dbg_name);
-        [DllImport("usdi")] public static extern void usdiExtTaskDestroy(int handle);
-        [DllImport("usdi")] public static extern void usdiExtTaskRun(int handle);
-        [DllImport("usdi")] public static extern bool usdiExtTaskIsRunning(int handle);
-        [DllImport("usdi")] public static extern void usdiExtTaskWait(int handle);
+        [DllImport("usdi")] public static extern int  usdiTaskCreate(usdiTaskFunc func, IntPtr arg, string dbg_name);
+        [DllImport("usdi")] public static extern void usdiTaskDestroy(int handle);
+        [DllImport("usdi")] public static extern void usdiTaskRun(int handle);
+        [DllImport("usdi")] public static extern bool usdiTaskIsRunning(int handle);
+        [DllImport("usdi")] public static extern void usdiTaskWait(int handle);
 
+        [DllImport("usdi")] public static extern int  usdiTaskMeshReadSample(Mesh mesh, ref MeshData dst, ref double t);
+        [DllImport("usdi")] public static extern int  usdiTaskPointsReadSample(Points points, ref PointsData dst, ref double t);
 
         public class VertexUpdateCommand
         {
@@ -436,61 +448,69 @@ namespace UTJ
 
             public VertexUpdateCommand(string dbg_name)
             {
-                handle = usdiExtVtxCmdCreate(dbg_name);
+                handle = usdiVtxCmdCreate(dbg_name);
             }
 
             ~VertexUpdateCommand()
             {
-                usdiExtVtxCmdDestroy(handle);
+                usdiVtxCmdDestroy(handle);
             }
 
             public void Update(ref MeshData data, IntPtr vb, IntPtr ib)
             {
-                usdiExtVtxCmdUpdate(handle, ref data, vb, ib);
+                usdiVtxCmdUpdate(handle, ref data, vb, ib);
             }
         }
 
 
         public class Task
         {
-            usdiTaskFunc m_func;
-            GCHandle m_arg;
-            int m_handle;
+            protected int m_handle;
 
-            public Task(usdiTaskFunc f, object arg, string dbg_name = "")
+            public Task(int handle = 0)
             {
-                m_func = f;
-                m_arg = GCHandle.Alloc(arg);
-                m_handle = usdiExtTaskCreate(m_func, (IntPtr)m_arg, dbg_name);
-            }
-
-            public Task(usdiTaskFunc f, string dbg_name = "")
-            {
-                m_func = f;
-                m_handle = usdiExtTaskCreate(m_func, IntPtr.Zero, dbg_name);
+                m_handle = handle;
             }
 
             ~Task()
             {
-                usdiExtTaskDestroy(m_handle);
+                usdiTaskDestroy(m_handle);
             }
 
             public void Run()
             {
-                usdiExtTaskRun(m_handle);
+                usdiTaskRun(m_handle);
             }
 
             public bool IsRunning()
             {
-                return usdiExtTaskIsRunning(m_handle);
+                return usdiTaskIsRunning(m_handle);
             }
 
             public void Wait()
             {
-                usdiExtTaskWait(m_handle);
+                usdiTaskWait(m_handle);
             }
         }
 
+        public class DelegateTask : Task
+        {
+            usdiTaskFunc m_func;
+            GCHandle m_arg;
+
+            public DelegateTask(usdiTaskFunc f, object arg, string dbg_name = "")
+            {
+                m_func = f;
+                m_arg = GCHandle.Alloc(arg);
+                m_handle = usdiTaskCreate(m_func, (IntPtr)m_arg, dbg_name);
+            }
+
+            public DelegateTask(usdiTaskFunc f, string dbg_name = "")
+            {
+                m_func = f;
+                m_handle = usdiTaskCreate(m_func, IntPtr.Zero, dbg_name);
+            }
+        }
 
 
         public static string S(IntPtr cstring) { return Marshal.PtrToStringAnsi(cstring); }

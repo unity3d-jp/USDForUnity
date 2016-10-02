@@ -172,9 +172,9 @@ TaskManager::Task* TaskManager::getTask(handle_t h)
     return m_tasks.get(h).get();
 }
 
-handle_t TaskManager::createTask(TaskFunc func, void *arg, const char *name)
+handle_t TaskManager::createTask(TaskFunc func, const char *name)
 {
-    auto *ptr = new Task(func, arg, name);
+    auto *ptr = new Task(func, name);
 
     handle_t ret = 0;
     {
@@ -199,7 +199,7 @@ void TaskManager::run(handle_t h)
     m_group.run([task]() {
         {
             //MonoScope mscope;
-            task->func(task->arg);
+            task->func();
         }
         task->mutex.unlock();
     });

@@ -277,15 +277,7 @@ namespace UTJ
                 {
                     if (m_asyncRead == null)
                     {
-                        m_asyncRead = new usdi.Task(
-                            (arg) =>
-                            {
-                                try
-                                {
-                                    usdi.usdiMeshReadSample(m_mesh, ref m_meshData, m_timeRead, true);
-                                }
-                                finally { }
-                            }, "usdiMesh: " + usdi.usdiGetNameS(m_mesh));
+                        m_asyncRead = new usdi.Task(usdi.usdiTaskMeshReadSample(m_mesh, ref m_meshData, ref m_timeRead));
                     }
                     m_asyncRead.Run();
                 }
