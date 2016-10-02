@@ -128,9 +128,7 @@ bool Context::open(const char *path)
     usdiLogTrace("  swap_handedness: %d\n", (int)m_import_config.swap_handedness);
     usdiLogTrace("  swap_faces: %d\n", (int)m_import_config.swap_faces);
 
-    ArGetResolver().ConfigureResolverForAsset(path);
-    auto resolverctx = ArGetResolver().CreateDefaultContextForAsset(path);
-    m_stage = UsdStage::Open(path, resolverctx);
+    m_stage = UsdStage::Open(path);
     if (!m_stage) {
         usdiLogWarning("Context::open(): failed to load %s\n", path);
         return false;

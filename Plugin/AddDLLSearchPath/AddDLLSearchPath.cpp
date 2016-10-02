@@ -32,9 +32,10 @@ extern "C" DLLEXPORT void AddDLLSearchPath(const char *v)
     std::string path;
     {
         DWORD size = ::GetEnvironmentVariableA("PATH", nullptr, 0);
-        path.resize(size);
-        ::GetEnvironmentVariableA("PATH", &path[0], (DWORD)path.size());
-        path.pop_back(); // delete last '\0'
+        if (size > 0) {
+            path.resize(size-1); // ignore 1 byte for '\0'
+            ::GetEnvironmentVariableA("PATH", &path[0], (DWORD)path.size());
+        }
     }
     if (path.find(v) == std::string::npos) {
         path += ";";
@@ -57,10 +58,7 @@ extern "C" DLLEXPORT void SetEnv(const char *name, const char *value)
 #ifdef _WIN32
     // get/setenv() and Set/GetEnvironmentVariable() is *not* compatible.
     // set both to make sure.
-    std::string tmp = name;
-    tmp += "=";
-    tmp += value;
-    ::_putenv(tmp.c_str());
+    ::_putenv_s(name, value);
     ::SetEnvironmentVariableA(name, value);
 #else
     ::setenv(name, value, 1);
