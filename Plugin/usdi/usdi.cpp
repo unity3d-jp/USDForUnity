@@ -149,6 +149,14 @@ usdiAPI void usdiUpdateAllSamples(usdi::Context *ctx, usdi::Time t)
     ctx->updateAllSamples(t);
 }
 
+usdiAPI void usdiInvalidateAllSamples(usdi::Context *ctx)
+{
+    usdiTraceFunc();
+    if (!ctx) return;
+
+    ctx->invalidateAllSamples();
+}
+
 
 // Schema interface
 

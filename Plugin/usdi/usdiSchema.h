@@ -31,6 +31,8 @@ public:
 
     bool                needsUpdate() const;
     virtual void        updateSample(Time t);
+    virtual void        invalidateSample();
+
 
 public: // for internal use
     void addChild(Schema *child);

@@ -1,9 +1,20 @@
 #include "pch.h"
 #include "Hook.h"
 
-namespace usdi {
-
 #ifdef _WIN32
+
+int SetMemoryFlags(void *addr, size_t size, MemoryFlags flags)
+{
+    DWORD flag = 0;
+    switch (flags) {
+    case MemoryFlags::ReadWrite: flag = PAGE_READWRITE; break;
+    case MemoryFlags::ExecuteRead: flag = PAGE_EXECUTE_READ; break;
+    case MemoryFlags::ExecuteReadWrite: flag = PAGE_EXECUTE_READWRITE; break;
+    }
+    DWORD old_flag;
+    VirtualProtect(addr, size, flag, &old_flag);
+    return old_flag;
+}
 
 void ForceWrite(void *dst, const void *src, size_t s)
 {
@@ -13,7 +24,7 @@ void ForceWrite(void *dst, const void *src, size_t s)
     VirtualProtect(dst, s, old_flag, &old_flag);
 }
 
-void* EmitJumpInstruction(void* from_, void* to_)
+void* EmitJumpInstruction(void* from_, const void* to_)
 {
     BYTE *base, *from, *to;
     base = from = (BYTE*)from_;
@@ -47,6 +58,7 @@ void* EmitJumpInstruction(void* from_, void* to_)
     return from;
 }
 
+
 void* OverrideDLLImport(HMODULE module, const char *target_module, const char *target_funcname, void *replacement)
 {
     if (!module) { return nullptr; }
@@ -58,7 +70,7 @@ void* OverrideDLLImport(HMODULE module, const char *target_module, const char *t
     size_t RVAImports = pNTHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress;
     IMAGE_IMPORT_DESCRIPTOR *pImportDesc = (IMAGE_IMPORT_DESCRIPTOR*)(ImageBase + RVAImports);
     while (pImportDesc->Name != 0) {
-        if (stricmp((const char*)(ImageBase + pImportDesc->Name), target_module) == 0) {
+        if (_stricmp((const char*)(ImageBase + pImportDesc->Name), target_module) == 0) {
             const char *dllname = (const char*)(ImageBase + pImportDesc->Name);
             IMAGE_IMPORT_BY_NAME **func_names = (IMAGE_IMPORT_BY_NAME**)(ImageBase + pImportDesc->Characteristics);
             void **import_table = (void**)(ImageBase + pImportDesc->FirstThunk);
@@ -105,5 +117,3 @@ void* OverrideDLLExportByName(HMODULE module, const char *funcname, void *replac
 }
 
 #endif
-
-} // namespace usdi

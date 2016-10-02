@@ -27,6 +27,7 @@ public:
     int                 generateID();
 
     void                updateAllSamples(Time t);
+    void                invalidateAllSamples();
 
 private:
     void    applyImportConfig();

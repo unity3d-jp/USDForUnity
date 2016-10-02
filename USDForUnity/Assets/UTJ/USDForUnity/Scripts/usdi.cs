@@ -345,6 +345,7 @@ namespace UTJ
         [DllImport ("usdi")] public static extern Schema        usdiGetRoot(Context ctx);
 
         [DllImport ("usdi")] public static extern void          usdiUpdateAllSamples(Context ctx, double t);
+        [DllImport ("usdi")] public static extern void          usdiInvalidateAllSamples(Context ctx);
 
         // Schema interface
         [DllImport ("usdi")] public static extern int           usdiGetID(Schema schema);
@@ -452,33 +453,41 @@ namespace UTJ
 
         public class Task
         {
-            usdiTaskFunc func;
-            int handle;
+            usdiTaskFunc m_func;
+            GCHandle m_arg;
+            int m_handle;
+
+            public Task(usdiTaskFunc f, object arg, string dbg_name = "")
+            {
+                m_func = f;
+                m_arg = GCHandle.Alloc(arg);
+                m_handle = usdiExtTaskCreate(m_func, (IntPtr)m_arg, dbg_name);
+            }
 
             public Task(usdiTaskFunc f, string dbg_name = "")
             {
-                func = f;
-                handle = usdiExtTaskCreate(func, IntPtr.Zero, dbg_name);
+                m_func = f;
+                m_handle = usdiExtTaskCreate(m_func, IntPtr.Zero, dbg_name);
             }
 
             ~Task()
             {
-                usdiExtTaskDestroy(handle);
+                usdiExtTaskDestroy(m_handle);
             }
 
             public void Run()
             {
-                usdiExtTaskRun(handle);
+                usdiExtTaskRun(m_handle);
             }
 
             public bool IsRunning()
             {
-                return usdiExtTaskIsRunning(handle);
+                return usdiExtTaskIsRunning(m_handle);
             }
 
             public void Wait()
             {
-                usdiExtTaskWait(handle);
+                usdiExtTaskWait(m_handle);
             }
         }
 

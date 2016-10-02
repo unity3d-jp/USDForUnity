@@ -2,6 +2,7 @@
 #include "usdiInternal.h"
 #include "usdiExtTask.h"
 #include "usdiUtils.h"
+#include "etc/Mono.h"
 
 namespace usdi {
 
@@ -196,7 +197,10 @@ void TaskManager::run(handle_t h)
 
     task->mutex.lock();
     m_group.run([task]() {
-        task->func(task->arg);
+        {
+            //MonoScope mscope;
+            task->func(task->arg);
+        }
         task->mutex.unlock();
     });
 }

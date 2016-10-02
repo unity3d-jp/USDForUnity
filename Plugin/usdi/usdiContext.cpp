@@ -234,4 +234,11 @@ void Context::updateAllSamples(Time t)
 #endif
 }
 
+void Context::invalidateAllSamples()
+{
+    for (auto& s : m_schemas) {
+        s->invalidateSample();
+    }
+}
+
 } // namespace usdi

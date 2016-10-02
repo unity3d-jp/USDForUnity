@@ -138,6 +138,12 @@ void Schema::updateSample(Time t)
     //}
 }
 
+void Schema::invalidateSample()
+{
+    m_needs_update = true;
+    m_time_prev = usdiInvalidTime;
+}
+
 const ImportConfig& Schema::getImportConfig() const { return m_ctx->getImportConfig(); }
 const ExportConfig& Schema::getExportConfig() const { return m_ctx->getExportConfig(); }
 

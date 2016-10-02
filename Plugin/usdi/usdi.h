@@ -248,6 +248,7 @@ usdiAPI void             usdiSetExportConfig(usdi::Context *ctx, const usdi::Exp
 usdiAPI void             usdiGetExportConfig(usdi::Context *ctx, usdi::ExportConfig *conf);
 usdiAPI usdi::Schema*    usdiGetRoot(usdi::Context *ctx);
 usdiAPI void             usdiUpdateAllSamples(usdi::Context *ctx, usdi::Time t);
+usdiAPI void             usdiInvalidateAllSamples(usdi::Context *ctx);
 
 // Schema interface
 usdiAPI int              usdiGetID(usdi::Schema *schema);
