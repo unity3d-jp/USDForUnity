@@ -1,5 +1,6 @@
 #pragma once
 
+#ifdef usdiEnableUnityExtension
 #include "usdi.h"
 
 // ext
@@ -28,5 +29,8 @@ usdiAPI usdi::Task*     usdiTaskCreatePointsReadSample(usdi::Points *points, usd
 usdiAPI usdi::Task*     usdiTaskCreateAttrReadSample(usdi::Attribute *attr, usdi::AttributeData *dst, const usdi::Time *t);
 usdiAPI usdi::Task*     usdiTaskCreateComposite(usdi::Task **tasks, int num);
 
-} // extern "C"
+usdiAPI void usdiUniForceAssignTRS(void *monoobj, const usdi::XformData *data);
+usdiAPI void usdiUniForceAssignBounds(void *monoobj, const usdi::float3 *center, const usdi::float3 *extents);
 
+} // extern "C"
+#endif // usdiEnableUnityExtension

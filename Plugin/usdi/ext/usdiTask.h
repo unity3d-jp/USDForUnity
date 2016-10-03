@@ -1,5 +1,6 @@
 #pragma once
 
+#ifdef usdiEnableUnityExtension
 #include "GraphicsInterface/GraphicsInterface.h"
 #include "etc/HandleBasedVector.h"
 #include "etc/FixedAllocator.h"
@@ -87,3 +88,4 @@ private:
 };
 
 } // namespace usdi
+#endif // usdiEnableUnityExtension

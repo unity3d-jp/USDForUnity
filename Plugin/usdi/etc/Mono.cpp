@@ -17,6 +17,7 @@ void (*mono_thread_detach)(MonoThread *thread);
 void (*mono_thread_suspend_all_other_threads)();
 void (*mono_thread_abort_all_other_threads)();
 void (*mono_jit_thread_attach)(MonoDomain *domain);
+void (*mono_add_internal_call)(const char *name, void *method);
 
 
 static void initialize_mono_functions()
@@ -32,6 +33,7 @@ static void initialize_mono_functions()
         (void*&)mono_thread_suspend_all_other_threads = ::GetProcAddress(mono, "mono_thread_suspend_all_other_threads");
         (void*&)mono_thread_abort_all_other_threads = ::GetProcAddress(mono, "mono_thread_abort_all_other_threads");
         (void*&)mono_jit_thread_attach = ::GetProcAddress(mono, "mono_jit_thread_attach");
+        (void*&)mono_add_internal_call = ::GetProcAddress(mono, "mono_add_internal_call");
     }
 #else
     // todo

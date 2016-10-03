@@ -58,6 +58,9 @@
     <ClCompile Include="usdi\ext\usdiTask.cpp">
       <Filter>usdi\ext</Filter>
     </ClCompile>
+    <ClCompile Include="usdi\ext\usdiUnity.cpp">
+      <Filter>usdi\ext</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="usdi\pch.h">
@@ -118,6 +121,9 @@
       <Filter>usdi</Filter>
     </ClInclude>
     <ClInclude Include="usdi\ext\usdiTask.h">
+      <Filter>usdi\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="usdi\ext\usdiUnity.h">
       <Filter>usdi\ext</Filter>
     </ClInclude>
   </ItemGroup>

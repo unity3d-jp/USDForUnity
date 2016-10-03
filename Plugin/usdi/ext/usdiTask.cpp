@@ -1,4 +1,6 @@
 #include "pch.h"
+
+#ifdef usdiEnableUnityExtension
 #include "usdiInternal.h"
 #include "usdiTask.h"
 #include "usdiUtils.h"
@@ -210,4 +212,7 @@ void Task::wait()
     m_mutex.unlock();
 }
 
+
 } // namespace usdi
+
+#endif // usdiEnableUnityExtension

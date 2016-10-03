@@ -1,4 +1,6 @@
 ﻿#include "pch.h"
+
+#ifdef usdiEnableUnityExtension
 #include "usdiInternal.h"
 #include "usdiAttribute.h"
 #include "usdiSchema.h"
@@ -8,9 +10,10 @@
 #include "usdiPoints.h"
 #include "usdiContext.h"
 
+#include "etc/Mono.h"
 #include "usdiExt.h"
 #include "ext/usdiTask.h"
-#include "etc/Mono.h"
+#include "ext/usdiUnity.h"
 
 
 namespace usdi {
@@ -120,7 +123,7 @@ usdiAPI usdi::Task* usdiTaskCreateAttrReadSample(usdi::Attribute *attr, usdi::At
 usdiAPI usdi::Task* usdiTaskCreateComposite(usdi::Task **tasks, int num)
 {
     usdiTraceFunc();
-    if (!tasks || num ==0) { return 0; }
+    if (!tasks || num == 0) { return 0; }
     return new usdi::Task([=]() {
         for (int i = 0; i < num; ++i) {
             tasks[i]->run(false);
@@ -128,5 +131,19 @@ usdiAPI usdi::Task* usdiTaskCreateComposite(usdi::Task **tasks, int num)
     });
 }
 
-} // extern "C"
 
+
+usdiAPI void usdiUniForceAssignTRS(void *monoobj, const usdi::XformData *data)
+{
+    usdiTraceFunc();
+    usdi::ForceAssignTRS(monoobj, *data);
+}
+
+usdiAPI void usdiUniForceAssignBounds(void *monoobj, const usdi::float3 *center, const usdi::float3 *extents)
+{
+    usdiTraceFunc();
+    usdi::ForceAssignBounds(monoobj, *center, *extents);
+}
+
+} // extern "C"
+#endif // usdiEnableUnityExtension

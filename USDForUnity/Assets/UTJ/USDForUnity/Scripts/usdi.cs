@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace UTJ
@@ -433,6 +434,14 @@ namespace UTJ
         [DllImport("usdi")] public static extern IntPtr usdiTaskCreatePointsReadSample(Points points, ref PointsData dst, ref double t);
         [DllImport("usdi")] public static extern IntPtr usdiTaskCreateAttrReadSample(Attribute points, ref AttributeData dst, ref double t);
         [DllImport("usdi")] public static extern IntPtr usdiTaskCreateComposite(IntPtr tasks, int num);
+
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public static extern void usdiUniForceAssignTRS(UnityEngine.Transform trans, ref XformData data);
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public static extern void usdiUniForceAssignBounds(UnityEngine.Mesh mesh, ref Vector3 center, ref Vector3 extents);
+
+
 
         public class VertexUpdateCommand
         {
