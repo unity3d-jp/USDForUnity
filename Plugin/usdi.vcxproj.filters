@@ -114,6 +114,9 @@
     <ClInclude Include="usdi\etc\Mono.h">
       <Filter>usdi\etc</Filter>
     </ClInclude>
+    <ClInclude Include="usdi\usdiExt.h">
+      <Filter>usdi</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />

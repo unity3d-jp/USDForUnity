@@ -95,24 +95,24 @@ void VertexUpdateCommand::clearDirty()
 }
 
 
-VertexUpdateCommand* VertexCommandManager::get(handle_t h)
+VertexUpdateCommand* VertexCommandManager::get(Handle h)
 {
     return m_commands.get(h).get();
 }
 
-handle_t VertexCommandManager::createCommand(const char *dbg_name)
+Handle VertexCommandManager::createCommand(const char *dbg_name)
 {
     lock_t l(m_mutex_processing);
     return m_commands.push(CommandPtr(new Command(dbg_name)));
 }
 
-void VertexCommandManager::destroyCommand(handle_t h)
+void VertexCommandManager::destroyCommand(Handle h)
 {
     lock_t l(m_mutex_processing);
     m_commands.pull(h);
 }
 
-void VertexCommandManager::update(handle_t h, const usdi::MeshData *src, void *vb, void *ib)
+void VertexCommandManager::update(Handle h, const usdi::MeshData *src, void *vb, void *ib)
 {
     if (auto *cmd = get(h)) {
         cmd->update(src, vb, ib);
@@ -156,62 +156,40 @@ void VertexCommandManager::wait()
 
 
 
-TaskManager::TaskManager()
+tbb::task_group Task::s_task_group;
+
+Task::Task(const std::function<void()>& f, const char *n)
+    : m_func(f)
+    , m_dbg_name(n)
 {
 }
 
-TaskManager::~TaskManager()
+void Task::run(bool async)
 {
-}
-
-TaskManager::Task* TaskManager::getTask(handle_t h)
-{
-    if (h == 0) { return nullptr; }
-
-    lock_t l(m_mutex);
-    return m_tasks.get(h).get();
-}
-
-handle_t TaskManager::createTask(TaskFunc func, const char *name)
-{
-    auto *ptr = new Task(func, name);
-
-    handle_t ret = 0;
-    {
-        lock_t l(m_mutex);
-        ret = m_tasks.push(TaskPtr(ptr));
+    if (async) {
+        m_mutex.lock();
+        s_task_group.run([this]() {
+            {
+                //MonoScope mscope;
+                m_func();
+            }
+            m_mutex.unlock();
+        });
     }
-    return ret;
-}
-
-void TaskManager::destroyTask(handle_t h)
-{
-    lock_t l(m_mutex);
-    m_tasks.pull(h);
-}
-
-void TaskManager::run(handle_t h)
-{
-    Task *task = getTask(h);
-    if (!task) { return; }
-
-    task->mutex.lock();
-    m_group.run([task]() {
+    else {
+        m_mutex.lock();
         {
             //MonoScope mscope;
-            task->func();
+            m_func();
         }
-        task->mutex.unlock();
-    });
+        m_mutex.unlock();
+    }
 }
 
-bool TaskManager::isRunning(handle_t h)
+bool Task::isRunning()
 {
-    Task *task = getTask(h);
-    if (!task) { return false; }
-
-    if (task->mutex.try_lock()) {
-        task->mutex.unlock();
+    if (m_mutex.try_lock()) {
+        m_mutex.unlock();
         return false;
     }
     else {
@@ -219,15 +197,10 @@ bool TaskManager::isRunning(handle_t h)
     }
 }
 
-void TaskManager::wait(handle_t h)
+void Task::wait()
 {
-    Task *task = getTask(h);
-    if (!task) { return; }
-
-    if (task) {
-        task->mutex.lock();
-        task->mutex.unlock();
-    }
+    m_mutex.lock();
+    m_mutex.unlock();
 }
 
 } // namespace usdi

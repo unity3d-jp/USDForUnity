@@ -3,6 +3,7 @@
 #include "GraphicsInterface/GraphicsInterface.h"
 #include "etc/HandleBasedVector.h"
 #include "etc/FixedAllocator.h"
+#include "usdiExt.h"
 
 namespace usdi {
 
@@ -41,9 +42,9 @@ public:
     typedef VertexUpdateCommand Command;
     typedef std::unique_ptr<VertexUpdateCommand> CommandPtr;
 
-    handle_t createCommand(const char *dbg_name);
-    void destroyCommand(handle_t h);
-    void update(handle_t h, const usdi::MeshData *src, void *vb, void *ib);
+    Handle createCommand(const char *dbg_name);
+    void destroyCommand(Handle h);
+    void update(Handle h, const usdi::MeshData *src, void *vb, void *ib);
 
     void process();
     void wait();
@@ -51,7 +52,7 @@ public:
 private:
     typedef tbb::spin_mutex::scoped_lock lock_t;
 
-    VertexUpdateCommand* get(handle_t h);
+    VertexUpdateCommand* get(Handle h);
 
     tbb::spin_mutex                 m_mutex_processing;
     HandleBasedVector<CommandPtr>   m_commands;
@@ -59,38 +60,22 @@ private:
 };
 
 
-
-class TaskManager
+class Task
 {
 public:
-    typedef std::function<void()> TaskFunc;
+    Task(const std::function<void()>& f, const char *n = "");
+    void run(bool async = true);
+    bool isRunning();
+    void wait();
 
-    TaskManager();
-    ~TaskManager();
-    handle_t createTask(TaskFunc task, const char *name = "");
-    void destroyTask(handle_t h);
-    void run(handle_t h);
-    bool isRunning(handle_t h);
-    void wait(handle_t h);
+    usdiDefineCachedOperatorNew(Task, 256);
 
 private:
-    struct Task
-    {
-        std::string dbg_name;
-        std::function<void()> func;
-        tbb::spin_mutex mutex;
+    static tbb::task_group s_task_group;
 
-        Task(const TaskFunc& f, const char *n) : func(f), dbg_name(n) {}
-        usdiDefineCachedOperatorNew(Task, 256);
-    };
-    typedef std::unique_ptr<Task> TaskPtr;
-    typedef tbb::spin_mutex::scoped_lock lock_t;
-
-    Task* getTask(handle_t h);
-
+    std::string m_dbg_name;
+    std::function<void()> m_func;
     tbb::spin_mutex m_mutex;
-    tbb::task_group m_group;
-    HandleBasedVector<TaskPtr> m_tasks;
 };
 
 } // namespace usdi

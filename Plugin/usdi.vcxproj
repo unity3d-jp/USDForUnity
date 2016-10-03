@@ -21,6 +21,7 @@
     <ClInclude Include="usdi\usdiAttribute.h" />
     <ClInclude Include="usdi\usdiCamera.h" />
     <ClInclude Include="usdi\usdiContext.h" />
+    <ClInclude Include="usdi\usdiExt.h" />
     <ClInclude Include="usdi\usdiInternal.h" />
     <ClInclude Include="usdi\usdiMesh.h" />
     <ClInclude Include="usdi\usdi.h" />

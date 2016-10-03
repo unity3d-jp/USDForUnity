@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "usdiInternal.h"
+#include "usdiExt.h"
 #include "GraphicsInterface/GraphicsInterface.h"
 #include "GraphicsInterface/giUnityPluginImpl.h"
 #include "PluginAPI/IUnityGraphics.h"

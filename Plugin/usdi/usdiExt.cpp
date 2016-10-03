@@ -1,7 +1,5 @@
 ﻿#include "pch.h"
 #include "usdiInternal.h"
-#include "ext/usdiExtTask.h"
-
 #include "usdiAttribute.h"
 #include "usdiSchema.h"
 #include "usdiXform.h"
@@ -10,30 +8,32 @@
 #include "usdiPoints.h"
 #include "usdiContext.h"
 
+#include "usdiExt.h"
+#include "ext/usdiExtTask.h"
+
 
 namespace usdi {
 
-VertexCommandManager g_vtx_task_manager;
-TaskManager g_task_manager;
+    VertexCommandManager g_vtx_task_manager;
 
 } // namespace usdi
 
 
 extern "C" {
 
-usdiAPI usdi::handle_t usdiVtxCmdCreate(const char *dbg_name)
+usdiAPI usdi::Handle usdiVtxCmdCreate(const char *dbg_name)
 {
     usdiTraceFunc();
     return usdi::g_vtx_task_manager.createCommand(dbg_name);
 }
 
-usdiAPI void usdiVtxCmdDestroy(usdi::handle_t h)
+usdiAPI void usdiVtxCmdDestroy(usdi::Handle h)
 {
     usdiTraceFunc();
     usdi::g_vtx_task_manager.destroyCommand(h);
 }
 
-usdiAPI void usdiVtxCmdUpdate(usdi::handle_t h, const usdi::MeshData *src, void *vb, void *ib)
+usdiAPI void usdiVtxCmdUpdate(usdi::Handle h, const usdi::MeshData *src, void *vb, void *ib)
 {
     usdiTraceFunc();
     usdi::g_vtx_task_manager.update(h, src, vb, ib);
@@ -56,48 +56,71 @@ usdiAPI void usdiVtxCmdWait()
 
 
 
-usdiAPI usdi::handle_t usdiTaskCreate(usdi::TaskFunc func, void *arg, const char *name)
+usdiAPI void usdiTaskDestroy(usdi::Task *t)
 {
     usdiTraceFunc();
-    return usdi::g_task_manager.createTask([=]() { func(arg); }, name);
+    delete t;
 }
 
-usdiAPI void usdiTaskDestroy(usdi::handle_t h)
+usdiAPI void usdiTaskRun(usdi::Task *t)
 {
     usdiTraceFunc();
-    usdi::g_task_manager.destroyTask(h);
+    t->run();
 }
 
-usdiAPI void usdiTaskRun(usdi::handle_t h)
+usdiAPI bool usdiTaskIsRunning(usdi::Task *t)
 {
     usdiTraceFunc();
-    usdi::g_task_manager.run(h);
+    return t->isRunning();
 }
 
-usdiAPI bool usdiTaskIsRunning(usdi::handle_t h)
+usdiAPI void usdiTaskWait(usdi::Task *t)
 {
     usdiTraceFunc();
-    return usdi::g_task_manager.isRunning(h);
+    t->wait();
 }
 
-usdiAPI void usdiTaskWait(usdi::handle_t h)
+usdiAPI usdi::Task* usdiTaskCreate(usdi::TaskFunc func, void *arg, const char *name)
 {
     usdiTraceFunc();
-    usdi::g_task_manager.wait(h);
+    return new usdi::Task([=]() { func(arg); }, name);
 }
 
-usdiAPI usdi::handle_t usdiTaskMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, const usdi::Time *t)
+usdiAPI usdi::Task* usdiTaskCreateMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, const usdi::Time *t)
 {
     usdiTraceFunc();
-    return usdi::g_task_manager.createTask([=]() {
-        return mesh->readSample(*dst, *t, true);
+    if (!mesh || !dst || !t) { return 0; }
+    return new usdi::Task([=]() {
+        mesh->readSample(*dst, *t, true);
     });
 }
 
-usdiAPI usdi::handle_t usdiTaskPointsReadSample(usdi::Points *points, usdi::PointsData *dst, const usdi::Time *t)
+usdiAPI usdi::Task* usdiTaskCreatePointsReadSample(usdi::Points *points, usdi::PointsData *dst, const usdi::Time *t)
 {
-    return usdi::g_task_manager.createTask([=]() {
-        return points->readSample(*dst, *t, true);
+    usdiTraceFunc();
+    if (!points || !dst || !t) { return 0; }
+    return new usdi::Task([=]() {
+        points->readSample(*dst, *t, true);
+    });
+}
+
+usdiAPI usdi::Task* usdiTaskCreateAttrReadSample(usdi::Attribute *attr, usdi::AttributeData *dst, const usdi::Time *t)
+{
+    usdiTraceFunc();
+    if (!attr || !dst || !t) { return 0; }
+    return new usdi::Task([=]() {
+        attr->readSample(*dst, *t, true);
+    });
+}
+
+usdiAPI usdi::Task* usdiTaskCreateComposite(usdi::Task **tasks, int num)
+{
+    usdiTraceFunc();
+    if (!tasks || num ==0) { return 0; }
+    return new usdi::Task([=]() {
+        for (int i = 0; i < num; ++i) {
+            tasks[i]->run(false);
+        }
     });
 }
 

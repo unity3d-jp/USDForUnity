@@ -415,36 +415,28 @@ namespace UTJ
 
 
         // ext
-        public struct MapContext
-        {
-            public IntPtr dataPtr;
-            public IntPtr resource;
-            public IntPtr stagingResource;
-            public int bufferType;
-            public int mapMode;
-            public int size;
-            public Bool keepStagingResource;
-        };
 
-        [DllImport("usdi")] public static extern int  usdiVtxCmdCreate(string dbg_name);
-        [DllImport("usdi")] public static extern void usdiVtxCmdDestroy(int h);
-        [DllImport("usdi")] public static extern void usdiVtxCmdUpdate(int h, ref MeshData data, IntPtr vb, IntPtr ib);
+        [DllImport("usdi")] public static extern IntPtr usdiVtxCmdCreate(string dbg_name);
+        [DllImport("usdi")] public static extern void usdiVtxCmdDestroy(IntPtr h);
+        [DllImport("usdi")] public static extern void usdiVtxCmdUpdate(IntPtr h, ref MeshData data, IntPtr vb, IntPtr ib);
         [DllImport("usdi")] public static extern void usdiVtxCmdWait();
 
 
         public delegate void usdiTaskFunc(IntPtr arg);
-        [DllImport("usdi")] public static extern int  usdiTaskCreate(usdiTaskFunc func, IntPtr arg, string dbg_name);
-        [DllImport("usdi")] public static extern void usdiTaskDestroy(int handle);
-        [DllImport("usdi")] public static extern void usdiTaskRun(int handle);
-        [DllImport("usdi")] public static extern bool usdiTaskIsRunning(int handle);
-        [DllImport("usdi")] public static extern void usdiTaskWait(int handle);
+        [DllImport("usdi")] public static extern void usdiTaskDestroy(IntPtr task);
+        [DllImport("usdi")] public static extern void usdiTaskRun(IntPtr task);
+        [DllImport("usdi")] public static extern bool usdiTaskIsRunning(IntPtr task);
+        [DllImport("usdi")] public static extern void usdiTaskWait(IntPtr task);
 
-        [DllImport("usdi")] public static extern int  usdiTaskMeshReadSample(Mesh mesh, ref MeshData dst, ref double t);
-        [DllImport("usdi")] public static extern int  usdiTaskPointsReadSample(Points points, ref PointsData dst, ref double t);
+        [DllImport("usdi")] public static extern IntPtr usdiTaskCreate(usdiTaskFunc func, IntPtr arg, string dbg_name);
+        [DllImport("usdi")] public static extern IntPtr usdiTaskCreateMeshReadSample(Mesh mesh, ref MeshData dst, ref double t);
+        [DllImport("usdi")] public static extern IntPtr usdiTaskCreatePointsReadSample(Points points, ref PointsData dst, ref double t);
+        [DllImport("usdi")] public static extern IntPtr usdiTaskCreateAttrReadSample(Attribute points, ref AttributeData dst, ref double t);
+        [DllImport("usdi")] public static extern IntPtr usdiTaskCreateComposite(IntPtr tasks, int num);
 
         public class VertexUpdateCommand
         {
-            int handle;
+            IntPtr handle;
 
             public VertexUpdateCommand(string dbg_name)
             {
@@ -465,9 +457,13 @@ namespace UTJ
 
         public class Task
         {
-            protected int m_handle;
+            protected IntPtr m_handle;
 
-            public Task(int handle = 0)
+            public Task()
+            {
+            }
+
+            public Task(IntPtr handle)
             {
                 m_handle = handle;
             }
@@ -511,6 +507,18 @@ namespace UTJ
                 m_handle = usdiTaskCreate(m_func, IntPtr.Zero, dbg_name);
             }
         }
+
+        public class CompositeTask : Task
+        {
+            IntPtr[] m_handles;
+
+            public CompositeTask(IntPtr[] handles)
+            {
+                m_handles = handles;
+                m_handle = usdi.usdiTaskCreateComposite(GetArrayPtr(m_handles), m_handles.Length);
+            }
+        }
+
 
 
         public static string S(IntPtr cstring) { return Marshal.PtrToStringAnsi(cstring); }

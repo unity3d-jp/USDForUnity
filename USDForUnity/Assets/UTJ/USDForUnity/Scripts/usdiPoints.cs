@@ -115,14 +115,17 @@ namespace UTJ
                 {
                     if (m_asyncRead == null)
                     {
-                        m_asyncRead = new usdi.DelegateTask((var) =>
+                        if(m_attrRot)
                         {
-                            usdi.usdiPointsReadSample(m_points, ref m_pointsData, m_timeRead, true);
-                            if (m_attrRot)
-                            {
-                                usdi.usdiAttrReadSample(m_attrRot, ref m_rotData, m_timeRead, true);
-                            }
-                        }, "usdiPoints: " + usdi.usdiGetNameS(m_points));
+                            m_asyncRead = new usdi.CompositeTask(new IntPtr[] {
+                                usdi.usdiTaskCreatePointsReadSample(m_points, ref m_pointsData, ref m_timeRead),
+                                usdi.usdiTaskCreateAttrReadSample(m_attrRot, ref m_rotData, ref m_timeRead)
+                            });
+                        }
+                        else
+                        {
+                            m_asyncRead =  new usdi.Task(usdi.usdiTaskCreatePointsReadSample(m_points, ref m_pointsData, ref m_timeRead));
+                        }
                     }
                     m_timeRead = time;
                     m_asyncRead.Run();

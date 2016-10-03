@@ -19,7 +19,6 @@ namespace usdi {
 
 typedef unsigned char byte;
 typedef unsigned int uint;
-typedef unsigned int handle_t; // async handle
 #ifndef usdiImpl
     // force make convertible
     class Context {};
@@ -307,40 +306,13 @@ usdiAPI bool             usdiPointsReadSample(usdi::Points *points, usdi::Points
 usdiAPI bool             usdiPointsWriteSample(usdi::Points *points, const usdi::PointsData *src, usdi::Time t);
 
 // Attribute interface
-usdiAPI usdi::Schema*        usdiAttrGetParent(usdi::Attribute *attr);
-usdiAPI const char*          usdiAttrGetName(usdi::Attribute *attr);
-usdiAPI const char*          usdiAttrGetTypeName(usdi::Attribute *attr);
-usdiAPI void                 usdiAttrGetSummary(usdi::Attribute *attr, usdi::AttributeSummary *dst);
-usdiAPI bool                 usdiAttrReadSample(usdi::Attribute *attr, usdi::AttributeData *dst, usdi::Time t, bool copy);
-usdiAPI bool                 usdiAttrWriteSample(usdi::Attribute *attr, const usdi::AttributeData *src, usdi::Time t);
+usdiAPI usdi::Schema*    usdiAttrGetParent(usdi::Attribute *attr);
+usdiAPI const char*      usdiAttrGetName(usdi::Attribute *attr);
+usdiAPI const char*      usdiAttrGetTypeName(usdi::Attribute *attr);
+usdiAPI void             usdiAttrGetSummary(usdi::Attribute *attr, usdi::AttributeSummary *dst);
+usdiAPI bool             usdiAttrReadSample(usdi::Attribute *attr, usdi::AttributeData *dst, usdi::Time t, bool copy);
+usdiAPI bool             usdiAttrWriteSample(usdi::Attribute *attr, const usdi::AttributeData *src, usdi::Time t);
 
 } // extern "C"
 
-
-
-
-// ext
-
-namespace usdi {
-    typedef void(*TaskFunc)(void*);
-} // namespace usdi
-
-extern "C" {
-
-usdiAPI usdi::handle_t  usdiVtxCmdCreate(const char *dbg_name);
-usdiAPI void            usdiVtxCmdDestroy(usdi::handle_t h);
-usdiAPI void            usdiVtxCmdUpdate(usdi::handle_t h, const usdi::MeshData *src, void *vb, void *ib);
-usdiAPI void            usdiVtxCmdProcess();
-usdiAPI void            usdiVtxCmdWait();
-
-usdiAPI usdi::handle_t  usdiTaskCreate(usdi::TaskFunc func, void *arg, const char *dbg_name);
-usdiAPI void            usdiTaskDestroy(usdi::handle_t h);
-usdiAPI void            usdiTaskRun(usdi::handle_t h);
-usdiAPI bool            usdiTaskIsRunning(usdi::handle_t h);
-usdiAPI void            usdiTaskWait(usdi::handle_t h);
-usdiAPI usdi::handle_t  usdiTaskMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, const usdi::Time *t);
-usdiAPI usdi::handle_t  usdiTaskPointsReadSample(usdi::Points *points, usdi::PointsData *dst, const usdi::Time *t);
-usdiAPI usdi::handle_t  usdiTaskAttrReadArraySample(usdi::Attribute *attr, usdi::AttributeData *dst, const usdi::Time *t);
-
-} // extern "C"
 

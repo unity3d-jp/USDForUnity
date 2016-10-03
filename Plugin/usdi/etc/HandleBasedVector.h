@@ -8,7 +8,7 @@ class HandleBasedVector
 {
 public:
     typedef ValueType value_t;
-    typedef unsigned int handle_t;
+    typedef size_t handle_t;
     typedef std::vector<value_t> values_t;
     typedef std::vector<handle_t> handles_t;
 

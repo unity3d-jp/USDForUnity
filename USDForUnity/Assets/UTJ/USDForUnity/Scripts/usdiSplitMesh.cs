@@ -21,8 +21,7 @@ namespace UTJ
         int[] m_indices;
 
         // for Unity 5.5 or later
-        usdi.MapContext m_ctxVB;
-        usdi.MapContext m_ctxIB;
+        IntPtr m_VB, m_IB;
         #endregion
 
 
@@ -141,8 +140,8 @@ namespace UTJ
 #if UNITY_5_5_OR_NEWER
                 if(m_parent.stream.directVBUpdate)
                 {
-                    m_ctxVB.resource = m_umesh.GetNativeVertexBufferPtr(0);
-                    //m_ctxIB.resource = m_umesh.GetNativeIndexBufferPtr();
+                    m_VB = m_umesh.GetNativeVertexBufferPtr(0);
+                    //m_IB = m_umesh.GetNativeIndexBufferPtr();
                 }
 #endif
             }
