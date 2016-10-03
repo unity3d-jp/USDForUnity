@@ -36,21 +36,9 @@ static void initialize_mono_functions()
 #else
     // todo
 #endif
-    g_mono_domain = mono_domain_get();
 }
 
 static struct _initialize_mono_functions {
     _initialize_mono_functions() { initialize_mono_functions(); }
 } g_initialize_mono_functions;
 
-
-MonoScope::MonoScope()
-{
-    //m_mono_thread = mono_thread_attach(g_mono_domain);
-}
-
-MonoScope::~MonoScope()
-{
-    mono_thread_detach(mono_thread_current());
-    //mono_thread_detach(m_mono_thread);
-}

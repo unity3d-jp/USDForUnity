@@ -422,13 +422,13 @@ namespace UTJ
         [DllImport("usdi")] public static extern void usdiVtxCmdWait();
 
 
-        public delegate void usdiTaskFunc(IntPtr arg);
+        public delegate void usdiMonoDelegate(IntPtr arg);
         [DllImport("usdi")] public static extern void usdiTaskDestroy(IntPtr task);
         [DllImport("usdi")] public static extern void usdiTaskRun(IntPtr task);
         [DllImport("usdi")] public static extern bool usdiTaskIsRunning(IntPtr task);
         [DllImport("usdi")] public static extern void usdiTaskWait(IntPtr task);
 
-        [DllImport("usdi")] public static extern IntPtr usdiTaskCreate(usdiTaskFunc func, IntPtr arg, string dbg_name);
+        [DllImport("usdi")] public static extern IntPtr usdiTaskCreateMonoDelegate(usdiMonoDelegate func, IntPtr arg, string dbg_name);
         [DllImport("usdi")] public static extern IntPtr usdiTaskCreateMeshReadSample(Mesh mesh, ref MeshData dst, ref double t);
         [DllImport("usdi")] public static extern IntPtr usdiTaskCreatePointsReadSample(Points points, ref PointsData dst, ref double t);
         [DllImport("usdi")] public static extern IntPtr usdiTaskCreateAttrReadSample(Attribute points, ref AttributeData dst, ref double t);
@@ -491,20 +491,20 @@ namespace UTJ
 
         public class DelegateTask : Task
         {
-            usdiTaskFunc m_func;
+            usdiMonoDelegate m_func;
             GCHandle m_arg;
 
-            public DelegateTask(usdiTaskFunc f, object arg, string dbg_name = "")
+            public DelegateTask(usdiMonoDelegate f, object arg, string dbg_name = "")
             {
                 m_func = f;
                 m_arg = GCHandle.Alloc(arg);
-                m_handle = usdiTaskCreate(m_func, (IntPtr)m_arg, dbg_name);
+                m_handle = usdiTaskCreateMonoDelegate(m_func, (IntPtr)m_arg, dbg_name);
             }
 
-            public DelegateTask(usdiTaskFunc f, string dbg_name = "")
+            public DelegateTask(usdiMonoDelegate f, string dbg_name = "")
             {
                 m_func = f;
-                m_handle = usdiTaskCreate(m_func, IntPtr.Zero, dbg_name);
+                m_handle = usdiTaskCreateMonoDelegate(m_func, IntPtr.Zero, dbg_name);
             }
         }
 
@@ -515,7 +515,7 @@ namespace UTJ
             public CompositeTask(IntPtr[] handles)
             {
                 m_handles = handles;
-                m_handle = usdi.usdiTaskCreateComposite(GetArrayPtr(m_handles), m_handles.Length);
+                m_handle = usdiTaskCreateComposite(GetArrayPtr(m_handles), m_handles.Length);
             }
         }
 

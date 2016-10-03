@@ -9,7 +9,8 @@
 #include "usdiContext.h"
 
 #include "usdiExt.h"
-#include "ext/usdiExtTask.h"
+#include "ext/usdiTask.h"
+#include "etc/Mono.h"
 
 
 namespace usdi {
@@ -80,10 +81,13 @@ usdiAPI void usdiTaskWait(usdi::Task *t)
     t->wait();
 }
 
-usdiAPI usdi::Task* usdiTaskCreate(usdi::TaskFunc func, void *arg, const char *name)
+usdiAPI usdi::Task* usdiTaskCreateMonoDelegate(usdi::MonoDelegate func, void *arg, const char *name)
 {
     usdiTraceFunc();
-    return new usdi::Task([=]() { func(arg); }, name);
+    return new usdi::Task([=]() {
+        usdi::MonoThreadScope mts;
+        func(arg);
+    }, name);
 }
 
 usdiAPI usdi::Task* usdiTaskCreateMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, const usdi::Time *t)

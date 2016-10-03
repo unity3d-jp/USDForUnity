@@ -1,5 +1,6 @@
 #pragma once
 
+#include "usdiConfig.h"
 
 
 #define usdiImpl
@@ -18,6 +19,7 @@
 #endif
 
 #ifdef usdiDbgVTune
+    #include "ittnotify.h"
     #define usdiVTuneScope(Name)    static usdi::VTuneTask s_vtune_task_##__LINE__(Name); usdi::VTuneScope _vtune_scope_##__LINE__(s_vtune_task_##__LINE__);
 #else
     #define usdiVTuneScope(...)

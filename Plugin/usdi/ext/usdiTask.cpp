@@ -1,10 +1,23 @@
 #include "pch.h"
 #include "usdiInternal.h"
-#include "usdiExtTask.h"
+#include "usdiTask.h"
 #include "usdiUtils.h"
 #include "etc/Mono.h"
 
 namespace usdi {
+
+MonoThreadScope::MonoThreadScope()
+{
+}
+
+MonoThreadScope::~MonoThreadScope()
+{
+#ifdef usdiMonoThreadGuard
+    mono_thread_detach(mono_thread_current());
+#endif
+}
+
+
 
 VertexUpdateCommand::VertexUpdateCommand(const char *dbg_name)
     : m_dbg_name(dbg_name)
@@ -169,19 +182,13 @@ void Task::run(bool async)
     if (async) {
         m_mutex.lock();
         s_task_group.run([this]() {
-            {
-                //MonoScope mscope;
-                m_func();
-            }
+            m_func();
             m_mutex.unlock();
         });
     }
     else {
         m_mutex.lock();
-        {
-            //MonoScope mscope;
-            m_func();
-        }
+        m_func();
         m_mutex.unlock();
     }
 }

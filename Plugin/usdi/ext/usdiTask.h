@@ -7,6 +7,14 @@
 
 namespace usdi {
 
+class MonoThreadScope
+{
+public:
+    MonoThreadScope();
+    ~MonoThreadScope();
+};
+
+
 using MapContext = gi::MapContext;
 
 class VertexUpdateCommand

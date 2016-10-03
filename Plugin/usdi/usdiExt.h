@@ -7,7 +7,7 @@
 namespace usdi {
     typedef size_t Handle; // async handle
     class Task;
-    typedef void(__stdcall *TaskFunc)(void*);
+    typedef void(__stdcall *MonoDelegate)(void*);
 } // namespace usdi
 
 extern "C" {
@@ -22,7 +22,7 @@ usdiAPI void            usdiTaskDestroy(usdi::Task *t);
 usdiAPI void            usdiTaskRun(usdi::Task *t);
 usdiAPI bool            usdiTaskIsRunning(usdi::Task *t);
 usdiAPI void            usdiTaskWait(usdi::Task *t);
-usdiAPI usdi::Task*     usdiTaskCreate(usdi::TaskFunc func, void *arg, const char *dbg_name);
+usdiAPI usdi::Task*     usdiTaskCreateMonoDelegate(usdi::MonoDelegate func, void *arg, const char *dbg_name);
 usdiAPI usdi::Task*     usdiTaskCreateMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, const usdi::Time *t);
 usdiAPI usdi::Task*     usdiTaskCreatePointsReadSample(usdi::Points *points, usdi::PointsData *dst, const usdi::Time *t);
 usdiAPI usdi::Task*     usdiTaskCreateAttrReadSample(usdi::Attribute *attr, usdi::AttributeData *dst, const usdi::Time *t);
