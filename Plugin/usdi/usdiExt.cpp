@@ -131,19 +131,5 @@ usdiAPI usdi::Task* usdiTaskCreateComposite(usdi::Task **tasks, int num)
     });
 }
 
-
-
-usdiAPI void usdiUniForceAssignTRS(void *monoobj, const usdi::XformData *data)
-{
-    usdiTraceFunc();
-    usdi::ForceAssignTRS(monoobj, *data);
-}
-
-usdiAPI void usdiUniForceAssignBounds(void *monoobj, const usdi::float3 *center, const usdi::float3 *extents)
-{
-    usdiTraceFunc();
-    usdi::ForceAssignBounds(monoobj, *center, *extents);
-}
-
 } // extern "C"
 #endif // usdiEnableUnityExtension

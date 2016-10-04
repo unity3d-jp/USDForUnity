@@ -437,7 +437,7 @@ namespace UTJ
 
 
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public static extern void usdiUniForceAssignTRS(UnityEngine.Transform trans, ref XformData data);
+        public static extern void usdiUniForceAssignXform(UnityEngine.Transform trans, ref XformData data);
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
         public static extern void usdiUniForceAssignBounds(UnityEngine.Mesh mesh, ref Vector3 center, ref Vector3 extents);
 

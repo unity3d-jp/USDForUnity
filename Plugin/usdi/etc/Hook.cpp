@@ -2,6 +2,8 @@
 #include "Hook.h"
 
 #ifdef _WIN32
+#include <dbghelp.h>
+#pragma comment(lib, "dbghelp.lib")
 
 int SetMemoryFlags(void *addr, size_t size, MemoryFlags flags)
 {
@@ -59,7 +61,7 @@ void* EmitJumpInstruction(void* from_, const void* to_)
 }
 
 
-void* OverrideDLLImport(HMODULE module, const char *target_module, const char *target_funcname, void *replacement)
+void* OverrideDLLImport(void *module, const char *target_module, const char *target_funcname, void *replacement)
 {
     if (!module) { return nullptr; }
 
@@ -89,7 +91,7 @@ void* OverrideDLLImport(HMODULE module, const char *target_module, const char *t
     return nullptr;
 }
 
-void* OverrideDLLExportByName(HMODULE module, const char *funcname, void *replacement)
+void* OverrideDLLExportByName(void *module, const char *funcname, void *replacement)
 {
     if (!module) { return nullptr; }
 
@@ -113,6 +115,51 @@ void* OverrideDLLExportByName(HMODULE module, const char *funcname, void *replac
             return (void*)ret;
         }
     }
+    return nullptr;
+}
+
+void* FindSymbolByName(const char *name)
+{
+    static bool s_first = true;
+
+    if (s_first) {
+        s_first = false;
+
+        // set path to main module to symbol search path
+        char sympath[MAX_PATH] = "";
+        {
+            auto ret = ::GetModuleFileNameA(::GetModuleHandleA(nullptr), (LPSTR)sympath, sizeof(sympath));
+            for (int i = ret - 1; i > 0; --i) {
+                if (sympath[i] == '\\') {
+                    sympath[i] = '\0';
+                    break;
+                }
+            }
+        }
+
+        DWORD opt = ::SymGetOptions();
+        opt |= SYMOPT_DEFERRED_LOADS;
+        opt &= ~SYMOPT_UNDNAME;
+        //opt |= SYMOPT_DEBUG;
+        ::SymSetOptions(opt);
+        ::SymInitialize(::GetCurrentProcess(), sympath, TRUE);
+    }
+
+    char buf[sizeof(SYMBOL_INFO) + MAX_SYM_NAME];
+    PSYMBOL_INFO sinfo = (PSYMBOL_INFO)buf;
+    sinfo->SizeOfStruct = sizeof(SYMBOL_INFO);
+    sinfo->MaxNameLen = MAX_SYM_NAME;
+    if (::SymFromName(::GetCurrentProcess(), name, sinfo) == FALSE) {
+        return nullptr;
+    }
+    return (void*)sinfo->Address;
+}
+
+#else
+
+void* FindSymbolByName(const char *name)
+{
+    // todo
     return nullptr;
 }
 

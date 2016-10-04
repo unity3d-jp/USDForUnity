@@ -36,6 +36,10 @@ typedef unsigned int uint;
     struct float3x3 { float3 v[3]; };
     struct float4x4 { float4 v[4]; };
 #endif
+    struct AABB
+    {
+        float3 center, extents;
+    };
 
 
 enum class InterpolationType
