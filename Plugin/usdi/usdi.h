@@ -252,6 +252,10 @@ usdiAPI usdi::Time       usdiDefaultTime();
 
 usdiAPI void             usdiSetPluginPath(const char *path);
 
+usdiAPI void             usdiInitialize();
+usdiAPI void             usdiFinalize();
+
+
 // Context interface
 usdiAPI usdi::Context*   usdiCreateContext();
 usdiAPI void             usdiDestroyContext(usdi::Context *ctx);

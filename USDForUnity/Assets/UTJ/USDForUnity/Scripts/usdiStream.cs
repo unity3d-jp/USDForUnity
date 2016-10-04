@@ -22,8 +22,6 @@ namespace UTJ
     [ExecuteInEditMode]
     public class usdiStream : MonoBehaviour
     {
-        static List<usdiStream> s_instances = new List<usdiStream>();
-
         #region fields 
         [SerializeField] string m_path;
         [SerializeField] usdiImportOptions m_importOptions = new usdiImportOptions();
@@ -75,6 +73,7 @@ namespace UTJ
 
 
         #region impl
+
         void usdiLog(string message)
         {
 #if UNITY_EDITOR
@@ -296,9 +295,20 @@ namespace UTJ
 
 
         #region callbacks
+        void OnApplicationQuit()
+        {
+            usdi.FinalizePlugin();
+        }
+
         void Awake()
         {
-            usdi.InitializePlugin();
+            usdi.InitializePluginPass1();
+            usdi.InitializePluginPass2();
+        }
+
+        void OnDestroy()
+        {
+            usdiUnload();
         }
 
         void Start()
@@ -308,7 +318,6 @@ namespace UTJ
 
         void OnEnable()
         {
-            s_instances.Add(this);
         }
 
         void OnDisable()
@@ -319,17 +328,6 @@ namespace UTJ
                 usdiUnload();
             }
 #endif
-            s_instances.Remove(this);
-        }
-
-        void OnDestroy()
-        {
-            usdiUnload();
-        }
-
-        void OnApplicationQuit()
-        {
-            usdiUnload();
         }
 
 
@@ -363,7 +361,9 @@ namespace UTJ
             usdiWaitAsyncUpdateTask();
             usdiUpdate(m_time);
 
-            if(m_directVBUpdate)
+            usdi.usdiUniTransformNotfyChange(GetComponent<Transform>());
+
+            if (m_directVBUpdate)
             {
                 GL.IssuePluginEvent(usdi.usdiGetRenderEventFunc(), 0);
             }

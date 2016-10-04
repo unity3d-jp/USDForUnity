@@ -378,7 +378,10 @@ namespace UTJ
 
             if(m_needsUploadMeshData)
             {
-                m_umesh.bounds = new Bounds(m_meshData.center, m_meshData.extents);
+                usdi.usdiUniMeshAssignBounds(m_umesh, ref m_meshData.center, ref m_meshData.extents);
+
+                //// fall back
+                // m_umesh.bounds = new Bounds(m_meshData.center, m_meshData.extents);
             }
 
             if (m_needsAllocateMeshData && m_frame == 0)

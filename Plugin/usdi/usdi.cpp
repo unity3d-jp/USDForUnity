@@ -35,7 +35,12 @@
 #endif
 
 namespace usdi {
-extern int g_debug_level;
+    extern int g_debug_level;
+
+#ifdef usdiEnableUnityExtension
+    void InitializeInternalMethods();
+    void ClearInternalMethodsCache();
+#endif // usdiEnableUnityExtension
 } // namespace usdi
 
 extern "C" {
@@ -63,6 +68,22 @@ usdiAPI void usdiSetPluginPath(const char *path)
 #else
     ::setenv(env_name, path, 1);
 #endif
+}
+
+
+
+usdiAPI void usdiInitialize()
+{
+#ifdef usdiEnableUnityExtension
+    usdi::InitializeInternalMethods();
+#endif // usdiEnableUnityExtension
+}
+
+usdiAPI void usdiFinalize()
+{
+#ifdef usdiEnableUnityExtension
+    usdi::ClearInternalMethodsCache();
+#endif // usdiEnableUnityExtension
 }
 
 // Context interface

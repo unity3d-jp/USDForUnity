@@ -2,6 +2,7 @@
 
 namespace usdi {
 
-void AddMonoFunctions();
+    void InitializeInternalMethods();
+    void ClearInternalMethodsCache();
 
 } // namespace usdi

@@ -10,7 +10,6 @@
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
     if (fdwReason == DLL_PROCESS_ATTACH) {
-        usdi::AddMonoFunctions();
 #ifndef usdiMonoThreadGuard
         // redirect mono_thread_suspend_all_other_threads to mono_thread_abort_all_other_threads to avoid
         // Mono wait TBB worker threads forever...

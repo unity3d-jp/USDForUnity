@@ -22,9 +22,6 @@
     <ClCompile Include="usdi\usdiContext.cpp">
       <Filter>usdi</Filter>
     </ClCompile>
-    <ClCompile Include="usdi\usdiExt.cpp">
-      <Filter>usdi</Filter>
-    </ClCompile>
     <ClCompile Include="usdi\usdiInternal.cpp">
       <Filter>usdi</Filter>
     </ClCompile>
@@ -59,6 +56,9 @@
       <Filter>usdi\ext</Filter>
     </ClCompile>
     <ClCompile Include="usdi\ext\usdiUnity.cpp">
+      <Filter>usdi\ext</Filter>
+    </ClCompile>
+    <ClCompile Include="usdi\ext\usdiExt.cpp">
       <Filter>usdi\ext</Filter>
     </ClCompile>
   </ItemGroup>
@@ -114,9 +114,6 @@
     <ClInclude Include="usdi\etc\Mono.h">
       <Filter>usdi\etc</Filter>
     </ClInclude>
-    <ClInclude Include="usdi\usdiExt.h">
-      <Filter>usdi</Filter>
-    </ClInclude>
     <ClInclude Include="usdi\usdiConfig.h">
       <Filter>usdi</Filter>
     </ClInclude>
@@ -124,6 +121,9 @@
       <Filter>usdi\ext</Filter>
     </ClInclude>
     <ClInclude Include="usdi\ext\usdiUnity.h">
+      <Filter>usdi\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="usdi\ext\usdiExt.h">
       <Filter>usdi\ext</Filter>
     </ClInclude>
   </ItemGroup>

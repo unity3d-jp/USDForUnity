@@ -913,7 +913,8 @@ namespace UTJ
 
         void Awake()
         {
-            usdi.InitializePlugin();
+            usdi.InitializePluginPass1();
+            usdi.InitializePluginPass2();
         }
 
         void OnEnable()

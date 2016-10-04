@@ -1,11 +1,5 @@
 #pragma once
 
-#ifdef _WIN32
-    #include <windows.h>
-#endif
-
-
-#ifdef _WIN32
 
 enum class MemoryFlags
 {
@@ -49,5 +43,3 @@ inline void ForceWrite(void *dst, size_t size, const Body& body)
     body();
     SetMemoryFlags(dst, size, (MemoryFlags)f);
 }
-
-#endif

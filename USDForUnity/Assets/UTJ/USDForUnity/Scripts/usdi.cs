@@ -343,6 +343,11 @@ namespace UTJ
         [DllImport ("AddDLLSearchPath")] public static extern void AddDLLSearchPath(string path);
         [DllImport ("AddDLLSearchPath")] public static extern void SetEnv(string name, string value);
 
+
+        [DllImport("usdi")] public static extern void usdiInitialize();
+        [DllImport("usdi")] public static extern void usdiFinalize();
+
+
         [DllImport ("usdi")] public static extern IntPtr        usdiGetRenderEventFunc();
 
         // Context interface
@@ -437,9 +442,11 @@ namespace UTJ
 
 
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public static extern void usdiUniForceAssignXform(UnityEngine.Transform trans, ref XformData data);
+        public static extern void usdiUniTransformAssignXform(UnityEngine.Transform trans, ref XformData data);
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public static extern void usdiUniForceAssignBounds(UnityEngine.Mesh mesh, ref Vector3 center, ref Vector3 extents);
+        public static extern void usdiUniTransformNotfyChange(UnityEngine.Transform trans);
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        public static extern void usdiUniMeshAssignBounds(UnityEngine.Mesh mesh, ref Vector3 center, ref Vector3 extents);
 
 
 
@@ -533,13 +540,24 @@ namespace UTJ
         public static string S(IntPtr cstring) { return Marshal.PtrToStringAnsi(cstring); }
         public static IntPtr GetArrayPtr(Array v) { return v == null ? IntPtr.Zero : Marshal.UnsafeAddrOfPinnedArrayElement(v, 0); }
 
-        public static void InitializePlugin()
+        public static void InitializePluginPass1()
         {
             usdi.AddDLLSearchPath(GetModulePath());
 
             var usdPluginDir = Application.streamingAssetsPath + "/UTJ/USDForUnity/plugins";
             usdi.AddDLLSearchPath(usdPluginDir + "/lib");
             usdi.SetEnv("PXR_PLUGINPATH_NAME", usdPluginDir);
+        }
+
+        // separate pass because loading usdi.dll will fail in InitializePluginPass1()
+        public static void InitializePluginPass2()
+        {
+            usdi.usdiInitialize();
+        }
+
+        public static void FinalizePlugin()
+        {
+            usdi.usdiFinalize();
         }
     }
 

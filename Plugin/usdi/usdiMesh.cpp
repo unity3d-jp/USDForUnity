@@ -209,7 +209,7 @@ void Mesh::updateSample(Time t_)
     // bounds
     ComputeBounds((float3*)sample.points.cdata(), sample.points.size(), sample.bounds_min, sample.bounds_max);
     sample.center = (sample.bounds_min + sample.bounds_max) * 0.5f;
-    sample.extents = sample.bounds_max - sample.bounds_min;
+    sample.extents = (sample.bounds_max - sample.bounds_min) * 0.5f;
 
 
     // mesh split
