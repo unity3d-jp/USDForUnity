@@ -27,14 +27,23 @@ MonoObject*  (*mono_runtime_invoke)(MonoMethod *method, MonoObject *obj, void **
 MonoClass*   (*mono_class_from_name)(MonoImage *image, const char *namespaceString, const char *classnameString);
 MonoMethod*  (*mono_class_get_method_from_name)(MonoClass *klass, const char *name, int param_count);
 
+MonoObject*  (*mono_object_new)(MonoDomain *domain, MonoClass *klass);
 MonoClass*   (*mono_object_get_class)(MonoObject *obj);
 gpointer     (*mono_object_unbox)(MonoObject *obj);
+
+MonoArray*   (*mono_array_new)(MonoDomain *domain, MonoClass *eclass, mono_array_size_t n);
+char*        (*mono_array_addr_with_size)(MonoArray *array, int size, uintptr_t idx);
+
+MonoString*  (*mono_string_new)(MonoDomain *domain, const char *text);
+MonoString*  (*mono_string_new_len)(MonoDomain *domain, const char *text, guint length);
+char*        (*mono_string_to_utf8)(MonoString *string_obj);
+gunichar2*   (*mono_string_to_utf16)(MonoString *string_obj);
 
 guint32      (*mono_gchandle_new)(MonoObject *obj, gboolean pinned);
 void         (*mono_gchandle_free)(guint32 gchandle);
 
 
-static void initialize_mono_functions()
+void ImportMonoFunctions()
 {
 #ifdef _WIN32
     auto mono = ::GetModuleHandleA("mono.dll");
@@ -59,8 +68,17 @@ static void initialize_mono_functions()
         Import(mono_class_from_name);
         Import(mono_class_get_method_from_name);
 
+        Import(mono_object_new);
         Import(mono_object_get_class);
         Import(mono_object_unbox);
+
+        Import(mono_array_new);
+        Import(mono_array_addr_with_size);
+
+        Import(mono_string_new);
+        Import(mono_string_new_len);
+        Import(mono_string_to_utf8);
+        Import(mono_string_to_utf16);
 
         Import(mono_gchandle_new);
         Import(mono_gchandle_free);
@@ -72,7 +90,7 @@ static void initialize_mono_functions()
 #endif
 }
 
-static struct _initialize_mono_functions {
-    _initialize_mono_functions() { initialize_mono_functions(); }
-} g_initialize_mono_functions;
+static struct _ImportMonoFunctions {
+    _ImportMonoFunctions() { ImportMonoFunctions(); }
+} g_ImportMonoFunctions;
 

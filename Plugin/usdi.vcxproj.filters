@@ -61,6 +61,9 @@
     <ClCompile Include="usdi\ext\usdiExt.cpp">
       <Filter>usdi\ext</Filter>
     </ClCompile>
+    <ClCompile Include="usdi\ext\usdiInternalMethods.cpp">
+      <Filter>usdi\ext</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="usdi\pch.h">
@@ -124,6 +127,9 @@
       <Filter>usdi\ext</Filter>
     </ClInclude>
     <ClInclude Include="usdi\ext\usdiExt.h">
+      <Filter>usdi\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="usdi\ext\usdiInternalMethods.h">
       <Filter>usdi\ext</Filter>
     </ClInclude>
   </ItemGroup>

@@ -311,11 +311,6 @@ namespace UTJ
                 if (topology)
                 {
                     m_umesh.SetIndices(m_buf.indices, MeshTopology.Triangles, 0);
-
-                    if (!m_meshSummary.has_normals)
-                    {
-                        m_umesh.RecalculateNormals();
-                    }
                 }
 
                 m_umesh.UploadMeshData(close);
