@@ -70,6 +70,9 @@
     <ProjectReference Include="MeshUtils.vcxproj">
       <Project>{fd3fe1ff-abe5-40db-b867-144e9dd9b23c}</Project>
     </ProjectReference>
+    <ProjectReference Include="setup.vcxproj">
+      <Project>{1c5de91b-7ae9-4304-9fa1-0de1aba8c02d}</Project>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{08361722-5520-47AC-A0C2-31E8A062B73F}</ProjectGuid>
@@ -120,9 +123,6 @@ xcopy /Yq $(TargetPath) $(SolutionDir)..\USDForUnity\Assets\UTJ\Plugins\x86_64\<
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
-    <PreBuildEvent>
-      <Command>setup.bat</Command>
-    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Master|x64'">
     <PostBuildEvent>
@@ -153,9 +153,6 @@ xcopy /Yq $(TargetPath) $(SolutionDir)..\USDForUnity\Assets\UTJ\Plugins\x86_64\<
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <GenerateMapFile>true</GenerateMapFile>
     </Link>
-    <PreBuildEvent>
-      <Command>setup.bat</Command>
-    </PreBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

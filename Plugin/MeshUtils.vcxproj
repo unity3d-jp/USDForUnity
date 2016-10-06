@@ -45,6 +45,11 @@ copy $(IntDir)%(Filename).h %(RelativeDir)</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Master|x64'">$(IntDir)%(Filename).obj;$(IntDir)%(Filename)_sse2.obj;$(IntDir)%(Filename)_sse4.obj;$(IntDir)%(Filename)_avx.obj</Outputs>
     </CustomBuild>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="setup.vcxproj">
+      <Project>{1c5de91b-7ae9-4304-9fa1-0de1aba8c02d}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{FD3FE1FF-ABE5-40DB-B867-144E9DD9B23C}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>

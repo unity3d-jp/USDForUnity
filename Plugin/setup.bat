@@ -1,10 +1,11 @@
 @echo off
 
-IF EXIST "External/tbb44_20160526oss_win_0.zip" (
-    echo "skipping setup"
-) ELSE (
+IF NOT EXIST "External/tbb44_20160526oss_win_0.zip" (
     echo "downloading TBB..."
     Powershell.exe -executionpolicy remotesigned -File setup.ps1
+)
+
+IF NOT EXIST "External/USD" (
     cd External
     7z\7za.exe x -aos *.7z
     cd ..
