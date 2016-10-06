@@ -7,6 +7,7 @@ namespace UTJ
     {
         #region fields
         protected usdiStream m_stream;
+        protected usdi.Schema m_schema;
         #endregion
 
 
@@ -16,11 +17,12 @@ namespace UTJ
             get { return m_stream; }
             set { m_stream = value; }
         }
+        public usdi.Schema usdiObject { get { return m_schema; } }
         #endregion
 
 
         #region impl
-        public abstract void usdiOnLoad(usdi.Schema schema);
+        public virtual void usdiOnLoad(usdi.Schema schema) { m_schema = schema; }
         public abstract void usdiOnUnload();
         public abstract void usdiAsyncUpdate(double time);
         public abstract void usdiUpdate(double time);

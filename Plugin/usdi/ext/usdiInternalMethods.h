@@ -24,6 +24,11 @@ extern MonoClass *MC_Vector3;
 extern MonoClass *MC_Quaternion;
 extern MonoClass *MC_Transform;
 extern MonoClass *MC_Mesh;
+extern MonoClass *MC_usdiElement;
+extern MonoClass *MC_usdiXform;
+extern MonoClass *MC_usdiCamera;
+extern MonoClass *MC_usdiMesh;
+extern MonoClass *MC_usdiPoints;
 
 extern MonoMethod *MM_Transform_set_localPosition;
 extern MonoMethod *MM_Transform_set_localRotation;
@@ -36,7 +41,9 @@ extern MonoMethod *MM_Mesh_SetIndices;
 extern MonoMethod *MM_Mesh_UploadMeshData;
 extern MonoMethod *MM_Mesh_GetNativeVertexBufferPtr;
 extern MonoMethod *MM_Mesh_GetNativeIndexBufferPtr;
+extern MonoMethod *MM_usdiMesh_usdiAllocateChildMeshes;
 
+extern int MF_usdiElement_m_schema;
 
 
 void InitializeInternalMethods();

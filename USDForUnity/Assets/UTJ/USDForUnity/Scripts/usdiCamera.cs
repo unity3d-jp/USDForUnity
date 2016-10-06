@@ -20,6 +20,7 @@ namespace UTJ
         Camera m_ucam;
         #endregion
 
+
         #region impl
         public override void usdiOnLoad(usdi.Schema schema)
         {

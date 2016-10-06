@@ -27,51 +27,54 @@ typedef unsigned __int16    gunichar2;
 typedef guint32 mono_array_size_t;
 typedef gint32 mono_array_lower_bound_t;
 
-typedef void MonoDomain;
-typedef void MonoAssembly;
-typedef void MonoImage;
-typedef void MonoThread;
+struct MonoDomain;
+struct MonoAssembly;
+struct MonoImage;
+struct MonoThread;
 
-typedef void MonoClass;
-typedef void MonoMethod;
-typedef void MonoObject;
-typedef void MonoArray;
-typedef void MonoString;
+struct MonoClass;
+struct MonoClassField;
+struct MonoMethod;
+struct MonoObject;
+struct MonoArray;
+struct MonoString;
 
 extern void *g_mono_dll;
 
-extern MonoDomain*  (*mono_domain_get)(void);
-extern MonoAssembly*(*mono_domain_assembly_open)(MonoDomain *domain, const char *assemblyName);
-extern MonoImage*   (*mono_assembly_get_image)(MonoAssembly *assembly);
+extern MonoDomain*      (*mono_domain_get)(void);
+extern MonoAssembly*    (*mono_domain_assembly_open)(MonoDomain *domain, const char *assemblyName);
+extern MonoImage*       (*mono_assembly_get_image)(MonoAssembly *assembly);
 
-extern MonoThread*  (*mono_thread_current)(void);
-extern MonoThread*  (*mono_thread_attach)(MonoDomain *domain);
-extern void         (*mono_thread_detach)(MonoThread *thread);
-extern void         (*mono_thread_suspend_all_other_threads)();
-extern void         (*mono_thread_abort_all_other_threads)();
-extern void         (*mono_jit_thread_attach)(MonoDomain *domain);
+extern MonoThread*      (*mono_thread_current)(void);
+extern MonoThread*      (*mono_thread_attach)(MonoDomain *domain);
+extern void             (*mono_thread_detach)(MonoThread *thread);
+extern void             (*mono_thread_suspend_all_other_threads)();
+extern void             (*mono_thread_abort_all_other_threads)();
+extern void             (*mono_jit_thread_attach)(MonoDomain *domain);
 
-extern void         (*mono_add_internal_call)(const char *name, void *method);
-extern MonoObject*  (*mono_runtime_invoke)(MonoMethod *method, MonoObject *obj, void **params, void **exc);
+extern void             (*mono_add_internal_call)(const char *name, void *method);
+extern MonoObject*      (*mono_runtime_invoke)(MonoMethod *method, MonoObject *obj, void **params, void **exc);
 
-extern MonoClass*   (*mono_class_from_name)(MonoImage *image, const char *namespaceString, const char *classnameString);
-extern MonoMethod*  (*mono_class_get_method_from_name)(MonoClass *klass, const char *name, int param_count);
+extern MonoClass*       (*mono_class_from_name)(MonoImage *image, const char *namespaceString, const char *classnameString);
+extern MonoMethod*      (*mono_class_get_method_from_name)(MonoClass *klass, const char *name, int param_count);
+extern MonoClassField*  (*mono_class_get_field_from_name)(MonoClass *klass, const char *name);
 
-extern MonoObject*  (*mono_object_new)(MonoDomain *domain, MonoClass *klass);
-extern MonoClass*   (*mono_object_get_class)(MonoObject *obj);
-extern gpointer     (*mono_object_unbox)(MonoObject *obj);
+extern guint32          (*mono_field_get_offset)(MonoClassField *field);
 
-extern MonoArray*   (*mono_array_new)(MonoDomain *domain, MonoClass *eclass, mono_array_size_t n);
-extern char*        (*mono_array_addr_with_size)(MonoArray *array, int size, uintptr_t idx);
-#define mono_array_addr(array,type,index) ((type*)(gpointer) mono_array_addr_with_size (array, sizeof (type), index))
+extern MonoObject*      (*mono_object_new)(MonoDomain *domain, MonoClass *klass);
+extern MonoClass*       (*mono_object_get_class)(MonoObject *obj);
+extern gpointer         (*mono_object_unbox)(MonoObject *obj);
 
-extern MonoString*  (*mono_string_new)(MonoDomain *domain, const char *text);
-extern MonoString*  (*mono_string_new_len)(MonoDomain *domain, const char *text, guint length);
-extern char*        (*mono_string_to_utf8)(MonoString *string_obj);
-extern gunichar2*   (*mono_string_to_utf16)(MonoString *string_obj);
+extern MonoArray*       (*mono_array_new)(MonoDomain *domain, MonoClass *eclass, mono_array_size_t n);
+extern char*            (*mono_array_addr_with_size)(MonoArray *array, int size, uintptr_t idx);
 
-extern guint32      (*mono_gchandle_new)(MonoObject *obj, gboolean pinned);
-extern void         (*mono_gchandle_free)(guint32 gchandle);
+extern MonoString*      (*mono_string_new)(MonoDomain *domain, const char *text);
+extern MonoString*      (*mono_string_new_len)(MonoDomain *domain, const char *text, guint length);
+extern char*            (*mono_string_to_utf8)(MonoString *string_obj);
+extern gunichar2*       (*mono_string_to_utf16)(MonoString *string_obj);
+
+extern guint32          (*mono_gchandle_new)(MonoObject *obj, gboolean pinned);
+extern void             (*mono_gchandle_free)(guint32 gchandle);
 
 
 
@@ -88,32 +91,49 @@ template<class T> struct UnboxValueImpl<T*> { T* operator()(MonoObject *mobj) { 
 template<class T> struct UnboxValueImpl<T&> { T& operator()(MonoObject *mobj) { return *((T*)mobj); } };
 template<class T> static inline T UnboxValue(MonoObject *mobj) { return UnboxValueImpl<T>()(mobj); }
 
+template<class T> struct MFieldImpl;
+template<class T> struct MFieldImpl<T*> { T* operator()(MonoObject *mobj, int pos) { return *(T**)((size_t)mobj+pos); } };
+template<class T> struct MFieldImpl<T&> { T& operator()(MonoObject *mobj, int pos) { return *((T*)((size_t)mobj + pos)); } };
+template<class T> static inline T MField(MonoObject *mobj, int pos) { return pos == 0 ? nullptr : MFieldImpl<T>()(mobj, pos); }
 
 inline MonoObject* MCall(MonoObject *self, MonoMethod *method)
 {
     return mono_runtime_invoke(method, self, nullptr, nullptr);
 }
-
-template<class A0>
-inline MonoObject* MCall(MonoObject *self, MonoMethod *method, A0 a0)
+inline MonoObject* MCall(MonoObject *self, MonoMethod *method, void *a0)
 {
-    MonoObject *args[] = { a0 };
+    void *args[] = { a0 };
+    return mono_runtime_invoke(method, self, args, nullptr);
+}
+inline MonoObject* MCall(MonoObject *self, MonoMethod *method, void *a0, void *a1)
+{
+    void *args[] = { a0, a1 };
+    return mono_runtime_invoke(method, self, args, nullptr);
+}
+inline MonoObject* MCall(MonoObject *self, MonoMethod *method, void *a0, void *a1, void *a2)
+{
+    void *args[] = { a0, a1, a2 };
     return mono_runtime_invoke(method, self, args, nullptr);
 }
 
-template<class A0, class A1>
-inline MonoObject* MCall(MonoObject *self, MonoMethod *method, A0 a0, A1 a1)
+#define MM(N) mono_class_get_method_from_name(mono_object_get_class(self), method, N)
+inline MonoObject* MCall(MonoObject *self, const char *method)
 {
-    MonoObject *args[] = { a0, a1 };
-    return mono_runtime_invoke(method, self, args, nullptr);
+    return MCall(self, MM(0));
 }
-
-template<class A0, class A1, class A2>
-inline MonoObject* MCall(MonoObject *self, MonoMethod *method, A0 a0, A1 a1, A2 a2)
+inline MonoObject* MCall(MonoObject *self, const char *method, void *a0)
 {
-    MonoObject *args[] = { a0, a1, a2 };
-    return mono_runtime_invoke(method, self, args, nullptr);
+    return MCall(self, MM(1), a0);
 }
+inline MonoObject* MCall(MonoObject *self, const char *method, void *a0, void *a1)
+{
+    return MCall(self, MM(2), a0, a1);
+}
+inline MonoObject* MCall(MonoObject *self, const char *method, void *a0, void *a1, void *a2)
+{
+    return MCall(self, MM(3), a0, a1, a2);
+}
+#undef MM
 
 
 

@@ -5,78 +5,31 @@ using UnityEngine;
 
 namespace UTJ
 {
-    abstract class usdiIUpdator
+    class usdiStreamUpdator
     {
         protected IntPtr m_rep;
 
-        public abstract void Update(double time);
-    }
+        public usdiStreamUpdator(usdi.Context usd, usdiStream stream) { m_rep = _Ctor(usd, stream); }
+        ~usdiStreamUpdator() { _Dtor(m_rep); }
 
-    class usdiTransformUpdator : usdiIUpdator
-    {
-        public usdiTransformUpdator(usdi.Xform usd, Transform trans) { m_rep = InternalCtor(usd, trans); }
-        ~usdiTransformUpdator() { InternalDtor(m_rep); }
-
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private extern IntPtr InternalCtor(usdi.Xform usd, Transform trans);
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private extern void InternalDtor(IntPtr nobj);
-
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern override void Update(double time);
-    }
-
-    class usdiCameraUpdator : usdiIUpdator
-    {
-        public usdiCameraUpdator(usdi.Camera usd, Camera cam) { m_rep = InternalCtor(usd, cam); }
-        ~usdiCameraUpdator() { InternalDtor(m_rep); }
-
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private extern IntPtr InternalCtor(usdi.Xform usd, Camera cam);
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private extern void InternalDtor(IntPtr nobj);
-
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern override void Update(double time);
-    }
+        public void Add(usdiElement component) { _Add(m_rep, component); }
+        public void AsyncUpdate(double time) { _AsyncUpdate(m_rep, time); }
+        public void Update(double time) { _Update(m_rep, time); }
 
 
-    class usdiMeshUpdator : usdiIUpdator
-    {
-        public usdiMeshUpdator(usdi.Mesh usd) { m_rep = InternalCtor(usd); }
-        ~usdiMeshUpdator() { InternalDtor(m_rep); }
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private extern IntPtr InternalCtor(usdi.Mesh usd);
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private extern void InternalDtor(IntPtr nobj);
 
 
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern override void Update(double time);
-
+        private static extern IntPtr _Ctor(usdi.Context usd, usdiStream stream);
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern void SetMesh(int nth, Mesh mesh);
-
+        private static extern void _Dtor(IntPtr rep);
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern void RunCopyTask();
-
+        private static extern void _Add(IntPtr rep, usdiElement component);
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern void WaitCopyTask();
-    }
-
-    class usdiParticleUpdator : usdiIUpdator
-    {
-        public usdiParticleUpdator(usdi.Camera usd) { m_rep = InternalCtor(usd); }
-        ~usdiParticleUpdator() { InternalDtor(m_rep); }
-
+        private static extern void _AsyncUpdate(IntPtr rep, double time);
         [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private extern IntPtr InternalCtor(usdi.Xform usd);
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        private extern void InternalDtor(IntPtr nobj);
-
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
-        public extern override void Update(double time);
+        private static extern void _Update(IntPtr rep, double time);
     }
 
 }

@@ -13,9 +13,11 @@ namespace UTJ
         protected bool m_needsUpdate = true;
         #endregion
 
+
         #region impl
         public override void usdiOnLoad(usdi.Schema schema)
         {
+            base.usdiOnLoad(schema);
             m_xf = usdi.usdiAsXform(schema);
             if(!m_xf)
             {

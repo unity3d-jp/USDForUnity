@@ -59,6 +59,7 @@ namespace UTJ
 
         Renderer m_renderer;
         Mesh m_umesh;
+        Mesh[] m_childMeshes;
         bool m_needsAllocateMeshData;
         bool m_needsUploadMeshData;
 
@@ -82,7 +83,6 @@ namespace UTJ
 
 
         #region properties
-        public usdi.Mesh usdiObject { get { return m_mesh; } }
         public usdi.MeshSummary meshSummary { get { return m_meshSummary; } }
         public usdi.MeshData meshData { get { return m_meshData; } }
         public bool directVBUpdate { get { return m_directVBUpdate; } }
@@ -148,6 +148,17 @@ namespace UTJ
             m_children.Add(split);
             return split;
         }
+
+        void usdiAllocateChildMeshes(int n)
+        {
+            if(n <= m_children.Count + 1) { return; }
+
+            while(m_children.Count + 1 < n)
+            {
+                usdiAddSplit();
+            }
+        }
+
 
         void usdiGatherExistingSplits()
         {

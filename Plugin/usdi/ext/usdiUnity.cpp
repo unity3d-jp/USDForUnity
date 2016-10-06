@@ -3,6 +3,12 @@
 #include "usdiUnity.h"
 #include "usdiInternalMethods.h"
 
+#include "usdiSchema.h"
+#include "usdiXform.h"
+#include "usdiCamera.h"
+#include "usdiMesh.h"
+#include "usdiPoints.h"
+
 namespace usdi {
 
 
@@ -77,6 +83,103 @@ void MeshAssignBoundsMono(MonoObject *mesh, MonoObject *center_, MonoObject  *ex
     AABB bounds = { center, extents };
 
     MCall(mesh, MM_Mesh_set_bounds, &bounds);
+}
+
+
+
+StreamUpdator::StreamUpdator()
+{
+}
+
+void StreamUpdator::add(MonoObject *component)
+{
+    auto *schema = MField<Schema*>(component, MF_usdiElement_m_schema);
+    if (schema) {
+        if (auto *mesh = dynamic_cast<Mesh*>(schema)) {
+            m_children.push_back(ChildPtr(new MeshUpdator(mesh, component)));
+        }
+        else if (auto *cam = dynamic_cast<Camera*>(schema)) {
+        }
+        else if (auto *points = dynamic_cast<Points*>(schema)) {
+        }
+        else if (auto *xf = dynamic_cast<Xform*>(schema)) {
+            m_children.push_back(ChildPtr(new XformUpdator(xf, component)));
+        }
+    }
+}
+
+void StreamUpdator::asyncUpdate(Time t)
+{
+#ifdef usdiDbgForceSingleThread
+    for (auto& s : m_children) {
+        s->asyncUpdate(t);
+    }
+#else
+    size_t grain = std::max<size_t>(m_children.size() / 32, 1);
+    tbb::parallel_for(tbb::blocked_range<size_t>(0, m_children.size(), grain), [t, this](const auto& r) {
+        for (size_t i = r.begin(); i != r.end(); ++i) {
+            m_children[i]->asyncUpdate(t);
+        }
+    });
+#endif
+}
+
+void StreamUpdator::update(Time time)
+{
+    for (auto& c : m_children) {
+        c->update(time);
+    }
+}
+
+StreamUpdator* StreamUpdator_Ctor() { return new StreamUpdator(); }
+void StreamUpdator_Dtor(StreamUpdator *rep) { delete rep; }
+void StreamUpdator_Add(StreamUpdator *rep, MonoObject *component) { rep->add(component); }
+void StreamUpdator_AsyncUpdate(StreamUpdator *rep, double time) { rep->asyncUpdate(time); }
+void StreamUpdator_Update(StreamUpdator *rep, double time) { rep->update(time); }
+
+
+IUpdator::~IUpdator() {}
+
+XformUpdator::XformUpdator(Xform *xf, MonoObject *component)
+    : m_xform(xf)
+    , m_component(component)
+{
+
+}
+
+XformUpdator::~XformUpdator()
+{
+
+}
+
+void XformUpdator::asyncUpdate(Time time)
+{
+
+}
+
+void XformUpdator::update(Time time)
+{
+
+}
+
+
+MeshUpdator::MeshUpdator(Mesh *mesh, MonoObject *component)
+    : m_mesh(mesh)
+    , m_component(component)
+{
+}
+
+MeshUpdator::~MeshUpdator()
+{
+}
+
+void MeshUpdator::asyncUpdate(Time time)
+{
+
+}
+
+void MeshUpdator::update(Time time)
+{
 }
 
 

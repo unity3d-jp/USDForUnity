@@ -41,6 +41,7 @@ namespace UTJ
         List<usdiElement> m_elements = new List<usdiElement>();
         double m_prevUpdateTime = Double.NaN;
         usdi.Task m_asyncUpdate;
+        usdiStreamUpdator m_updator;
         #endregion
 
 
@@ -194,8 +195,12 @@ namespace UTJ
                 return false;
             }
 
+            m_updator = new usdiStreamUpdator(m_ctx, this);
             usdiCreateNodeRecursive(GetComponent<Transform>(), usdi.usdiGetRoot(m_ctx),
-                (e) => { m_elements.Add(e); });
+                (e) => {
+                    m_elements.Add(e);
+                    m_updator.Add(e);
+                });
 
             usdiAsyncUpdate(m_time);
             usdiUpdate(m_time);
