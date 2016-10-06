@@ -39,11 +39,7 @@ extern MonoMethod *MM_Mesh_GetNativeIndexBufferPtr;
 
 
 
-void TransformAssignXformCpp(MonoObject *transform_, MonoObject *data_);
-void TransformAssignXformMono(MonoObject *transform_, MonoObject *data_);
-void TransformNotfyChangeCpp(MonoObject *transform_);
-void TransformNotfyChangeMono(MonoObject *transform_);
-void MeshAssignBoundsCpp(MonoObject *mesh_, MonoObject *center_, MonoObject  *extents_);
-void MeshAssignBoundsMono(MonoObject *mesh_, MonoObject *center_, MonoObject  *extents_);
+void InitializeInternalMethods();
+void ClearInternalMethodsCache();
 
 } // namespace usdi

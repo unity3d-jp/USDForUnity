@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "usdiInternal.h"
 #include "usdiInternalMethods.h"
+#include "usdiUnity.h"
 #include "etc/Hook.h"
 
 //#define usdiDbgForceMono
@@ -64,16 +65,16 @@ void InitializeInternalMethods()
     std::call_once(s_once, []() {
 
 #ifndef usdiDbgForceMono
-#define Import(Class, Method)  (void*&)NM_##Class##_##Method = FindSymbolByName(Sym_##Class##_##Method)
+#define NMethod(Class, Method)  (void*&)NM_##Class##_##Method = FindSymbolByName(Sym_##Class##_##Method)
 
-        Import(Object, SetDirty);
-        Import(Transform, SetLocalPosition);
-        Import(Transform, SetLocalRotation);
-        Import(Transform, SetLocalScale);
-        Import(Transform, SendTransformChanged);
-        Import(Mesh, SetBounds);
+        NMethod(Object, SetDirty);
+        NMethod(Transform, SetLocalPosition);
+        NMethod(Transform, SetLocalRotation);
+        NMethod(Transform, SetLocalScale);
+        NMethod(Transform, SendTransformChanged);
+        NMethod(Mesh, SetBounds);
 
-#undef Import
+#undef NMethod
 #endif // usdiDbgForceMono
 
 

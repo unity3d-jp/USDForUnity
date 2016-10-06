@@ -89,6 +89,11 @@ template<class T> struct UnboxValueImpl<T&> { T& operator()(MonoObject *mobj) { 
 template<class T> static inline T UnboxValue(MonoObject *mobj) { return UnboxValueImpl<T>()(mobj); }
 
 
+inline MonoObject* MCall(MonoObject *self, MonoMethod *method)
+{
+    return mono_runtime_invoke(method, self, nullptr, nullptr);
+}
+
 template<class A0>
 inline MonoObject* MCall(MonoObject *self, MonoMethod *method, A0 a0)
 {
@@ -110,3 +115,42 @@ inline MonoObject* MCall(MonoObject *self, MonoMethod *method, A0 a0, A1 a1, A2 
     return mono_runtime_invoke(method, self, args, nullptr);
 }
 
+
+
+class MObject
+{
+public:
+    MObject(const MObject& o) = delete;
+    MObject& operator=(const MObject& o) = delete;
+
+    MObject();
+    ~MObject();
+
+    void allocate(MonoClass *mc);
+    void free();
+    MonoArray* get();
+
+private:
+    MonoObject *m_rep = nullptr;
+    guint32 m_gch = 0;
+};
+
+class MArray
+{
+public:
+    MArray(const MArray& o) = delete;
+    MArray& operator=(const MArray& o) = delete;
+
+    MArray();
+    ~MArray();
+
+    void allocate(MonoClass *mc, size_t size);
+    void free();
+    void* data();
+    const void* data() const;
+    MonoArray* get();
+
+private:
+    MonoArray *m_rep = nullptr;
+    guint32 m_gch = 0;
+};

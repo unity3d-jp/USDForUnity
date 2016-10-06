@@ -6,9 +6,11 @@
 // ext
 
 namespace usdi {
-    typedef size_t Handle; // async handle
-    class Task;
+    typedef size_t Handle;
     typedef void(__stdcall *MonoDelegate)(void*);
+
+    class Task;
+    class MeshBuffer;
 } // namespace usdi
 
 extern "C" {

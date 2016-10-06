@@ -94,3 +94,59 @@ static struct _ImportMonoFunctions {
     _ImportMonoFunctions() { ImportMonoFunctions(); }
 } g_ImportMonoFunctions;
 
+
+
+MObject::MObject() {}
+MObject::~MObject() { free(); }
+
+void MObject::allocate(MonoClass *mc)
+{
+    m_rep = mono_object_new(mono_domain_get(), mc);
+    m_gch = mono_gchandle_new(m_rep, 1);
+}
+
+void MObject::free()
+{
+    if (m_rep) {
+        mono_gchandle_free(m_gch);
+        m_rep = nullptr;
+        m_gch = 0;
+    }
+}
+
+MonoArray* MObject::get() { return m_rep; }
+
+
+MArray::MArray() {}
+
+MArray::~MArray()
+{
+    free();
+}
+
+void MArray::allocate(MonoClass *mc, size_t size)
+{
+    m_rep = mono_array_new(mono_domain_get(), mc, (mono_array_size_t)size);
+    m_gch = mono_gchandle_new(m_rep, 1);
+}
+
+void MArray::free()
+{
+    if (m_rep) {
+        mono_gchandle_free(m_gch);
+        m_rep = nullptr;
+        m_gch = 0;
+    }
+}
+
+void* MArray::data()
+{
+    return m_rep ? mono_array_addr_with_size(m_rep, 0, 0) : nullptr;
+}
+
+const void* MArray::data() const
+{
+    return const_cast<MArray*>(this)->data();
+}
+
+MonoArray* MArray::get() { return m_rep; }
