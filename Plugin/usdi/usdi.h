@@ -175,7 +175,7 @@ struct MeshSummary
     bool                has_velocities = false;
 };
 
-struct SplitedMeshData
+struct SubmeshData
 {
     float3  *points = nullptr;
     float3  *normals = nullptr;
@@ -199,7 +199,7 @@ struct MeshData
     int     *indices = nullptr;
     int     *indices_triangulated = nullptr;
 
-    SplitedMeshData *splits = nullptr;
+    SubmeshData *splits = nullptr;
 
     uint    num_points = 0;
     uint    num_counts = 0;

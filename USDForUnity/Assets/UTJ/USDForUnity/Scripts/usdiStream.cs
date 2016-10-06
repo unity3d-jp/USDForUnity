@@ -236,6 +236,8 @@ namespace UTJ
             if (t == m_prevUpdateTime) { return; }
 
             usdiApplyImportConfig();
+            //m_updator.AsyncUpdate(t);
+
             usdi.usdiUpdateAllSamples(m_ctx, t);
 
             // update all elements
@@ -249,6 +251,8 @@ namespace UTJ
         void usdiUpdate(double t)
         {
             if (t == m_prevUpdateTime) { return; }
+
+            //m_updator.Update(t);
 
             // update all elements
             int c = m_elements.Count;

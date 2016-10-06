@@ -96,13 +96,15 @@ void InitializeInternalMethods()
 #undef NMethod
 #endif // usdiDbgForceMono
 
+        TransformAssignXform = NM_Transform_SetLocalPosition ? TransformAssignXformCpp : TransformAssignXformMono;
+        TransformNotfyChange = NM_Transform_SendTransformChanged ? TransformNotfyChangeCpp : TransformNotfyChangeMono;
+        MeshAssignBounds = NM_Mesh_SetBounds ? MeshAssignBoundsCpp : MeshAssignBoundsMono;
 
 #define ICall(Name, Func) mono_add_internal_call(Name, Func)
-#define ICallC(Name, Func, Cond) mono_add_internal_call(Name, Cond ? Func##Cpp : Func##Mono)
 
-        ICallC("UTJ.usdi::usdiUniTransformAssignXform", TransformAssignXform, NM_Transform_SetLocalPosition);
-        ICallC("UTJ.usdi::usdiUniTransformNotfyChange", TransformNotfyChange, NM_Transform_SendTransformChanged);
-        ICallC("UTJ.usdi::usdiUniMeshAssignBounds", MeshAssignBounds, NM_Mesh_SetBounds);
+        ICall("UTJ.usdi::usdiUniTransformAssignXform", TransformAssignXform);
+        ICall("UTJ.usdi::usdiUniTransformNotfyChange", TransformNotfyChange);
+        ICall("UTJ.usdi::usdiUniMeshAssignBounds", MeshAssignBounds);
 
         ICall("UTJ.usdiStreamUpdator::_Ctor", StreamUpdator_Ctor);
         ICall("UTJ.usdiStreamUpdator::_Dtor", StreamUpdator_Dtor);
@@ -111,7 +113,6 @@ void InitializeInternalMethods()
         ICall("UTJ.usdiStreamUpdator::_Update", StreamUpdator_Update);
 
 #undef ICall
-#undef ICallC
     });
 
 

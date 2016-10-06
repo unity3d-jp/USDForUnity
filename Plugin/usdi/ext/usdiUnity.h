@@ -1,13 +1,19 @@
 #pragma once
 
 #include "etc/Mono.h"
+#include "usdiExt.h"
 
 namespace usdi {
 
+extern void (*TransformAssignXform)(MonoObject *transform_, MonoObject *data_);
 void TransformAssignXformCpp(MonoObject *transform_, MonoObject *data_);
 void TransformAssignXformMono(MonoObject *transform_, MonoObject *data_);
+
+extern void (*TransformNotfyChange)(MonoObject *transform_);
 void TransformNotfyChangeCpp(MonoObject *transform_);
 void TransformNotfyChangeMono(MonoObject *transform_);
+
+extern void (*MeshAssignBounds)(MonoObject *mesh_, MonoObject *center_, MonoObject  *extents_);
 void MeshAssignBoundsCpp(MonoObject *mesh_, MonoObject *center_, MonoObject  *extents_);
 void MeshAssignBoundsMono(MonoObject *mesh_, MonoObject *center_, MonoObject  *extents_);
 
@@ -27,6 +33,7 @@ private:
     typedef std::vector<ChildPtr> Children;
 
     Children m_children;
+    tbb::task_group m_tasks;
 };
 
 StreamUpdator* StreamUpdator_Ctor();
@@ -44,6 +51,7 @@ public:
     virtual void update(Time time) = 0;
 };
 
+
 class XformUpdator : public IUpdator
 {
 public:
@@ -52,17 +60,41 @@ public:
     void asyncUpdate(Time time) override;
     void update(Time time) override;
 
-protected:
-    Xform       *m_xform;
+private:
+    Xform       *m_schema;
     MonoObject  *m_component;
+    XformData   m_data;
 };
 
 
-class MeshUpdator : public IUpdator
+class CameraUpdator : public XformUpdator
 {
+typedef XformUpdator super;
 public:
-    struct Segment
+    CameraUpdator(Camera *cam, MonoObject *component);
+    ~CameraUpdator() override;
+    void asyncUpdate(Time time) override;
+    void update(Time time) override;
+
+private:
+    Camera      *m_schema;
+    MonoObject  *m_component;
+    CameraData  m_data;
+};
+
+
+class MeshUpdator : public XformUpdator
+{
+typedef XformUpdator super;
+public:
+    class MeshBuffer
     {
+    public:
+        MeshBuffer(MonoObject *mmesh, int nth);
+        void asyncUpdate(MeshData &data);
+        void update(MeshData &data);
+
+    private:
         MonoObject *m_mmesh;
         MArray m_mvertices;
         MArray m_mnormals;
@@ -70,9 +102,12 @@ public:
         MArray m_mindices;
         void *m_vb = nullptr;
         void *m_ib = nullptr;
+        Handle m_hcommand;
+        int m_nth;
     };
-    typedef std::unique_ptr<Segment> SegmentPtr;
-    typedef std::vector<SegmentPtr> Segments;
+    typedef std::unique_ptr<MeshBuffer> BufferPtr;
+    typedef std::vector<BufferPtr> Buffers;
+    typedef std::vector<SubmeshData> Splits;
 
     MeshUpdator(Mesh *mesh, MonoObject *component);
     ~MeshUpdator() override;
@@ -80,11 +115,27 @@ public:
     void update(Time time) override;
 
 private:
-    Mesh        *m_mesh;
+    Mesh        *m_schema;
     MonoObject  *m_component;
+    MeshData    m_data, m_data_prev;
+    Splits      m_splits;
+    Buffers     m_buffers;
+};
 
-    MeshData m_data, m_dataPrev;
-    Segments m_segments;
+
+class PointsUpdator : public XformUpdator
+{
+typedef XformUpdator super;
+public:
+    PointsUpdator(Points *cam, MonoObject *component);
+    ~PointsUpdator() override;
+    void asyncUpdate(Time time) override;
+    void update(Time time) override;
+
+private:
+    Points      *m_schema;
+    MonoObject  *m_component;
+    PointsData  m_data, m_data_prev;
 };
 
 } // namespace usdi
