@@ -1,6 +1,6 @@
 @echo off
 
-IF NOT EXIST "External/tbb44_20160526oss_win_0.zip" (
+IF NOT EXIST "External/tbb44_20160526oss" (
     echo "downloading TBB..."
     Powershell.exe -executionpolicy remotesigned -File setup.ps1
 )

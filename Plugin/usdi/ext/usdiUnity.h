@@ -64,6 +64,7 @@ private:
     Xform       *m_schema;
     MonoObject  *m_component;
     XformData   m_data;
+    MonoObject  *m_mono_transform;
 };
 
 
@@ -80,6 +81,7 @@ private:
     Camera      *m_schema;
     MonoObject  *m_component;
     CameraData  m_data;
+    MonoObject  *m_mono_camera;
 };
 
 

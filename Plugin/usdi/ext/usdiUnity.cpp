@@ -157,7 +157,7 @@ XformUpdator::XformUpdator(Xform *xf, MonoObject *component)
     : m_schema(xf)
     , m_component(component)
 {
-
+    m_mono_transform = MCall(component, MM_Component_GetComponent_Transform);
 }
 
 XformUpdator::~XformUpdator()
@@ -176,7 +176,7 @@ void XformUpdator::asyncUpdate(Time time)
 void XformUpdator::update(Time time)
 {
     if (m_schema->needsUpdate()) {
-        // todo
+        TransformAssignXform(m_mono_transform, (MonoObject*)&m_data);
     }
 }
 
@@ -186,6 +186,7 @@ CameraUpdator::CameraUpdator(Camera *cam, MonoObject *component)
     , m_schema(cam)
     , m_component(component)
 {
+    m_mono_camera = MCall(component, MM_Component_GetComponent_Camera);
 }
 
 CameraUpdator::~CameraUpdator()

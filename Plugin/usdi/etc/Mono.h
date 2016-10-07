@@ -32,12 +32,29 @@ struct MonoAssembly;
 struct MonoImage;
 struct MonoThread;
 
+struct MonoType;
 struct MonoClass;
 struct MonoClassField;
 struct MonoMethod;
 struct MonoObject;
 struct MonoArray;
 struct MonoString;
+
+#define MONO_ZERO_LEN_ARRAY 1
+
+struct MonoGenericInst {
+    guint id;
+    guint type_argc : 22;
+    guint is_open : 1;
+    MonoType *type_argv[MONO_ZERO_LEN_ARRAY];
+};
+
+struct MonoGenericContext {
+    MonoGenericInst *class_inst;
+    MonoGenericInst *method_inst;
+};
+
+
 
 extern void *g_mono_dll;
 
@@ -56,8 +73,10 @@ extern void             (*mono_add_internal_call)(const char *name, void *method
 extern MonoObject*      (*mono_runtime_invoke)(MonoMethod *method, MonoObject *obj, void **params, void **exc);
 
 extern MonoClass*       (*mono_class_from_name)(MonoImage *image, const char *namespaceString, const char *classnameString);
+extern MonoType*        (*mono_class_get_type)(MonoClass *klass);
 extern MonoMethod*      (*mono_class_get_method_from_name)(MonoClass *klass, const char *name, int param_count);
 extern MonoClassField*  (*mono_class_get_field_from_name)(MonoClass *klass, const char *name);
+extern MonoMethod*      (*mono_class_inflate_generic_method)(MonoMethod *method, MonoGenericContext *context);
 
 extern guint32          (*mono_field_get_offset)(MonoClassField *field);
 

@@ -25,8 +25,10 @@ void            (*mono_add_internal_call)(const char *name, void *method);
 MonoObject*     (*mono_runtime_invoke)(MonoMethod *method, MonoObject *obj, void **params, void **exc);
 
 MonoClass*      (*mono_class_from_name)(MonoImage *image, const char *namespaceString, const char *classnameString);
+MonoType*       (*mono_class_get_type)(MonoClass *klass);
 MonoMethod*     (*mono_class_get_method_from_name)(MonoClass *klass, const char *name, int param_count);
 MonoClassField* (*mono_class_get_field_from_name)(MonoClass *klass, const char *name);
+MonoMethod*     (*mono_class_inflate_generic_method)(MonoMethod *method, MonoGenericContext *context);
 
 guint32         (*mono_field_get_offset)(MonoClassField *field);
 
@@ -69,8 +71,10 @@ void ImportMonoFunctions()
         Import(mono_runtime_invoke);
 
         Import(mono_class_from_name);
+        Import(mono_class_get_type);
         Import(mono_class_get_method_from_name);
         Import(mono_class_get_field_from_name);
+        Import(mono_class_inflate_generic_method);
 
         Import(mono_field_get_offset);
 

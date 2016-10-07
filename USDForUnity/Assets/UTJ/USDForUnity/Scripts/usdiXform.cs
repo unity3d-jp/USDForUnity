@@ -19,11 +19,6 @@ namespace UTJ
         {
             base.usdiOnLoad(schema);
             m_xf = usdi.usdiAsXform(schema);
-            if(!m_xf)
-            {
-                Debug.LogWarning("schema is not Xform!");
-            }
-
             m_trans = GetComponent<Transform>();
         }
 

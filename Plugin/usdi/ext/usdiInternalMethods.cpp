@@ -25,10 +25,15 @@ void(uTransform::*NM_Transform_SendTransformChanged)(int mask);
 void(uMesh::*NM_Mesh_SetBounds)(const AABB &);
 
 
+static void *Buf_Component_GetComponent_Transform;
+static void *Buf_Component_GetComponent_Camera;
+
 MonoClass *MC_Vector2;
 MonoClass *MC_Vector3;
 MonoClass *MC_Quaternion;
+MonoClass *MC_Component;
 MonoClass *MC_Transform;
+MonoClass *MC_Camera;
 MonoClass *MC_Mesh;
 MonoClass *MC_usdiElement;
 MonoClass *MC_usdiXform;
@@ -36,6 +41,9 @@ MonoClass *MC_usdiCamera;
 MonoClass *MC_usdiMesh;
 MonoClass *MC_usdiPoints;
 
+MonoMethod *MM_Component_GetComponent;
+MonoMethod *MM_Component_GetComponent_Transform;
+MonoMethod *MM_Component_GetComponent_Camera;
 MonoMethod *MM_Transform_set_localPosition;
 MonoMethod *MM_Transform_set_localRotation;
 MonoMethod *MM_Transform_set_localScale;
@@ -77,6 +85,32 @@ void ClearInternalMethodsCache()
     MM_usdiMesh_usdiAllocateChildMeshes = nullptr;
 }
 
+
+static MonoMethod* InstantiateGenericMethod(MonoMethod *generic_method, MonoClass *generic_param, void *& buf)
+{
+    if (!generic_method) {
+        usdiLogWarning("InstantiateGenericMethod: method is null\n");
+        usdiDebugBreak();
+        return nullptr;
+    }
+    if (!generic_param) {
+        usdiLogWarning("InstantiateGenericMethod: paremeter is null\n");
+        usdiDebugBreak();
+        return nullptr;
+    }
+
+    if (!buf) {
+        buf = malloc(sizeof(MonoGenericInst));
+    }
+
+    auto *mgi = (MonoGenericInst*)buf;
+    mgi->id = -1;
+    mgi->is_open = 0;
+    mgi->type_argc = 1;
+    mgi->type_argv[0] = mono_class_get_type(generic_param);
+    MonoGenericContext ctx = { nullptr, mgi };
+    return mono_class_inflate_generic_method(generic_method, &ctx);
+}
 
 void InitializeInternalMethods()
 {
@@ -123,6 +157,9 @@ void InitializeInternalMethods()
 #define MMethod(Class, Method, NumArgs) if(MC_##Class) MM_##Class##_##Method = mono_class_get_method_from_name(MC_##Class, #Method, NumArgs)
 #define MField(Class, Name) if(MC_##Class) MF_##Class##_##Name = mono_field_get_offset(mono_class_get_field_from_name(MC_##Class, #Name))
 
+#define MGMethod(Class, Method, GParam)\
+    MM_##Class##_##Method##_##GParam = InstantiateGenericMethod(MM_##Class##_##Method, MC_##GParam, Buf_##Class##_##Method##_##GParam)
+
     auto mdomain = mono_domain_get();
 
     // UnityEngine methods
@@ -133,6 +170,13 @@ void InitializeInternalMethods()
         MClass("UnityEngine", Vector2);
         MClass("UnityEngine", Vector3);
         MClass("UnityEngine", Quaternion);
+
+        MClass("UnityEngine", Component);
+        MMethod(Component, GetComponent, 0);
+        MClass("UnityEngine", Transform);
+        MClass("UnityEngine", Camera);
+        MGMethod(Component, GetComponent, Transform);
+        MGMethod(Component, GetComponent, Camera);
 
         MClass("UnityEngine", Transform);
         MMethod(Transform, set_localPosition, 1);
@@ -166,6 +210,7 @@ void InitializeInternalMethods()
     }
 
 
+#undef MGethod
 #undef MField
 #undef MMethod
 #undef MClass

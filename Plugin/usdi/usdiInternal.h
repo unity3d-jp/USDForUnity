@@ -9,10 +9,16 @@
 #define usdiLogWarning(...)     usdi::LogImpl(2, "usdi warning: " __VA_ARGS__)
 #define usdiLogInfo(...)        usdi::LogImpl(3, "usdi info: " __VA_ARGS__)
 #ifdef usdiDebug
+    #ifdef _WIN32
+           #define usdiDebugBreak() ::DebugBreak()
+    #else
+           #define usdiDebugBreak()
+    #endif
     #define usdiLogTrace(...)   usdi::LogImpl(4, "usdi trace: " __VA_ARGS__)
     #define usdiLogDetail(...)  usdi::LogImpl(5, "usdi trace: " __VA_ARGS__)
     #define usdiTraceFunc(...)  usdi::TraceFuncImpl _trace_(__FUNCTION__)
 #else
+    #define usdiDebugBreak()
     #define usdiLogTrace(...)
     #define usdiLogDetail(...)
     #define usdiTraceFunc(...)
