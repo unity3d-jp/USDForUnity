@@ -47,6 +47,28 @@ gunichar2*      (*mono_string_to_utf16)(MonoString *string_obj);
 guint32         (*mono_gchandle_new)(MonoObject *obj, gboolean pinned);
 void            (*mono_gchandle_free)(guint32 gchandle);
 
+MonoClass* (*mono_get_object_class)();
+MonoClass* (*mono_get_byte_class)();
+MonoClass* (*mono_get_void_class)();
+MonoClass* (*mono_get_boolean_class)();
+MonoClass* (*mono_get_sbyte_class)();
+MonoClass* (*mono_get_int16_class)();
+MonoClass* (*mono_get_uint16_class)();
+MonoClass* (*mono_get_int32_class)();
+MonoClass* (*mono_get_uint32_class)();
+MonoClass* (*mono_get_intptr_class)();
+MonoClass* (*mono_get_uintptr_class)();
+MonoClass* (*mono_get_int64_class)();
+MonoClass* (*mono_get_uint64_class)();
+MonoClass* (*mono_get_single_class)();
+MonoClass* (*mono_get_double_class)();
+MonoClass* (*mono_get_char_class)();
+MonoClass* (*mono_get_string_class)();
+MonoClass* (*mono_get_enum_class)();
+MonoClass* (*mono_get_array_class)();
+MonoClass* (*mono_get_thread_class)();
+MonoClass* (*mono_get_exception_class)();
+
 
 void ImportMonoFunctions()
 {
@@ -93,6 +115,27 @@ void ImportMonoFunctions()
         Import(mono_gchandle_new);
         Import(mono_gchandle_free);
 
+        Import(mono_get_object_class);
+        Import(mono_get_byte_class);
+        Import(mono_get_void_class);
+        Import(mono_get_boolean_class);
+        Import(mono_get_sbyte_class);
+        Import(mono_get_int16_class);
+        Import(mono_get_uint16_class);
+        Import(mono_get_int32_class);
+        Import(mono_get_uint32_class);
+        Import(mono_get_intptr_class);
+        Import(mono_get_uintptr_class);
+        Import(mono_get_int64_class);
+        Import(mono_get_uint64_class);
+        Import(mono_get_single_class);
+        Import(mono_get_double_class);
+        Import(mono_get_char_class);
+        Import(mono_get_string_class);
+        Import(mono_get_enum_class);
+        Import(mono_get_array_class);
+        Import(mono_get_thread_class);
+        Import(mono_get_exception_class);
 #undef Import
     }
 #else
@@ -124,10 +167,13 @@ void MObject::free()
     }
 }
 
-MonoArray* MObject::get() { return (MonoArray*)m_rep; }
+MonoObject* MObject::get() { return m_rep; }
+MObject::operator bool() const { return m_rep != nullptr; }
 
 
-MArray::MArray() {}
+MArray::MArray()
+{
+}
 
 MArray::~MArray()
 {
@@ -136,8 +182,17 @@ MArray::~MArray()
 
 void MArray::allocate(MonoClass *mc, size_t size)
 {
+    if (m_size == size) {
+        // no need to re-allocate
+        return;
+    }
+
+    free();
+
+    if (size == 0) { return; }
     m_rep = mono_array_new(mono_domain_get(), mc, (mono_array_size_t)size);
     m_gch = mono_gchandle_new((MonoObject*)m_rep, 1);
+    m_size = size;
 }
 
 void MArray::free()
@@ -146,7 +201,13 @@ void MArray::free()
         mono_gchandle_free(m_gch);
         m_rep = nullptr;
         m_gch = 0;
+        m_size = 0;
     }
+}
+
+size_t MArray::size() const
+{
+    return m_size;
 }
 
 void* MArray::data()
@@ -160,3 +221,4 @@ const void* MArray::data() const
 }
 
 MonoArray* MArray::get() { return m_rep; }
+MArray::operator bool() const { return m_rep != nullptr; }

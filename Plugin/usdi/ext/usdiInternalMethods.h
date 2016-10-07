@@ -19,6 +19,8 @@ extern void(uMesh::*NM_Mesh_SetBounds)(const AABB &);
 
 // mono classes & methods
 
+extern MonoClass *MC_int;
+extern MonoClass *MC_IntPtr;
 extern MonoClass *MC_Vector2;
 extern MonoClass *MC_Vector3;
 extern MonoClass *MC_Quaternion;
@@ -38,6 +40,10 @@ extern MonoMethod *MM_Component_GetComponent_Camera;
 extern MonoMethod *MM_Transform_set_localPosition;
 extern MonoMethod *MM_Transform_set_localRotation;
 extern MonoMethod *MM_Transform_set_localScale;
+extern MonoMethod *MM_Camera_set_nearClipPlane;
+extern MonoMethod *MM_Camera_set_farClipPlane;
+extern MonoMethod *MM_Camera_set_fieldOfView;
+extern MonoMethod *MM_Camera_set_aspect;
 extern MonoMethod *MM_Mesh_set_vertices;
 extern MonoMethod *MM_Mesh_set_normals;
 extern MonoMethod *MM_Mesh_set_uv;

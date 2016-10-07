@@ -95,6 +95,28 @@ extern gunichar2*       (*mono_string_to_utf16)(MonoString *string_obj);
 extern guint32          (*mono_gchandle_new)(MonoObject *obj, gboolean pinned);
 extern void             (*mono_gchandle_free)(guint32 gchandle);
 
+extern MonoClass* (*mono_get_object_class)();
+extern MonoClass* (*mono_get_byte_class)();
+extern MonoClass* (*mono_get_void_class)();
+extern MonoClass* (*mono_get_boolean_class)();
+extern MonoClass* (*mono_get_sbyte_class)();
+extern MonoClass* (*mono_get_int16_class)();
+extern MonoClass* (*mono_get_uint16_class)();
+extern MonoClass* (*mono_get_int32_class)();
+extern MonoClass* (*mono_get_uint32_class)();
+extern MonoClass* (*mono_get_intptr_class)();
+extern MonoClass* (*mono_get_uintptr_class)();
+extern MonoClass* (*mono_get_int64_class)();
+extern MonoClass* (*mono_get_uint64_class)();
+extern MonoClass* (*mono_get_single_class)();
+extern MonoClass* (*mono_get_double_class)();
+extern MonoClass* (*mono_get_char_class)();
+extern MonoClass* (*mono_get_string_class)();
+extern MonoClass* (*mono_get_enum_class)();
+extern MonoClass* (*mono_get_array_class)();
+extern MonoClass* (*mono_get_thread_class)();
+extern MonoClass* (*mono_get_exception_class)();
+
 
 
 
@@ -167,7 +189,8 @@ public:
 
     void allocate(MonoClass *mc);
     void free();
-    MonoArray* get();
+    MonoObject* get();
+    operator bool() const;
 
 private:
     MonoObject *m_rep = nullptr;
@@ -185,11 +208,15 @@ public:
 
     void allocate(MonoClass *mc, size_t size);
     void free();
+
+    size_t size() const;
     void* data();
     const void* data() const;
     MonoArray* get();
+    operator bool() const;
 
 private:
     MonoArray *m_rep = nullptr;
+    size_t m_size = 0;
     guint32 m_gch = 0;
 };

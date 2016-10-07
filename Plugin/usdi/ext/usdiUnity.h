@@ -43,19 +43,26 @@ void StreamUpdator_AsyncUpdate(StreamUpdator *rep, double time);
 void StreamUpdator_Update(StreamUpdator *rep, double time);
 
 
+
+
 class IUpdator
 {
 public:
+    IUpdator(StreamUpdator *parent);
     virtual ~IUpdator();
     virtual void asyncUpdate(Time time) = 0;
     virtual void update(Time time) = 0;
+
+protected:
+    StreamUpdator *m_parent;
 };
 
 
 class XformUpdator : public IUpdator
 {
+typedef IUpdator super;
 public:
-    XformUpdator(Xform *xf, MonoObject *component);
+    XformUpdator(StreamUpdator *parent, Xform *xf, MonoObject *component);
     ~XformUpdator() override;
     void asyncUpdate(Time time) override;
     void update(Time time) override;
@@ -72,7 +79,7 @@ class CameraUpdator : public XformUpdator
 {
 typedef XformUpdator super;
 public:
-    CameraUpdator(Camera *cam, MonoObject *component);
+    CameraUpdator(StreamUpdator *parent, Camera *cam, MonoObject *component);
     ~CameraUpdator() override;
     void asyncUpdate(Time time) override;
     void update(Time time) override;
@@ -89,12 +96,25 @@ class MeshUpdator : public XformUpdator
 {
 typedef XformUpdator super;
 public:
+    union UpdateFlags
+    {
+        uint32_t all;
+        struct {
+            uint32_t points : 1;
+            uint32_t normals : 1;
+            uint32_t uv : 1;
+            uint32_t indices : 1;
+        };
+    };
+
     class MeshBuffer
     {
     public:
-        MeshBuffer(MonoObject *mmesh, int nth);
-        void asyncUpdate(MeshData &data);
-        void update(MeshData &data);
+        MeshBuffer(MonoObject *mmesh);
+
+        void copyMeshDataToMonoArrays(UpdateFlags flags, const MeshData &data);
+        void copySubmeshDataToMonoArrays(UpdateFlags flags, const MeshData &data, int split);
+        void copyDataToMonoMesh(UpdateFlags flags);
 
     private:
         MonoObject *m_mmesh;
@@ -104,14 +124,14 @@ public:
         MArray m_mindices;
         void *m_vb = nullptr;
         void *m_ib = nullptr;
-        Handle m_hcommand;
-        int m_nth;
+        Handle m_hcommand = 0;
+
     };
     typedef std::unique_ptr<MeshBuffer> BufferPtr;
     typedef std::vector<BufferPtr> Buffers;
     typedef std::vector<SubmeshData> Splits;
 
-    MeshUpdator(Mesh *mesh, MonoObject *component);
+    MeshUpdator(StreamUpdator *parent, Mesh *mesh, MonoObject *component);
     ~MeshUpdator() override;
     void asyncUpdate(Time time) override;
     void update(Time time) override;
@@ -120,8 +140,12 @@ private:
     Mesh        *m_schema;
     MonoObject  *m_component;
     MeshData    m_data, m_data_prev;
+    MeshSummary m_summary;
     Splits      m_splits;
     Buffers     m_buffers;
+    UpdateFlags m_uflags = { 0 };
+    bool        m_directVBUpdate = false;
+    int         m_frame = 0;
 };
 
 
@@ -129,7 +153,7 @@ class PointsUpdator : public XformUpdator
 {
 typedef XformUpdator super;
 public:
-    PointsUpdator(Points *cam, MonoObject *component);
+    PointsUpdator(StreamUpdator *parent, Points *cam, MonoObject *component);
     ~PointsUpdator() override;
     void asyncUpdate(Time time) override;
     void update(Time time) override;

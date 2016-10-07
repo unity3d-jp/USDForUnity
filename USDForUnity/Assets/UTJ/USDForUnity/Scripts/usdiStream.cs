@@ -154,7 +154,7 @@ namespace UTJ
             {
                 elem.stream = this;
                 elem.usdiOnLoad(schema);
-                if (node_handler != null) { node_handler(elem); }
+                node_handler(elem);
             }
 
             var trans = elem == null ? parent : elem.GetComponent<Transform>();

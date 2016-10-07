@@ -28,6 +28,8 @@ void(uMesh::*NM_Mesh_SetBounds)(const AABB &);
 static void *Buf_Component_GetComponent_Transform;
 static void *Buf_Component_GetComponent_Camera;
 
+MonoClass *MC_int;
+MonoClass *MC_IntPtr;
 MonoClass *MC_Vector2;
 MonoClass *MC_Vector3;
 MonoClass *MC_Quaternion;
@@ -47,6 +49,10 @@ MonoMethod *MM_Component_GetComponent_Camera;
 MonoMethod *MM_Transform_set_localPosition;
 MonoMethod *MM_Transform_set_localRotation;
 MonoMethod *MM_Transform_set_localScale;
+MonoMethod *MM_Camera_set_nearClipPlane;
+MonoMethod *MM_Camera_set_farClipPlane;
+MonoMethod *MM_Camera_set_fieldOfView;
+MonoMethod *MM_Camera_set_aspect;
 MonoMethod *MM_Mesh_set_vertices;
 MonoMethod *MM_Mesh_set_normals;
 MonoMethod *MM_Mesh_set_uv;
@@ -85,6 +91,28 @@ void ClearInternalMethodsCache()
     MM_usdiMesh_usdiAllocateChildMeshes = nullptr;
 }
 
+
+static MonoClass* FindClass(MonoImage *mimg, const char *ns, const char *classname)
+{
+    auto *ret = mono_class_from_name(mimg, ns, classname);
+    if (!ret) {
+        usdiLogWarning("FindClass: not found %s\n", classname);
+        usdiDebugBreak();
+    }
+    return ret;
+}
+
+static MonoMethod* FindMethod(MonoClass *mclass, const char *method_name, int num_args = -1)
+{
+    if (!mclass) { return nullptr; }
+
+    auto *ret = mono_class_get_method_from_name(mclass, method_name, num_args);
+    if (!ret) {
+        usdiLogWarning("FindMethod: not found %s\n", method_name);
+        usdiDebugBreak();
+    }
+    return ret;
+}
 
 static MonoMethod* InstantiateGenericMethod(MonoMethod *generic_method, MonoClass *generic_param, void *& buf)
 {
@@ -153,11 +181,11 @@ void InitializeInternalMethods()
     // mono classes & methods will change when script recompiled.
     // therefore these can not be inside call_once.
 
-#define MClass(Namespace, Class) MC_##Class = mono_class_from_name(mimg, Namespace, #Class)
-#define MMethod(Class, Method, NumArgs) if(MC_##Class) MM_##Class##_##Method = mono_class_get_method_from_name(MC_##Class, #Method, NumArgs)
+#define MClass(Namespace, Class) MC_##Class = FindClass(mimg, Namespace, #Class)
+#define MMethod(Class, Method, NumArgs) MM_##Class##_##Method = FindMethod(MC_##Class, #Method, NumArgs)
 #define MField(Class, Name) if(MC_##Class) MF_##Class##_##Name = mono_field_get_offset(mono_class_get_field_from_name(MC_##Class, #Name))
 
-#define MGMethod(Class, Method, GParam)\
+#define MMInstantiate(Class, Method, GParam)\
     MM_##Class##_##Method##_##GParam = InstantiateGenericMethod(MM_##Class##_##Method, MC_##GParam, Buf_##Class##_##Method##_##GParam)
 
     auto mdomain = mono_domain_get();
@@ -167,21 +195,26 @@ void InitializeInternalMethods()
     if(masm) {
         auto mimg = mono_assembly_get_image(masm);
 
+        MC_int = mono_get_int32_class();
+        MC_IntPtr = mono_get_intptr_class();
+
         MClass("UnityEngine", Vector2);
         MClass("UnityEngine", Vector3);
         MClass("UnityEngine", Quaternion);
 
         MClass("UnityEngine", Component);
-        MMethod(Component, GetComponent, 0);
         MClass("UnityEngine", Transform);
         MClass("UnityEngine", Camera);
-        MGMethod(Component, GetComponent, Transform);
-        MGMethod(Component, GetComponent, Camera);
-
-        MClass("UnityEngine", Transform);
+        MMethod(Component, GetComponent, 0);
+        MMInstantiate(Component, GetComponent, Transform);
+        MMInstantiate(Component, GetComponent, Camera);
         MMethod(Transform, set_localPosition, 1);
         MMethod(Transform, set_localRotation, 1);
         MMethod(Transform, set_localScale, 1);
+        MMethod(Camera, set_nearClipPlane, 1);
+        MMethod(Camera, set_farClipPlane, 1);
+        MMethod(Camera, set_fieldOfView, 1);
+        MMethod(Camera, set_aspect, 1);
 
         MClass("UnityEngine", Mesh);
         MMethod(Mesh, set_vertices, 1);
@@ -206,7 +239,7 @@ void InitializeInternalMethods()
         MClass("UTJ", usdiCamera);
         MClass("UTJ", usdiPoints);
         MClass("UTJ", usdiMesh);
-        MMethod(usdiMesh, usdiAllocateChildMeshes, 0);
+        MMethod(usdiMesh, usdiAllocateChildMeshes, 1);
     }
 
 
