@@ -38,6 +38,7 @@
 #include <cstdarg>
 #include <cmath>
 #include <cctype>
+#include <experimental/filesystem>
 
 #include "pxr/usd/usd/modelAPI.h"
 #include "pxr/usd/usd/timeCode.h"

@@ -46,17 +46,22 @@ void Context::initialize()
 
 bool Context::createStage(const char *identifier)
 {
+    namespace fs = std::experimental::filesystem;
+
     initialize();
 
-    // UsdStage::CreateNew() will fail if file already exists. try to delete existing one.
-    {
-        FILE *f = fopen(identifier, "rb");
-        if (f) {
-            fclose(f);
-            if (std::remove(identifier)) {
-                usdiLogTrace("Context::createStage(): deleted existing file %s\n", identifier);
-            }
+    FILE *f = fopen(identifier, "rb");
+    if (f) {
+        fclose(f);
+        // UsdStage::CreateNew() will fail if file already exists. try to delete existing one.
+        if (std::remove(identifier)) {
+            usdiLogTrace("Context::createStage(): deleted existing file %s\n", identifier);
         }
+    }
+    else {
+        // create output directory if not exist
+        fs::path path = {identifier};
+        fs::create_directories(path.remove_filename());
     }
 
     m_stage = UsdStage::CreateNew(identifier);
