@@ -3,18 +3,18 @@
 
 namespace usdi {
 
-class uObject;
-class uTransform;
-class uMesh;
+class nObject;
+class nTransform;
+class nMesh;
 
 
 // native methods
-extern void(uObject::*NM_Object_SetDirty)();
-extern void(uTransform::*NM_Transform_SetLocalPosition)(const __m128 &pos);
-extern void(uTransform::*NM_Transform_SetLocalRotation)(const __m128 &rot);
-extern void(uTransform::*NM_Transform_SetLocalScale)(const __m128 &scale);
-extern void(uTransform::*NM_Transform_SendTransformChanged)(int mask);
-extern void(uMesh::*NM_Mesh_SetBounds)(const AABB &);
+extern void(nObject::*NM_Object_SetDirty)();
+extern void(nTransform::*NM_Transform_SetLocalPosition)(const __m128 &pos);
+extern void(nTransform::*NM_Transform_SetLocalRotation)(const __m128 &rot);
+extern void(nTransform::*NM_Transform_SetLocalScale)(const __m128 &scale);
+extern void(nTransform::*NM_Transform_SendTransformChanged)(int mask);
+extern void(nMesh::*NM_Mesh_SetBounds)(const AABB &);
 
 
 // mono classes & methods
@@ -38,42 +38,6 @@ extern MonoClass *MC_usdiCamera;
 extern MonoClass *MC_usdiMesh;
 extern MonoClass *MC_usdiPoints;
 
-extern MonoMethod *MM_GameObject_SetActive;
-extern MonoMethod *MM_GameObject_GetComponent;
-extern MonoMethod *MM_GameObject_GetComponent_Transform;
-extern MonoMethod *MM_GameObject_GetComponent_Camera;
-extern MonoMethod *MM_GameObject_GetComponent_MeshFilter;
-extern MonoMethod *MM_GameObject_GetComponent_MeshRenderer;
-extern MonoMethod *MM_GameObject_GetComponent_Light;
-extern MonoMethod *MM_GameObject_AddComponent;
-extern MonoMethod *MM_GameObject_AddComponent_Transform;
-extern MonoMethod *MM_GameObject_AddComponent_Camera;
-extern MonoMethod *MM_GameObject_AddComponent_MeshFilter;
-extern MonoMethod *MM_GameObject_AddComponent_MeshRenderer;
-extern MonoMethod *MM_GameObject_AddComponent_Light;
-extern MonoMethod *MM_Component_get_gameObject;
-extern MonoMethod *MM_Component_GetComponent;
-extern MonoMethod *MM_Component_GetComponent_Transform;
-extern MonoMethod *MM_Component_GetComponent_Camera;
-extern MonoMethod *MM_Transform_set_localPosition;
-extern MonoMethod *MM_Transform_set_localRotation;
-extern MonoMethod *MM_Transform_set_localScale;
-extern MonoMethod *MM_Transform_SetParent;
-extern MonoMethod *MM_Camera_set_nearClipPlane;
-extern MonoMethod *MM_Camera_set_farClipPlane;
-extern MonoMethod *MM_Camera_set_fieldOfView;
-extern MonoMethod *MM_Camera_set_aspect;
-extern MonoMethod *MM_MeshFilter_set_sharedMesh;
-extern MonoMethod *MM_Light_set_color;
-extern MonoMethod *MM_Light_set_intensity;
-extern MonoMethod *MM_Mesh_set_vertices;
-extern MonoMethod *MM_Mesh_set_normals;
-extern MonoMethod *MM_Mesh_set_uv;
-extern MonoMethod *MM_Mesh_set_bounds;
-extern MonoMethod *MM_Mesh_SetIndices;
-extern MonoMethod *MM_Mesh_UploadMeshData;
-extern MonoMethod *MM_Mesh_GetNativeVertexBufferPtr;
-extern MonoMethod *MM_Mesh_GetNativeIndexBufferPtr;
 extern MonoMethod *MM_usdiMesh_usdiAllocateChildMeshes;
 
 extern int MF_usdiElement_m_schema;
@@ -81,5 +45,133 @@ extern int MF_usdiElement_m_schema;
 
 void InitializeInternalMethods();
 void ClearInternalMethodsCache();
+
+
+
+
+class mObject
+{
+public:
+    mObject(MonoObject *rep = nullptr);
+    MonoObject* get() const;
+    operator bool() const;
+
+    MonoObject* mcall(MonoMethod *mm);
+    MonoObject* mcall(MonoMethod *mm, void *a0);
+    MonoObject* mcall(MonoMethod *mm, void *a0, void *a1);
+    MonoObject* mcall(MonoMethod *mm, void *a0, void *a1, void *a2);
+
+protected:
+    MonoObject *m_rep;
+};
+
+
+class mGameObject : public mObject
+{
+typedef mObject super;
+public:
+    static MonoClass *MClass;
+
+    mGameObject(MonoObject *game_object = nullptr);
+
+    void SetActive(bool v);
+    MonoObject* getComponent(MonoClass *mclass);
+    MonoObject* AddComponent(MonoClass *mclass);
+
+    template<class Component> Component getComponent() { return Component(getComponent(Component::MClass)); }
+    template<class Component> Component addComponent() { return Component(addComponent(Component::MClass)); }
+};
+
+
+class mComponent : public mObject
+{
+typedef mObject super;
+public:
+    static MonoClass *MClass;
+
+    mComponent(MonoObject *component = nullptr);
+    mGameObject getGameObject();
+
+protected:
+    MonoObject *m_component;
+};
+
+
+class mTransform : public mComponent
+{
+typedef mComponent super;
+public:
+    static MonoClass *MClass;
+
+    mTransform(MonoObject *component = nullptr);
+    void setLocalPosition(const float3& v);
+    void setLocalRotation(const quatf& v);
+    void setLocalScale(const float3& v);
+    void setParent(mTransform parent);
+};
+
+
+class mCamera : public mComponent
+{
+typedef mComponent super;
+public:
+    static MonoClass *MClass;
+
+    mCamera(MonoObject *component = nullptr);
+    void setNearClipPlane(float v);
+    void setFarClipPlane(float v);
+    void setFieldOfView(float v);
+    void setAspect(float v);
+};
+
+
+class mMeshFilter : public mComponent
+{
+typedef mComponent super;
+public:
+    static MonoClass *MClass;
+
+    mMeshFilter(MonoObject *component = nullptr);
+};
+
+
+class mMeshRenderer : public mComponent
+{
+typedef mComponent super;
+public:
+    static MonoClass *MClass;
+
+    mMeshRenderer(MonoObject *component = nullptr);
+};
+
+
+class mLight : public mComponent
+{
+    typedef mComponent super;
+public:
+    static MonoClass *MClass;
+
+    mLight(MonoObject *component = nullptr);
+};
+
+
+class mMesh : public mObject
+{
+typedef mObject super;
+public:
+    static MonoClass *MClass;
+
+    mMesh(MonoObject *mo = nullptr);
+    void setVertices(MonoArray *v);
+    void setNormals(MonoArray *v);
+    void setUV(MonoArray *v);
+    void setIndices(MonoArray *v, int topology = 0, int submesh = 0);
+    void uploadMeshData(bool fix);
+    void setBounds(const AABB& v);
+
+    static bool hasNativeBufferAPI();
+    void* getNativeVertexBufferPtr(int nth);
+    void* getNativeIndexBufferPtr();
+};
 
 } // namespace usdi

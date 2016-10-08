@@ -17,26 +17,26 @@ const char Sym_Transform_SendTransformChanged[] = "?SendTransformChanged@Transfo
 const char Sym_Mesh_SetBounds[] = "?SetBounds@Mesh@@QEAAXAEBVAABB@@@Z";
 
 
-void(uObject::*NM_Object_SetDirty)();
-void(uTransform::*NM_Transform_SetLocalPosition)(const __m128 &pos);
-void(uTransform::*NM_Transform_SetLocalRotation)(const __m128 &rot);
-void(uTransform::*NM_Transform_SetLocalScale)(const __m128 &scale);
-void(uTransform::*NM_Transform_SendTransformChanged)(int mask);
-void(uMesh::*NM_Mesh_SetBounds)(const AABB &);
+void(nObject::*NM_Object_SetDirty)();
+void(nTransform::*NM_Transform_SetLocalPosition)(const __m128 &pos);
+void(nTransform::*NM_Transform_SetLocalRotation)(const __m128 &rot);
+void(nTransform::*NM_Transform_SetLocalScale)(const __m128 &scale);
+void(nTransform::*NM_Transform_SendTransformChanged)(int mask);
+void(nMesh::*NM_Mesh_SetBounds)(const AABB &);
 
 
-static void* Buf_GameObject_GetComponent_Transform;
-static void* Buf_GameObject_GetComponent_Camera;
-static void* Buf_GameObject_GetComponent_MeshFilter;
-static void* Buf_GameObject_GetComponent_MeshRenderer;
-static void* Buf_GameObject_GetComponent_Light;
-static void* Buf_GameObject_AddComponent_Transform;
-static void* Buf_GameObject_AddComponent_Camera;
-static void* Buf_GameObject_AddComponent_MeshFilter;
-static void* Buf_GameObject_AddComponent_MeshRenderer;
-static void* Buf_GameObject_AddComponent_Light;
-static void *Buf_Component_GetComponent_Transform;
-static void *Buf_Component_GetComponent_Camera;
+static MonoGenericInst Buf_GameObject_GetComponent_Transform;
+static MonoGenericInst Buf_GameObject_GetComponent_Camera;
+static MonoGenericInst Buf_GameObject_GetComponent_MeshFilter;
+static MonoGenericInst Buf_GameObject_GetComponent_MeshRenderer;
+static MonoGenericInst Buf_GameObject_GetComponent_Light;
+static MonoGenericInst Buf_GameObject_AddComponent_Transform;
+static MonoGenericInst Buf_GameObject_AddComponent_Camera;
+static MonoGenericInst Buf_GameObject_AddComponent_MeshFilter;
+static MonoGenericInst Buf_GameObject_AddComponent_MeshRenderer;
+static MonoGenericInst Buf_GameObject_AddComponent_Light;
+static MonoGenericInst Buf_Component_GetComponent_Transform;
+static MonoGenericInst Buf_Component_GetComponent_Camera;
 
 MonoClass *MC_int;
 MonoClass *MC_IntPtr;
@@ -71,9 +71,6 @@ MonoMethod *MM_GameObject_AddComponent_MeshFilter;
 MonoMethod *MM_GameObject_AddComponent_MeshRenderer;
 MonoMethod *MM_GameObject_AddComponent_Light;
 MonoMethod *MM_Component_get_gameObject;
-MonoMethod *MM_Component_GetComponent;
-MonoMethod *MM_Component_GetComponent_Transform;
-MonoMethod *MM_Component_GetComponent_Camera;
 MonoMethod *MM_Transform_set_localPosition;
 MonoMethod *MM_Transform_set_localRotation;
 MonoMethod *MM_Transform_set_localScale;
@@ -146,7 +143,7 @@ static MonoMethod* FindMethod(MonoClass *mclass, const char *method_name, int nu
     return ret;
 }
 
-static MonoMethod* InstantiateGenericMethod(MonoMethod *generic_method, MonoClass *generic_param, void *& buf)
+static MonoMethod* InstantiateGenericMethod(MonoMethod *generic_method, MonoClass *generic_param, MonoGenericInst &mgi)
 {
     if (!generic_method) {
         usdiLogWarning("InstantiateGenericMethod: method is null\n");
@@ -159,16 +156,11 @@ static MonoMethod* InstantiateGenericMethod(MonoMethod *generic_method, MonoClas
         return nullptr;
     }
 
-    if (!buf) {
-        buf = malloc(sizeof(MonoGenericInst));
-    }
-
-    auto *mgi = (MonoGenericInst*)buf;
-    mgi->id = -1;
-    mgi->is_open = 0;
-    mgi->type_argc = 1;
-    mgi->type_argv[0] = mono_class_get_type(generic_param);
-    MonoGenericContext ctx = { nullptr, mgi };
+    mgi.id = -1;
+    mgi.is_open = 0;
+    mgi.type_argc = 1;
+    mgi.type_argv[0] = mono_class_get_type(generic_param);
+    MonoGenericContext ctx = { nullptr, &mgi };
     return mono_class_inflate_generic_method(generic_method, &ctx);
 }
 
@@ -204,6 +196,8 @@ void InitializeInternalMethods()
         ICall("UTJ.usdiStreamUpdator::_Dtor", StreamUpdator_Dtor);
         ICall("UTJ.usdiStreamUpdator::_SetConfig", StreamUpdator_SetConfig);
         ICall("UTJ.usdiStreamUpdator::_Add", StreamUpdator_Add);
+        ICall("UTJ.usdiStreamUpdator::_OnLoad", StreamUpdator_OnLoad);
+        ICall("UTJ.usdiStreamUpdator::_OnUnload", StreamUpdator_OnUnload);
         ICall("UTJ.usdiStreamUpdator::_AsyncUpdate", StreamUpdator_AsyncUpdate);
         ICall("UTJ.usdiStreamUpdator::_Update", StreamUpdator_Update);
 
@@ -211,14 +205,14 @@ void InitializeInternalMethods()
     });
 
 
-    // mono classes & methods will change when script recompiled.
+    // mono classes & methods will change when assembly is reloaded.
     // therefore these can not be inside call_once.
 
-#define MClass(Namespace, Class) MC_##Class = FindClass(mimg, Namespace, #Class)
-#define MMethod(Class, Method, NumArgs) MM_##Class##_##Method = FindMethod(MC_##Class, #Method, NumArgs)
-#define MField(Class, Name) if(MC_##Class) MF_##Class##_##Name = mono_field_get_offset(mono_class_get_field_from_name(MC_##Class, #Name))
+#define MC(Namespace, Class) MC_##Class = FindClass(mimg, Namespace, #Class)
+#define MM(Class, Method, NumArgs) MM_##Class##_##Method = FindMethod(MC_##Class, #Method, NumArgs)
+#define MF(Class, Name) if(MC_##Class) MF_##Class##_##Name = mono_field_get_offset(mono_class_get_field_from_name(MC_##Class, #Name))
 
-#define MMInstantiate(Class, Method, GParam)\
+#define MMI(Class, Method, GParam)\
     MM_##Class##_##Method##_##GParam = InstantiateGenericMethod(MM_##Class##_##Method, MC_##GParam, Buf_##Class##_##Method##_##GParam)
 
     auto mdomain = mono_domain_get();
@@ -231,62 +225,59 @@ void InitializeInternalMethods()
         MC_int = mono_get_int32_class();
         MC_IntPtr = mono_get_intptr_class();
 
-        MClass("UnityEngine", Vector2);
-        MClass("UnityEngine", Vector3);
-        MClass("UnityEngine", Quaternion);
+        MC("UnityEngine", Vector2);
+        MC("UnityEngine", Vector3);
+        MC("UnityEngine", Quaternion);
 
-        MClass("UnityEngine", GameObject);
-        MClass("UnityEngine", Component);
-        MClass("UnityEngine", Transform);
-        MClass("UnityEngine", Camera);
-        MClass("UnityEngine", MeshFilter);
-        MClass("UnityEngine", MeshRenderer);
-        MClass("UnityEngine", Light);
+        MC("UnityEngine", GameObject);
+        MC("UnityEngine", Component);
+        MC("UnityEngine", Transform);
+        MC("UnityEngine", Camera);
+        MC("UnityEngine", MeshFilter);
+        MC("UnityEngine", MeshRenderer);
+        MC("UnityEngine", Light);
 
-        MClass("UnityEngine", Mesh);
+        MC("UnityEngine", Mesh);
 
-        MMethod(GameObject, SetActive, 1);
-        MMethod(GameObject, GetComponent, 0);
-        MMInstantiate(GameObject, GetComponent, Transform);
-        MMInstantiate(GameObject, GetComponent, Camera);
-        MMInstantiate(GameObject, GetComponent, MeshFilter);
-        MMInstantiate(GameObject, GetComponent, MeshRenderer);
-        MMInstantiate(GameObject, GetComponent, Light);
-        MMethod(GameObject, AddComponent, 0);
-        MMInstantiate(GameObject, AddComponent, Transform);
-        MMInstantiate(GameObject, AddComponent, Camera);
-        MMInstantiate(GameObject, AddComponent, MeshFilter);
-        MMInstantiate(GameObject, AddComponent, MeshRenderer);
-        MMInstantiate(GameObject, AddComponent, Light);
+        MM(GameObject, SetActive, 1);
+        MM(GameObject, GetComponent, 0);
+        MMI(GameObject, GetComponent, Transform);
+        MMI(GameObject, GetComponent, Camera);
+        MMI(GameObject, GetComponent, MeshFilter);
+        MMI(GameObject, GetComponent, MeshRenderer);
+        MMI(GameObject, GetComponent, Light);
+        MM(GameObject, AddComponent, 0);
+        MMI(GameObject, AddComponent, Transform);
+        MMI(GameObject, AddComponent, Camera);
+        MMI(GameObject, AddComponent, MeshFilter);
+        MMI(GameObject, AddComponent, MeshRenderer);
+        MMI(GameObject, AddComponent, Light);
 
-        MMethod(Component, get_gameObject, 0);
-        MMethod(Component, GetComponent, 0);
-        MMInstantiate(Component, GetComponent, Transform);
-        MMInstantiate(Component, GetComponent, Camera);
+        MM(Component, get_gameObject, 0);
 
-        MMethod(Transform, set_localPosition, 1);
-        MMethod(Transform, set_localRotation, 1);
-        MMethod(Transform, set_localScale, 1);
-        MMethod(Transform, SetParent, 1);
+        MM(Transform, set_localPosition, 1);
+        MM(Transform, set_localRotation, 1);
+        MM(Transform, set_localScale, 1);
+        MM(Transform, SetParent, 1);
 
-        MMethod(Camera, set_nearClipPlane, 1);
-        MMethod(Camera, set_farClipPlane, 1);
-        MMethod(Camera, set_fieldOfView, 1);
-        MMethod(Camera, set_aspect, 1);
+        MM(Camera, set_nearClipPlane, 1);
+        MM(Camera, set_farClipPlane, 1);
+        MM(Camera, set_fieldOfView, 1);
+        MM(Camera, set_aspect, 1);
 
-        MMethod(MeshFilter, set_sharedMesh, 1);
+        MM(MeshFilter, set_sharedMesh, 1);
 
-        MMethod(Light, set_color, 1);
-        MMethod(Light, set_intensity, 1);
+        MM(Light, set_color, 1);
+        MM(Light, set_intensity, 1);
 
-        MMethod(Mesh, set_vertices, 1);
-        MMethod(Mesh, set_normals, 1);
-        MMethod(Mesh, set_uv, 1);
-        MMethod(Mesh, set_bounds, 1);
-        MMethod(Mesh, SetIndices, 3);
-        MMethod(Mesh, UploadMeshData, 1);
-        MMethod(Mesh, GetNativeVertexBufferPtr, 1);
-        MMethod(Mesh, GetNativeIndexBufferPtr, 0);
+        MM(Mesh, set_vertices, 1);
+        MM(Mesh, set_normals, 1);
+        MM(Mesh, set_uv, 1);
+        MM(Mesh, set_bounds, 1);
+        MM(Mesh, SetIndices, 3);
+        MM(Mesh, UploadMeshData, 1);
+        MM(Mesh, GetNativeVertexBufferPtr, 1);
+        MM(Mesh, GetNativeIndexBufferPtr, 0);
     }
 
     // script methods
@@ -294,20 +285,113 @@ void InitializeInternalMethods()
     if(masm) {
         auto mimg = mono_assembly_get_image(masm);
 
-        MClass("UTJ", usdiElement);
-        MClass("UTJ", usdiXform);
-        MClass("UTJ", usdiCamera);
-        MClass("UTJ", usdiPoints);
-        MClass("UTJ", usdiMesh);
-        MField(usdiElement, m_schema);
-        MMethod(usdiMesh, usdiAllocateChildMeshes, 1);
+        MC("UTJ", usdiElement);
+        MC("UTJ", usdiXform);
+        MC("UTJ", usdiCamera);
+        MC("UTJ", usdiPoints);
+        MC("UTJ", usdiMesh);
+        MF(usdiElement, m_schema);
+        MM(usdiMesh, usdiAllocateChildMeshes, 1);
     }
 
 
 #undef MGethod
-#undef MField
-#undef MMethod
-#undef MClass
+#undef MF
+#undef MM
+#undef MC
 };
+
+mObject::mObject(MonoObject *rep) : m_rep(rep) {}
+MonoObject* mObject::get() const { return m_rep; }
+mObject::operator bool() const { return m_rep != nullptr; }
+
+MonoObject* mObject::mcall(MonoMethod *mm) { return MCall(m_rep, mm); }
+MonoObject* mObject::mcall(MonoMethod *mm, void *a0) { return MCall(m_rep, mm, a0); }
+MonoObject* mObject::mcall(MonoMethod *mm, void *a0, void *a1) { return MCall(m_rep, mm, a0, a1); }
+MonoObject* mObject::mcall(MonoMethod *mm, void *a0, void *a1, void *a2) { return MCall(m_rep, mm, a0, a1, a2); }
+
+
+MonoClass* mGameObject::MClass = MC_GameObject;
+
+mGameObject::mGameObject(MonoObject *game_object)
+    : super(game_object)
+{
+}
+
+void mGameObject::SetActive(bool v)
+{
+    int a = (int)v;
+    mcall(MM_GameObject_SetActive, &a);
+}
+
+MonoObject* mGameObject::getComponent(MonoClass *mclass)
+{
+    if (mclass == MC_Transform) { return mcall(MM_GameObject_GetComponent_Transform); }
+    else if (mclass == MC_Camera) { return mcall(MM_GameObject_GetComponent_Camera); }
+    else if (mclass == MC_MeshFilter) { return mcall(MM_GameObject_GetComponent_MeshFilter); }
+    else if (mclass == MC_MeshRenderer) { return mcall(MM_GameObject_GetComponent_MeshRenderer); }
+    else if (mclass == MC_Light) { return mcall(MM_GameObject_GetComponent_Light); }
+    return nullptr;
+}
+
+MonoObject* mGameObject::AddComponent(MonoClass *mclass)
+{
+    if (mclass == MC_Transform) { return mcall(MM_GameObject_AddComponent_Transform); }
+    else if (mclass == MC_Camera) { return mcall(MM_GameObject_AddComponent_Camera); }
+    else if (mclass == MC_MeshFilter) { return mcall(MM_GameObject_AddComponent_MeshFilter); }
+    else if (mclass == MC_MeshRenderer) { return mcall(MM_GameObject_AddComponent_MeshRenderer); }
+    else if (mclass == MC_Light) { return mcall(MM_GameObject_AddComponent_Light); }
+    return nullptr;
+}
+
+
+MonoClass* mComponent::MClass = MC_Component;
+mComponent::mComponent(MonoObject *component) : super(component) {}
+mGameObject mComponent::getGameObject()
+{
+    return mGameObject(mcall(MM_Component_get_gameObject));
+}
+
+
+MonoClass* mTransform::MClass = MC_Transform;
+mTransform::mTransform(MonoObject *component) : super(component) {}
+void mTransform::setLocalPosition(const float3& v) { mcall(MM_Transform_set_localPosition, (void*)&v); }
+void mTransform::setLocalRotation(const quatf& v) { mcall(MM_Transform_set_localRotation, (void*)&v); }
+void mTransform::setLocalScale(const float3& v) { mcall(MM_Transform_set_localScale, (void*)&v); }
+void mTransform::setParent(mTransform parent) { mcall(MM_Transform_SetParent, parent.get()); }
+
+
+MonoClass* mCamera::MClass = MC_Camera;
+mCamera::mCamera(MonoObject *component) : super(component) {}
+void mCamera::setNearClipPlane(float v) { mcall(MM_Camera_set_nearClipPlane, &v); }
+void mCamera::setFarClipPlane(float v) { mcall(MM_Camera_set_farClipPlane, &v); }
+void mCamera::setFieldOfView(float v) { mcall(MM_Camera_set_fieldOfView, &v); }
+void mCamera::setAspect(float v) { mcall(MM_Camera_set_aspect, &v); }
+
+
+MonoClass* mMeshFilter::MClass = MC_MeshFilter;
+mMeshFilter::mMeshFilter(MonoObject *component) : super(component) {}
+
+
+MonoClass* mMeshRenderer::MClass = MC_MeshFilter;
+mMeshRenderer::mMeshRenderer(MonoObject *component) : super(component) {}
+
+
+MonoClass* mLight::MClass = MC_Light;
+mLight::mLight(MonoObject *component) : super(component) {}
+
+
+MonoClass* mMesh::MClass = MC_Mesh;
+mMesh::mMesh(MonoObject *mo) : super(mo) {}
+void mMesh::setVertices(MonoArray *v) { mcall(MM_Mesh_set_vertices, v); }
+void mMesh::setNormals(MonoArray *v) { mcall(MM_Mesh_set_normals, v); }
+void mMesh::setUV(MonoArray *v) { mcall(MM_Mesh_set_uv, v); }
+void mMesh::setIndices(MonoArray *v, int topology, int submesh) { mcall(MM_Mesh_SetIndices, &topology, &submesh); }
+void mMesh::uploadMeshData(bool _fix) { int fix=_fix; mcall(MM_Mesh_UploadMeshData, &fix); }
+void mMesh::setBounds(const AABB& v) { mcall(MM_Mesh_set_bounds, (void*)&v); }
+
+bool mMesh::hasNativeBufferAPI() { return MM_Mesh_GetNativeIndexBufferPtr && MM_Mesh_GetNativeVertexBufferPtr; }
+void* mMesh::getNativeVertexBufferPtr(int nth) { return Unbox<void*>(mcall(MM_Mesh_GetNativeVertexBufferPtr, &nth)); }
+void* mMesh::getNativeIndexBufferPtr() { return Unbox<void*>(mcall(MM_Mesh_GetNativeIndexBufferPtr)); }
 
 } // namespace usdi

@@ -20,7 +20,7 @@ void(*MeshAssignBounds)(MonoObject *mesh_, MonoObject *center_, MonoObject  *ext
 void TransformAssignXformCpp(MonoObject *transform_, MonoObject *data_)
 {
     auto& data = UnboxValue<XformData&>(data_);
-    auto* trans = Unbox<uTransform>(transform_);
+    auto* trans = Unbox<nTransform>(transform_);
 
     if ((data.flags & (int)XformData::Flags::UpdatedPosition) != 0)
     {
@@ -43,24 +43,25 @@ void TransformAssignXformMono(MonoObject *transform, MonoObject *data_)
 {
     auto& data = UnboxValue<XformData&>(data_);
 
+    mTransform t(transform);
     if ((data.flags & (int)XformData::Flags::UpdatedPosition) != 0)
     {
-        MCall(transform, MM_Transform_set_localPosition, &data.position);
+        t.setLocalPosition(data.position);
     }
     if ((data.flags & (int)XformData::Flags::UpdatedRotation) != 0)
     {
-        MCall(transform, MM_Transform_set_localRotation, &data.rotation);
+        t.setLocalRotation(data.rotation);
     }
     if ((data.flags & (int)XformData::Flags::UpdatedScale) != 0)
     {
-        MCall(transform, MM_Transform_set_localScale, &data.scale);
+        t.setLocalScale(data.scale);
     }
 }
 
 
 void TransformNotfyChangeCpp(MonoObject *transform_)
 {
-    auto* trans = Unbox<uTransform>(transform_);
+    auto* trans = Unbox<nTransform>(transform_);
     (trans->*NM_Transform_SendTransformChanged)(0x1 | 0x2 | 0x8);
 }
 
@@ -77,7 +78,7 @@ void MeshAssignBoundsCpp(MonoObject *mesh_, MonoObject *center_, MonoObject  *ex
     auto& extents = UnboxValue<float3&>(extents_);
     AABB bounds = { center, extents };
 
-    auto* mesh = Unbox<uMesh>(mesh_);
+    auto* mesh = Unbox<nMesh>(mesh_);
     (mesh->*NM_Mesh_SetBounds)(bounds);
 }
 
@@ -87,15 +88,20 @@ void MeshAssignBoundsMono(MonoObject *mesh, MonoObject *center_, MonoObject  *ex
     auto& extents = UnboxValue<float3&>(extents_);
     AABB bounds = { center, extents };
 
-    MCall(mesh, MM_Mesh_set_bounds, &bounds);
+    mMesh m(mesh);
+    m.setBounds(bounds);
 }
-
 
 
 
 
 StreamUpdator::StreamUpdator()
 {
+}
+
+StreamUpdator::~StreamUpdator()
+{
+    m_tasks.wait();
 }
 
 void StreamUpdator::setConfig(const Config& conf) { m_config = conf; }
@@ -107,7 +113,7 @@ void StreamUpdator::add(MonoObject *component)
     auto *schema = MField<Schema*>(component, MF_usdiElement_m_schema);
     if (schema) {
         if (auto *mesh = dynamic_cast<Mesh*>(schema)) {
-            m_children.emplace_back(new MeshUpdator(this, mesh, component));
+            //m_children.emplace_back(new MeshUpdator(this, mesh, component));
         }
         else if (auto *cam = dynamic_cast<Camera*>(schema)) {
             m_children.emplace_back(new CameraUpdator(this, cam, component));
@@ -116,22 +122,29 @@ void StreamUpdator::add(MonoObject *component)
             m_children.emplace_back(new XformUpdator(this, xf, component));
         }
         else if (auto *points = dynamic_cast<Points*>(schema)) {
-            m_children.emplace_back(new PointsUpdator(this, points, component));
+            //m_children.emplace_back(new PointsUpdator(this, points, component));
         }
     }
+}
+
+void StreamUpdator::onLoad()
+{
+    for (auto& c : m_children) { c->onLoad(); }
+}
+
+void StreamUpdator::onUnload()
+{
+    m_tasks.wait();
+    for (auto& c : m_children) { c->onUnload(); }
 }
 
 void StreamUpdator::asyncUpdate(Time t)
 {
 #ifdef usdiDbgForceSingleThread
-    for (auto& s : m_children) {
-        s->asyncUpdate(t);
-    }
+    for (auto& s : m_children) { s->asyncUpdate(t); }
 #else
     if (m_config.forceSingleThread) {
-        for (auto& s : m_children) {
-            s->asyncUpdate(t);
-        }
+        for (auto& s : m_children) { s->asyncUpdate(t); }
     }
     else {
         m_tasks.run([this, t]() {
@@ -158,23 +171,32 @@ StreamUpdator* StreamUpdator_Ctor() { return new StreamUpdator(); }
 void StreamUpdator_Dtor(StreamUpdator *rep) { delete rep; }
 void StreamUpdator_SetConfig(StreamUpdator *rep, StreamUpdator::Config *config) { rep->setConfig(*config); }
 void StreamUpdator_Add(StreamUpdator *rep, MonoObject *component) { rep->add(component); }
+void StreamUpdator_OnLoad(StreamUpdator *rep) { rep->onLoad(); }
+void StreamUpdator_OnUnload(StreamUpdator *rep) { rep->onUnload(); }
 void StreamUpdator_AsyncUpdate(StreamUpdator *rep, double *time) { rep->asyncUpdate(*time); }
 void StreamUpdator_Update(StreamUpdator *rep, double *time) { rep->update(*time); }
 
-IUpdator::IUpdator(StreamUpdator *parent) : m_parent(parent) {}
+
+
+
+
+IUpdator::IUpdator(StreamUpdator *parent, mGameObject go)
+    : m_parent(parent)
+    , m_go(go)
+{}
 IUpdator::~IUpdator() {}
+void IUpdator::onLoad() {}
+void IUpdator::onUnload() {}
+void IUpdator::asyncUpdate(Time time) {}
+void IUpdator::update(Time time) {}
 
-void IUpdator::asyncUpdate(Time time)
-{
-
-}
 
 XformUpdator::XformUpdator(StreamUpdator *parent, Xform *xf, MonoObject *component)
-    : super(parent)
+    : super(parent, mComponent(component).getGameObject())
     , m_schema(xf)
     , m_component(component)
 {
-    m_mono_transform = MCall(component, MM_Component_GetComponent_Transform);
+    m_mtrans = m_go.getComponent<mTransform>();
 }
 
 XformUpdator::~XformUpdator()
@@ -192,8 +214,8 @@ void XformUpdator::asyncUpdate(Time time)
 
 void XformUpdator::update(Time time)
 {
-    if (m_schema->needsUpdate() && m_mono_transform) {
-        TransformAssignXform(m_mono_transform, (MonoObject*)&m_data);
+    if (m_schema->needsUpdate() && m_mtrans) {
+        TransformAssignXform(m_mtrans.get(), (MonoObject*)&m_data);
     }
 }
 
@@ -203,7 +225,7 @@ CameraUpdator::CameraUpdator(StreamUpdator *parent, Camera *cam, MonoObject *com
     , m_schema(cam)
     , m_component(component)
 {
-    m_mono_camera = MCall(component, MM_Component_GetComponent_Camera);
+    m_mcamera = m_go.getComponent<mCamera>();
 }
 
 CameraUpdator::~CameraUpdator()
@@ -221,11 +243,11 @@ void CameraUpdator::asyncUpdate(Time time)
 void CameraUpdator::update(Time time)
 {
     super::update(time);
-    if (m_schema->needsUpdate() && m_mono_camera) {
-        MCall(m_mono_camera, MM_Camera_set_nearClipPlane, &m_data.near_clipping_plane);
-        MCall(m_mono_camera, MM_Camera_set_farClipPlane, &m_data.far_clipping_plane);
-        MCall(m_mono_camera, MM_Camera_set_fieldOfView, &m_data.field_of_view);
-        //MCall(m_mono_camera, MM_Camera_set_aspect, &m_data.aspect_ratio);
+    if (m_schema->needsUpdate() && m_mcamera) {
+        m_mcamera.setNearClipPlane(m_data.near_clipping_plane);
+        m_mcamera.setFarClipPlane(m_data.far_clipping_plane);
+        m_mcamera.setFieldOfView(m_data.field_of_view);
+        //m_ucamera.setAspect(m_data.aspect_ratio);
     }
 }
 
@@ -305,24 +327,21 @@ void MeshUpdator::MeshBuffer::copyDataToMonoMesh(UpdateFlags flags)
     if (flags.all == 0) { return; }
 
     if (flags.points) {
-        MCall(m_mmesh, MM_Mesh_set_vertices, m_mvertices.get());
+        m_mmesh.setVertices(m_mvertices.get());
     }
     if (flags.normals) {
-        MCall(m_mmesh, MM_Mesh_set_normals, m_mnormals.get());
+        m_mmesh.setNormals(m_mnormals.get());
     }
     if (flags.uv) {
-        MCall(m_mmesh, MM_Mesh_set_uv, m_mnormals.get());
+        m_mmesh.setUV(m_muv.get());
     }
 
     if(flags.indices) {
-        int enum_Triangles = 0;
-        int submesh = 0;
-        MCall(m_mmesh, MM_Mesh_SetIndices, m_mindices.get(), &enum_Triangles, &submesh);
+        m_mmesh.setIndices(m_mindices.get());
     }
 
     {
-        int False = 0;
-        MCall(m_mmesh, MM_Mesh_UploadMeshData, &False);
+        m_mmesh.uploadMeshData(false);
     }
 }
 
@@ -352,8 +371,7 @@ void MeshUpdator::asyncUpdate(Time time)
         m_uflags.uv = m_data.uvs && (m_frame == 0 || m_summary.topology_variance != TopologyVariance::Constant);
         m_uflags.indices = m_data.num_indices_triangulated && (m_frame == 0 || m_summary.topology_variance == TopologyVariance::Heterogenous);
         m_uflags.directVB =
-            m_parent->getConfig().directVBUpdate &&
-            MM_Mesh_GetNativeVertexBufferPtr != nullptr &&
+            m_parent->getConfig().directVBUpdate && mMesh::hasNativeBufferAPI() &&
             m_summary.topology_variance == TopologyVariance::Homogenous;
 
         if (m_data.num_splits == 0) {

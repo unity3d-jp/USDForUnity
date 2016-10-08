@@ -2,6 +2,7 @@
 
 #include "etc/Mono.h"
 #include "usdiExt.h"
+#include "usdiInternalMethods.h"
 
 namespace usdi {
 
@@ -30,10 +31,14 @@ public:
     };
 
     StreamUpdator();
+    ~StreamUpdator();
     void setConfig(const Config& conf);
     const Config& getConfig() const;
 
     void add(MonoObject *component);
+
+    void onLoad();
+    void onUnload();
     void asyncUpdate(Time time);
     void update(Time time);
 
@@ -50,22 +55,26 @@ StreamUpdator* StreamUpdator_Ctor();
 void StreamUpdator_Dtor(StreamUpdator *rep);
 void StreamUpdator_SetConfig(StreamUpdator *rep, StreamUpdator::Config *config);
 void StreamUpdator_Add(StreamUpdator *rep, MonoObject *component);
+void StreamUpdator_OnLoad(StreamUpdator *rep);
+void StreamUpdator_OnUnload(StreamUpdator *rep);
 void StreamUpdator_AsyncUpdate(StreamUpdator *rep, double *time);
 void StreamUpdator_Update(StreamUpdator *rep, double *time);
-
 
 
 
 class IUpdator
 {
 public:
-    IUpdator(StreamUpdator *parent);
+    IUpdator(StreamUpdator *parent, mGameObject go);
     virtual ~IUpdator();
-    virtual void asyncUpdate(Time time) = 0;
-    virtual void update(Time time) = 0;
+    virtual void onLoad();
+    virtual void onUnload();
+    virtual void asyncUpdate(Time time);
+    virtual void update(Time time);
 
 protected:
     StreamUpdator *m_parent;
+    mGameObject m_go;
 };
 
 
@@ -82,7 +91,7 @@ private:
     Xform       *m_schema;
     MonoObject  *m_component;
     XformData   m_data;
-    MonoObject  *m_mono_transform;
+    mTransform  m_mtrans;
 };
 
 
@@ -99,7 +108,7 @@ private:
     Camera      *m_schema;
     MonoObject  *m_component;
     CameraData  m_data;
-    MonoObject  *m_mono_camera;
+    mCamera     m_mcamera;
 };
 
 
@@ -139,7 +148,7 @@ public:
         void copyDataToMonoMesh(UpdateFlags flags);
 
     private:
-        MonoObject *m_mmesh;
+        mMesh m_mmesh;
         MArray m_mvertices;
         MArray m_mnormals;
         MArray m_muv;

@@ -201,6 +201,7 @@ namespace UTJ
                     m_elements.Add(e);
                     m_updator.Add(e);
                 });
+            m_updator.OnLoad();
 
             usdiAsyncUpdate(m_time);
             usdiUpdate(m_time);
@@ -221,6 +222,8 @@ namespace UTJ
                 {
                     m_elements[i].usdiOnUnload();
                 }
+                m_updator.OnUnload();
+                m_updator = null;
 
                 usdi.usdiDestroyContext(m_ctx);
                 m_ctx = default(usdi.Context);
