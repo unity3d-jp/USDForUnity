@@ -51,7 +51,9 @@ public:
     typedef VertexUpdateCommand Command;
     typedef std::unique_ptr<VertexUpdateCommand> CommandPtr;
 
-    Handle createCommand(const char *dbg_name);
+    static VertexCommandManager& getInstance();
+
+    Handle createCommand(const char *dbg_name = "");
     void destroyCommand(Handle h);
     void update(Handle h, const usdi::MeshData *src, void *vb, void *ib);
 

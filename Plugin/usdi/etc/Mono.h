@@ -188,7 +188,7 @@ public:
     ~MObject();
 
     void allocate(MonoClass *mc);
-    void free();
+    void rerlease();
     MonoObject* get();
     operator bool() const;
 
@@ -207,7 +207,7 @@ public:
     ~MArray();
 
     void allocate(MonoClass *mc, size_t size);
-    void free();
+    void release();
 
     size_t size() const;
     void* data();

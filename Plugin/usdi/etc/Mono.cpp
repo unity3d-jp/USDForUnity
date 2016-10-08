@@ -150,7 +150,7 @@ static struct _ImportMonoFunctions {
 
 
 MObject::MObject() {}
-MObject::~MObject() { free(); }
+MObject::~MObject() { rerlease(); }
 
 void MObject::allocate(MonoClass *mc)
 {
@@ -158,7 +158,7 @@ void MObject::allocate(MonoClass *mc)
     m_gch = mono_gchandle_new(m_rep, 1);
 }
 
-void MObject::free()
+void MObject::rerlease()
 {
     if (m_rep) {
         mono_gchandle_free(m_gch);
@@ -177,7 +177,7 @@ MArray::MArray()
 
 MArray::~MArray()
 {
-    free();
+    release();
 }
 
 void MArray::allocate(MonoClass *mc, size_t size)
@@ -187,7 +187,7 @@ void MArray::allocate(MonoClass *mc, size_t size)
         return;
     }
 
-    free();
+    release();
 
     if (size == 0) { return; }
     m_rep = mono_array_new(mono_domain_get(), mc, (mono_array_size_t)size);
@@ -195,7 +195,7 @@ void MArray::allocate(MonoClass *mc, size_t size)
     m_size = size;
 }
 
-void MArray::free()
+void MArray::release()
 {
     if (m_rep) {
         mono_gchandle_free(m_gch);

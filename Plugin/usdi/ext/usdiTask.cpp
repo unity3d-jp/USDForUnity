@@ -110,6 +110,13 @@ void VertexUpdateCommand::clearDirty()
 }
 
 
+
+VertexCommandManager& VertexCommandManager::getInstance()
+{
+    static VertexCommandManager s_instance;
+    return s_instance;
+}
+
 VertexUpdateCommand* VertexCommandManager::get(Handle h)
 {
     return m_commands.get(h).get();
@@ -123,6 +130,8 @@ Handle VertexCommandManager::createCommand(const char *dbg_name)
 
 void VertexCommandManager::destroyCommand(Handle h)
 {
+    if (h == 0) { return; }
+
     lock_t l(m_mutex_processing);
     m_commands.pull(h);
 }

@@ -16,45 +16,39 @@
 #include "ext/usdiUnity.h"
 
 
-namespace usdi {
-
-    VertexCommandManager g_vtx_task_manager;
-
-} // namespace usdi
-
 
 extern "C" {
 
 usdiAPI usdi::Handle usdiVtxCmdCreate(const char *dbg_name)
 {
     usdiTraceFunc();
-    return usdi::g_vtx_task_manager.createCommand(dbg_name);
+    return usdi::VertexCommandManager::getInstance().createCommand(dbg_name);
 }
 
 usdiAPI void usdiVtxCmdDestroy(usdi::Handle h)
 {
     usdiTraceFunc();
-    usdi::g_vtx_task_manager.destroyCommand(h);
+    usdi::VertexCommandManager::getInstance().destroyCommand(h);
 }
 
 usdiAPI void usdiVtxCmdUpdate(usdi::Handle h, const usdi::MeshData *src, void *vb, void *ib)
 {
     usdiTraceFunc();
-    usdi::g_vtx_task_manager.update(h, src, vb, ib);
+    usdi::VertexCommandManager::getInstance().update(h, src, vb, ib);
 }
 
 usdiAPI void usdiVtxCmdProcess()
 {
     usdiTraceFunc();
-    usdiVTuneScope("usdiVtxCmdKick");
-    usdi::g_vtx_task_manager.process();
+    usdiVTuneScope("usdiVtxCmdProcess");
+    usdi::VertexCommandManager::getInstance().process();
 }
 
 usdiAPI void usdiVtxCmdWait()
 {
     usdiTraceFunc();
-    usdiVTuneScope("usdiVtxCmdKick");
-    usdi::g_vtx_task_manager.wait();
+    usdiVTuneScope("usdiVtxCmdWait");
+    usdi::VertexCommandManager::getInstance().wait();
 }
 
 

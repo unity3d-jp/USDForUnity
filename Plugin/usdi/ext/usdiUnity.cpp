@@ -2,6 +2,7 @@
 #include "usdiInternal.h"
 #include "usdiUnity.h"
 #include "usdiInternalMethods.h"
+#include "usdiTask.h"
 
 #include "usdiSchema.h"
 #include "usdiXform.h"
@@ -97,6 +98,10 @@ StreamUpdator::StreamUpdator()
 {
 }
 
+void StreamUpdator::setConfig(const Config& conf) { m_config = conf; }
+const StreamUpdator::Config& StreamUpdator::getConfig() const { return m_config; }
+
+
 void StreamUpdator::add(MonoObject *component)
 {
     auto *schema = MField<Schema*>(component, MF_usdiElement_m_schema);
@@ -123,14 +128,21 @@ void StreamUpdator::asyncUpdate(Time t)
         s->asyncUpdate(t);
     }
 #else
-    m_tasks.run([this, t] () {
-        size_t grain = std::max<size_t>(m_children.size() / 32, 1);
-        tbb::parallel_for(tbb::blocked_range<size_t>(0, m_children.size(), grain), [t, this](const auto& r) {
-            for (size_t i = r.begin(); i != r.end(); ++i) {
-                m_children[i]->asyncUpdate(t);
-            }
+    if (m_config.forceSingleThread) {
+        for (auto& s : m_children) {
+            s->asyncUpdate(t);
+        }
+    }
+    else {
+        m_tasks.run([this, t]() {
+            size_t grain = std::max<size_t>(m_children.size() / 32, 1);
+            tbb::parallel_for(tbb::blocked_range<size_t>(0, m_children.size(), grain), [t, this](const auto& r) {
+                for (size_t i = r.begin(); i != r.end(); ++i) {
+                    m_children[i]->asyncUpdate(t);
+                }
+            });
         });
-    });
+    }
 #endif
 }
 
@@ -144,9 +156,10 @@ void StreamUpdator::update(Time time)
 
 StreamUpdator* StreamUpdator_Ctor() { return new StreamUpdator(); }
 void StreamUpdator_Dtor(StreamUpdator *rep) { delete rep; }
+void StreamUpdator_SetConfig(StreamUpdator *rep, StreamUpdator::Config *config) { rep->setConfig(*config); }
 void StreamUpdator_Add(StreamUpdator *rep, MonoObject *component) { rep->add(component); }
-void StreamUpdator_AsyncUpdate(StreamUpdator *rep, double time) { rep->asyncUpdate(time); }
-void StreamUpdator_Update(StreamUpdator *rep, double time) { rep->update(time); }
+void StreamUpdator_AsyncUpdate(StreamUpdator *rep, double *time) { rep->asyncUpdate(*time); }
+void StreamUpdator_Update(StreamUpdator *rep, double *time) { rep->update(*time); }
 
 IUpdator::IUpdator(StreamUpdator *parent) : m_parent(parent) {}
 IUpdator::~IUpdator() {}
@@ -220,7 +233,26 @@ void CameraUpdator::update(Time time)
 MeshUpdator::MeshBuffer::MeshBuffer(MonoObject *mmesh)
     : m_mmesh(mmesh)
 {
+}
 
+MeshUpdator::MeshBuffer::~MeshBuffer()
+{
+    usdi::VertexCommandManager::getInstance().destroyCommand(m_hcommand);
+}
+
+void MeshUpdator::MeshBuffer::kickVBUpdateTask()
+{
+    if (!m_hcommand) {
+        m_hcommand = usdi::VertexCommandManager::getInstance().createCommand();
+    }
+}
+
+void MeshUpdator::MeshBuffer::releaseMonoArrays(UpdateFlags flags, const MeshData &data, int split)
+{
+    m_mvertices.release();
+    m_mnormals.release();
+    m_muv.release();
+    m_mindices.release();
 }
 
 void MeshUpdator::MeshBuffer::copyMeshDataToMonoArrays(UpdateFlags flags, const MeshData &data)
@@ -300,9 +332,6 @@ MeshUpdator::MeshUpdator(StreamUpdator *parent, Mesh *mesh, MonoObject *componen
     , m_component(component)
 {
     m_summary = mesh->getSummary();
-    m_directVBUpdate =
-        MM_Mesh_GetNativeVertexBufferPtr != nullptr &&
-        m_summary.topology_variance == TopologyVariance::Homogenous;
 }
 
 MeshUpdator::~MeshUpdator()
@@ -322,6 +351,10 @@ void MeshUpdator::asyncUpdate(Time time)
         m_uflags.normals = m_data.normals && (m_frame == 0 || m_summary.topology_variance != TopologyVariance::Constant);
         m_uflags.uv = m_data.uvs && (m_frame == 0 || m_summary.topology_variance != TopologyVariance::Constant);
         m_uflags.indices = m_data.num_indices_triangulated && (m_frame == 0 || m_summary.topology_variance == TopologyVariance::Heterogenous);
+        m_uflags.directVB =
+            m_parent->getConfig().directVBUpdate &&
+            MM_Mesh_GetNativeVertexBufferPtr != nullptr &&
+            m_summary.topology_variance == TopologyVariance::Homogenous;
 
         if (m_data.num_splits == 0) {
             // no split

@@ -23,7 +23,16 @@ class IUpdator;
 class StreamUpdator
 {
 public:
+    struct Config
+    {
+        bool forceSingleThread = false;
+        bool directVBUpdate = true;
+    };
+
     StreamUpdator();
+    void setConfig(const Config& conf);
+    const Config& getConfig() const;
+
     void add(MonoObject *component);
     void asyncUpdate(Time time);
     void update(Time time);
@@ -32,15 +41,17 @@ private:
     typedef std::unique_ptr<IUpdator> ChildPtr;
     typedef std::vector<ChildPtr> Children;
 
+    Config m_config;
     Children m_children;
     tbb::task_group m_tasks;
 };
 
 StreamUpdator* StreamUpdator_Ctor();
 void StreamUpdator_Dtor(StreamUpdator *rep);
+void StreamUpdator_SetConfig(StreamUpdator *rep, StreamUpdator::Config *config);
 void StreamUpdator_Add(StreamUpdator *rep, MonoObject *component);
-void StreamUpdator_AsyncUpdate(StreamUpdator *rep, double time);
-void StreamUpdator_Update(StreamUpdator *rep, double time);
+void StreamUpdator_AsyncUpdate(StreamUpdator *rep, double *time);
+void StreamUpdator_Update(StreamUpdator *rep, double *time);
 
 
 
@@ -104,6 +115,7 @@ public:
             uint32_t normals : 1;
             uint32_t uv : 1;
             uint32_t indices : 1;
+            uint32_t directVB : 1;
         };
     };
 
@@ -111,9 +123,19 @@ public:
     {
     public:
         MeshBuffer(MonoObject *mmesh);
+        ~MeshBuffer();
 
+        // async
+        void kickVBUpdateTask();
+
+        // async
+        void releaseMonoArrays(UpdateFlags flags, const MeshData &data, int split);
+        // async
         void copyMeshDataToMonoArrays(UpdateFlags flags, const MeshData &data);
+        // async
         void copySubmeshDataToMonoArrays(UpdateFlags flags, const MeshData &data, int split);
+
+        // sync
         void copyDataToMonoMesh(UpdateFlags flags);
 
     private:
@@ -144,7 +166,6 @@ private:
     Splits      m_splits;
     Buffers     m_buffers;
     UpdateFlags m_uflags = { 0 };
-    bool        m_directVBUpdate = false;
     int         m_frame = 0;
 };
 

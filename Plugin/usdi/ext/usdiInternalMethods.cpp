@@ -25,6 +25,16 @@ void(uTransform::*NM_Transform_SendTransformChanged)(int mask);
 void(uMesh::*NM_Mesh_SetBounds)(const AABB &);
 
 
+static void* Buf_GameObject_GetComponent_Transform;
+static void* Buf_GameObject_GetComponent_Camera;
+static void* Buf_GameObject_GetComponent_MeshFilter;
+static void* Buf_GameObject_GetComponent_MeshRenderer;
+static void* Buf_GameObject_GetComponent_Light;
+static void* Buf_GameObject_AddComponent_Transform;
+static void* Buf_GameObject_AddComponent_Camera;
+static void* Buf_GameObject_AddComponent_MeshFilter;
+static void* Buf_GameObject_AddComponent_MeshRenderer;
+static void* Buf_GameObject_AddComponent_Light;
 static void *Buf_Component_GetComponent_Transform;
 static void *Buf_Component_GetComponent_Camera;
 
@@ -33,9 +43,13 @@ MonoClass *MC_IntPtr;
 MonoClass *MC_Vector2;
 MonoClass *MC_Vector3;
 MonoClass *MC_Quaternion;
+MonoClass *MC_GameObject;
 MonoClass *MC_Component;
 MonoClass *MC_Transform;
 MonoClass *MC_Camera;
+MonoClass *MC_MeshFilter;
+MonoClass *MC_MeshRenderer;
+MonoClass *MC_Light;
 MonoClass *MC_Mesh;
 MonoClass *MC_usdiElement;
 MonoClass *MC_usdiXform;
@@ -43,16 +57,34 @@ MonoClass *MC_usdiCamera;
 MonoClass *MC_usdiMesh;
 MonoClass *MC_usdiPoints;
 
+MonoMethod *MM_GameObject_SetActive;
+MonoMethod *MM_GameObject_GetComponent;
+MonoMethod *MM_GameObject_GetComponent_Transform;
+MonoMethod *MM_GameObject_GetComponent_Camera;
+MonoMethod *MM_GameObject_GetComponent_MeshFilter;
+MonoMethod *MM_GameObject_GetComponent_MeshRenderer;
+MonoMethod *MM_GameObject_GetComponent_Light;
+MonoMethod *MM_GameObject_AddComponent;
+MonoMethod *MM_GameObject_AddComponent_Transform;
+MonoMethod *MM_GameObject_AddComponent_Camera;
+MonoMethod *MM_GameObject_AddComponent_MeshFilter;
+MonoMethod *MM_GameObject_AddComponent_MeshRenderer;
+MonoMethod *MM_GameObject_AddComponent_Light;
+MonoMethod *MM_Component_get_gameObject;
 MonoMethod *MM_Component_GetComponent;
 MonoMethod *MM_Component_GetComponent_Transform;
 MonoMethod *MM_Component_GetComponent_Camera;
 MonoMethod *MM_Transform_set_localPosition;
 MonoMethod *MM_Transform_set_localRotation;
 MonoMethod *MM_Transform_set_localScale;
+MonoMethod *MM_Transform_SetParent;
 MonoMethod *MM_Camera_set_nearClipPlane;
 MonoMethod *MM_Camera_set_farClipPlane;
 MonoMethod *MM_Camera_set_fieldOfView;
 MonoMethod *MM_Camera_set_aspect;
+MonoMethod *MM_MeshFilter_set_sharedMesh;
+MonoMethod *MM_Light_set_color;
+MonoMethod *MM_Light_set_intensity;
 MonoMethod *MM_Mesh_set_vertices;
 MonoMethod *MM_Mesh_set_normals;
 MonoMethod *MM_Mesh_set_uv;
@@ -170,6 +202,7 @@ void InitializeInternalMethods()
 
         ICall("UTJ.usdiStreamUpdator::_Ctor", StreamUpdator_Ctor);
         ICall("UTJ.usdiStreamUpdator::_Dtor", StreamUpdator_Dtor);
+        ICall("UTJ.usdiStreamUpdator::_SetConfig", StreamUpdator_SetConfig);
         ICall("UTJ.usdiStreamUpdator::_Add", StreamUpdator_Add);
         ICall("UTJ.usdiStreamUpdator::_AsyncUpdate", StreamUpdator_AsyncUpdate);
         ICall("UTJ.usdiStreamUpdator::_Update", StreamUpdator_Update);
@@ -202,21 +235,50 @@ void InitializeInternalMethods()
         MClass("UnityEngine", Vector3);
         MClass("UnityEngine", Quaternion);
 
+        MClass("UnityEngine", GameObject);
         MClass("UnityEngine", Component);
         MClass("UnityEngine", Transform);
         MClass("UnityEngine", Camera);
+        MClass("UnityEngine", MeshFilter);
+        MClass("UnityEngine", MeshRenderer);
+        MClass("UnityEngine", Light);
+
+        MClass("UnityEngine", Mesh);
+
+        MMethod(GameObject, SetActive, 1);
+        MMethod(GameObject, GetComponent, 0);
+        MMInstantiate(GameObject, GetComponent, Transform);
+        MMInstantiate(GameObject, GetComponent, Camera);
+        MMInstantiate(GameObject, GetComponent, MeshFilter);
+        MMInstantiate(GameObject, GetComponent, MeshRenderer);
+        MMInstantiate(GameObject, GetComponent, Light);
+        MMethod(GameObject, AddComponent, 0);
+        MMInstantiate(GameObject, AddComponent, Transform);
+        MMInstantiate(GameObject, AddComponent, Camera);
+        MMInstantiate(GameObject, AddComponent, MeshFilter);
+        MMInstantiate(GameObject, AddComponent, MeshRenderer);
+        MMInstantiate(GameObject, AddComponent, Light);
+
+        MMethod(Component, get_gameObject, 0);
         MMethod(Component, GetComponent, 0);
         MMInstantiate(Component, GetComponent, Transform);
         MMInstantiate(Component, GetComponent, Camera);
+
         MMethod(Transform, set_localPosition, 1);
         MMethod(Transform, set_localRotation, 1);
         MMethod(Transform, set_localScale, 1);
+        MMethod(Transform, SetParent, 1);
+
         MMethod(Camera, set_nearClipPlane, 1);
         MMethod(Camera, set_farClipPlane, 1);
         MMethod(Camera, set_fieldOfView, 1);
         MMethod(Camera, set_aspect, 1);
 
-        MClass("UnityEngine", Mesh);
+        MMethod(MeshFilter, set_sharedMesh, 1);
+
+        MMethod(Light, set_color, 1);
+        MMethod(Light, set_intensity, 1);
+
         MMethod(Mesh, set_vertices, 1);
         MMethod(Mesh, set_normals, 1);
         MMethod(Mesh, set_uv, 1);
@@ -233,12 +295,11 @@ void InitializeInternalMethods()
         auto mimg = mono_assembly_get_image(masm);
 
         MClass("UTJ", usdiElement);
-        MField(usdiElement, m_schema);
-
         MClass("UTJ", usdiXform);
         MClass("UTJ", usdiCamera);
         MClass("UTJ", usdiPoints);
         MClass("UTJ", usdiMesh);
+        MField(usdiElement, m_schema);
         MMethod(usdiMesh, usdiAllocateChildMeshes, 1);
     }
 
