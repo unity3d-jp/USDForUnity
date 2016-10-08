@@ -24,6 +24,8 @@
 *.usda.meta
 *.usdc
 *.usdc.meta
+*.abc
+*.abc.meta
 
 Makefile
 
@@ -40,3 +42,5 @@ CMakeFiles/
 CMakeCache.txt
 USDForUnity/*.sln
 USDForUnity/*.csproj
+
+MeshUtilsCore.h

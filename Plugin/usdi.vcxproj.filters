@@ -55,13 +55,13 @@
     <ClCompile Include="usdi\ext\usdiTask.cpp">
       <Filter>usdi\ext</Filter>
     </ClCompile>
-    <ClCompile Include="usdi\ext\usdiUnity.cpp">
-      <Filter>usdi\ext</Filter>
-    </ClCompile>
     <ClCompile Include="usdi\ext\usdiExt.cpp">
       <Filter>usdi\ext</Filter>
     </ClCompile>
-    <ClCompile Include="usdi\ext\usdiInternalMethods.cpp">
+    <ClCompile Include="usdi\ext\UnityEngineBinding.cpp">
+      <Filter>usdi\ext</Filter>
+    </ClCompile>
+    <ClCompile Include="usdi\ext\usdiComponentUpdator.cpp">
       <Filter>usdi\ext</Filter>
     </ClCompile>
   </ItemGroup>
@@ -123,13 +123,13 @@
     <ClInclude Include="usdi\ext\usdiTask.h">
       <Filter>usdi\ext</Filter>
     </ClInclude>
-    <ClInclude Include="usdi\ext\usdiUnity.h">
-      <Filter>usdi\ext</Filter>
-    </ClInclude>
     <ClInclude Include="usdi\ext\usdiExt.h">
       <Filter>usdi\ext</Filter>
     </ClInclude>
-    <ClInclude Include="usdi\ext\usdiInternalMethods.h">
+    <ClInclude Include="usdi\ext\UnityEngineBinding.h">
+      <Filter>usdi\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="usdi\ext\usdiComponentUpdator.h">
       <Filter>usdi\ext</Filter>
     </ClInclude>
   </ItemGroup>

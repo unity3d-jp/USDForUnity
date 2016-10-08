@@ -2,7 +2,7 @@
 
 #include "etc/Mono.h"
 #include "usdiExt.h"
-#include "usdiInternalMethods.h"
+#include "UnityEngineBinding.h"
 
 namespace usdi {
 

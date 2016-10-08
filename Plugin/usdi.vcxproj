@@ -16,10 +16,10 @@
     <ClInclude Include="usdi\etc\Hook.h" />
     <ClInclude Include="usdi\etc\Mono.h" />
     <ClInclude Include="usdi\etc\RawVector.h" />
+    <ClInclude Include="usdi\ext\UnityEngineBinding.h" />
+    <ClInclude Include="usdi\ext\usdiComponentUpdator.h" />
     <ClInclude Include="usdi\ext\usdiExt.h" />
-    <ClInclude Include="usdi\ext\usdiInternalMethods.h" />
     <ClInclude Include="usdi\ext\usdiTask.h" />
-    <ClInclude Include="usdi\ext\usdiUnity.h" />
     <ClInclude Include="usdi\pch.h" />
     <ClInclude Include="usdi\usdiAttribute.h" />
     <ClInclude Include="usdi\usdiCamera.h" />
@@ -39,10 +39,10 @@
     <ClCompile Include="usdi\etc\FixedAllocator.cpp" />
     <ClCompile Include="usdi\etc\Hook.cpp" />
     <ClCompile Include="usdi\etc\Mono.cpp" />
+    <ClCompile Include="usdi\ext\UnityEngineBinding.cpp" />
+    <ClCompile Include="usdi\ext\usdiComponentUpdator.cpp" />
     <ClCompile Include="usdi\ext\usdiExt.cpp" />
-    <ClCompile Include="usdi\ext\usdiInternalMethods.cpp" />
     <ClCompile Include="usdi\ext\usdiTask.cpp" />
-    <ClCompile Include="usdi\ext\usdiUnity.cpp" />
     <ClCompile Include="usdi\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Master|x64'">Create</PrecompiledHeader>

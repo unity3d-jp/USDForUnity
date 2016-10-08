@@ -3,50 +3,76 @@
 
 namespace usdi {
 
+void InitializeInternalMethods();
+void ClearInternalMethodsCache();
+
+
+// native class bindings
+
 class nObject;
 class nTransform;
 class nMesh;
 
+class nObject
+{
+public:
+    nObject(void *rep);
+    void* get() const;
+    operator bool() const;
 
-// native methods
-extern void(nObject::*NM_Object_SetDirty)();
-extern void(nTransform::*NM_Transform_SetLocalPosition)(const __m128 &pos);
-extern void(nTransform::*NM_Transform_SetLocalRotation)(const __m128 &rot);
-extern void(nTransform::*NM_Transform_SetLocalScale)(const __m128 &scale);
-extern void(nTransform::*NM_Transform_SendTransformChanged)(int mask);
-extern void(nMesh::*NM_Mesh_SetBounds)(const AABB &);
+protected:
+    void *m_rep;
+};
 
 
-// mono classes & methods
+class nTransform : public nObject
+{
+typedef nObject super;
+public:
+    static bool isAvailable();
+    nTransform(void *rep);
+    nTransform* self();
+    void setLocalPositionWithoutNotification(__m128 v);
+    void setLocalRotationWithoutNotification(__m128 v);
+    void setLocalScaleWithoutNotification(__m128 v);
+    void sendTransformChanged(int mask);
+};
 
-extern MonoClass *MC_int;
-extern MonoClass *MC_IntPtr;
-extern MonoClass *MC_Vector2;
-extern MonoClass *MC_Vector3;
-extern MonoClass *MC_Quaternion;
-extern MonoClass *MC_GameObject;
-extern MonoClass *MC_Component;
-extern MonoClass *MC_Transform;
-extern MonoClass *MC_Camera;
-extern MonoClass *MC_MeshFilter;
-extern MonoClass *MC_MeshRenderer;
-extern MonoClass *MC_Light;
-extern MonoClass *MC_Mesh;
-extern MonoClass *MC_usdiElement;
-extern MonoClass *MC_usdiXform;
-extern MonoClass *MC_usdiCamera;
-extern MonoClass *MC_usdiMesh;
-extern MonoClass *MC_usdiPoints;
+
+class nMesh : public nObject
+{
+typedef nObject super;
+public:
+    static bool isAvailable();
+    nMesh(void *rep);
+    nMesh* self();
+    void setBounds(const AABB &);
+};
+
+
+
+// mono class bindings
 
 extern MonoMethod *MM_usdiMesh_usdiAllocateChildMeshes;
 
 extern int MF_usdiElement_m_schema;
 
 
-void InitializeInternalMethods();
-void ClearInternalMethodsCache();
+class mInt32;
+class mIntPtr;
+class mVector2;
+class mVector3;
+class mQuaternion;
 
-
+class mObject;
+class mGameObject;
+class mComponent;
+class mTransform;
+class mCamera;
+class mMeshFilter;
+class mMeshRenderer;
+class mLight;
+class mMesh;
 
 
 class mObject
@@ -70,16 +96,18 @@ class mGameObject : public mObject
 {
 typedef mObject super;
 public:
-    static MonoClass *MClass;
+    static mGameObject New(const char *name = "");
 
     mGameObject(MonoObject *game_object = nullptr);
-
     void SetActive(bool v);
-    MonoObject* getComponent(MonoClass *mclass);
-    MonoObject* AddComponent(MonoClass *mclass);
+    template<class Component> Component getComponent();
+    template<class Component> Component addComponent();
 
-    template<class Component> Component getComponent() { return Component(getComponent(Component::MClass)); }
-    template<class Component> Component addComponent() { return Component(addComponent(Component::MClass)); }
+    template<class Component> Component getOrAddComponent()
+    {
+        if (auto c = getComponent<Component>()) { return c; }
+        return addComponent<Component>();
+    }
 };
 
 
@@ -87,8 +115,6 @@ class mComponent : public mObject
 {
 typedef mObject super;
 public:
-    static MonoClass *MClass;
-
     mComponent(MonoObject *component = nullptr);
     mGameObject getGameObject();
 
@@ -101,7 +127,7 @@ class mTransform : public mComponent
 {
 typedef mComponent super;
 public:
-    static MonoClass *MClass;
+    static MonoClass* getMonoClass();
 
     mTransform(MonoObject *component = nullptr);
     void setLocalPosition(const float3& v);
@@ -115,8 +141,6 @@ class mCamera : public mComponent
 {
 typedef mComponent super;
 public:
-    static MonoClass *MClass;
-
     mCamera(MonoObject *component = nullptr);
     void setNearClipPlane(float v);
     void setFarClipPlane(float v);
@@ -129,8 +153,6 @@ class mMeshFilter : public mComponent
 {
 typedef mComponent super;
 public:
-    static MonoClass *MClass;
-
     mMeshFilter(MonoObject *component = nullptr);
 };
 
@@ -139,8 +161,6 @@ class mMeshRenderer : public mComponent
 {
 typedef mComponent super;
 public:
-    static MonoClass *MClass;
-
     mMeshRenderer(MonoObject *component = nullptr);
 };
 
@@ -149,8 +169,6 @@ class mLight : public mComponent
 {
     typedef mComponent super;
 public:
-    static MonoClass *MClass;
-
     mLight(MonoObject *component = nullptr);
 };
 
@@ -159,8 +177,6 @@ class mMesh : public mObject
 {
 typedef mObject super;
 public:
-    static MonoClass *MClass;
-
     mMesh(MonoObject *mo = nullptr);
     void setVertices(MonoArray *v);
     void setNormals(MonoArray *v);

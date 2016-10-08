@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "usdiInternal.h"
-#include "usdiInternalMethods.h"
-#include "usdiUnity.h"
+#include "UnityEngineBinding.h"
+#include "usdiComponentUpdator.h"
 #include "etc/Hook.h"
 
 //#define usdiDbgForceMono
@@ -9,21 +9,23 @@
 
 namespace usdi {
 
+// native methods
+
 const char Sym_Object_SetDirty[] = "?SetDirty@Object@@QEAAXXZ";
-const char Sym_Transform_SetLocalPosition[] = "?SetLocalPositionWithoutNotification@Transform@@QEAAXAEBU_float3@math@@@Z";
-const char Sym_Transform_SetLocalRotation[] = "?SetLocalRotationWithoutNotification@Transform@@QEAAXAEBU_float4@math@@@Z";
-const char Sym_Transform_SetLocalScale[] = "?SetLocalScaleWithoutNotification@Transform@@QEAAXAEBU_float3@math@@@Z";
+const char Sym_Transform_SetLocalPositionWithoutNotification[] = "?SetLocalPositionWithoutNotification@Transform@@QEAAXAEBU_float3@math@@@Z";
+const char Sym_Transform_SetLocalRotationWithoutNotification[] = "?SetLocalRotationWithoutNotification@Transform@@QEAAXAEBU_float4@math@@@Z";
+const char Sym_Transform_SetLocalScaleWithoutNotification[] = "?SetLocalScaleWithoutNotification@Transform@@QEAAXAEBU_float3@math@@@Z";
 const char Sym_Transform_SendTransformChanged[] = "?SendTransformChanged@Transform@@QEAAXH@Z";
 const char Sym_Mesh_SetBounds[] = "?SetBounds@Mesh@@QEAAXAEBVAABB@@@Z";
 
+static void(nTransform::*NM_Transform_SetLocalPositionWithoutNotification)(const __m128 &pos);
+static void(nTransform::*NM_Transform_SetLocalRotationWithoutNotification)(const __m128 &rot);
+static void(nTransform::*NM_Transform_SetLocalScaleWithoutNotification)(const __m128 &scale);
+static void(nTransform::*NM_Transform_SendTransformChanged)(int mask);
+static void(nMesh::*NM_Mesh_SetBounds)(const AABB &);
 
-void(nObject::*NM_Object_SetDirty)();
-void(nTransform::*NM_Transform_SetLocalPosition)(const __m128 &pos);
-void(nTransform::*NM_Transform_SetLocalRotation)(const __m128 &rot);
-void(nTransform::*NM_Transform_SetLocalScale)(const __m128 &scale);
-void(nTransform::*NM_Transform_SendTransformChanged)(int mask);
-void(nMesh::*NM_Mesh_SetBounds)(const AABB &);
 
+// mono methods 
 
 static MonoGenericInst Buf_GameObject_GetComponent_Transform;
 static MonoGenericInst Buf_GameObject_GetComponent_Camera;
@@ -38,61 +40,87 @@ static MonoGenericInst Buf_GameObject_AddComponent_Light;
 static MonoGenericInst Buf_Component_GetComponent_Transform;
 static MonoGenericInst Buf_Component_GetComponent_Camera;
 
-MonoClass *MC_int;
-MonoClass *MC_IntPtr;
-MonoClass *MC_Vector2;
-MonoClass *MC_Vector3;
-MonoClass *MC_Quaternion;
-MonoClass *MC_GameObject;
-MonoClass *MC_Component;
-MonoClass *MC_Transform;
-MonoClass *MC_Camera;
-MonoClass *MC_MeshFilter;
-MonoClass *MC_MeshRenderer;
-MonoClass *MC_Light;
-MonoClass *MC_Mesh;
-MonoClass *MC_usdiElement;
-MonoClass *MC_usdiXform;
-MonoClass *MC_usdiCamera;
-MonoClass *MC_usdiMesh;
-MonoClass *MC_usdiPoints;
+static MonoClass *MC_Int32;
+static MonoClass *MC_IntPtr;
+static MonoClass *MC_Vector2;
+static MonoClass *MC_Vector3;
+static MonoClass *MC_Quaternion;
+static MonoClass *MC_Object;
+static MonoClass *MC_GameObject;
+static MonoClass *MC_Component;
+static MonoClass *MC_Transform;
+static MonoClass *MC_Camera;
+static MonoClass *MC_MeshFilter;
+static MonoClass *MC_MeshRenderer;
+static MonoClass *MC_Light;
+static MonoClass *MC_Mesh;
+static MonoClass *MC_usdiElement;
+static MonoClass *MC_usdiXform;
+static MonoClass *MC_usdiCamera;
+static MonoClass *MC_usdiMesh;
+static MonoClass *MC_usdiPoints;
 
-MonoMethod *MM_GameObject_SetActive;
-MonoMethod *MM_GameObject_GetComponent;
-MonoMethod *MM_GameObject_GetComponent_Transform;
-MonoMethod *MM_GameObject_GetComponent_Camera;
-MonoMethod *MM_GameObject_GetComponent_MeshFilter;
-MonoMethod *MM_GameObject_GetComponent_MeshRenderer;
-MonoMethod *MM_GameObject_GetComponent_Light;
-MonoMethod *MM_GameObject_AddComponent;
-MonoMethod *MM_GameObject_AddComponent_Transform;
-MonoMethod *MM_GameObject_AddComponent_Camera;
-MonoMethod *MM_GameObject_AddComponent_MeshFilter;
-MonoMethod *MM_GameObject_AddComponent_MeshRenderer;
-MonoMethod *MM_GameObject_AddComponent_Light;
-MonoMethod *MM_Component_get_gameObject;
-MonoMethod *MM_Transform_set_localPosition;
-MonoMethod *MM_Transform_set_localRotation;
-MonoMethod *MM_Transform_set_localScale;
-MonoMethod *MM_Transform_SetParent;
-MonoMethod *MM_Camera_set_nearClipPlane;
-MonoMethod *MM_Camera_set_farClipPlane;
-MonoMethod *MM_Camera_set_fieldOfView;
-MonoMethod *MM_Camera_set_aspect;
-MonoMethod *MM_MeshFilter_set_sharedMesh;
-MonoMethod *MM_Light_set_color;
-MonoMethod *MM_Light_set_intensity;
-MonoMethod *MM_Mesh_set_vertices;
-MonoMethod *MM_Mesh_set_normals;
-MonoMethod *MM_Mesh_set_uv;
-MonoMethod *MM_Mesh_set_bounds;
-MonoMethod *MM_Mesh_SetIndices;
-MonoMethod *MM_Mesh_UploadMeshData;
-MonoMethod *MM_Mesh_GetNativeVertexBufferPtr;
-MonoMethod *MM_Mesh_GetNativeIndexBufferPtr;
-MonoMethod *MM_usdiMesh_usdiAllocateChildMeshes;
+static MonoMethod *MM_GameObject_ctor;
+static MonoMethod *MM_GameObject_SetActive;
+static MonoMethod *MM_GameObject_GetComponent;
+static MonoMethod *MM_GameObject_GetComponent_Transform;
+static MonoMethod *MM_GameObject_GetComponent_Camera;
+static MonoMethod *MM_GameObject_GetComponent_MeshFilter;
+static MonoMethod *MM_GameObject_GetComponent_MeshRenderer;
+static MonoMethod *MM_GameObject_GetComponent_Light;
+static MonoMethod *MM_GameObject_AddComponent;
+static MonoMethod *MM_GameObject_AddComponent_Transform;
+static MonoMethod *MM_GameObject_AddComponent_Camera;
+static MonoMethod *MM_GameObject_AddComponent_MeshFilter;
+static MonoMethod *MM_GameObject_AddComponent_MeshRenderer;
+static MonoMethod *MM_GameObject_AddComponent_Light;
+static MonoMethod *MM_Component_get_gameObject;
+static MonoMethod *MM_Transform_set_localPosition;
+static MonoMethod *MM_Transform_set_localRotation;
+static MonoMethod *MM_Transform_set_localScale;
+static MonoMethod *MM_Transform_SetParent;
+static MonoMethod *MM_Camera_set_nearClipPlane;
+static MonoMethod *MM_Camera_set_farClipPlane;
+static MonoMethod *MM_Camera_set_fieldOfView;
+static MonoMethod *MM_Camera_set_aspect;
+static MonoMethod *MM_MeshFilter_set_sharedMesh;
+static MonoMethod *MM_Light_set_color;
+static MonoMethod *MM_Light_set_intensity;
+static MonoMethod *MM_Mesh_set_vertices;
+static MonoMethod *MM_Mesh_set_normals;
+static MonoMethod *MM_Mesh_set_uv;
+static MonoMethod *MM_Mesh_set_bounds;
+static MonoMethod *MM_Mesh_SetIndices;
+static MonoMethod *MM_Mesh_UploadMeshData;
+static MonoMethod *MM_Mesh_GetNativeVertexBufferPtr;
+static MonoMethod *MM_Mesh_GetNativeIndexBufferPtr;
+static MonoMethod *MM_usdiMesh_usdiAllocateChildMeshes;
 
 int MF_usdiElement_m_schema;
+
+static MonoDomain *g_mdomain;
+
+} // namespace usdi
+
+#define Def(T) template<> MonoClass* GetMonoClass<usdi::m##T>() { return usdi::MC_##T; }
+Def(Int32);
+Def(IntPtr);
+Def(Vector2);
+Def(Vector3);
+Def(Quaternion);
+Def(Object);
+Def(GameObject);
+Def(Component);
+Def(Transform);
+Def(Camera);
+Def(MeshFilter);
+Def(MeshRenderer);
+Def(Light);
+Def(Mesh);
+#undef Def
+
+
+namespace usdi {
 
 
 
@@ -172,17 +200,16 @@ void InitializeInternalMethods()
 #ifndef usdiDbgForceMono
 #define NMethod(Class, Method)  (void*&)NM_##Class##_##Method = FindSymbolByName(Sym_##Class##_##Method)
 
-        NMethod(Object, SetDirty);
-        NMethod(Transform, SetLocalPosition);
-        NMethod(Transform, SetLocalRotation);
-        NMethod(Transform, SetLocalScale);
+        NMethod(Transform, SetLocalPositionWithoutNotification);
+        NMethod(Transform, SetLocalRotationWithoutNotification);
+        NMethod(Transform, SetLocalScaleWithoutNotification);
         NMethod(Transform, SendTransformChanged);
         NMethod(Mesh, SetBounds);
 
 #undef NMethod
 #endif // usdiDbgForceMono
 
-        TransformAssignXform = NM_Transform_SetLocalPosition ? TransformAssignXformCpp : TransformAssignXformMono;
+        TransformAssignXform = NM_Transform_SetLocalPositionWithoutNotification ? TransformAssignXformCpp : TransformAssignXformMono;
         TransformNotfyChange = NM_Transform_SendTransformChanged ? TransformNotfyChangeCpp : TransformNotfyChangeMono;
         MeshAssignBounds = NM_Mesh_SetBounds ? MeshAssignBoundsCpp : MeshAssignBoundsMono;
 
@@ -214,21 +241,24 @@ void InitializeInternalMethods()
 
 #define MMI(Class, Method, GParam)\
     MM_##Class##_##Method##_##GParam = InstantiateGenericMethod(MM_##Class##_##Method, MC_##GParam, Buf_##Class##_##Method##_##GParam)
+#define MCtor(Class, NumArgs) MM_##Class##_ctor = FindMethod(MC_##Class, ".ctor", NumArgs)
 
     auto mdomain = mono_domain_get();
+    g_mdomain = mdomain;
 
     // UnityEngine methods
     auto masm = mono_domain_assembly_open(mdomain, "UnityEngine");
     if(masm) {
         auto mimg = mono_assembly_get_image(masm);
 
-        MC_int = mono_get_int32_class();
+        MC_Int32 = mono_get_int32_class();
         MC_IntPtr = mono_get_intptr_class();
 
         MC("UnityEngine", Vector2);
         MC("UnityEngine", Vector3);
         MC("UnityEngine", Quaternion);
 
+        MC("UnityEngine", Object);
         MC("UnityEngine", GameObject);
         MC("UnityEngine", Component);
         MC("UnityEngine", Transform);
@@ -239,6 +269,7 @@ void InitializeInternalMethods()
 
         MC("UnityEngine", Mesh);
 
+        MCtor(GameObject, 1);
         MM(GameObject, SetActive, 1);
         MM(GameObject, GetComponent, 0);
         MMI(GameObject, GetComponent, Transform);
@@ -295,11 +326,45 @@ void InitializeInternalMethods()
     }
 
 
-#undef MGethod
+#undef MCtor
+#undef MMI
 #undef MF
 #undef MM
 #undef MC
 };
+
+
+
+nObject::nObject(void *rep) : m_rep(rep) {}
+void* nObject::get() const { return m_rep; }
+nObject::operator bool() const { return m_rep != nullptr; }
+
+
+bool nTransform::isAvailable()
+{
+    return
+        NM_Transform_SetLocalPositionWithoutNotification &&
+        NM_Transform_SetLocalRotationWithoutNotification &&
+        NM_Transform_SetLocalScaleWithoutNotification &&
+        NM_Transform_SendTransformChanged;
+}
+nTransform::nTransform(void *rep) : super(rep) {}
+nTransform* nTransform::self() { return (nTransform*)m_rep; }
+void nTransform::setLocalPositionWithoutNotification(__m128 v) { (self()->*NM_Transform_SetLocalPositionWithoutNotification)(v); }
+void nTransform::setLocalRotationWithoutNotification(__m128 v) { (self()->*NM_Transform_SetLocalRotationWithoutNotification)(v); }
+void nTransform::setLocalScaleWithoutNotification(__m128 v) { (self()->*NM_Transform_SetLocalScaleWithoutNotification)(v); }
+void nTransform::sendTransformChanged(int mask) { (self()->*NM_Transform_SendTransformChanged)(mask); }
+
+
+bool nMesh::isAvailable()
+{
+    return NM_Mesh_SetBounds;
+}
+nMesh::nMesh(void *rep) : super(rep) {}
+nMesh* nMesh::self() { return (nMesh*)m_rep; }
+void nMesh::setBounds(const AABB &v) { (self()->*NM_Mesh_SetBounds)(v); }
+
+
 
 mObject::mObject(MonoObject *rep) : m_rep(rep) {}
 MonoObject* mObject::get() const { return m_rep; }
@@ -311,41 +376,31 @@ MonoObject* mObject::mcall(MonoMethod *mm, void *a0, void *a1) { return MCall(m_
 MonoObject* mObject::mcall(MonoMethod *mm, void *a0, void *a1, void *a2) { return MCall(m_rep, mm, a0, a1, a2); }
 
 
-MonoClass* mGameObject::MClass = MC_GameObject;
+mGameObject mGameObject::New(const char *name)
+{
+    MonoObject *mo = mono_object_new(g_mdomain, GetMonoClass<mGameObject>());
+    MCall(mo, MM_GameObject_ctor, mono_string_new(g_mdomain, name));
+    return mo;
+}
 
 mGameObject::mGameObject(MonoObject *game_object)
     : super(game_object)
 {
 }
 
-void mGameObject::SetActive(bool v)
-{
-    int a = (int)v;
-    mcall(MM_GameObject_SetActive, &a);
-}
-
-MonoObject* mGameObject::getComponent(MonoClass *mclass)
-{
-    if (mclass == MC_Transform) { return mcall(MM_GameObject_GetComponent_Transform); }
-    else if (mclass == MC_Camera) { return mcall(MM_GameObject_GetComponent_Camera); }
-    else if (mclass == MC_MeshFilter) { return mcall(MM_GameObject_GetComponent_MeshFilter); }
-    else if (mclass == MC_MeshRenderer) { return mcall(MM_GameObject_GetComponent_MeshRenderer); }
-    else if (mclass == MC_Light) { return mcall(MM_GameObject_GetComponent_Light); }
-    return nullptr;
-}
-
-MonoObject* mGameObject::AddComponent(MonoClass *mclass)
-{
-    if (mclass == MC_Transform) { return mcall(MM_GameObject_AddComponent_Transform); }
-    else if (mclass == MC_Camera) { return mcall(MM_GameObject_AddComponent_Camera); }
-    else if (mclass == MC_MeshFilter) { return mcall(MM_GameObject_AddComponent_MeshFilter); }
-    else if (mclass == MC_MeshRenderer) { return mcall(MM_GameObject_AddComponent_MeshRenderer); }
-    else if (mclass == MC_Light) { return mcall(MM_GameObject_AddComponent_Light); }
-    return nullptr;
-}
+void mGameObject::SetActive(bool v) { int a = (int)v; mcall(MM_GameObject_SetActive, &a); }
+template<> mTransform    mGameObject::getComponent() { return mcall(MM_GameObject_GetComponent_Transform); }
+template<> mTransform    mGameObject::addComponent() { return mcall(MM_GameObject_AddComponent_Transform); }
+template<> mCamera       mGameObject::getComponent() { return mcall(MM_GameObject_GetComponent_Camera); }
+template<> mCamera       mGameObject::addComponent() { return mcall(MM_GameObject_AddComponent_Camera); }
+template<> mMeshFilter   mGameObject::getComponent() { return mcall(MM_GameObject_GetComponent_MeshFilter); }
+template<> mMeshFilter   mGameObject::addComponent() { return mcall(MM_GameObject_AddComponent_MeshFilter); }
+template<> mMeshRenderer mGameObject::getComponent() { return mcall(MM_GameObject_GetComponent_MeshRenderer); }
+template<> mMeshRenderer mGameObject::addComponent() { return mcall(MM_GameObject_AddComponent_MeshRenderer); }
+template<> mLight        mGameObject::getComponent() { return mcall(MM_GameObject_GetComponent_Light); }
+template<> mLight        mGameObject::addComponent() { return mcall(MM_GameObject_AddComponent_Light); }
 
 
-MonoClass* mComponent::MClass = MC_Component;
 mComponent::mComponent(MonoObject *component) : super(component) {}
 mGameObject mComponent::getGameObject()
 {
@@ -353,7 +408,7 @@ mGameObject mComponent::getGameObject()
 }
 
 
-MonoClass* mTransform::MClass = MC_Transform;
+MonoClass* mTransform::getMonoClass() { return MC_Transform; }
 mTransform::mTransform(MonoObject *component) : super(component) {}
 void mTransform::setLocalPosition(const float3& v) { mcall(MM_Transform_set_localPosition, (void*)&v); }
 void mTransform::setLocalRotation(const quatf& v) { mcall(MM_Transform_set_localRotation, (void*)&v); }
@@ -361,7 +416,6 @@ void mTransform::setLocalScale(const float3& v) { mcall(MM_Transform_set_localSc
 void mTransform::setParent(mTransform parent) { mcall(MM_Transform_SetParent, parent.get()); }
 
 
-MonoClass* mCamera::MClass = MC_Camera;
 mCamera::mCamera(MonoObject *component) : super(component) {}
 void mCamera::setNearClipPlane(float v) { mcall(MM_Camera_set_nearClipPlane, &v); }
 void mCamera::setFarClipPlane(float v) { mcall(MM_Camera_set_farClipPlane, &v); }
@@ -369,19 +423,15 @@ void mCamera::setFieldOfView(float v) { mcall(MM_Camera_set_fieldOfView, &v); }
 void mCamera::setAspect(float v) { mcall(MM_Camera_set_aspect, &v); }
 
 
-MonoClass* mMeshFilter::MClass = MC_MeshFilter;
 mMeshFilter::mMeshFilter(MonoObject *component) : super(component) {}
 
 
-MonoClass* mMeshRenderer::MClass = MC_MeshFilter;
 mMeshRenderer::mMeshRenderer(MonoObject *component) : super(component) {}
 
 
-MonoClass* mLight::MClass = MC_Light;
 mLight::mLight(MonoObject *component) : super(component) {}
 
 
-MonoClass* mMesh::MClass = MC_Mesh;
 mMesh::mMesh(MonoObject *mo) : super(mo) {}
 void mMesh::setVertices(MonoArray *v) { mcall(MM_Mesh_set_vertices, v); }
 void mMesh::setNormals(MonoArray *v) { mcall(MM_Mesh_set_normals, v); }

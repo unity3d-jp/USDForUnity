@@ -1,14 +1,14 @@
 #include "pch.h"
 #include "usdiInternal.h"
-#include "usdiUnity.h"
-#include "usdiInternalMethods.h"
-#include "usdiTask.h"
+#include "UnityEngineBinding.h"
+#include "usdiComponentUpdator.h"
 
 #include "usdiSchema.h"
 #include "usdiXform.h"
 #include "usdiCamera.h"
 #include "usdiMesh.h"
 #include "usdiPoints.h"
+#include "usdiTask.h"
 
 namespace usdi {
 
@@ -20,22 +20,22 @@ void(*MeshAssignBounds)(MonoObject *mesh_, MonoObject *center_, MonoObject  *ext
 void TransformAssignXformCpp(MonoObject *transform_, MonoObject *data_)
 {
     auto& data = UnboxValue<XformData&>(data_);
-    auto* trans = Unbox<nTransform>(transform_);
+    auto trans = Unbox<nTransform>(transform_);
 
     if ((data.flags & (int)XformData::Flags::UpdatedPosition) != 0)
     {
         __m128 v = _mm_loadu_ps((float*)&data.position);
-        (trans->*NM_Transform_SetLocalPosition)(v);
+        trans.setLocalPositionWithoutNotification(v);
     }
     if ((data.flags & (int)XformData::Flags::UpdatedRotation) != 0)
     {
         __m128 v = _mm_loadu_ps((float*)&data.rotation);
-        (trans->*NM_Transform_SetLocalRotation)(v);
+        trans.setLocalRotationWithoutNotification(v);
     }
     if ((data.flags & (int)XformData::Flags::UpdatedScale) != 0)
     {
         __m128 v = _mm_loadu_ps((float*)&data.scale);
-        (trans->*NM_Transform_SetLocalScale)(v);
+        trans.setLocalScaleWithoutNotification(v);
     }
 }
 
@@ -61,8 +61,8 @@ void TransformAssignXformMono(MonoObject *transform, MonoObject *data_)
 
 void TransformNotfyChangeCpp(MonoObject *transform_)
 {
-    auto* trans = Unbox<nTransform>(transform_);
-    (trans->*NM_Transform_SendTransformChanged)(0x1 | 0x2 | 0x8);
+    auto trans = Unbox<nTransform>(transform_);
+    trans.sendTransformChanged(0x1 | 0x2 | 0x8);
 }
 
 void TransformNotfyChangeMono(MonoObject *transform)
@@ -78,8 +78,8 @@ void MeshAssignBoundsCpp(MonoObject *mesh_, MonoObject *center_, MonoObject  *ex
     auto& extents = UnboxValue<float3&>(extents_);
     AABB bounds = { center, extents };
 
-    auto* mesh = Unbox<nMesh>(mesh_);
-    (mesh->*NM_Mesh_SetBounds)(bounds);
+    auto mesh = Unbox<nMesh>(mesh_);
+    mesh.setBounds(bounds);
 }
 
 void MeshAssignBoundsMono(MonoObject *mesh, MonoObject *center_, MonoObject  *extents_)
@@ -113,7 +113,7 @@ void StreamUpdator::add(MonoObject *component)
     auto *schema = MField<Schema*>(component, MF_usdiElement_m_schema);
     if (schema) {
         if (auto *mesh = dynamic_cast<Mesh*>(schema)) {
-            //m_children.emplace_back(new MeshUpdator(this, mesh, component));
+            m_children.emplace_back(new MeshUpdator(this, mesh, component));
         }
         else if (auto *cam = dynamic_cast<Camera*>(schema)) {
             m_children.emplace_back(new CameraUpdator(this, cam, component));
@@ -122,7 +122,7 @@ void StreamUpdator::add(MonoObject *component)
             m_children.emplace_back(new XformUpdator(this, xf, component));
         }
         else if (auto *points = dynamic_cast<Points*>(schema)) {
-            //m_children.emplace_back(new PointsUpdator(this, points, component));
+            m_children.emplace_back(new PointsUpdator(this, points, component));
         }
     }
 }
@@ -282,19 +282,19 @@ void MeshUpdator::MeshBuffer::copyMeshDataToMonoArrays(UpdateFlags flags, const 
     auto& src = data;
 
     if (flags.points) {
-        m_mvertices.allocate(MC_Vector3, src.num_points);
+        m_mvertices.allocate<mVector3>(src.num_points);
         memcpy(m_mvertices.data(), src.points, sizeof(float3)*src.num_points);
     }
     if (flags.normals) {
-        m_mnormals.allocate(MC_Vector3, src.num_points);
+        m_mnormals.allocate<mVector3>(src.num_points);
         memcpy(m_mnormals.data(), src.normals, sizeof(float3)*src.num_points);
     }
     if (flags.uv) {
-        m_muv.allocate(MC_Vector2, src.num_points);
+        m_muv.allocate<mVector2>(src.num_points);
         memcpy(m_muv.data(), src.uvs, sizeof(float2)*src.num_points);
     }
     if (flags.indices) {
-        m_mindices.allocate(MC_int, src.num_indices_triangulated);
+        m_mindices.allocate<mInt32>(src.num_indices_triangulated);
         memcpy(m_mindices.data(), src.indices_triangulated, sizeof(int)*src.num_indices_triangulated);
     }
 }
@@ -304,19 +304,19 @@ void MeshUpdator::MeshBuffer::copySubmeshDataToMonoArrays(UpdateFlags flags, con
     auto& src = data.splits[split];
 
     if (flags.points) {
-        m_mvertices.allocate(MC_Vector3, src.num_points);
+        m_mvertices.allocate<mVector3>(src.num_points);
         memcpy(m_mvertices.data(), src.points, sizeof(float3)*src.num_points);
     }
     if (flags.normals) {
-        m_mnormals.allocate(MC_Vector3, src.num_points);
+        m_mnormals.allocate<mVector3>(src.num_points);
         memcpy(m_mnormals.data(), src.normals, sizeof(float3)*src.num_points);
     }
     if (flags.uv) {
-        m_muv.allocate(MC_Vector2, src.num_points);
+        m_muv.allocate<mVector2>(src.num_points);
         memcpy(m_muv.data(), src.uvs, sizeof(float2)*src.num_points);
     }
     if (flags.indices) {
-        m_mindices.allocate(MC_int, src.num_points);
+        m_mindices.allocate<mInt32>(src.num_points);
         memcpy(m_mindices.data(), src.indices, sizeof(int)*src.num_points);
     }
 }

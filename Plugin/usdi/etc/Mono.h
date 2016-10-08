@@ -122,9 +122,9 @@ extern MonoClass* (*mono_get_exception_class)();
 
 // helper
 
-template<class T> static inline T* Unbox(MonoObject *mobj)
+template<class T> static inline T Unbox(MonoObject *mobj)
 {
-    return ((T**)mobj)[2];
+    return T(((void**)mobj)[2]);
 }
 
 template<class T> struct UnboxValueImpl;
@@ -177,6 +177,7 @@ inline MonoObject* MCall(MonoObject *self, const char *method, void *a0, void *a
 #undef MM
 
 
+template<class T> MonoClass* GetMonoClass();
 
 class MObject
 {
@@ -188,6 +189,7 @@ public:
     ~MObject();
 
     void allocate(MonoClass *mc);
+    template<class T> void allocate() { allocate(GetMonoClass<T>()); }
     void rerlease();
     MonoObject* get();
     operator bool() const;
@@ -207,8 +209,8 @@ public:
     ~MArray();
 
     void allocate(MonoClass *mc, size_t size);
+    template<class T> void allocate(size_t size) { allocate(GetMonoClass<T>(), size); }
     void release();
-
     size_t size() const;
     void* data();
     const void* data() const;
