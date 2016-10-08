@@ -441,11 +441,11 @@ namespace UTJ
         [DllImport("usdi")] public static extern IntPtr usdiTaskCreateComposite(IntPtr tasks, int num);
 
 
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern void usdiUniTransformAssignXform(UnityEngine.Transform trans, ref XformData data);
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern void usdiUniTransformNotfyChange(UnityEngine.Transform trans);
-        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern void usdiUniMeshAssignBounds(UnityEngine.Mesh mesh, ref Vector3 center, ref Vector3 extents);
 
 
@@ -540,6 +540,7 @@ namespace UTJ
         public static string S(IntPtr cstring) { return Marshal.PtrToStringAnsi(cstring); }
         public static IntPtr GetArrayPtr(Array v) { return v == null ? IntPtr.Zero : Marshal.UnsafeAddrOfPinnedArrayElement(v, 0); }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public static void InitializePluginPass1()
         {
             usdi.AddDLLSearchPath(GetModulePath());
@@ -550,6 +551,7 @@ namespace UTJ
         }
 
         // separate pass because loading usdi.dll will fail in InitializePluginPass1()
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public static void InitializePluginPass2()
         {
             usdi.usdiInitialize();
