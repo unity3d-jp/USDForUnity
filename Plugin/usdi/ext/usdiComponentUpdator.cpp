@@ -3,6 +3,7 @@
 #include "UnityEngineBinding.h"
 #include "usdiComponentUpdator.h"
 
+#include "usdiContext.h"
 #include "usdiSchema.h"
 #include "usdiXform.h"
 #include "usdiCamera.h"
@@ -95,7 +96,9 @@ void MeshAssignBoundsMono(MonoObject *mesh, MonoObject *center_, MonoObject  *ex
 
 
 
-StreamUpdator::StreamUpdator()
+StreamUpdator::StreamUpdator(Context *ctx, MonoObject *component)
+    : m_ctx(ctx)
+    , m_component(component)
 {
 }
 
@@ -107,23 +110,51 @@ StreamUpdator::~StreamUpdator()
 void StreamUpdator::setConfig(const Config& conf) { m_config = conf; }
 const StreamUpdator::Config& StreamUpdator::getConfig() const { return m_config; }
 
-
-void StreamUpdator::add(MonoObject *component)
+mTransform StreamUpdator::createNode(Schema *schema, mTransform parent)
 {
-    auto *schema = MField<Schema*>(component, MF_usdiElement_m_schema);
-    if (schema) {
-        if (auto *mesh = dynamic_cast<Mesh*>(schema)) {
-            m_children.emplace_back(new MeshUpdator(this, mesh, component));
+    mGameObject go;
+    mTransform trans;
+
+    if (parent) {
+        if (auto child = parent.findChild(schema->getName())) {
+            trans = child;
+            go = trans.getGameObject();
         }
-        else if (auto *cam = dynamic_cast<Camera*>(schema)) {
-            m_children.emplace_back(new CameraUpdator(this, cam, component));
-        }
-        else if (auto *xf = dynamic_cast<Xform*>(schema)) {
-            m_children.emplace_back(new XformUpdator(this, xf, component));
-        }
-        else if (auto *points = dynamic_cast<Points*>(schema)) {
-            m_children.emplace_back(new PointsUpdator(this, points, component));
-        }
+    }
+    if (!go) {
+        go = mGameObject::New(schema->getName());
+        trans = go.getComponent<mTransform>();
+        trans.setParent(parent);
+    }
+
+    add(schema, go);
+
+    schema->each([this, trans](Schema *c) {
+        createNode(c, trans);
+    });
+    return trans;
+}
+
+void StreamUpdator::createNodeRecursive()
+{
+    createNode(m_ctx->getRootNode(), nullptr);
+}
+
+void StreamUpdator::add(Schema *schema, mGameObject go)
+{
+    if (!schema) { return; }
+
+    if (auto *cam = dynamic_cast<Camera*>(schema)) {
+        m_children.emplace_back(new CameraUpdator(this, cam, go));
+    }
+    else if (auto *mesh = dynamic_cast<Mesh*>(schema)) {
+        m_children.emplace_back(new MeshUpdator(this, mesh, go));
+    }
+    else if (auto *points = dynamic_cast<Points*>(schema)) {
+        m_children.emplace_back(new PointsUpdator(this, points, go));
+    }
+    else if (auto *xf = dynamic_cast<Xform*>(schema)) {
+        m_children.emplace_back(new XformUpdator(this, xf, go));
     }
 }
 
@@ -167,10 +198,10 @@ void StreamUpdator::update(Time time)
     }
 }
 
-StreamUpdator* StreamUpdator_Ctor() { return new StreamUpdator(); }
+StreamUpdator* StreamUpdator_Ctor(Context *ctx, MonoObject *component) { return new StreamUpdator(ctx, component); }
 void StreamUpdator_Dtor(StreamUpdator *rep) { delete rep; }
 void StreamUpdator_SetConfig(StreamUpdator *rep, StreamUpdator::Config *config) { rep->setConfig(*config); }
-void StreamUpdator_Add(StreamUpdator *rep, MonoObject *component) { rep->add(component); }
+void StreamUpdator_Add(StreamUpdator *rep, Schema *schema, MonoObject *gameobject) { rep->add(schema, gameobject); }
 void StreamUpdator_OnLoad(StreamUpdator *rep) { rep->onLoad(); }
 void StreamUpdator_OnUnload(StreamUpdator *rep) { rep->onUnload(); }
 void StreamUpdator_AsyncUpdate(StreamUpdator *rep, double *time) { rep->asyncUpdate(*time); }
@@ -191,12 +222,11 @@ void IUpdator::asyncUpdate(Time time) {}
 void IUpdator::update(Time time) {}
 
 
-XformUpdator::XformUpdator(StreamUpdator *parent, Xform *xf, MonoObject *component)
-    : super(parent, mComponent(component).getGameObject())
+XformUpdator::XformUpdator(StreamUpdator *parent, Xform *xf, mGameObject go)
+    : super(parent, go)
     , m_schema(xf)
-    , m_component(component)
 {
-    m_mtrans = m_go.getComponent<mTransform>();
+    m_mtrans = m_go.getOrAddComponent<mTransform>();
 }
 
 XformUpdator::~XformUpdator()
@@ -220,12 +250,11 @@ void XformUpdator::update(Time time)
 }
 
 
-CameraUpdator::CameraUpdator(StreamUpdator *parent, Camera *cam, MonoObject *component)
-    : super(parent, m_schema, component)
+CameraUpdator::CameraUpdator(StreamUpdator *parent, Camera *cam, mGameObject go)
+    : super(parent, m_schema, go)
     , m_schema(cam)
-    , m_component(component)
 {
-    m_mcamera = m_go.getComponent<mCamera>();
+    m_mcamera = m_go.getOrAddComponent<mCamera>();
 }
 
 CameraUpdator::~CameraUpdator()
@@ -252,9 +281,18 @@ void CameraUpdator::update(Time time)
 }
 
 
-MeshUpdator::MeshBuffer::MeshBuffer(MonoObject *mmesh)
-    : m_mmesh(mmesh)
+MeshUpdator::MeshBuffer::MeshBuffer(MeshUpdator *parent, mGameObject go)
 {
+    m_parent = parent;
+    m_go = go;
+
+    m_mfilter = m_go.getOrAddComponent<mMeshFilter>();
+    m_mrenderer = m_go.getOrAddComponent<mMeshRenderer>();
+    m_mmesh = m_mfilter.getSharedMesh();
+    if (!m_mmesh) {
+        m_mmesh = mMesh::New();
+        m_mfilter.setSharedMesh(m_mmesh);
+    }
 }
 
 MeshUpdator::MeshBuffer::~MeshBuffer()
@@ -267,6 +305,7 @@ void MeshUpdator::MeshBuffer::kickVBUpdateTask()
     if (!m_hcommand) {
         m_hcommand = usdi::VertexCommandManager::getInstance().createCommand();
     }
+    // todo
 }
 
 void MeshUpdator::MeshBuffer::releaseMonoArrays(UpdateFlags flags, const MeshData &data, int split)
@@ -345,12 +384,25 @@ void MeshUpdator::MeshBuffer::copyDataToMonoMesh(UpdateFlags flags)
     }
 }
 
-MeshUpdator::MeshUpdator(StreamUpdator *parent, Mesh *mesh, MonoObject *component)
-    : super(parent, m_schema, component)
+MeshUpdator::MeshUpdator(StreamUpdator *parent, Mesh *mesh, mGameObject go)
+    : super(parent, m_schema, go)
     , m_schema(mesh)
-    , m_component(component)
 {
     m_summary = mesh->getSummary();
+
+    m_buffers.emplace_back(new MeshBuffer(this, go));
+
+    // gather existing submeshes
+    for (int i = 0; ; ++i) {
+        char name[128];
+        sprintf(name, "Submesh [%d]", i);
+        if (auto c = m_mtrans.findChild(name)) {
+            m_buffers.emplace_back(new MeshBuffer(this, c.getGameObject()));
+        }
+        else {
+            break;
+        }
+    }
 }
 
 MeshUpdator::~MeshUpdator()
@@ -391,16 +443,25 @@ void MeshUpdator::update(Time time)
 {
     super::update(time);
     if (m_schema->needsUpdate()) {
+
+        // create submesh objects if needed
+        while (m_buffers.size() < m_data.num_splits) {
+            char name[128];
+            sprintf(name, "Submesh [%d]", (int)m_buffers.size()-1);
+            auto go = mGameObject::New(name);
+            go.getComponent<mTransform>().setParent(m_mtrans);
+            m_buffers.emplace_back(new MeshBuffer(this, go));
+        }
+
         // todo
     }
     ++m_frame;
 }
 
 
-PointsUpdator::PointsUpdator(StreamUpdator *parent, Points *points, MonoObject *component)
-    : super(parent, m_schema, component)
+PointsUpdator::PointsUpdator(StreamUpdator *parent, Points *points, mGameObject go)
+    : super(parent, m_schema, go)
     , m_schema(points)
-    , m_component(component)
 {
 }
 

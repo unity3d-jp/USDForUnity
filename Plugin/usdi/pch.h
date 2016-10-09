@@ -38,6 +38,7 @@
 #include <cstdarg>
 #include <cmath>
 #include <cctype>
+#include <type_traits>
 #include <experimental/filesystem>
 
 #include "pxr/usd/usd/modelAPI.h"

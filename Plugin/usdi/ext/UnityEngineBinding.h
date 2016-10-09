@@ -53,10 +53,6 @@ public:
 
 // mono class bindings
 
-extern MonoMethod *MM_usdiMesh_usdiAllocateChildMeshes;
-
-extern int MF_usdiElement_m_schema;
-
 
 class mInt32;
 class mIntPtr;
@@ -82,6 +78,9 @@ public:
     MonoObject* get() const;
     operator bool() const;
 
+    void setName(const char *name);
+    std::string getName();
+
     MonoObject* mcall(MonoMethod *mm);
     MonoObject* mcall(MonoMethod *mm, void *a0);
     MonoObject* mcall(MonoMethod *mm, void *a0, void *a1);
@@ -89,6 +88,26 @@ public:
 
 protected:
     MonoObject *m_rep;
+};
+
+
+class mMesh : public mObject
+{
+    typedef mObject super;
+public:
+    static mMesh New();
+
+    mMesh(MonoObject *mo = nullptr);
+    void setVertices(MonoArray *v);
+    void setNormals(MonoArray *v);
+    void setUV(MonoArray *v);
+    void setIndices(MonoArray *v, int topology = 0, int submesh = 0);
+    void uploadMeshData(bool fix);
+    void setBounds(const AABB& v);
+
+    static bool hasNativeBufferAPI();
+    void* getNativeVertexBufferPtr(int nth);
+    void* getNativeIndexBufferPtr();
 };
 
 
@@ -117,9 +136,6 @@ typedef mObject super;
 public:
     mComponent(MonoObject *component = nullptr);
     mGameObject getGameObject();
-
-protected:
-    MonoObject *m_component;
 };
 
 
@@ -127,13 +143,12 @@ class mTransform : public mComponent
 {
 typedef mComponent super;
 public:
-    static MonoClass* getMonoClass();
-
     mTransform(MonoObject *component = nullptr);
     void setLocalPosition(const float3& v);
     void setLocalRotation(const quatf& v);
     void setLocalScale(const float3& v);
     void setParent(mTransform parent);
+    mTransform findChild(const char *name);
 };
 
 
@@ -154,6 +169,8 @@ class mMeshFilter : public mComponent
 typedef mComponent super;
 public:
     mMeshFilter(MonoObject *component = nullptr);
+    mMesh getSharedMesh();
+    void setSharedMesh(mMesh v);
 };
 
 
@@ -167,27 +184,9 @@ public:
 
 class mLight : public mComponent
 {
-    typedef mComponent super;
+typedef mComponent super;
 public:
     mLight(MonoObject *component = nullptr);
-};
-
-
-class mMesh : public mObject
-{
-typedef mObject super;
-public:
-    mMesh(MonoObject *mo = nullptr);
-    void setVertices(MonoArray *v);
-    void setNormals(MonoArray *v);
-    void setUV(MonoArray *v);
-    void setIndices(MonoArray *v, int topology = 0, int submesh = 0);
-    void uploadMeshData(bool fix);
-    void setBounds(const AABB& v);
-
-    static bool hasNativeBufferAPI();
-    void* getNativeVertexBufferPtr(int nth);
-    void* getNativeIndexBufferPtr();
 };
 
 } // namespace usdi

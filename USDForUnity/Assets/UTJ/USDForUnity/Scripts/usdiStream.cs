@@ -145,7 +145,7 @@ namespace UTJ
             return elem;
         }
 
-        void usdiCreateNodeRecursive(Transform parent, usdi.Schema schema, Action<usdiElement> node_handler)
+        void usdiCreateNodeRecursive(Transform parent, usdi.Schema schema, Action<usdiElement, usdi.Schema> node_handler)
         {
             if(!schema) { return; }
 
@@ -154,7 +154,7 @@ namespace UTJ
             {
                 elem.stream = this;
                 elem.usdiOnLoad(schema);
-                node_handler(elem);
+                node_handler(elem, schema);
             }
 
             var trans = elem == null ? parent : elem.GetComponent<Transform>();
@@ -197,9 +197,9 @@ namespace UTJ
 
             m_updator = new usdiStreamUpdator(m_ctx, this);
             usdiCreateNodeRecursive(GetComponent<Transform>(), usdi.usdiGetRoot(m_ctx),
-                (e) => {
+                (e, schema) => {
                     m_elements.Add(e);
-                    m_updator.Add(e);
+                    m_updator.Add(schema, e.gameObject);
                 });
             m_updator.OnLoad();
 

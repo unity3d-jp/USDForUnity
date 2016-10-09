@@ -33,6 +33,12 @@ public:
     virtual void        updateSample(Time t);
     virtual void        invalidateSample();
 
+    template<class Body>
+    void each(const Body& body)
+    {
+        for (auto& c : m_children) { body(c); }
+    }
+
 
 public: // for internal use
     void addChild(Schema *child);

@@ -30,12 +30,13 @@ public:
         bool directVBUpdate = true;
     };
 
-    StreamUpdator();
+    StreamUpdator(Context *ctx, MonoObject *component);
     ~StreamUpdator();
     void setConfig(const Config& conf);
     const Config& getConfig() const;
 
-    void add(MonoObject *component);
+    void createNodeRecursive();
+    void add(Schema *schema, mGameObject go);
 
     void onLoad();
     void onUnload();
@@ -43,18 +44,23 @@ public:
     void update(Time time);
 
 private:
+    mTransform createNode(Schema *schema, mTransform parent);
+
     typedef std::unique_ptr<IUpdator> ChildPtr;
     typedef std::vector<ChildPtr> Children;
 
     Config m_config;
     Children m_children;
     tbb::task_group m_tasks;
+
+    Context *m_ctx;
+    MonoObject *m_component;
 };
 
-StreamUpdator* StreamUpdator_Ctor();
+StreamUpdator* StreamUpdator_Ctor(Context *ctx, MonoObject *component);
 void StreamUpdator_Dtor(StreamUpdator *rep);
 void StreamUpdator_SetConfig(StreamUpdator *rep, StreamUpdator::Config *config);
-void StreamUpdator_Add(StreamUpdator *rep, MonoObject *component);
+void StreamUpdator_Add(StreamUpdator *rep, Schema *schema, MonoObject *gameobject);
 void StreamUpdator_OnLoad(StreamUpdator *rep);
 void StreamUpdator_OnUnload(StreamUpdator *rep);
 void StreamUpdator_AsyncUpdate(StreamUpdator *rep, double *time);
@@ -82,15 +88,15 @@ class XformUpdator : public IUpdator
 {
 typedef IUpdator super;
 public:
-    XformUpdator(StreamUpdator *parent, Xform *xf, MonoObject *component);
+    XformUpdator(StreamUpdator *parent, Xform *xf, mGameObject go);
     ~XformUpdator() override;
     void asyncUpdate(Time time) override;
     void update(Time time) override;
 
 private:
     Xform       *m_schema;
-    MonoObject  *m_component;
     XformData   m_data;
+protected:
     mTransform  m_mtrans;
 };
 
@@ -99,14 +105,13 @@ class CameraUpdator : public XformUpdator
 {
 typedef XformUpdator super;
 public:
-    CameraUpdator(StreamUpdator *parent, Camera *cam, MonoObject *component);
+    CameraUpdator(StreamUpdator *parent, Camera *cam, mGameObject go);
     ~CameraUpdator() override;
     void asyncUpdate(Time time) override;
     void update(Time time) override;
 
 private:
     Camera      *m_schema;
-    MonoObject  *m_component;
     CameraData  m_data;
     mCamera     m_mcamera;
 };
@@ -131,7 +136,7 @@ public:
     class MeshBuffer
     {
     public:
-        MeshBuffer(MonoObject *mmesh);
+        MeshBuffer(MeshUpdator *parent, mGameObject go);
         ~MeshBuffer();
 
         // async
@@ -148,7 +153,12 @@ public:
         void copyDataToMonoMesh(UpdateFlags flags);
 
     private:
+        MeshUpdator *m_parent;
+        mGameObject m_go;
+        mMeshFilter m_mfilter;
+        mMeshRenderer m_mrenderer;
         mMesh m_mmesh;
+
         MArray m_mvertices;
         MArray m_mnormals;
         MArray m_muv;
@@ -162,20 +172,19 @@ public:
     typedef std::vector<BufferPtr> Buffers;
     typedef std::vector<SubmeshData> Splits;
 
-    MeshUpdator(StreamUpdator *parent, Mesh *mesh, MonoObject *component);
+    MeshUpdator(StreamUpdator *parent, Mesh *mesh, mGameObject go);
     ~MeshUpdator() override;
     void asyncUpdate(Time time) override;
     void update(Time time) override;
 
 private:
-    Mesh        *m_schema;
-    MonoObject  *m_component;
-    MeshData    m_data, m_data_prev;
-    MeshSummary m_summary;
-    Splits      m_splits;
-    Buffers     m_buffers;
-    UpdateFlags m_uflags = { 0 };
-    int         m_frame = 0;
+    Mesh            *m_schema;
+    MeshData        m_data, m_data_prev;
+    MeshSummary     m_summary;
+    Splits          m_splits;
+    Buffers         m_buffers;
+    UpdateFlags     m_uflags = { 0 };
+    int             m_frame = 0;
 };
 
 
@@ -183,14 +192,13 @@ class PointsUpdator : public XformUpdator
 {
 typedef XformUpdator super;
 public:
-    PointsUpdator(StreamUpdator *parent, Points *cam, MonoObject *component);
+    PointsUpdator(StreamUpdator *parent, Points *cam, mGameObject go);
     ~PointsUpdator() override;
     void asyncUpdate(Time time) override;
     void update(Time time) override;
 
 private:
     Points      *m_schema;
-    MonoObject  *m_component;
     PointsData  m_data, m_data_prev;
 };
 

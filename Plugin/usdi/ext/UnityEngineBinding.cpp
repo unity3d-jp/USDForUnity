@@ -60,6 +60,8 @@ static MonoClass *MC_usdiCamera;
 static MonoClass *MC_usdiMesh;
 static MonoClass *MC_usdiPoints;
 
+static MonoMethod *MM_Object_set_name;
+static MonoMethod *MM_Object_get_name;
 static MonoMethod *MM_GameObject_ctor;
 static MonoMethod *MM_GameObject_SetActive;
 static MonoMethod *MM_GameObject_GetComponent;
@@ -79,13 +81,16 @@ static MonoMethod *MM_Transform_set_localPosition;
 static MonoMethod *MM_Transform_set_localRotation;
 static MonoMethod *MM_Transform_set_localScale;
 static MonoMethod *MM_Transform_SetParent;
+static MonoMethod *MM_Transform_FindChild;
 static MonoMethod *MM_Camera_set_nearClipPlane;
 static MonoMethod *MM_Camera_set_farClipPlane;
 static MonoMethod *MM_Camera_set_fieldOfView;
 static MonoMethod *MM_Camera_set_aspect;
+static MonoMethod *MM_MeshFilter_get_sharedMesh;
 static MonoMethod *MM_MeshFilter_set_sharedMesh;
 static MonoMethod *MM_Light_set_color;
 static MonoMethod *MM_Light_set_intensity;
+static MonoMethod *MM_Mesh_ctor;
 static MonoMethod *MM_Mesh_set_vertices;
 static MonoMethod *MM_Mesh_set_normals;
 static MonoMethod *MM_Mesh_set_uv;
@@ -94,9 +99,7 @@ static MonoMethod *MM_Mesh_SetIndices;
 static MonoMethod *MM_Mesh_UploadMeshData;
 static MonoMethod *MM_Mesh_GetNativeVertexBufferPtr;
 static MonoMethod *MM_Mesh_GetNativeIndexBufferPtr;
-static MonoMethod *MM_usdiMesh_usdiAllocateChildMeshes;
 
-int MF_usdiElement_m_schema;
 
 static MonoDomain *g_mdomain;
 
@@ -145,7 +148,6 @@ void ClearInternalMethodsCache()
     MM_Mesh_UploadMeshData = nullptr;
     MM_Mesh_GetNativeVertexBufferPtr = nullptr;
     MM_Mesh_GetNativeIndexBufferPtr = nullptr;
-    MM_usdiMesh_usdiAllocateChildMeshes = nullptr;
 }
 
 
@@ -269,6 +271,9 @@ void InitializeInternalMethods()
 
         MC("UnityEngine", Mesh);
 
+        MM(Object, set_name, 1);
+        MM(Object, get_name, 0);
+
         MCtor(GameObject, 1);
         MM(GameObject, SetActive, 1);
         MM(GameObject, GetComponent, 0);
@@ -290,17 +295,20 @@ void InitializeInternalMethods()
         MM(Transform, set_localRotation, 1);
         MM(Transform, set_localScale, 1);
         MM(Transform, SetParent, 1);
+        MM(Transform, FindChild, 1);
 
         MM(Camera, set_nearClipPlane, 1);
         MM(Camera, set_farClipPlane, 1);
         MM(Camera, set_fieldOfView, 1);
         MM(Camera, set_aspect, 1);
 
+        MM(MeshFilter, get_sharedMesh, 0);
         MM(MeshFilter, set_sharedMesh, 1);
 
         MM(Light, set_color, 1);
         MM(Light, set_intensity, 1);
 
+        MCtor(Mesh, 0);
         MM(Mesh, set_vertices, 1);
         MM(Mesh, set_normals, 1);
         MM(Mesh, set_uv, 1);
@@ -321,10 +329,7 @@ void InitializeInternalMethods()
         MC("UTJ", usdiCamera);
         MC("UTJ", usdiPoints);
         MC("UTJ", usdiMesh);
-        MF(usdiElement, m_schema);
-        MM(usdiMesh, usdiAllocateChildMeshes, 1);
     }
-
 
 #undef MCtor
 #undef MMI
@@ -332,7 +337,6 @@ void InitializeInternalMethods()
 #undef MM
 #undef MC
 };
-
 
 
 nObject::nObject(void *rep) : m_rep(rep) {}
@@ -366,9 +370,23 @@ void nMesh::setBounds(const AABB &v) { (self()->*NM_Mesh_SetBounds)(v); }
 
 
 
+#define mThisClass GetMonoClass<std::remove_reference<decltype(*this)>::type>()
+#ifdef usdiDebug
+    #define mTypeCheck() assert(!m_rep || mono_object_get_class(m_rep) == mThisClass)
+#else
+    #define mTypeCheck()
+#endif
+
+inline MonoString* ToMString(const char *s) { return mono_string_new(g_mdomain, s); }
+inline std::string ToCString(MonoString *s) { return mono_string_to_utf8(s); }
+
+
 mObject::mObject(MonoObject *rep) : m_rep(rep) {}
 MonoObject* mObject::get() const { return m_rep; }
 mObject::operator bool() const { return m_rep != nullptr; }
+
+void mObject::setName(const char *name) { MCall(m_rep, MM_Object_set_name, ToMString(name)); }
+std::string mObject::getName() { return ToCString((MonoString*)MCall(m_rep, MM_Object_get_name)); }
 
 MonoObject* mObject::mcall(MonoMethod *mm) { return MCall(m_rep, mm); }
 MonoObject* mObject::mcall(MonoMethod *mm, void *a0) { return MCall(m_rep, mm, a0); }
@@ -376,16 +394,37 @@ MonoObject* mObject::mcall(MonoMethod *mm, void *a0, void *a1) { return MCall(m_
 MonoObject* mObject::mcall(MonoMethod *mm, void *a0, void *a1, void *a2) { return MCall(m_rep, mm, a0, a1, a2); }
 
 
+mMesh mMesh::New()
+{
+    MonoObject *mo = mono_object_new(g_mdomain, GetMonoClass<mMesh>());
+    MCall(mo, MM_Mesh_ctor);
+    return mo;
+}
+
+mMesh::mMesh(MonoObject *mo) : super(mo) { mTypeCheck(); }
+void mMesh::setVertices(MonoArray *v) { mcall(MM_Mesh_set_vertices, v); }
+void mMesh::setNormals(MonoArray *v) { mcall(MM_Mesh_set_normals, v); }
+void mMesh::setUV(MonoArray *v) { mcall(MM_Mesh_set_uv, v); }
+void mMesh::setIndices(MonoArray *v, int topology, int submesh) { mcall(MM_Mesh_SetIndices, &topology, &submesh); }
+void mMesh::uploadMeshData(bool _fix) { int fix = _fix; mcall(MM_Mesh_UploadMeshData, &fix); }
+void mMesh::setBounds(const AABB& v) { mcall(MM_Mesh_set_bounds, (void*)&v); }
+
+bool mMesh::hasNativeBufferAPI() { return MM_Mesh_GetNativeIndexBufferPtr && MM_Mesh_GetNativeVertexBufferPtr; }
+void* mMesh::getNativeVertexBufferPtr(int nth) { return Unbox<void*>(mcall(MM_Mesh_GetNativeVertexBufferPtr, &nth)); }
+void* mMesh::getNativeIndexBufferPtr() { return Unbox<void*>(mcall(MM_Mesh_GetNativeIndexBufferPtr)); }
+
+
 mGameObject mGameObject::New(const char *name)
 {
     MonoObject *mo = mono_object_new(g_mdomain, GetMonoClass<mGameObject>());
-    MCall(mo, MM_GameObject_ctor, mono_string_new(g_mdomain, name));
+    MCall(mo, MM_GameObject_ctor, ToMString(name));
     return mo;
 }
 
 mGameObject::mGameObject(MonoObject *game_object)
     : super(game_object)
 {
+    mTypeCheck();
 }
 
 void mGameObject::SetActive(bool v) { int a = (int)v; mcall(MM_GameObject_SetActive, &a); }
@@ -408,40 +447,29 @@ mGameObject mComponent::getGameObject()
 }
 
 
-MonoClass* mTransform::getMonoClass() { return MC_Transform; }
-mTransform::mTransform(MonoObject *component) : super(component) {}
+mTransform::mTransform(MonoObject *component) : super(component) { mTypeCheck(); }
 void mTransform::setLocalPosition(const float3& v) { mcall(MM_Transform_set_localPosition, (void*)&v); }
 void mTransform::setLocalRotation(const quatf& v) { mcall(MM_Transform_set_localRotation, (void*)&v); }
 void mTransform::setLocalScale(const float3& v) { mcall(MM_Transform_set_localScale, (void*)&v); }
 void mTransform::setParent(mTransform parent) { mcall(MM_Transform_SetParent, parent.get()); }
+mTransform mTransform::findChild(const char *name) { return mcall(MM_Transform_FindChild, mono_string_new(g_mdomain, name)); }
 
 
-mCamera::mCamera(MonoObject *component) : super(component) {}
+mCamera::mCamera(MonoObject *component) : super(component) { mTypeCheck(); }
 void mCamera::setNearClipPlane(float v) { mcall(MM_Camera_set_nearClipPlane, &v); }
 void mCamera::setFarClipPlane(float v) { mcall(MM_Camera_set_farClipPlane, &v); }
 void mCamera::setFieldOfView(float v) { mcall(MM_Camera_set_fieldOfView, &v); }
 void mCamera::setAspect(float v) { mcall(MM_Camera_set_aspect, &v); }
 
 
-mMeshFilter::mMeshFilter(MonoObject *component) : super(component) {}
+mMeshFilter::mMeshFilter(MonoObject *component) : super(component) { mTypeCheck(); }
+mMesh mMeshFilter::getSharedMesh() { return mcall(MM_MeshFilter_get_sharedMesh); }
+void mMeshFilter::setSharedMesh(mMesh v) { mcall(MM_MeshFilter_set_sharedMesh, v.get()); }
 
 
-mMeshRenderer::mMeshRenderer(MonoObject *component) : super(component) {}
+mMeshRenderer::mMeshRenderer(MonoObject *component) : super(component) { mTypeCheck(); }
 
 
-mLight::mLight(MonoObject *component) : super(component) {}
-
-
-mMesh::mMesh(MonoObject *mo) : super(mo) {}
-void mMesh::setVertices(MonoArray *v) { mcall(MM_Mesh_set_vertices, v); }
-void mMesh::setNormals(MonoArray *v) { mcall(MM_Mesh_set_normals, v); }
-void mMesh::setUV(MonoArray *v) { mcall(MM_Mesh_set_uv, v); }
-void mMesh::setIndices(MonoArray *v, int topology, int submesh) { mcall(MM_Mesh_SetIndices, &topology, &submesh); }
-void mMesh::uploadMeshData(bool _fix) { int fix=_fix; mcall(MM_Mesh_UploadMeshData, &fix); }
-void mMesh::setBounds(const AABB& v) { mcall(MM_Mesh_set_bounds, (void*)&v); }
-
-bool mMesh::hasNativeBufferAPI() { return MM_Mesh_GetNativeIndexBufferPtr && MM_Mesh_GetNativeVertexBufferPtr; }
-void* mMesh::getNativeVertexBufferPtr(int nth) { return Unbox<void*>(mcall(MM_Mesh_GetNativeVertexBufferPtr, &nth)); }
-void* mMesh::getNativeIndexBufferPtr() { return Unbox<void*>(mcall(MM_Mesh_GetNativeIndexBufferPtr)); }
+mLight::mLight(MonoObject *component) : super(component) { mTypeCheck(); }
 
 } // namespace usdi
