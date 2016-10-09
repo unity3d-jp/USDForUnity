@@ -24,22 +24,51 @@ void            (*mono_jit_thread_attach)(MonoDomain *domain);
 void            (*mono_add_internal_call)(const char *name, void *method);
 MonoObject*     (*mono_runtime_invoke)(MonoMethod *method, MonoObject *obj, void **params, void **exc);
 
+char*           (*mono_type_get_name)(MonoType *type);
+MonoClass*      (*mono_type_get_class)(MonoType *type);
+
 MonoClass*      (*mono_class_from_name)(MonoImage *image, const char *namespaceString, const char *classnameString);
+const char*     (*mono_class_get_name)(MonoClass *klass);
 MonoType*       (*mono_class_get_type)(MonoClass *klass);
 MonoMethod*     (*mono_class_get_method_from_name)(MonoClass *klass, const char *name, int param_count);
 MonoClassField* (*mono_class_get_field_from_name)(MonoClass *klass, const char *name);
 MonoMethod*     (*mono_class_inflate_generic_method)(MonoMethod *method, MonoGenericContext *context);
+gboolean        (*mono_class_is_subclass_of)(MonoClass *klass, MonoClass *klassc, gboolean check_interfaces);
+MonoProperty*   (*mono_class_get_property_from_name)(MonoClass *klass, const char *name);
+MonoMethod*     (*mono_class_get_methods)(MonoClass* klass, gpointer *iter);
+MonoClassField* (*mono_class_get_fields)(MonoClass* klass, gpointer *iter);
+MonoProperty*   (*mono_class_get_properties)(MonoClass* klass, gpointer *iter);
+MonoClass*      (*mono_class_get_parent)(MonoClass *klass);
 
+const char*     (*mono_method_get_name)(MonoMethod *method);
+MonoMethodSignature* (*mono_method_signature)(MonoMethod *method);
+guint32         (*mono_signature_get_param_count)(MonoMethodSignature *sig);
+MonoType*       (*mono_signature_get_params)(MonoMethodSignature *sig, gpointer *iter);
+
+const char*     (*mono_field_get_name)(MonoClassField *field);
+MonoType*       (*mono_field_get_type)(MonoClassField *field);
+MonoClass*      (*mono_field_get_parent)(MonoClassField *field);
+guint32         (*mono_field_get_flags)(MonoClassField *field);
 guint32         (*mono_field_get_offset)(MonoClassField *field);
+const char*     (*mono_field_get_data)(MonoClassField *field);
+void            (*mono_field_get_value)(MonoObject *obj, MonoClassField *field, void *value);
+void            (*mono_field_set_value)(MonoObject *obj, MonoClassField *field, void *value);
+
+const char*     (*mono_property_get_name)(MonoProperty *prop);
+MonoMethod*     (*mono_property_get_set_method)(MonoProperty *prop);
+MonoMethod*     (*mono_property_get_get_method)(MonoProperty *prop);
+MonoClass*      (*mono_property_get_parent)(MonoProperty *prop);
 
 MonoObject*     (*mono_object_new)(MonoDomain *domain, MonoClass *klass);
 MonoClass*      (*mono_object_get_class)(MonoObject *obj);
+MonoDomain*     (*mono_object_get_domain)(MonoObject *obj);
 gpointer        (*mono_object_unbox)(MonoObject *obj);
 
 MonoArray*      (*mono_array_new)(MonoDomain *domain, MonoClass *eclass, mono_array_size_t n);
 char*           (*mono_array_addr_with_size)(MonoArray *array, int size, uintptr_t idx);
 
 MonoString*     (*mono_string_new)(MonoDomain *domain, const char *text);
+MonoString*     (*mono_string_new_utf16)(MonoDomain *domain, const guint16 *text, gint32 len);
 MonoString*     (*mono_string_new_len)(MonoDomain *domain, const char *text, guint length);
 char*           (*mono_string_to_utf8)(MonoString *string_obj);
 gunichar2*      (*mono_string_to_utf16)(MonoString *string_obj);
@@ -92,22 +121,51 @@ void ImportMonoFunctions()
         Import(mono_add_internal_call);
         Import(mono_runtime_invoke);
 
+        Import(mono_type_get_name);
+        Import(mono_type_get_class);
+
         Import(mono_class_from_name);
+        Import(mono_class_get_name);
         Import(mono_class_get_type);
         Import(mono_class_get_method_from_name);
         Import(mono_class_get_field_from_name);
         Import(mono_class_inflate_generic_method);
+        Import(mono_class_is_subclass_of);
+        Import(mono_class_get_property_from_name);
+        Import(mono_class_get_methods);
+        Import(mono_class_get_fields);
+        Import(mono_class_get_properties);
+        Import(mono_class_get_parent);
 
+        Import(mono_method_get_name);
+        Import(mono_method_signature);
+        Import(mono_signature_get_param_count);
+        Import(mono_signature_get_params);
+
+        Import(mono_field_get_name);
+        Import(mono_field_get_type);
+        Import(mono_field_get_parent);
+        Import(mono_field_get_flags);
         Import(mono_field_get_offset);
+        Import(mono_field_get_data);
+        Import(mono_field_get_value);
+        Import(mono_field_set_value);
+
+        Import(mono_property_get_name);
+        Import(mono_property_get_set_method);
+        Import(mono_property_get_get_method);
+        Import(mono_property_get_parent);
 
         Import(mono_object_new);
         Import(mono_object_get_class);
+        Import(mono_object_get_domain);
         Import(mono_object_unbox);
 
         Import(mono_array_new);
         Import(mono_array_addr_with_size);
 
         Import(mono_string_new);
+        Import(mono_string_new_utf16);
         Import(mono_string_new_len);
         Import(mono_string_to_utf8);
         Import(mono_string_to_utf16);

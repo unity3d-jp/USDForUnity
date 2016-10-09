@@ -15,6 +15,7 @@
     <ClInclude Include="usdi\etc\HandleBasedVector.h" />
     <ClInclude Include="usdi\etc\Hook.h" />
     <ClInclude Include="usdi\etc\Mono.h" />
+    <ClInclude Include="usdi\etc\MonoWrapper.h" />
     <ClInclude Include="usdi\etc\RawVector.h" />
     <ClInclude Include="usdi\ext\UnityEngineBinding.h" />
     <ClInclude Include="usdi\ext\usdiComponentUpdator.h" />
@@ -39,6 +40,7 @@
     <ClCompile Include="usdi\etc\FixedAllocator.cpp" />
     <ClCompile Include="usdi\etc\Hook.cpp" />
     <ClCompile Include="usdi\etc\Mono.cpp" />
+    <ClCompile Include="usdi\etc\MonoWrapper.cpp" />
     <ClCompile Include="usdi\ext\UnityEngineBinding.cpp" />
     <ClCompile Include="usdi\ext\usdiComponentUpdator.cpp" />
     <ClCompile Include="usdi\ext\usdiExt.cpp" />

@@ -64,6 +64,9 @@
     <ClCompile Include="usdi\ext\usdiComponentUpdator.cpp">
       <Filter>usdi\ext</Filter>
     </ClCompile>
+    <ClCompile Include="usdi\etc\MonoWrapper.cpp">
+      <Filter>usdi\etc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="usdi\pch.h">
@@ -131,6 +134,9 @@
     </ClInclude>
     <ClInclude Include="usdi\ext\usdiComponentUpdator.h">
       <Filter>usdi\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="usdi\etc\MonoWrapper.h">
+      <Filter>usdi\etc</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
