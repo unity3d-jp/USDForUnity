@@ -13,38 +13,38 @@
 
 namespace usdi {
 
-void(*TransformAssignXform)(MonoObject *transform_, MonoObject *data_);
-void(*TransformNotfyChange)(MonoObject *transform_);
-void(*MeshAssignBounds)(MonoObject *mesh_, MonoObject *center_, MonoObject  *extents_);
+void(*TransformAssignXform)(MonoObject *trans, XformData *data);
+void(*TransformNotfyChange)(MonoObject *trans);
+void(*MeshAssignBounds)(MonoObject *mesh, float3 *center, float3  *extents);
 
 
-void TransformAssignXformCpp(MonoObject *transform_, MonoObject *data_)
+void TransformAssignXformCpp(MonoObject *trans, XformData *data_)
 {
-    auto& data = UnboxValue<XformData&>(data_);
-    auto trans = Unbox<nTransform>(transform_);
+    auto& data = *data_;
+    auto t = mObject(trans).unbox<nTransform>();
 
     if ((data.flags & (int)XformData::Flags::UpdatedPosition) != 0)
     {
         __m128 v = _mm_loadu_ps((float*)&data.position);
-        trans.setLocalPositionWithoutNotification(v);
+        t.setLocalPositionWithoutNotification(v);
     }
     if ((data.flags & (int)XformData::Flags::UpdatedRotation) != 0)
     {
         __m128 v = _mm_loadu_ps((float*)&data.rotation);
-        trans.setLocalRotationWithoutNotification(v);
+        t.setLocalRotationWithoutNotification(v);
     }
     if ((data.flags & (int)XformData::Flags::UpdatedScale) != 0)
     {
         __m128 v = _mm_loadu_ps((float*)&data.scale);
-        trans.setLocalScaleWithoutNotification(v);
+        t.setLocalScaleWithoutNotification(v);
     }
 }
 
-void TransformAssignXformMono(MonoObject *transform, MonoObject *data_)
+void TransformAssignXformMono(MonoObject *trans, XformData *data_)
 {
-    auto& data = UnboxValue<XformData&>(data_);
+    auto& data = *data_;
+    auto t = mTransform(trans);
 
-    mTransform t(transform);
     if ((data.flags & (int)XformData::Flags::UpdatedPosition) != 0)
     {
         t.setLocalPosition(data.position);
@@ -60,37 +60,32 @@ void TransformAssignXformMono(MonoObject *transform, MonoObject *data_)
 }
 
 
-void TransformNotfyChangeCpp(MonoObject *transform_)
+void TransformNotfyChangeCpp(MonoObject *trans)
 {
-    auto trans = Unbox<nTransform>(transform_);
-    trans.sendTransformChanged(0x1 | 0x2 | 0x8);
+    auto t = mObject(trans).unbox<nTransform>();
+    t.sendTransformChanged(0x1 | 0x2 | 0x8);
 }
 
-void TransformNotfyChangeMono(MonoObject *transform)
+void TransformNotfyChangeMono(MonoObject *trans)
 {
     // nothing to do
 }
 
 
 
-void MeshAssignBoundsCpp(MonoObject *mesh_, MonoObject *center_, MonoObject  *extents_)
+void MeshAssignBoundsCpp(MonoObject *mesh, float3 *center, float3  *extents)
 {
-    auto& center = UnboxValue<float3&>(center_);
-    auto& extents = UnboxValue<float3&>(extents_);
-    AABB bounds = { center, extents };
+    AABB bounds = { *center, *extents };
 
-    auto mesh = Unbox<nMesh>(mesh_);
-    mesh.setBounds(bounds);
+    auto m = mObject(mesh).unbox<nMesh>();
+    m.setBounds(bounds);
 }
 
-void MeshAssignBoundsMono(MonoObject *mesh, MonoObject *center_, MonoObject  *extents_)
+void MeshAssignBoundsMono(MonoObject *mesh, float3 *center, float3  *extents)
 {
-    auto& center = UnboxValue<float3&>(center_);
-    auto& extents = UnboxValue<float3&>(extents_);
-    AABB bounds = { center, extents };
+    AABB bounds = { *center, *extents };
 
-    mMesh m(mesh);
-    m.setBounds(bounds);
+    mMesh(mesh).setBounds(bounds);
 }
 
 
@@ -245,7 +240,7 @@ void XformUpdator::asyncUpdate(Time time)
 void XformUpdator::update(Time time)
 {
     if (m_schema->needsUpdate() && m_mtrans) {
-        TransformAssignXform(m_mtrans.get(), (MonoObject*)&m_data);
+        TransformAssignXform(m_mtrans.get(), &m_data);
     }
 }
 
@@ -310,10 +305,10 @@ void MeshUpdator::MeshBuffer::kickVBUpdateTask()
 
 void MeshUpdator::MeshBuffer::releaseMonoArrays(UpdateFlags flags, const MeshData &data, int split)
 {
-    m_mvertices.release();
-    m_mnormals.release();
-    m_muv.release();
-    m_mindices.release();
+    m_mvertices.clear();
+    m_mnormals.clear();
+    m_muv.clear();
+    m_mindices.clear();
 }
 
 void MeshUpdator::MeshBuffer::copyMeshDataToMonoArrays(UpdateFlags flags, const MeshData &data)
@@ -321,19 +316,19 @@ void MeshUpdator::MeshBuffer::copyMeshDataToMonoArrays(UpdateFlags flags, const 
     auto& src = data;
 
     if (flags.points) {
-        m_mvertices.allocate<mVector3>(src.num_points);
+        m_mvertices.resize(src.num_points);
         memcpy(m_mvertices.data(), src.points, sizeof(float3)*src.num_points);
     }
     if (flags.normals) {
-        m_mnormals.allocate<mVector3>(src.num_points);
+        m_mnormals.resize(src.num_points);
         memcpy(m_mnormals.data(), src.normals, sizeof(float3)*src.num_points);
     }
     if (flags.uv) {
-        m_muv.allocate<mVector2>(src.num_points);
+        m_muv.resize(src.num_points);
         memcpy(m_muv.data(), src.uvs, sizeof(float2)*src.num_points);
     }
     if (flags.indices) {
-        m_mindices.allocate<mInt32>(src.num_indices_triangulated);
+        m_mindices.resize(src.num_indices_triangulated);
         memcpy(m_mindices.data(), src.indices_triangulated, sizeof(int)*src.num_indices_triangulated);
     }
 }
@@ -343,19 +338,19 @@ void MeshUpdator::MeshBuffer::copySubmeshDataToMonoArrays(UpdateFlags flags, con
     auto& src = data.splits[split];
 
     if (flags.points) {
-        m_mvertices.allocate<mVector3>(src.num_points);
+        m_mvertices.resize(src.num_points);
         memcpy(m_mvertices.data(), src.points, sizeof(float3)*src.num_points);
     }
     if (flags.normals) {
-        m_mnormals.allocate<mVector3>(src.num_points);
+        m_mnormals.resize(src.num_points);
         memcpy(m_mnormals.data(), src.normals, sizeof(float3)*src.num_points);
     }
     if (flags.uv) {
-        m_muv.allocate<mVector2>(src.num_points);
+        m_muv.resize(src.num_points);
         memcpy(m_muv.data(), src.uvs, sizeof(float2)*src.num_points);
     }
     if (flags.indices) {
-        m_mindices.allocate<mInt32>(src.num_points);
+        m_mindices.resize(src.num_points);
         memcpy(m_mindices.data(), src.indices, sizeof(int)*src.num_points);
     }
 }
@@ -376,7 +371,7 @@ void MeshUpdator::MeshBuffer::copyDataToMonoMesh(UpdateFlags flags)
     }
 
     if(flags.indices) {
-        m_mmesh.setIndices(m_mindices.get());
+        m_mmesh.SetTriangles(m_mindices.get());
     }
 
     {

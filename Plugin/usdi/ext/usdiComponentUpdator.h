@@ -1,22 +1,21 @@
 #pragma once
 
-#include "etc/Mono.h"
 #include "usdiExt.h"
 #include "UnityEngineBinding.h"
 
 namespace usdi {
 
-extern void (*TransformAssignXform)(MonoObject *transform_, MonoObject *data_);
-void TransformAssignXformCpp(MonoObject *transform_, MonoObject *data_);
-void TransformAssignXformMono(MonoObject *transform_, MonoObject *data_);
+extern void (*TransformAssignXform)(MonoObject *trans, XformData *data);
+void TransformAssignXformCpp(MonoObject *trans, XformData *data);
+void TransformAssignXformMono(MonoObject *trans, XformData *data);
 
-extern void (*TransformNotfyChange)(MonoObject *transform_);
-void TransformNotfyChangeCpp(MonoObject *transform_);
-void TransformNotfyChangeMono(MonoObject *transform_);
+extern void (*TransformNotfyChange)(MonoObject *trans);
+void TransformNotfyChangeCpp(MonoObject *trans);
+void TransformNotfyChangeMono(MonoObject *trans);
 
-extern void (*MeshAssignBounds)(MonoObject *mesh_, MonoObject *center_, MonoObject  *extents_);
-void MeshAssignBoundsCpp(MonoObject *mesh_, MonoObject *center_, MonoObject  *extents_);
-void MeshAssignBoundsMono(MonoObject *mesh_, MonoObject *center_, MonoObject  *extents_);
+extern void (*MeshAssignBounds)(MonoObject *mesh, float3 *center, float3  *extents);
+void MeshAssignBoundsCpp(MonoObject *mesh, float3 *center, float3  *extents);
+void MeshAssignBoundsMono(MonoObject *mesh, float3 *center, float3  *extents);
 
 
 class IUpdator;
@@ -159,10 +158,10 @@ public:
         mMeshRenderer m_mrenderer;
         mMesh m_mmesh;
 
-        MArray m_mvertices;
-        MArray m_mnormals;
-        MArray m_muv;
-        MArray m_mindices;
+        mTArray<mVector3> m_mvertices;
+        mTArray<mVector3> m_mnormals;
+        mTArray<mVector2> m_muv;
+        mTArray<int> m_mindices;
         void *m_vb = nullptr;
         void *m_ib = nullptr;
         Handle m_hcommand = 0;

@@ -23,10 +23,12 @@ class mString;
 typedef char        mchar8;
 typedef uint16_t    mchar16;
 
+typedef std::initializer_list<const char*> mTypenames;
+
 template<class T> const char*   mTypename();
 template<class T> const char*   mTypenameRef();
 template<class T> const char*   mTypenameArray();
-template<class T> mClass        mTypeinfo();
+template<class T> mClass&       mTypeof();
 
 
 class mImage
@@ -52,6 +54,8 @@ public:
     mType(MonoType *m) : mtype(m) {}
     operator MonoType*() const { return mtype; }
     operator bool() const { return mtype != nullptr; }
+    bool operator==(mType other) const { return mtype == other.mtype; }
+    bool operator!=(mType other) const { return mtype != other.mtype; }
     const char* getName() const;
     mClass getClass() const;
 
@@ -104,10 +108,12 @@ public:
     mMethod(MonoMethod *mm) : mmethod(mm) {}
     operator MonoMethod*() const { return mmethod; }
     operator bool() const { return mmethod != nullptr; }
+    bool operator==(mMethod other) const { return mmethod == other.mmethod; }
+    bool operator!=(mMethod other) const { return mmethod != other.mmethod; }
     const char* getName() const;
 
     mObject invoke(mObject obj, void **args=nullptr);
-    mMethod instantiate(mClass *params, int num_params, void *& allocated_space);
+    mMethod instantiate(mClass *params, int num_params, void *& mem);
 
 public:
     MonoMethod *mmethod;
@@ -120,13 +126,16 @@ public:
     mClass(MonoClass *mc) : mclass(mc) {}
     operator MonoClass*() const { return mclass; }
     operator bool() const { return mclass != nullptr; }
+    bool operator==(mClass other) const { return mclass == other.mclass; }
+    bool operator!=(mClass other) const { return mclass != other.mclass; }
+
     const char* getName() const;
     mType     getType() const;
     mClass    getParent() const;
 
     mField    findField(const char *name) const;
     mProperty findProperty(const char *name) const;
-    mMethod   findMethod(const char *name, int num_args=-1, const char **arg_typenames=nullptr) const; // num_args: -1=don't care
+    mMethod   findMethod(const char *name, int num_args = -1, mTypenames typenames = {}) const; // num_args: -1=don't care
 
     // enumerate members (not include parent class members)
     void eachFields(const std::function<void(mField&)> &f);
@@ -140,7 +149,7 @@ public:
     //mClass insantiate(mClass *template_params);
 
     template<class T>
-    T as() const { return mIsSubclassOf(*this, mTypeinfo<T>()) ? T(*this) : nullptr; }
+    T as() const { return mIsSubclassOf(*this, mTypeof<T>()) ? T(*this) : nullptr; }
 
 public:
     MonoClass *mclass;
@@ -151,20 +160,31 @@ class mObject
 {
 public:
     static mObject New(mClass mclass);
+    template<class T> static T New() { return T(New(mTypeof<T>())); }
 
     mObject(MonoObject *o) : mobj(o) {}
-    operator MonoObject*() const { return mobj; }
+    operator MonoObject*() const { return get(); }
     operator bool() const { return mobj != nullptr; }
+    bool operator==(mObject other) const { return mobj == other.mobj; }
+    bool operator!=(mObject other) const { return mobj != other.mobj; }
 
+    MonoObject* get() const;
     MonoDomain* getDomain() const;
-    mClass    getClass() const;
-    void*       data();
-    template<class T> T& getValue(int offset=0) { return *(T*)((size_t)data()+offset); }
+    mClass      getClass() const;
+    void*       unbox();
+    void*       unboxValue();
+    template<class T> T& unbox() { return *(T*)unbox(); }
+    template<class T> T& unboxValue() { return *(T*)unboxValue(); }
 
     // redirect to mClass
     mField    findField(const char *name) const;
     mProperty findProperty(const char *name) const;
-    mMethod   findMethod(const char *name, int num_args = -1, const char **arg_typenames = nullptr) const;
+    mMethod   findMethod(const char *name, int num_args = -1, mTypenames typenames = {}) const;
+
+    mObject invoke(mMethod method);
+    mObject invoke(mMethod method, void *a0);
+    mObject invoke(mMethod method, void *a0, void *a1);
+    mObject invoke(mMethod method, void *a0, void *a1, void *a2);
 
 public:
     MonoObject *mobj;
@@ -189,16 +209,18 @@ class mArray : public mObject
 public:
     static mArray New(mClass klass, size_t size);
 
-    mArray(MonoObject *o) : mObject(o) {}
     mArray(MonoArray *o) : mObject((MonoObject*)o) {}
+
+    MonoArray* get() { return (MonoArray*)mobj; }
 
     size_t size() const;
     void* data();
 };
 
 template<class T>
-class mTArray
+class mTArray : public mArray
 {
+typedef mArray super;
 public:
     typedef T           value_type;
     typedef T&          reference;
@@ -208,40 +230,45 @@ public:
     typedef T*          iterator;
     typedef const T*    const_iterator;
 
-    mTArray(mObject cs_array) : m_array(cs_array), m_size(m_array.size()), m_data((pointer)m_array.data()) {}
-    mTArray(mArray cs_array) : m_array(cs_array), m_size(m_array.size()), m_data((pointer)m_array.data()) {}
-    size_t          size() const { return m_size; }
-    pointer         data() { return m_data; }
-    reference       operator[](size_t i)        { return m_data[i]; }
-    const_reference operator[](size_t i) const  { return m_data[i]; }
-    iterator        begin()                     { return m_data; }
-    iterator        end()                       { return m_data + m_size; }
-    const_iterator  begin() const               { return m_data; }
-    const_iterator  end() const                 { return m_data + m_size; }
-    operator bool() const { return m_array; }
-    operator mArray() const { return m_array; }
+    static mTArray New(size_t size) { return mTArray<T>(super::New(mTypeof<T>(), size).get()); }
 
-private:
-    mArray m_array;
-    size_t m_size;
-    pointer m_data;
+    mTArray(MonoArray *o = nullptr) : super(o) {}
+    pointer         data() { return (pointer)super::data(); }
+    reference       operator[](size_t i)        { return data()[i]; }
+    const_reference operator[](size_t i) const  { return data()[i]; }
+    iterator        begin()                     { return data(); }
+    iterator        end()                       { return data() + size(); }
+    const_iterator  begin() const               { return data(); }
+    const_iterator  end() const                 { return data() + size(); }
+
+    void resize(size_t s)
+    {
+        if (size() == s) { return; }
+        *this = New(s);
+    }
+
+    void clear()
+    {
+    }
 };
 
 
 template<class T> const char* mTypename()       { return T::getTypename(); }
 template<class T> const char* mTypenameRef()    { return T::getTypenameRef(); }
 template<class T> const char* mTypenameArray()  { return T::getTypenameArray(); }
-template<class T> mClass      mTypeinfo()       { return T::getClass(); }
+template<class T> mClass&     mTypeof()         { return T::getClass(); }
 
-template<> mClass       mTypeinfo<bool>();
+template<> mClass&      mTypeof<void*>();
+template<> const char*  mTypename<void*>();
+template<> mClass&      mTypeof<bool>();
 template<> const char*  mTypename<bool>();
-template<> mClass       mTypeinfo<uint8_t>();
+template<> mClass&      mTypeof<uint8_t>();
 template<> const char*  mTypename<uint8_t>();
-template<> mClass       mTypeinfo<int>();
+template<> mClass&      mTypeof<int>();
 template<> const char*  mTypename<int>();
-template<> mClass       mTypeinfo<float>();
+template<> mClass&      mTypeof<float>();
 template<> const char*  mTypename<float>();
-template<> mClass       mTypeinfo<mString>();
+template<> mClass&      mTypeof<mString>();
 template<> const char*  mTypename<mString>();
 
 bool     mIsSubclassOf(mClass parent, mClass child);
@@ -254,8 +281,15 @@ void mRebindCache();
 
 
 
+class mICache
+{
+public:
+    virtual ~mICache() {}
+    virtual void clear() = 0;
+    virtual void rebind() = 0;
+};
 
-class mCachedImage : public mImage
+class mCachedImage : public mImage, public mICache
 {
 public:
     mCachedImage(const char *name);
@@ -266,79 +300,93 @@ private:
     const char *m_name;
 };
 
-class mCachedClass : public mClass
+class mCachedClass : public mClass, public mICache
 {
 public:
     typedef MonoClass* (*Initializer)();
 
-    mCachedClass(mCachedImage& img, const char *ns, const char *name);
+    mCachedClass(mImage& img, const char *ns, const char *name);
     mCachedClass(Initializer init);
-    void clear();
-    void rebind();
+    void clear() override;
+    void rebind() override;
 
 private:
-    mCachedImage *m_image = nullptr;
+    mImage *m_image = nullptr;
     const char *m_name = nullptr;
     const char *m_namespace = nullptr;
     Initializer m_initializer = nullptr;
 };
 
-class mCachedField : public mField
+class mCachedField : public mField, public mICache
 {
 public:
-    mCachedField(mCachedClass& mclass, const char *name);
-    void clear();
-    void rebind();
+    mCachedField(mClass& mclass, const char *name);
+    void clear() override;
+    void rebind() override;
 
 private:
-    mCachedClass *m_class;
+    mClass *m_class;
     const char *m_name;
 };
 
-class mCachedMethod : public mMethod
+class mCachedMethod : public mMethod, public mICache
 {
 public:
-    mCachedMethod(mCachedClass& mclass, const char *name, int nargs=-1, const char **arg_types=nullptr);
-    void clear();
-    void rebind();
+    mCachedMethod(mClass& mclass, const char *name, int nargs = -1, mTypenames arg_types = {});
+    void clear() override;
+    void rebind() override;
 
 private:
-    mCachedClass *m_class;
+    mClass *m_class;
     const char *m_name;
     int m_num_args;
-    const char **m_arg_typenames;
+    mTypenames m_argtypes;
 };
 
-class mCachedProperty : public mProperty
+class mCachedIMethod : public mMethod, public mICache
 {
 public:
-    mCachedProperty(mCachedClass& mclass, const char *name);
-    void clear();
-    void rebind();
+    mCachedIMethod(mMethod& generics, mClass& param);
+    template<class T> mCachedIMethod(mMethod& generics) { mCachedIMethod(generics, mTypeof<T>()); }
+    void clear() override;
+    void rebind() override;
 
 private:
-    mCachedClass *m_class;
+    mMethod *m_generics;
+    mClass *m_param;
+    void *m_mem = nullptr;
+};
+
+class mCachedProperty : public mProperty, public mICache
+{
+public:
+    mCachedProperty(mClass& mclass, const char *name);
+    void clear() override;
+    void rebind() override;
+
+private:
+    mClass *m_class;
     const char *m_name;
 };
 
 
-#define mDeclImage(Name) mImage mGet##Name##Image();
-#define mImplImage(Name) mImage mGet##Name##Image() { static mCachedImage s_image(Name); return s_image; }
+#define mDeclImage(Name) mImage& mGet##Name##Image();
+#define mDefImage(Name, AssemblyName) mImage& mGet##Name##Image() { static mCachedImage s_image(AssemblyName); return s_image; }
 
 #define mDeclTraits()\
-    static mClass getClass();\
+    static mClass& getClass();\
     static const char* getTypename();\
     static const char* getTypenameRef();\
     static const char* getTypenameArray();
 
 
-#define mImplTraits(Img, Namespace, Type)\
-    mClass Type::getClass()\
+#define mDefTraits(Img, Namespace, MonoTypename, Type)\
+    mClass& Type::getClass()\
     {\
-        static mCachedClass s_class(mGet##Img##Image(), Namespace, Type);\
+        static mCachedClass s_class(mGet##Img##Image(), Namespace, MonoTypename);\
         return s_class;\
     }\
-    const char* Type::getTypename() { return #Namespace "." #Type; }\
-    const char* Type::getTypenameRef() { return #Namespace "." #Type "&"; }\
-    const char* Type::getTypenameArray() { return #Namespace "." #Type "[]"; }
+    const char* Type::getTypename() { return #Namespace "." MonoTypename; }\
+    const char* Type::getTypenameRef() { return #Namespace "." MonoTypename "&"; }\
+    const char* Type::getTypenameArray() { return #Namespace "." MonoTypename "[]"; }
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "etc/Mono.h"
+#include "etc/MonoWrapper.h"
 
 namespace usdi {
 
@@ -54,13 +54,11 @@ public:
 // mono class bindings
 
 
-class mInt32;
-class mIntPtr;
 class mVector2;
 class mVector3;
 class mQuaternion;
 
-class mObject;
+class mUObject;
 class mGameObject;
 class mComponent;
 class mTransform;
@@ -71,12 +69,35 @@ class mLight;
 class mMesh;
 
 
-class mObject
+mDeclImage(UnityEngine);
+
+
+class mVector2
 {
 public:
-    mObject(MonoObject *rep = nullptr);
-    MonoObject* get() const;
-    operator bool() const;
+    mDeclTraits();
+};
+
+class mVector3
+{
+public:
+    mDeclTraits();
+};
+
+class mQuaternion
+{
+public:
+    mDeclTraits();
+};
+
+
+class mUObject : public mObject
+{
+typedef mObject super;
+public:
+    mDeclTraits();
+
+    mUObject(MonoObject *rep = nullptr);
 
     void setName(const char *name);
     std::string getName();
@@ -91,17 +112,18 @@ protected:
 };
 
 
-class mMesh : public mObject
+class mMesh : public mUObject
 {
-    typedef mObject super;
+typedef mUObject super;
 public:
+    mDeclTraits();
     static mMesh New();
 
     mMesh(MonoObject *mo = nullptr);
     void setVertices(MonoArray *v);
     void setNormals(MonoArray *v);
     void setUV(MonoArray *v);
-    void setIndices(MonoArray *v, int topology = 0, int submesh = 0);
+    void SetTriangles(MonoArray *v);
     void uploadMeshData(bool fix);
     void setBounds(const AABB& v);
 
@@ -111,10 +133,11 @@ public:
 };
 
 
-class mGameObject : public mObject
+class mGameObject : public mUObject
 {
-typedef mObject super;
+typedef mUObject super;
 public:
+    mDeclTraits();
     static mGameObject New(const char *name = "");
 
     mGameObject(MonoObject *game_object = nullptr);
@@ -127,13 +150,18 @@ public:
         if (auto c = getComponent<Component>()) { return c; }
         return addComponent<Component>();
     }
+
+private:
+    mMethod& getGetComponent();
+    mMethod& getAddComponent();
 };
 
 
-class mComponent : public mObject
+class mComponent : public mUObject
 {
-typedef mObject super;
+typedef mUObject super;
 public:
+    mDeclTraits();
     mComponent(MonoObject *component = nullptr);
     mGameObject getGameObject();
 };
@@ -143,6 +171,7 @@ class mTransform : public mComponent
 {
 typedef mComponent super;
 public:
+    mDeclTraits();
     mTransform(MonoObject *component = nullptr);
     void setLocalPosition(const float3& v);
     void setLocalRotation(const quatf& v);
@@ -156,6 +185,7 @@ class mCamera : public mComponent
 {
 typedef mComponent super;
 public:
+    mDeclTraits();
     mCamera(MonoObject *component = nullptr);
     void setNearClipPlane(float v);
     void setFarClipPlane(float v);
@@ -168,6 +198,7 @@ class mMeshFilter : public mComponent
 {
 typedef mComponent super;
 public:
+    mDeclTraits();
     mMeshFilter(MonoObject *component = nullptr);
     mMesh getSharedMesh();
     void setSharedMesh(mMesh v);
@@ -178,6 +209,7 @@ class mMeshRenderer : public mComponent
 {
 typedef mComponent super;
 public:
+    mDeclTraits();
     mMeshRenderer(MonoObject *component = nullptr);
 };
 
@@ -186,6 +218,7 @@ class mLight : public mComponent
 {
 typedef mComponent super;
 public:
+    mDeclTraits();
     mLight(MonoObject *component = nullptr);
 };
 

@@ -110,10 +110,12 @@ mObject mMethod::invoke(mObject obj, void **args)
     return mono_runtime_invoke(mmethod, obj, args, nullptr);
 }
 
-mMethod mMethod::instantiate(mClass *params, int num_params, void *& allocated_space)
+mMethod mMethod::instantiate(mClass *params, int num_params, void *& mem)
 {
-    allocated_space = malloc(sizeof(MonoGenericInst)+(sizeof(void*)*(num_params-1)));
-    MonoGenericInst *gi = (MonoGenericInst*)allocated_space;
+    if (mem == nullptr) {
+        mem = malloc(sizeof(MonoGenericInst) + (sizeof(void*)*(num_params - 1)));
+    }
+    MonoGenericInst *gi = (MonoGenericInst*)mem;
     gi->id = -1;
     gi->is_open = 0; // must be zero!
     gi->type_argc = num_params;
@@ -149,10 +151,10 @@ mProperty mClass::findProperty(const char *name) const
     return mono_class_get_property_from_name(mclass, name);
 }
 
-mMethod mClass::findMethod(const char *name, int num_args, const char **arg_typenames) const
+mMethod mClass::findMethod(const char *name, int num_args, mTypenames typenames) const
 {
     if (!mclass) { return nullptr; }
-    if (arg_typenames != nullptr) {
+    if (typenames.size() > 0) {
         for (mClass mc = mclass; mc; mc = mc.getParent()) {
             MonoMethod *method;
             gpointer iter = nullptr;
@@ -165,9 +167,9 @@ mMethod mClass::findMethod(const char *name, int num_args, const char **arg_type
                 MonoType *mt = nullptr;
                 gpointer iter = nullptr;
                 bool match = true;
-                for (int ia = 0; ia < num_args; ++ia) {
+                for (const char *tn : typenames) {
                     mt = mono_signature_get_params(sig, &iter);
-                    if (strcmp(mono_type_get_name(mt), arg_typenames[ia]) != 0) {
+                    if (strcmp(mono_type_get_name(mt), tn) != 0) {
                         match = false;
                         break;
                     }
@@ -281,10 +283,9 @@ MonoDomain* mObject::getDomain() const
 }
 
 
-void* mObject::data()
-{
-    return mono_object_unbox(mobj);
-}
+MonoObject* mObject::get() const { return mobj; }
+void* mObject::unbox() { return mobj + 1; }
+void* mObject::unboxValue() { return mobj; }
 
 mField mObject::findField(const char *name) const
 {
@@ -294,9 +295,29 @@ mProperty mObject::findProperty(const char *name) const
 {
     return getClass().findProperty(name);
 }
-mMethod mObject::findMethod(const char *name, int num_args, const char **arg_typenames) const
+mMethod mObject::findMethod(const char *name, int num_args, mTypenames typenames) const
 {
-    return getClass().findMethod(name, num_args, arg_typenames);
+    return getClass().findMethod(name, num_args, typenames);
+}
+
+mObject mObject::invoke(mMethod method)
+{
+    return mono_runtime_invoke(method, mobj, nullptr, nullptr);
+}
+mObject mObject::invoke(mMethod method, void *a0)
+{
+    void *args[] = { a0 };
+    return mono_runtime_invoke(method, mobj, args, nullptr);
+}
+mObject mObject::invoke(mMethod method, void *a0, void *a1)
+{
+    void *args[] = { a0, a1 };
+    return mono_runtime_invoke(method, mobj, args, nullptr);
+}
+mObject mObject::invoke(mMethod method, void *a0, void *a1, void *a2)
+{
+    void *args[] = { a0, a1, a2 };
+    return mono_runtime_invoke(method, mobj, args, nullptr);
 }
 
 
@@ -396,9 +417,10 @@ void* mArray::data()
 
 
 #define DefBuiltinType(Type, ClassGetter, Typename)\
-    template<> mClass mTypeinfo<Type>() { static mCachedClass s_class(ClassGetter); return s_class; }\
+    template<> mClass& mTypeof<Type>() { static mCachedClass s_class(ClassGetter); return s_class; }\
     template<> const char* mTypename<Type>() { return Typename; }
 
+DefBuiltinType(void*, mono_get_intptr_class, "System.IntPtr");
 DefBuiltinType(bool, mono_get_boolean_class, "System.Boolean");
 DefBuiltinType(uint8_t, mono_get_byte_class, "System.Byte");
 DefBuiltinType(int, mono_get_int32_class, "System.Int32");
@@ -419,31 +441,27 @@ void mUnpin(uint32_t handle)
 
 
 
-static struct mCaches
+static std::vector<mICache*> g_mCaches;
+static std::mutex g_mCache_mutex;
+
+static void mRegisterCache(mICache *v)
 {
-    std::vector<mCachedImage*>    images;
-    std::vector<mCachedClass*>    classes;
-    std::vector<mCachedField*>    fields;
-    std::vector<mCachedMethod*>   methods;
-    std::vector<mCachedProperty*> properties;
-} g_mCaches;
+    v->rebind();
+
+    std::unique_lock<std::mutex> l(g_mCache_mutex);
+    g_mCaches.push_back(v);
+}
 
 void mClearCache()
 {
-    for (auto o : g_mCaches.images) { o->mimage = nullptr; }
-    for (auto o : g_mCaches.classes) { o->mclass = nullptr; }
-    for (auto o : g_mCaches.methods) { o->mmethod = nullptr; }
-    for (auto o : g_mCaches.properties) { o->mproperty = nullptr; }
-    for (auto o : g_mCaches.fields) { o->mfield = nullptr; }
+    std::unique_lock<std::mutex> l(g_mCache_mutex);
+    for (auto o : g_mCaches) { o->clear(); }
 }
 
 void mRebindCache()
 {
-    for (auto o : g_mCaches.images) { o->rebind(); }
-    for (auto o : g_mCaches.classes) { o->rebind(); }
-    for (auto o : g_mCaches.methods) { o->rebind(); }
-    for (auto o : g_mCaches.properties) { o->rebind(); }
-    for (auto o : g_mCaches.fields) { o->rebind(); }
+    std::unique_lock<std::mutex> l(g_mCache_mutex);
+    for (auto o : g_mCaches) { o->rebind(); }
 }
 
 
@@ -451,20 +469,19 @@ mCachedImage::mCachedImage(const char *name)
     : mImage(nullptr)
     , m_name(name)
 {
-    rebind();
-    g_mCaches.images.push_back(this);
+    mRegisterCache(this);
 }
 void mCachedImage::clear() { mimage = nullptr; }
 void mCachedImage::rebind() { mimage = findImage(m_name); }
 
 
-mCachedClass::mCachedClass(mCachedImage& img, const char *ns, const char *name)
+mCachedClass::mCachedClass(mImage& img, const char *ns, const char *name)
     : mClass(nullptr)
     , m_image(&img)
     , m_namespace(ns)
     , m_name(name)
 {
-    g_mCaches.classes.push_back(this);
+    mRegisterCache(this);
 }
 
 mCachedClass::mCachedClass(Initializer init)
@@ -477,39 +494,45 @@ void mCachedClass::clear() { mclass = nullptr; }
 void mCachedClass::rebind() { mclass = m_initializer ? m_initializer() : m_image->findClass(m_namespace, m_name); }
 
 
-mCachedField::mCachedField(mCachedClass& mclass, const char *name)
+mCachedField::mCachedField(mClass& mclass, const char *name)
     : mField(nullptr)
     , m_class(&mclass)
     , m_name(name)
 {
-    rebind();
-    g_mCaches.fields.push_back(this);
+    mRegisterCache(this);
 }
 void mCachedField::clear() { mfield = nullptr; }
 void mCachedField::rebind() { mfield = m_class->findField(m_name); }
 
 
-mCachedMethod::mCachedMethod(mCachedClass& mclass, const char *name, int nargs, const char **arg_types)
+mCachedMethod::mCachedMethod(mClass& mclass, const char *name, int nargs, mTypenames arg_types)
     : mMethod(nullptr)
     , m_class(&mclass)
     , m_name(name)
     , m_num_args(nargs)
-    , m_arg_typenames(arg_types)
+    , m_argtypes(arg_types)
 {
-    rebind();
-    g_mCaches.methods.push_back(this);
+    mRegisterCache(this);
 }
 void mCachedMethod::clear() { mmethod = nullptr; }
-void mCachedMethod::rebind() { mmethod = m_class->findMethod(m_name, m_num_args, m_arg_typenames); }
+void mCachedMethod::rebind() { mmethod = m_class->findMethod(m_name, m_num_args, m_argtypes); }
 
+mCachedIMethod::mCachedIMethod(mMethod& generics, mClass& param)
+    : mMethod(nullptr)
+    , m_generics(&generics)
+    , m_param(&param)
+{
+    mRegisterCache(this);
+}
+void mCachedIMethod::clear() { mmethod = nullptr; }
+void mCachedIMethod::rebind() { mmethod = m_generics->instantiate(m_param, 1, m_mem); }
 
-mCachedProperty::mCachedProperty(mCachedClass& mclass, const char *name)
+mCachedProperty::mCachedProperty(mClass& mclass, const char *name)
     : mProperty(nullptr)
     , m_class(&mclass)
     , m_name(name)
 {
-    rebind();
-    g_mCaches.properties.push_back(this);
+    mRegisterCache(this);
 }
 void mCachedProperty::clear() { mproperty = nullptr; }
 void mCachedProperty::rebind() { mproperty = m_class->findProperty(m_name); }
