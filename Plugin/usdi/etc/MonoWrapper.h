@@ -166,7 +166,7 @@ public:
     static mObject New(mClass mclass);
     template<class T> static T New() { return T(New(mTypeof<T>()).get()); }
 
-    mObject(MonoObject *o) : m_rep(o) {}
+    mObject(MonoObject *o = nullptr) : m_rep(o) {}
     operator bool() const { return !isNull(); }
     bool operator==(mObject other) const { return m_rep == other.m_rep; }
     bool operator!=(mObject other) const { return m_rep != other.m_rep; }
@@ -201,7 +201,7 @@ public:
     static mString New(const mchar8 *str, int len = -1);
     static mString New(const mchar16 *str, int len = -1);
 
-    mString(MonoObject *o) : mObject(o) {}
+    mString(MonoObject *o = nullptr) : mObject(o) {}
     mString(MonoString *o) : mObject((MonoObject*)o) {}
     MonoString* get() { return (MonoString*)m_rep; }
 
@@ -210,12 +210,13 @@ public:
     const mchar16*   toUTF16();
 };
 
+
 class mArray : public mObject
 {
 public:
     static mArray New(mClass klass, size_t size);
 
-    mArray(MonoArray *o) : mObject((MonoObject*)o) {}
+    mArray(MonoArray *o = nullptr) : mObject((MonoObject*)o) {}
     MonoArray* get() { return (MonoArray*)m_rep; }
 
     size_t size() const;
@@ -258,6 +259,66 @@ public:
 };
 
 
+// gc control
+
+uint32_t mPin(mObject obj);
+void     mUnpin(uint32_t handle);
+
+template<class T>
+class mUnique
+{
+typedef T super;
+public:
+    mUnique() : m_obj(nullptr) {}
+    mUnique(T obj) : m_obj(nullptr) { reset(obj); }
+    ~mUnique() { reset(); }
+
+    mUnique(const mUnique& v) = delete;
+    mUnique& operator=(const mUnique& v) = delete;
+
+    operator bool() const       { return (bool)m_obj; }
+    T&       operator*()        { return m_obj; }
+    const T& operator*() const  { return m_obj; }
+    T*       operator->()       { return &m_obj; }
+    const T* operator->() const { return &m_obj; }
+    T&       get()              { return m_obj; }
+    const T& get() const        { return m_obj; }
+
+    void reset()
+    {
+        unpin();
+        m_obj = T(nullptr);
+    }
+
+    void reset(T obj)
+    {
+        unpin();
+        m_obj = obj;
+        pin();
+    }
+
+protected:
+    void pin()
+    {
+        if (m_obj && !m_gch)
+        {
+            m_gch = mPin(m_obj);
+        }
+    }
+
+    void unpin()
+    {
+        if (m_gch) {
+            mUnpin(m_obj);
+            m_gch = 0;
+        }
+    }
+
+protected:
+    T m_obj;
+    uint32_t m_gch = 0;
+};
+
 template<class T> mClass&     mTypeof() { return T::_getClass(); }
 template<class T> const char* mTypename() { return T::_getTypename(); }
 template<class T> const char* mTypenameRef() { return T::_getTypenameRef(); }
@@ -275,8 +336,6 @@ DeclBuiltinType(mString);
 
 bool     mIsSubclassOf(mClass parent, mClass child);
 void     mAddMethod(const char *name, void *addr);
-uint32_t mPin(mObject obj);
-void     mUnpin(uint32_t handle);
 
 mImage& mCreateImageCache(const char *name);
 mClass& mCreateClassCache(mImage& img, const char *ns, const char *name);

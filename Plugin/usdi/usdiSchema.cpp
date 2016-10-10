@@ -144,6 +144,10 @@ void Schema::invalidateSample()
     m_time_prev = usdiInvalidTime;
 }
 
+void Schema::setUserData(void *v) { m_userdata = v; }
+void* Schema::getUserData() const { return m_userdata; }
+
+
 const ImportConfig& Schema::getImportConfig() const { return m_ctx->getImportConfig(); }
 const ExportConfig& Schema::getExportConfig() const { return m_ctx->getExportConfig(); }
 

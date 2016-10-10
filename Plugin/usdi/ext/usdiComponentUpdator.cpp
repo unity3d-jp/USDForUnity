@@ -143,7 +143,8 @@ void StreamUpdator::constructUnityScene()
 
 void StreamUpdator::add(Schema *schema, mGameObject go)
 {
-    if (!schema) { return; }
+    if (!schema || schema->getUserData()==this) { return; }
+    schema->setUserData(this);
 
     if (auto *cam = dynamic_cast<Camera*>(schema)) {
         m_children.emplace_back(new CameraUpdator(this, cam, go));
@@ -325,10 +326,10 @@ void MeshUpdator::MeshBuffer::kickVBUpdateTask()
 
 void MeshUpdator::MeshBuffer::releaseMonoArrays(UpdateFlags flags, const MeshData &data, int split)
 {
-    m_mvertices.clear();
-    m_mnormals.clear();
-    m_muv.clear();
-    m_mindices.clear();
+    m_mvertices->clear();
+    m_mnormals->clear();
+    m_muv->clear();
+    m_mindices->clear();
 }
 
 void MeshUpdator::MeshBuffer::copyMeshDataToMonoArrays(UpdateFlags flags, const MeshData &data)
@@ -336,20 +337,20 @@ void MeshUpdator::MeshBuffer::copyMeshDataToMonoArrays(UpdateFlags flags, const 
     auto& src = data;
 
     if (flags.points) {
-        m_mvertices.resize(src.num_points);
-        memcpy(m_mvertices.data(), src.points, sizeof(float3)*src.num_points);
+        m_mvertices->resize(src.num_points);
+        memcpy(m_mvertices->data(), src.points, sizeof(float3)*src.num_points);
     }
     if (flags.normals) {
-        m_mnormals.resize(src.num_points);
-        memcpy(m_mnormals.data(), src.normals, sizeof(float3)*src.num_points);
+        m_mnormals->resize(src.num_points);
+        memcpy(m_mnormals->data(), src.normals, sizeof(float3)*src.num_points);
     }
     if (flags.uv) {
-        m_muv.resize(src.num_points);
-        memcpy(m_muv.data(), src.uvs, sizeof(float2)*src.num_points);
+        m_muv->resize(src.num_points);
+        memcpy(m_muv->data(), src.uvs, sizeof(float2)*src.num_points);
     }
     if (flags.indices) {
-        m_mindices.resize(src.num_indices_triangulated);
-        memcpy(m_mindices.data(), src.indices_triangulated, sizeof(int)*src.num_indices_triangulated);
+        m_mindices->resize(src.num_indices_triangulated);
+        memcpy(m_mindices->data(), src.indices_triangulated, sizeof(int)*src.num_indices_triangulated);
     }
 }
 
@@ -358,20 +359,20 @@ void MeshUpdator::MeshBuffer::copySubmeshDataToMonoArrays(UpdateFlags flags, con
     auto& src = data.splits[split];
 
     if (flags.points) {
-        m_mvertices.resize(src.num_points);
-        memcpy(m_mvertices.data(), src.points, sizeof(float3)*src.num_points);
+        m_mvertices->resize(src.num_points);
+        memcpy(m_mvertices->data(), src.points, sizeof(float3)*src.num_points);
     }
     if (flags.normals) {
-        m_mnormals.resize(src.num_points);
-        memcpy(m_mnormals.data(), src.normals, sizeof(float3)*src.num_points);
+        m_mnormals->resize(src.num_points);
+        memcpy(m_mnormals->data(), src.normals, sizeof(float3)*src.num_points);
     }
     if (flags.uv) {
-        m_muv.resize(src.num_points);
-        memcpy(m_muv.data(), src.uvs, sizeof(float2)*src.num_points);
+        m_muv->resize(src.num_points);
+        memcpy(m_muv->data(), src.uvs, sizeof(float2)*src.num_points);
     }
     if (flags.indices) {
-        m_mindices.resize(src.num_points);
-        memcpy(m_mindices.data(), src.indices, sizeof(int)*src.num_points);
+        m_mindices->resize(src.num_points);
+        memcpy(m_mindices->data(), src.indices, sizeof(int)*src.num_points);
     }
 }
 
@@ -381,17 +382,17 @@ void MeshUpdator::MeshBuffer::copyDataToMonoMesh(UpdateFlags flags)
     if (flags.all == 0) { return; }
 
     if (flags.points) {
-        m_mmesh.setVertices(m_mvertices.get());
+        m_mmesh.setVertices(m_mvertices->get());
     }
     if (flags.normals) {
-        m_mmesh.setNormals(m_mnormals.get());
+        m_mmesh.setNormals(m_mnormals->get());
     }
     if (flags.uv) {
-        m_mmesh.setUV(m_muv.get());
+        m_mmesh.setUV(m_muv->get());
     }
 
     if(flags.indices) {
-        m_mmesh.SetTriangles(m_mindices.get());
+        m_mmesh.SetTriangles(m_mindices->get());
     }
 
     {

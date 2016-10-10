@@ -151,10 +151,10 @@ public:
         mMeshRenderer m_mrenderer;
         mMesh m_mmesh;
 
-        mTArray<mVector3> m_mvertices;
-        mTArray<mVector3> m_mnormals;
-        mTArray<mVector2> m_muv;
-        mTArray<int> m_mindices;
+        mUnique<mTArray<mVector3>> m_mvertices;
+        mUnique<mTArray<mVector3>> m_mnormals;
+        mUnique<mTArray<mVector2>> m_muv;
+        mUnique<mTArray<int>> m_mindices;
         void *m_vb = nullptr;
         void *m_ib = nullptr;
         Handle m_hcommand = 0;

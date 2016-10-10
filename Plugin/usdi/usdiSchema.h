@@ -33,6 +33,9 @@ public:
     virtual void        updateSample(Time t);
     virtual void        invalidateSample();
 
+    void                setUserData(void *v);
+    void*               getUserData() const;
+
     template<class Body>
     void each(const Body& body)
     {
@@ -62,6 +65,7 @@ protected:
     Time        m_time_start = usdiInvalidTime, m_time_end = usdiInvalidTime;
     Time        m_time_prev = usdiInvalidTime;
     bool        m_needs_update = true;
+    void        *m_userdata = nullptr;
 #ifdef usdiDebug
     const char *m_dbg_path = nullptr;
     const char *m_dbg_typename = nullptr;
