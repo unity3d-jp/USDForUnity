@@ -25,10 +25,10 @@ typedef uint16_t    mchar16;
 
 typedef std::initializer_list<const char*> mTypenames;
 
+template<class T> mClass&       mTypeof();
 template<class T> const char*   mTypename();
 template<class T> const char*   mTypenameRef();
 template<class T> const char*   mTypenameArray();
-template<class T> mClass&       mTypeof();
 
 
 class mImage
@@ -135,7 +135,8 @@ public:
 
     mField    findField(const char *name) const;
     mProperty findProperty(const char *name) const;
-    mMethod   findMethod(const char *name, int num_args = -1, mTypenames typenames = {}) const; // num_args: -1=don't care
+    mMethod   findMethod(const char *name, int num_args = -1) const; // num_args: -1=don't care
+    mMethod   findMethod(const char *name, mTypenames typenames) const;
 
     // enumerate members (not include parent class members)
     void eachFields(const std::function<void(mField&)> &f);
@@ -160,14 +161,14 @@ class mObject
 {
 public:
     static mObject New(mClass mclass);
-    template<class T> static T New() { return T(New(mTypeof<T>())); }
+    template<class T> static T New() { return T(New(mTypeof<T>()).get()); }
 
     mObject(MonoObject *o) : mobj(o) {}
-    operator MonoObject*() const { return get(); }
-    operator bool() const { return mobj != nullptr; }
+    operator bool() const { return !isNull(); }
     bool operator==(mObject other) const { return mobj == other.mobj; }
     bool operator!=(mObject other) const { return mobj != other.mobj; }
 
+    bool        isNull() const;
     MonoObject* get() const;
     MonoDomain* getDomain() const;
     mClass      getClass() const;
@@ -179,7 +180,8 @@ public:
     // redirect to mClass
     mField    findField(const char *name) const;
     mProperty findProperty(const char *name) const;
-    mMethod   findMethod(const char *name, int num_args = -1, mTypenames typenames = {}) const;
+    mMethod   findMethod(const char *name, int num_args = -1) const;
+    mMethod   findMethod(const char *name, mTypenames typenames) const;
 
     mObject invoke(mMethod method);
     mObject invoke(mMethod method, void *a0);
@@ -253,10 +255,10 @@ public:
 };
 
 
-template<class T> const char* mTypename()       { return T::getTypename(); }
-template<class T> const char* mTypenameRef()    { return T::getTypenameRef(); }
-template<class T> const char* mTypenameArray()  { return T::getTypenameArray(); }
-template<class T> mClass&     mTypeof()         { return T::getClass(); }
+template<class T> mClass&     mTypeof()         { return T::_getClass(); }
+template<class T> const char* mTypename()       { return T::_getTypename(); }
+template<class T> const char* mTypenameRef()    { return T::_getTypenameRef(); }
+template<class T> const char* mTypenameArray()  { return T::_getTypenameArray(); }
 
 template<> mClass&      mTypeof<void*>();
 template<> const char*  mTypename<void*>();
@@ -332,14 +334,15 @@ private:
 class mCachedMethod : public mMethod, public mICache
 {
 public:
-    mCachedMethod(mClass& mclass, const char *name, int nargs = -1, mTypenames arg_types = {});
+    mCachedMethod(mClass& mclass, const char *name, int nargs = -1);
+    mCachedMethod(mClass& mclass, const char *name, mTypenames arg_types);
     void clear() override;
     void rebind() override;
 
 private:
     mClass *m_class;
     const char *m_name;
-    int m_num_args;
+    int m_num_args = -1;
     mTypenames m_argtypes;
 };
 
@@ -374,19 +377,19 @@ private:
 #define mDefImage(Name, AssemblyName) mImage& mGet##Name##Image() { static mCachedImage s_image(AssemblyName); return s_image; }
 
 #define mDeclTraits()\
-    static mClass& getClass();\
-    static const char* getTypename();\
-    static const char* getTypenameRef();\
-    static const char* getTypenameArray();
+    static mClass& _getClass();\
+    static const char* _getTypename();\
+    static const char* _getTypenameRef();\
+    static const char* _getTypenameArray();
 
 
 #define mDefTraits(Img, Namespace, MonoTypename, Type)\
-    mClass& Type::getClass()\
+    mClass& Type::_getClass()\
     {\
         static mCachedClass s_class(mGet##Img##Image(), Namespace, MonoTypename);\
         return s_class;\
     }\
-    const char* Type::getTypename() { return #Namespace "." MonoTypename; }\
-    const char* Type::getTypenameRef() { return #Namespace "." MonoTypename "&"; }\
-    const char* Type::getTypenameArray() { return #Namespace "." MonoTypename "[]"; }
+    const char* Type::_getTypename() { return #Namespace "." MonoTypename; }\
+    const char* Type::_getTypenameRef() { return #Namespace "." MonoTypename "&"; }\
+    const char* Type::_getTypenameArray() { return #Namespace "." MonoTypename "[]"; }
 

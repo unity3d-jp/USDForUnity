@@ -101,14 +101,6 @@ public:
 
     void setName(const char *name);
     std::string getName();
-
-    MonoObject* mcall(MonoMethod *mm);
-    MonoObject* mcall(MonoMethod *mm, void *a0);
-    MonoObject* mcall(MonoMethod *mm, void *a0, void *a1);
-    MonoObject* mcall(MonoMethod *mm, void *a0, void *a1, void *a2);
-
-protected:
-    MonoObject *m_rep;
 };
 
 

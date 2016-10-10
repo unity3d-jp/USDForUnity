@@ -45,13 +45,13 @@ int mField::getOffset() const
 void mField::getValueImpl(mObject obj, void *p) const
 {
     if (!mfield) { return; }
-    mono_field_get_value(obj, mfield, p);
+    mono_field_get_value(obj.get(), mfield, p);
 }
 
 void mField::setValueImpl(mObject obj, const void *p)
 {
     if (!mfield) { return; }
-    mono_field_set_value(obj, mfield, (void*)p);
+    mono_field_set_value(obj.get(), mfield, (void*)p);
 }
 
 
@@ -107,7 +107,7 @@ const char* mMethod::getName() const
 mObject mMethod::invoke(mObject obj, void **args)
 {
     if (!mmethod) { return nullptr; }
-    return mono_runtime_invoke(mmethod, obj, args, nullptr);
+    return mono_runtime_invoke(mmethod, obj.get(), args, nullptr);
 }
 
 mMethod mMethod::instantiate(mClass *params, int num_params, void *& mem)
@@ -151,38 +151,40 @@ mProperty mClass::findProperty(const char *name) const
     return mono_class_get_property_from_name(mclass, name);
 }
 
-mMethod mClass::findMethod(const char *name, int num_args, mTypenames typenames) const
+mMethod mClass::findMethod(const char *name, int num_args) const
 {
     if (!mclass) { return nullptr; }
-    if (typenames.size() > 0) {
-        for (mClass mc = mclass; mc; mc = mc.getParent()) {
-            MonoMethod *method;
-            gpointer iter = nullptr;
-            while ((method = mono_class_get_methods(mclass, &iter))) {
-                if (strcmp(mono_method_get_name(method), name) != 0) { continue; }
-
-                MonoMethodSignature *sig = mono_method_signature(method);
-                if (mono_signature_get_param_count(sig) != num_args) { continue; }
-
-                MonoType *mt = nullptr;
-                gpointer iter = nullptr;
-                bool match = true;
-                for (const char *tn : typenames) {
-                    mt = mono_signature_get_params(sig, &iter);
-                    if (strcmp(mono_type_get_name(mt), tn) != 0) {
-                        match = false;
-                        break;
-                    }
-                }
-                if (match) { return method; }
-            }
+    for (mClass mc = mclass; mc; mc = mc.getParent()) {
+        if (MonoMethod *ret = mono_class_get_method_from_name(mc.mclass, name, num_args)) {
+            return ret;
         }
     }
-    else {
-        for (mClass mc = mclass; mc; mc = mc.getParent()) {
-            if (MonoMethod *ret = mono_class_get_method_from_name(mc.mclass, name, num_args)) {
-                return ret;
+    return nullptr;
+}
+
+mMethod mClass::findMethod(const char *name, mTypenames typenames) const
+{
+    if (!mclass) { return nullptr; }
+    for (mClass mc = mclass; mc; mc = mc.getParent()) {
+        MonoMethod *method;
+        gpointer iter = nullptr;
+        while ((method = mono_class_get_methods(mclass, &iter))) {
+            if (strcmp(mono_method_get_name(method), name) != 0) { continue; }
+
+            MonoMethodSignature *sig = mono_method_signature(method);
+            if (mono_signature_get_param_count(sig) != typenames.size()) { continue; }
+
+            MonoType *mt = nullptr;
+            gpointer iter = nullptr;
+            bool match = true;
+            for (const char *tn : typenames) {
+                mt = mono_signature_get_params(sig, &iter);
+                if (strcmp(mono_type_get_name(mt), tn) != 0) {
+                    match = false;
+                    break;
+                }
             }
+            if (match) { return method; }
         }
     }
     return nullptr;
@@ -282,6 +284,7 @@ MonoDomain* mObject::getDomain() const
     return mono_object_new(mono_domain_get(), mclass);
 }
 
+bool mObject::isNull() const { return !mobj || !*(void**)(mobj + 1); }
 
 MonoObject* mObject::get() const { return mobj; }
 void* mObject::unbox() { return mobj + 1; }
@@ -295,9 +298,13 @@ mProperty mObject::findProperty(const char *name) const
 {
     return getClass().findProperty(name);
 }
-mMethod mObject::findMethod(const char *name, int num_args, mTypenames typenames) const
+mMethod mObject::findMethod(const char *name, int num_args) const
 {
-    return getClass().findMethod(name, num_args, typenames);
+    return getClass().findMethod(name, num_args);
+}
+mMethod mObject::findMethod(const char *name, mTypenames typenames) const
+{
+    return getClass().findMethod(name, typenames);
 }
 
 mObject mObject::invoke(mMethod method)
@@ -429,7 +436,7 @@ DefBuiltinType(mString, mono_get_string_class, "System.String");
 
 uint32_t mPin(mObject obj)
 {
-    return mono_gchandle_new(obj, 1);
+    return mono_gchandle_new(obj.get(), 1);
 }
 
 void mUnpin(uint32_t handle)
@@ -491,7 +498,9 @@ mCachedClass::mCachedClass(Initializer init)
 }
 
 void mCachedClass::clear() { mclass = nullptr; }
-void mCachedClass::rebind() { mclass = m_initializer ? m_initializer() : m_image->findClass(m_namespace, m_name); }
+void mCachedClass::rebind() {
+    mclass = m_initializer ? m_initializer() : m_image->findClass(m_namespace, m_name);
+}
 
 
 mCachedField::mCachedField(mClass& mclass, const char *name)
@@ -505,17 +514,26 @@ void mCachedField::clear() { mfield = nullptr; }
 void mCachedField::rebind() { mfield = m_class->findField(m_name); }
 
 
-mCachedMethod::mCachedMethod(mClass& mclass, const char *name, int nargs, mTypenames arg_types)
+mCachedMethod::mCachedMethod(mClass& mclass, const char *name, int nargs)
     : mMethod(nullptr)
     , m_class(&mclass)
     , m_name(name)
     , m_num_args(nargs)
+{
+    mRegisterCache(this);
+}
+mCachedMethod::mCachedMethod(mClass& mclass, const char *name, mTypenames arg_types)
+    : mMethod(nullptr)
+    , m_class(&mclass)
+    , m_name(name)
     , m_argtypes(arg_types)
 {
     mRegisterCache(this);
 }
 void mCachedMethod::clear() { mmethod = nullptr; }
-void mCachedMethod::rebind() { mmethod = m_class->findMethod(m_name, m_num_args, m_argtypes); }
+void mCachedMethod::rebind() {
+    mmethod = m_argtypes.size() ? m_class->findMethod(m_name, m_argtypes) : m_class->findMethod(m_name, m_num_args);
+}
 
 mCachedIMethod::mCachedIMethod(mMethod& generics, mClass& param)
     : mMethod(nullptr)

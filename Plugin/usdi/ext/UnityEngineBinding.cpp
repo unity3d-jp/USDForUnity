@@ -123,7 +123,10 @@ void nMesh::setBounds(const AABB &v) { (self()->*NM_Mesh_SetBounds)(v); }
 
 #define mThisClass mTypeof<std::remove_reference<decltype(*this)>::type>()
 #ifdef usdiDebug
-    #define mTypeCheck() assert(!mobj || mObject(mobj).getClass() == mThisClass)
+    #define mTypeCheck() if(mobj && getClass() != mThisClass) {\
+        auto *type_name = getClass().getName();\
+        assert(getClass() == mThisClass);\
+    } 
 #else
     #define mTypeCheck()
 #endif
@@ -146,7 +149,7 @@ mUObject::mUObject(MonoObject *rep) : super(rep) {}
 void mUObject::setName(const char *name)
 {
     mBindMethod("set_name");
-    invoke(s_method, ToMString(name));
+    invoke(s_method, ToMString(name).get());
 }
 std::string mUObject::getName()
 {
@@ -186,7 +189,7 @@ void mMesh::setUV(MonoArray *v)
 }
 void mMesh::SetTriangles(MonoArray *v)
 {
-    mBindMethod("SetTriangles", 2, {"int[]", "int"});
+    mBindMethod("SetTriangles", {"System.Int32[]", "System.Int32"});
     invoke(s_method, v);
 }
 void mMesh::uploadMeshData(bool _fix)
@@ -222,9 +225,9 @@ mDefTraits(UnityEngine, "UnityEngine", "GameObject", mGameObject);
 
 mGameObject mGameObject::New(const char *name)
 {
-    mBindMethodS(mGameObject, "GetNativeIndexBufferPtr", 0);
+    mBindMethodS(mGameObject, ".ctor", 1);
     auto ret = mObject::New<mGameObject>();
-    ret.invoke(s_method, ToMString(name));
+    ret.invoke(s_method, ToMString(name).get());
     return ret;
 }
 
@@ -256,12 +259,12 @@ mMethod& mGameObject::getAddComponent()
 template<> T mGameObject::getComponent()\
 {\
     static mCachedIMethod s_method(getGetComponent(), mTypeof<T>());\
-    return T(invoke(s_method));\
+    return T(invoke(s_method).get());\
 }\
 template<> T mGameObject::addComponent()\
 {\
     static mCachedIMethod s_method(getAddComponent(), mTypeof<T>());\
-    return T(invoke(s_method));\
+    return T(invoke(s_method).get());\
 }
 Instantiate(mTransform);
 Instantiate(mCamera);
@@ -277,7 +280,7 @@ mComponent::mComponent(MonoObject *component) : super(component) {}
 mGameObject mComponent::getGameObject()
 {
     mBindMethod("get_gameObject", 0);
-    return mGameObject(invoke(s_method));
+    return mGameObject(invoke(s_method).get());
 }
 
 
@@ -303,13 +306,13 @@ void mTransform::setLocalScale(const float3& v)
 }
 void mTransform::setParent(mTransform parent)
 {
-    mBindMethod("set_SetParent", 1);
+    mBindMethod("SetParent", 1);
     invoke(s_method, parent.get());
 }
 mTransform mTransform::findChild(const char *name)
 {
     mBindMethod("FindChild", 1);
-    return mTransform(invoke(s_method, ToMString(name)));
+    return mTransform(invoke(s_method, ToMString(name).get()).get());
 }
 
 
@@ -352,7 +355,7 @@ mMeshFilter::mMeshFilter(MonoObject *component)
 mMesh mMeshFilter::getSharedMesh()
 {
     mBindMethod("get_sharedMesh", 0);
-    return mMesh(invoke(s_method));
+    return mMesh(invoke(s_method).get());
 }
 void mMeshFilter::setSharedMesh(mMesh v)
 {

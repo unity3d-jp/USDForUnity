@@ -246,7 +246,7 @@ void XformUpdator::update(Time time)
 
 
 CameraUpdator::CameraUpdator(StreamUpdator *parent, Camera *cam, mGameObject go)
-    : super(parent, m_schema, go)
+    : super(parent, cam, go)
     , m_schema(cam)
 {
     m_mcamera = m_go.getOrAddComponent<mCamera>();
@@ -380,7 +380,7 @@ void MeshUpdator::MeshBuffer::copyDataToMonoMesh(UpdateFlags flags)
 }
 
 MeshUpdator::MeshUpdator(StreamUpdator *parent, Mesh *mesh, mGameObject go)
-    : super(parent, m_schema, go)
+    : super(parent, mesh, go)
     , m_schema(mesh)
 {
     m_summary = mesh->getSummary();
@@ -455,7 +455,7 @@ void MeshUpdator::update(Time time)
 
 
 PointsUpdator::PointsUpdator(StreamUpdator *parent, Points *points, mGameObject go)
-    : super(parent, m_schema, go)
+    : super(parent, points, go)
     , m_schema(points)
 {
 }
