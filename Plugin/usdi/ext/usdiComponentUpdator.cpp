@@ -130,9 +130,15 @@ mTransform StreamUpdator::createNode(Schema *schema, mTransform parent)
     return trans;
 }
 
-void StreamUpdator::createNodeRecursive()
+void StreamUpdator::constructUnityScene()
 {
-    createNode(m_ctx->getRootNode(), nullptr);
+    if (!m_ctx || !m_component) { return; }
+
+    auto go = m_component.getGameObject();
+    auto trans = go.getComponent<mTransform>();
+    m_ctx->getRootNode()->each([this, trans](Schema *c) {
+        createNode(c, trans);
+    });
 }
 
 void StreamUpdator::add(Schema *schema, mGameObject go)
@@ -196,11 +202,25 @@ void StreamUpdator::update(Time time)
 StreamUpdator* StreamUpdator_Ctor(Context *ctx, MonoObject *component) { return new StreamUpdator(ctx, component); }
 void StreamUpdator_Dtor(StreamUpdator *rep) { delete rep; }
 void StreamUpdator_SetConfig(StreamUpdator *rep, StreamUpdator::Config *config) { rep->setConfig(*config); }
+void StreamUpdator_ConstructScene(StreamUpdator *rep) { rep->constructUnityScene(); }
 void StreamUpdator_Add(StreamUpdator *rep, Schema *schema, MonoObject *gameobject) { rep->add(schema, gameobject); }
 void StreamUpdator_OnLoad(StreamUpdator *rep) { rep->onLoad(); }
 void StreamUpdator_OnUnload(StreamUpdator *rep) { rep->onUnload(); }
 void StreamUpdator_AsyncUpdate(StreamUpdator *rep, double *time) { rep->asyncUpdate(*time); }
 void StreamUpdator_Update(StreamUpdator *rep, double *time) { rep->update(*time); }
+
+void StreamUpdator::registerICalls()
+{
+    mAddMethod("UTJ.usdiStreamUpdator::_Ctor", StreamUpdator_Ctor);
+    mAddMethod("UTJ.usdiStreamUpdator::_Dtor", StreamUpdator_Dtor);
+    mAddMethod("UTJ.usdiStreamUpdator::_SetConfig", StreamUpdator_SetConfig);
+    mAddMethod("UTJ.usdiStreamUpdator::_ConstructScene", StreamUpdator_ConstructScene);
+    mAddMethod("UTJ.usdiStreamUpdator::_Add", StreamUpdator_Add);
+    mAddMethod("UTJ.usdiStreamUpdator::_OnLoad", StreamUpdator_OnLoad);
+    mAddMethod("UTJ.usdiStreamUpdator::_OnUnload", StreamUpdator_OnUnload);
+    mAddMethod("UTJ.usdiStreamUpdator::_AsyncUpdate", StreamUpdator_AsyncUpdate);
+    mAddMethod("UTJ.usdiStreamUpdator::_Update", StreamUpdator_Update);
+}
 
 
 

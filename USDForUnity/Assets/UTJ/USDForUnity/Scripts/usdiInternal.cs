@@ -19,6 +19,7 @@ namespace UTJ
         ~usdiStreamUpdator() { _Dtor(m_rep); }
 
         public void SetConfig(ref Config config) { _SetConfig(m_rep, ref config); }
+        public void ConstructScene() { _ConstructScene(m_rep); }
         public void Add(usdi.Schema schema, GameObject go) { _Add(m_rep, schema, go); }
         public void OnLoad() { _OnLoad(m_rep); }
         public void OnUnload() { _OnUnload(m_rep); }
@@ -33,6 +34,8 @@ namespace UTJ
         private static extern void _Dtor(IntPtr rep);
         [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern void _SetConfig(IntPtr rep, ref Config config);
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        private static extern void _ConstructScene(IntPtr rep);
         [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern void _Add(IntPtr rep, usdi.Schema schema, GameObject go);
         [MethodImpl(MethodImplOptions.InternalCall)]

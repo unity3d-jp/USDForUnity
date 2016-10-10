@@ -23,6 +23,8 @@ class IUpdator;
 class StreamUpdator
 {
 public:
+    static void registerICalls();
+
     struct Config
     {
         bool forceSingleThread = false;
@@ -34,7 +36,7 @@ public:
     void setConfig(const Config& conf);
     const Config& getConfig() const;
 
-    void createNodeRecursive();
+    void constructUnityScene();
     void add(Schema *schema, mGameObject go);
 
     void onLoad();
@@ -53,17 +55,8 @@ private:
     tbb::task_group m_tasks;
 
     Context *m_ctx;
-    MonoObject *m_component;
+    mComponent m_component;
 };
-
-StreamUpdator* StreamUpdator_Ctor(Context *ctx, MonoObject *component);
-void StreamUpdator_Dtor(StreamUpdator *rep);
-void StreamUpdator_SetConfig(StreamUpdator *rep, StreamUpdator::Config *config);
-void StreamUpdator_Add(StreamUpdator *rep, Schema *schema, MonoObject *gameobject);
-void StreamUpdator_OnLoad(StreamUpdator *rep);
-void StreamUpdator_OnUnload(StreamUpdator *rep);
-void StreamUpdator_AsyncUpdate(StreamUpdator *rep, double *time);
-void StreamUpdator_Update(StreamUpdator *rep, double *time);
 
 
 

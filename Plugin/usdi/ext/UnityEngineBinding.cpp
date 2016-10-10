@@ -8,13 +8,13 @@
 
 
 #define mBindClass(...)\
-    static mCachedClass s_class(__VA_ARGS__);\
+    static mClass& s_class=mCreateClassCache(__VA_ARGS__);\
     return s_class;
 
 #define mBindMethod(...)\
-    static mCachedMethod s_method(mTypeof<std::remove_reference<decltype(*this)>::type>(), __VA_ARGS__);
+    static mMethod& s_method=mCreateMethodCache(mTypeof<std::remove_reference<decltype(*this)>::type>(), __VA_ARGS__);
 #define mBindMethodS(T, ...)\
-    static mCachedMethod s_method(mTypeof<T>(), __VA_ARGS__);
+    static mMethod& s_method=mCreateMethodCache(mTypeof<T>(), __VA_ARGS__);
 
 namespace usdi {
 
@@ -68,22 +68,10 @@ void InitializeInternalMethods()
         TransformNotfyChange = NM_Transform_SendTransformChanged ? TransformNotfyChangeCpp : TransformNotfyChangeMono;
         MeshAssignBounds = NM_Mesh_SetBounds ? MeshAssignBoundsCpp : MeshAssignBoundsMono;
 
-#define ICall(Name, Func) mAddMethod(Name, Func)
-
-        ICall("UTJ.usdi::usdiUniTransformAssignXform", TransformAssignXform);
-        ICall("UTJ.usdi::usdiUniTransformNotfyChange", TransformNotfyChange);
-        ICall("UTJ.usdi::usdiUniMeshAssignBounds", MeshAssignBounds);
-
-        ICall("UTJ.usdiStreamUpdator::_Ctor", StreamUpdator_Ctor);
-        ICall("UTJ.usdiStreamUpdator::_Dtor", StreamUpdator_Dtor);
-        ICall("UTJ.usdiStreamUpdator::_SetConfig", StreamUpdator_SetConfig);
-        ICall("UTJ.usdiStreamUpdator::_Add", StreamUpdator_Add);
-        ICall("UTJ.usdiStreamUpdator::_OnLoad", StreamUpdator_OnLoad);
-        ICall("UTJ.usdiStreamUpdator::_OnUnload", StreamUpdator_OnUnload);
-        ICall("UTJ.usdiStreamUpdator::_AsyncUpdate", StreamUpdator_AsyncUpdate);
-        ICall("UTJ.usdiStreamUpdator::_Update", StreamUpdator_Update);
-
-#undef ICall
+        mAddMethod("UTJ.usdi::usdiUniTransformAssignXform", TransformAssignXform);
+        mAddMethod("UTJ.usdi::usdiUniTransformNotfyChange", TransformNotfyChange);
+        mAddMethod("UTJ.usdi::usdiUniMeshAssignBounds", MeshAssignBounds);
+        StreamUpdator::registerICalls();
     });
 
     mRebindCache();
@@ -123,7 +111,7 @@ void nMesh::setBounds(const AABB &v) { (self()->*NM_Mesh_SetBounds)(v); }
 
 #define mThisClass mTypeof<std::remove_reference<decltype(*this)>::type>()
 #ifdef usdiDebug
-    #define mTypeCheck() if(mobj && getClass() != mThisClass) {\
+    #define mTypeCheck() if(get() && getClass() != mThisClass) {\
         auto *type_name = getClass().getName();\
         assert(getClass() == mThisClass);\
     } 
@@ -258,12 +246,12 @@ mMethod& mGameObject::getAddComponent()
 #define Instantiate(T)\
 template<> T mGameObject::getComponent()\
 {\
-    static mCachedIMethod s_method(getGetComponent(), mTypeof<T>());\
+    static mMethod& s_method=mCreateMethodCache(getGetComponent(), {&mTypeof<T>()});\
     return T(invoke(s_method).get());\
 }\
 template<> T mGameObject::addComponent()\
 {\
-    static mCachedIMethod s_method(getAddComponent(), mTypeof<T>());\
+    static mMethod& s_method=mCreateMethodCache(getAddComponent(), {&mTypeof<T>()});\
     return T(invoke(s_method).get());\
 }
 Instantiate(mTransform);
