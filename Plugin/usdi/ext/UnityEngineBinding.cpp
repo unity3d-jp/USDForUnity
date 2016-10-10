@@ -111,7 +111,7 @@ void nMesh::setBounds(const AABB &v) { (self()->*NM_Mesh_SetBounds)(v); }
 
 #define mThisClass mTypeof<std::remove_reference<decltype(*this)>::type>()
 #ifdef usdiDebug
-    #define mTypeCheck() if(get() && getClass() != mThisClass) {\
+    #define mTypeCheck() if(!isNull() && getClass() != mThisClass) {\
         auto *type_name = getClass().getName();\
         assert(getClass() == mThisClass);\
     } 

@@ -23,10 +23,30 @@ class mString;
 typedef char        mchar8;
 typedef uint16_t    mchar16;
 
-template<class T> mClass&       mTypeof();
-template<class T> const char*   mTypename();
-template<class T> const char*   mTypenameRef();
-template<class T> const char*   mTypenameArray();
+template<class T> mClass&     mTypeof() { return T::_getClass(); }
+template<class T> const char* mTypename() { return T::_getTypename(); }
+template<class T> const char* mTypenameRef() { return T::_getTypenameRef(); }
+template<class T> const char* mTypenameArray() { return T::_getTypenameArray(); }
+
+#define mDeclImage(Name) mImage& mGet##Name##Image();
+#define mDefImage(Name, AssemblyName) mImage& mGet##Name##Image() { static mImage& s_image=mCreateImageCache(AssemblyName); return s_image; }
+
+#define mDeclTraits()\
+    static mClass& _getClass();\
+    static const char* _getTypename();\
+    static const char* _getTypenameRef();\
+    static const char* _getTypenameArray();
+
+#define mDefTraits(Img, Namespace, MonoTypename, Type)\
+    mClass& Type::_getClass()\
+    {\
+        static mClass& s_class=mCreateClassCache(mGet##Img##Image(), Namespace, MonoTypename);\
+        return s_class;\
+    }\
+    const char* Type::_getTypename() { return #Namespace "." MonoTypename; }\
+    const char* Type::_getTypenameRef() { return #Namespace "." MonoTypename "&"; }\
+    const char* Type::_getTypenameArray() { return #Namespace "." MonoTypename "[]"; }
+
 
 
 class mImage
@@ -163,6 +183,7 @@ protected:
 class mObject
 {
 public:
+    mDeclTraits();
     static mObject New(mClass mclass);
     template<class T> static T New() { return T(New(mTypeof<T>()).get()); }
 
@@ -198,6 +219,7 @@ protected:
 class mString : public mObject
 {
 public:
+    mDeclTraits();
     static mString New(const mchar8 *str, int len = -1);
     static mString New(const mchar16 *str, int len = -1);
 
@@ -246,17 +268,27 @@ public:
     iterator        end()                       { return data() + size(); }
     const_iterator  begin() const               { return data(); }
     const_iterator  end() const                 { return data() + size(); }
-
-    void resize(size_t s)
-    {
-        if (size() == s) { return; }
-        *this = New(s);
-    }
-
-    void clear()
-    {
-    }
 };
+
+// builtin types
+
+#define mDeclBuiltinType(MonoType, ValueType)\
+    struct MonoType\
+    {\
+        mDeclTraits();\
+        operator ValueType&() { return value; }\
+        ValueType value = {};\
+    };\
+
+struct mVoid { mDeclTraits(); };
+mDeclBuiltinType(mIntPtr, void*);
+mDeclBuiltinType(mBool, int);
+mDeclBuiltinType(mByte, uint8_t);
+mDeclBuiltinType(mInt32, int32_t);
+mDeclBuiltinType(mEnum, int32_t);
+mDeclBuiltinType(mSingle, float);
+mDeclBuiltinType(mDouble, double);
+#undef mDeclBuiltinType
 
 
 // gc control
@@ -265,16 +297,24 @@ uint32_t mPin(mObject obj);
 void     mUnpin(uint32_t handle);
 
 template<class T>
-class mUnique
+class mPinned
 {
 typedef T super;
 public:
-    mUnique() : m_obj(nullptr) {}
-    mUnique(T obj) : m_obj(nullptr) { reset(obj); }
-    ~mUnique() { reset(); }
+    mPinned() {}
+    mPinned(T v) { reset(v); }
+    mPinned(mPinned&& v) : m_obj(v.m_obj) , m_gch(v.m_gch) { v.m_obj=nullptr; v.m_gch=0; }
+    ~mPinned() { reset(); }
 
-    mUnique(const mUnique& v) = delete;
-    mUnique& operator=(const mUnique& v) = delete;
+    mPinned(const mPinned& v) = delete;
+    mPinned& operator=(const mPinned& v) = delete;
+    mPinned& operator=(const mPinned&& v)
+    {
+        reset();
+        std::swap(m_obj, v.m_obj);
+        std::swap(m_gch, v.m_gch);
+        return *this;
+    }
 
     operator bool() const       { return (bool)m_obj; }
     T&       operator*()        { return m_obj; }
@@ -287,7 +327,7 @@ public:
     void reset()
     {
         unpin();
-        m_obj = T(nullptr);
+        m_obj = nullptr;
     }
 
     void reset(T obj)
@@ -319,19 +359,21 @@ protected:
     uint32_t m_gch = 0;
 };
 
-template<class T> mClass&     mTypeof() { return T::_getClass(); }
-template<class T> const char* mTypename() { return T::_getTypename(); }
-template<class T> const char* mTypenameRef() { return T::_getTypenameRef(); }
-template<class T> const char* mTypenameArray() { return T::_getTypenameArray(); }
+template<class T> using mPTArray = mPinned<mTArray<T>>;
 
-#define DeclBuiltinType(T) template<> mClass& mTypeof<T>(); template<> const char* mTypename<T>();
-DeclBuiltinType(void*);
-DeclBuiltinType(bool);
-DeclBuiltinType(uint8_t);
-DeclBuiltinType(int);
-DeclBuiltinType(float);
-DeclBuiltinType(mString);
-#undef DeclBuiltinType
+template<class T>
+void mResize(mTArray<T>& a, size_t s)
+{
+    if (a.size() == s) { return; }
+    a = mTArray<T>::New(s);
+}
+
+template<class T>
+void mResize(mPTArray<T>& a, size_t s)
+{
+    if (a->size() == s) { return; }
+    a.reset(mTArray<T>::New(s));
+}
 
 
 bool     mIsSubclassOf(mClass parent, mClass child);
@@ -347,26 +389,3 @@ mMethod& mCreateMethodCache(mMethod& generics, std::vector<mClass*> params);
 mProperty& mCreatePropertyCache(mClass& mclass, const char *name);
 void mClearCache();
 void mRebindCache();
-
-
-
-#define mDeclImage(Name) mImage& mGet##Name##Image();
-#define mDefImage(Name, AssemblyName) mImage& mGet##Name##Image() { static mImage& s_image=mCreateImageCache(AssemblyName); return s_image; }
-
-#define mDeclTraits()\
-    static mClass& _getClass();\
-    static const char* _getTypename();\
-    static const char* _getTypenameRef();\
-    static const char* _getTypenameArray();
-
-
-#define mDefTraits(Img, Namespace, MonoTypename, Type)\
-    mClass& Type::_getClass()\
-    {\
-        static mClass& s_class=mCreateClassCache(mGet##Img##Image(), Namespace, MonoTypename);\
-        return s_class;\
-    }\
-    const char* Type::_getTypename() { return #Namespace "." MonoTypename; }\
-    const char* Type::_getTypenameRef() { return #Namespace "." MonoTypename "&"; }\
-    const char* Type::_getTypenameArray() { return #Namespace "." MonoTypename "[]"; }
-

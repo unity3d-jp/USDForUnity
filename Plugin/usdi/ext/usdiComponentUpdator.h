@@ -37,7 +37,7 @@ public:
     const Config& getConfig() const;
 
     void constructUnityScene();
-    void add(Schema *schema, mGameObject go);
+    IUpdator* add(Schema *schema, mGameObject& go);
 
     void onLoad();
     void onUnload();
@@ -69,6 +69,8 @@ public:
     virtual void onUnload();
     virtual void asyncUpdate(Time time);
     virtual void update(Time time);
+
+    mGameObject& getGO() { return m_go; }
 
 protected:
     StreamUpdator *m_parent;
@@ -151,10 +153,10 @@ public:
         mMeshRenderer m_mrenderer;
         mMesh m_mmesh;
 
-        mUnique<mTArray<mVector3>> m_mvertices;
-        mUnique<mTArray<mVector3>> m_mnormals;
-        mUnique<mTArray<mVector2>> m_muv;
-        mUnique<mTArray<int>> m_mindices;
+        mPTArray<mVector3> m_mvertices;
+        mPTArray<mVector3> m_mnormals;
+        mPTArray<mVector2> m_muv;
+        mPTArray<mInt32> m_mindices;
         void *m_vb = nullptr;
         void *m_ib = nullptr;
         Handle m_hcommand = 0;

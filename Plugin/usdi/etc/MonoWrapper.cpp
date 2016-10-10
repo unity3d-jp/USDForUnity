@@ -422,18 +422,23 @@ void* mArray::data()
     return ((MonoArray*)m_rep)->vector;
 }
 
+#define mDefBuiltinType(Type, ClassGetter, MonoTypename)\
+    mClass& Type::_getClass() { static mClass& s_class=mCreateClassCache(ClassGetter); return s_class; }\
+    const char* Type::_getTypename() { return MonoTypename; }\
+    const char* Type::_getTypenameRef() { return MonoTypename "&"; }\
+    const char* Type::_getTypenameArray() { return MonoTypename "[]"; }
 
-#define DefBuiltinType(Type, ClassGetter, Typename)\
-    template<> mClass& mTypeof<Type>() { static mClass& s_class = mCreateClassCache(ClassGetter); return s_class; }\
-    template<> const char* mTypename<Type>() { return Typename; }
-
-DefBuiltinType(void*, mono_get_intptr_class, "System.IntPtr");
-DefBuiltinType(bool, mono_get_boolean_class, "System.Boolean");
-DefBuiltinType(uint8_t, mono_get_byte_class, "System.Byte");
-DefBuiltinType(int, mono_get_int32_class, "System.Int32");
-DefBuiltinType(float, mono_get_single_class, "System.Single");
-DefBuiltinType(mString, mono_get_string_class, "System.String");
-#undef DefBuiltinType
+mDefBuiltinType(mVoid,   mono_get_void_class,   "System.Void"   );
+mDefBuiltinType(mIntPtr, mono_get_intptr_class, "System.IntPtr" );
+mDefBuiltinType(mBool,   mono_get_boolean_class,"System.Boolean");
+mDefBuiltinType(mByte,   mono_get_byte_class,   "System.Byte"   );
+mDefBuiltinType(mInt32,  mono_get_int32_class,  "System.Int32"  );
+mDefBuiltinType(mEnum,   mono_get_enum_class,   "System.Enum"   );
+mDefBuiltinType(mSingle, mono_get_single_class, "System.Single" );
+mDefBuiltinType(mDouble, mono_get_double_class, "System.Double" );
+mDefBuiltinType(mObject, mono_get_object_class, "System.Object" );
+mDefBuiltinType(mString, mono_get_string_class, "System.String" );
+#undef mDefBuiltinType
 
 uint32_t mPin(mObject obj)
 {

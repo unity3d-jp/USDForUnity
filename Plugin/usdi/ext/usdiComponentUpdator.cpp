@@ -110,19 +110,26 @@ mTransform StreamUpdator::createNode(Schema *schema, mTransform parent)
     mGameObject go;
     mTransform trans;
 
+    bool found = false;
     if (parent) {
         if (auto child = parent.findChild(schema->getName())) {
+            found = true;
             trans = child;
             go = trans.getGameObject();
         }
     }
-    if (!go) {
-        go = mGameObject::New(schema->getName());
-        trans = go.getComponent<mTransform>();
-        trans.setParent(parent);
-    }
 
-    add(schema, go);
+    auto *node = add(schema, go);
+
+    if (!found) {
+        if (go) {
+            trans = go.getComponent<mTransform>();
+            trans.setParent(parent);
+        }
+        else {
+            trans = parent;
+        }
+    }
 
     schema->each([this, trans](Schema *c) {
         createNode(c, trans);
@@ -136,28 +143,36 @@ void StreamUpdator::constructUnityScene()
 
     auto go = m_component.getGameObject();
     auto trans = go.getComponent<mTransform>();
-    m_ctx->getRootNode()->each([this, trans](Schema *c) {
-        createNode(c, trans);
-    });
+    createNode(m_ctx->getRootNode(), trans);
 }
 
-void StreamUpdator::add(Schema *schema, mGameObject go)
+IUpdator* StreamUpdator::add(Schema *schema, mGameObject& go)
 {
-    if (!schema || schema->getUserData()==this) { return; }
+    if (!schema || schema->getUserData()==this) { return nullptr; }
     schema->setUserData(this);
 
+    IUpdator *iu = nullptr;
     if (auto *cam = dynamic_cast<Camera*>(schema)) {
-        m_children.emplace_back(new CameraUpdator(this, cam, go));
+        if(!go) go = mGameObject::New(schema->getName());
+        iu = new CameraUpdator(this, cam, go);
     }
     else if (auto *mesh = dynamic_cast<Mesh*>(schema)) {
-        m_children.emplace_back(new MeshUpdator(this, mesh, go));
+        if (!go) go = mGameObject::New(schema->getName());
+        iu = new MeshUpdator(this, mesh, go);
     }
     else if (auto *points = dynamic_cast<Points*>(schema)) {
-        m_children.emplace_back(new PointsUpdator(this, points, go));
+        if (!go) go = mGameObject::New(schema->getName());
+        iu = new PointsUpdator(this, points, go);
     }
     else if (auto *xf = dynamic_cast<Xform*>(schema)) {
-        m_children.emplace_back(new XformUpdator(this, xf, go));
+        if (!go) go = mGameObject::New(schema->getName());
+        iu = new XformUpdator(this, xf, go);
     }
+
+    if (iu) {
+        m_children.emplace_back(iu);
+    }
+    return iu;
 }
 
 void StreamUpdator::onLoad()
@@ -204,11 +219,11 @@ StreamUpdator* StreamUpdator_Ctor(Context *ctx, MonoObject *component) { return 
 void StreamUpdator_Dtor(StreamUpdator *rep) { delete rep; }
 void StreamUpdator_SetConfig(StreamUpdator *rep, StreamUpdator::Config *config) { rep->setConfig(*config); }
 void StreamUpdator_ConstructScene(StreamUpdator *rep) { rep->constructUnityScene(); }
-void StreamUpdator_Add(StreamUpdator *rep, Schema *schema, MonoObject *gameobject) { rep->add(schema, gameobject); }
+void StreamUpdator_Add(StreamUpdator *rep, Schema *schema, MonoObject *gameobject) { rep->add(schema, mGameObject(gameobject)); }
 void StreamUpdator_OnLoad(StreamUpdator *rep) { rep->onLoad(); }
 void StreamUpdator_OnUnload(StreamUpdator *rep) { rep->onUnload(); }
-void StreamUpdator_AsyncUpdate(StreamUpdator *rep, double *time) { rep->asyncUpdate(*time); }
-void StreamUpdator_Update(StreamUpdator *rep, double *time) { rep->update(*time); }
+void StreamUpdator_AsyncUpdate(StreamUpdator *rep, double time) { rep->asyncUpdate(time); }
+void StreamUpdator_Update(StreamUpdator *rep, double time) { rep->update(time); }
 
 void StreamUpdator::registerICalls()
 {
@@ -307,6 +322,7 @@ MeshUpdator::MeshBuffer::MeshBuffer(MeshUpdator *parent, mGameObject go)
     m_mmesh = m_mfilter.getSharedMesh();
     if (!m_mmesh) {
         m_mmesh = mMesh::New();
+        m_mmesh.setName(parent->m_schema->getName());
         m_mfilter.setSharedMesh(m_mmesh);
     }
 }
@@ -326,10 +342,10 @@ void MeshUpdator::MeshBuffer::kickVBUpdateTask()
 
 void MeshUpdator::MeshBuffer::releaseMonoArrays(UpdateFlags flags, const MeshData &data, int split)
 {
-    m_mvertices->clear();
-    m_mnormals->clear();
-    m_muv->clear();
-    m_mindices->clear();
+    m_mvertices.reset();
+    m_mnormals.reset();
+    m_muv.reset();
+    m_mindices.reset();
 }
 
 void MeshUpdator::MeshBuffer::copyMeshDataToMonoArrays(UpdateFlags flags, const MeshData &data)
@@ -337,19 +353,19 @@ void MeshUpdator::MeshBuffer::copyMeshDataToMonoArrays(UpdateFlags flags, const 
     auto& src = data;
 
     if (flags.points) {
-        m_mvertices->resize(src.num_points);
+        mResize(m_mvertices, src.num_points);
         memcpy(m_mvertices->data(), src.points, sizeof(float3)*src.num_points);
     }
     if (flags.normals) {
-        m_mnormals->resize(src.num_points);
+        mResize(m_mnormals, src.num_points);
         memcpy(m_mnormals->data(), src.normals, sizeof(float3)*src.num_points);
     }
     if (flags.uv) {
-        m_muv->resize(src.num_points);
+        mResize(m_muv, src.num_points);
         memcpy(m_muv->data(), src.uvs, sizeof(float2)*src.num_points);
     }
     if (flags.indices) {
-        m_mindices->resize(src.num_indices_triangulated);
+        mResize(m_mindices, src.num_indices_triangulated);
         memcpy(m_mindices->data(), src.indices_triangulated, sizeof(int)*src.num_indices_triangulated);
     }
 }
@@ -359,19 +375,19 @@ void MeshUpdator::MeshBuffer::copySubmeshDataToMonoArrays(UpdateFlags flags, con
     auto& src = data.splits[split];
 
     if (flags.points) {
-        m_mvertices->resize(src.num_points);
+        mResize(m_mvertices, src.num_points);
         memcpy(m_mvertices->data(), src.points, sizeof(float3)*src.num_points);
     }
     if (flags.normals) {
-        m_mnormals->resize(src.num_points);
+        mResize(m_mnormals, src.num_points);
         memcpy(m_mnormals->data(), src.normals, sizeof(float3)*src.num_points);
     }
     if (flags.uv) {
-        m_muv->resize(src.num_points);
+        mResize(m_muv, src.num_points);
         memcpy(m_muv->data(), src.uvs, sizeof(float2)*src.num_points);
     }
     if (flags.indices) {
-        m_mindices->resize(src.num_points);
+        mResize(m_mindices, src.num_points);
         memcpy(m_mindices->data(), src.indices, sizeof(int)*src.num_points);
     }
 }
