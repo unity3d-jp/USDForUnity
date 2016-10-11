@@ -387,7 +387,8 @@ void MeshUpdator::MeshBuffer::kickVBUpdateTask()
     if (!m_hcommand) {
         m_hcommand = usdi::VertexCommandManager::getInstance().createCommand();
     }
-    // todo
+    usdi::VertexCommandManager::getInstance()
+        .update(m_hcommand, &m_parent->m_data, m_vb, nullptr);
 }
 
 void MeshUpdator::MeshBuffer::releaseMonoArrays()
@@ -466,6 +467,7 @@ void MeshUpdator::asyncUpdate(Time time)
         m_uflags.directVB =
             m_parent->getConfig().directVBUpdate && mMesh::hasNativeBufferAPI() &&
             m_summary.topology_variance == TopologyVariance::Homogenous;
+        bool kick = m_buffers.front()->m_vb != nullptr;
 
         if (m_data.num_splits != 0) {
             // get submesh data
@@ -474,7 +476,7 @@ void MeshUpdator::asyncUpdate(Time time)
             m_schema->readSample(m_data, time, false);
         }
 
-        if (m_buffers.front()->m_vb) {
+        if (kick) {
             for (auto& b : m_buffers) { b->kickVBUpdateTask(); }
         }
         else {

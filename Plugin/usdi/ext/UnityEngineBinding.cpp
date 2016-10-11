@@ -185,7 +185,8 @@ void mMesh::setUV(mTArray<mVector2> v)
 void mMesh::SetTriangles(mTArray<mInt32> v)
 {
     mBindMethod("SetTriangles", {"System.Int32[]", "System.Int32"});
-    invoke(s_method, v.get());
+    int zero = 0;
+    invoke(s_method, v.get(), &zero);
 }
 void mMesh::uploadMeshData(bool _fix)
 {
@@ -207,12 +208,12 @@ bool mMesh::hasNativeBufferAPI()
 void* mMesh::getNativeVertexBufferPtr(int nth)
 {
     mBindMethodS(mMesh, "GetNativeVertexBufferPtr", 1);
-    return invoke(s_method, &nth).unboxValue<void*>();
+    return invoke(s_method, &nth).unbox<void*>();
 }
 void* mMesh::getNativeIndexBufferPtr()
 {
     mBindMethodS(mMesh, "GetNativeIndexBufferPtr", 0);
-    return invoke(s_method).unboxValue<void*>();
+    return invoke(s_method).unbox<void*>();
 }
 
 
@@ -250,16 +251,27 @@ mMethod& mGameObject::getAddComponent()
     return s_method;
 }
 
+
+#ifdef usdiDebug
+    #define TypeCheck(T1, T2) assert((T1)=(T2))
+#else
+    #define TypeCheck(...)
+#endif
+
 #define Instantiate(T)\
 template<> T mGameObject::getComponent()\
 {\
     static mMethod& s_method=mCreateMethodCache(getGetComponent(), {&mTypeof<T>()});\
-    return T(invoke(s_method).get());\
+    auto ret = invoke(s_method);\
+    TypeCheck(ret.getClass(), mTypeof<T>());\
+    return T(ret.get());\
 }\
 template<> T mGameObject::addComponent()\
 {\
     static mMethod& s_method=mCreateMethodCache(getAddComponent(), {&mTypeof<T>()});\
-    return T(invoke(s_method).get());\
+    auto ret = invoke(s_method);\
+    TypeCheck(ret.getClass(), mTypeof<T>());\
+    return T(ret.get());\
 }
 Instantiate(mTransform);
 Instantiate(mCamera);
@@ -267,6 +279,7 @@ Instantiate(mMeshFilter);
 Instantiate(mMeshRenderer);
 Instantiate(mLight);
 #undef Instantiate
+#undef TypeCheck
 
 
 mDefTraits(UnityEngine, "UnityEngine", "Component", mComponent);
