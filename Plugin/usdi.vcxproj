@@ -17,6 +17,7 @@
     <ClInclude Include="usdi\etc\Mono.h" />
     <ClInclude Include="usdi\etc\MonoWrapper.h" />
     <ClInclude Include="usdi\etc\RawVector.h" />
+    <ClInclude Include="usdi\etc\tls.h" />
     <ClInclude Include="usdi\ext\UnityEngineBinding.h" />
     <ClInclude Include="usdi\ext\usdiComponentUpdator.h" />
     <ClInclude Include="usdi\ext\usdiExt.h" />

@@ -404,3 +404,7 @@ mMethod& mCreateMethodCache(mMethod& generics, std::vector<mClass*> params);
 mProperty& mCreatePropertyCache(mClass& mclass, const char *name);
 void mClearCache();
 void mRebindCache();
+
+void mAttachThread();
+void mDetachThread();
+void mDetachAllThreads();

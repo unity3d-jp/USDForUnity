@@ -138,6 +138,9 @@
     <ClInclude Include="usdi\etc\MonoWrapper.h">
       <Filter>usdi\etc</Filter>
     </ClInclude>
+    <ClInclude Include="usdi\etc\tls.h">
+      <Filter>usdi\etc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />

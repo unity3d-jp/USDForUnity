@@ -46,7 +46,7 @@ void FixedAllocator::Free(void *addr)
 
 
 
-static VtFixedAllocator g_allocators[] = {
+static FixedAllocator g_allocators[] = {
     { 0x8, 1 },
     { 0x8, 1 },
     { 0x8, 1 },

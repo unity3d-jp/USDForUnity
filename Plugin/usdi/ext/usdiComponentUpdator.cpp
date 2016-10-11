@@ -196,6 +196,7 @@ void StreamUpdator::asyncUpdate(Time t)
     }
     else {
         m_tasks.run([this, t]() {
+            mAttachThread();
             size_t grain = std::max<size_t>(m_children.size() / 32, 1);
             tbb::parallel_for(tbb::blocked_range<size_t>(0, m_children.size(), grain), [t, this](const auto& r) {
                 for (size_t i = r.begin(); i != r.end(); ++i) {

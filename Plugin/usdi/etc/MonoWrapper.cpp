@@ -1,6 +1,7 @@
 ﻿#include "pch.h"
 #include "Mono.h"
 #include "MonoWrapper.h"
+#include "tls.h"
 
 
 
@@ -716,4 +717,34 @@ mMethod& mCreateMethodCache(mMethod& generics, std::vector<mClass*> params)
 mProperty& mCreatePropertyCache(mClass& mclass, const char *name)
 {
     return *new mPropertyCache(mclass, name);
+}
+
+
+// thread management
+
+static tls<MonoThread*> g_mthreads;
+
+void mAttachThread()
+{
+    auto *& mthread = g_mthreads.local();
+    if (!mthread) {
+        mthread = mono_thread_attach(mGetDomain().get());
+    }
+}
+
+void mDetachThread()
+{
+    auto *& mthread = g_mthreads.local();
+    if (mthread) {
+        mono_thread_detach(mthread);
+        mthread = nullptr;
+    }
+}
+
+void mDetachAllThreads()
+{
+    g_mthreads.each([](auto *& mthread) {
+        mono_thread_detach(mthread);
+        mthread = nullptr;
+    });
 }
