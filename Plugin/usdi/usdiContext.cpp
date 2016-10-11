@@ -8,11 +8,15 @@
 #include "usdiPoints.h"
 #include "usdiContext.h"
 
+void mDetachAllThreads();
+
 namespace usdi {
 
+static int g_ctx_count;
 
 Context::Context()
 {
+    ++g_ctx_count;
     initialize();
     usdiLogTrace("Context::Context()\n");
 }
@@ -21,6 +25,13 @@ Context::~Context()
 {
     initialize();
     usdiLogTrace("Context::~Context()\n");
+    --g_ctx_count;
+
+#ifdef usdiEnableUnityExtension
+    if (g_ctx_count == 0) {
+        mDetachAllThreads();
+    }
+#endif // usdiEnableUnityExtension
 }
 
 bool Context::valid() const

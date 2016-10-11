@@ -10,6 +10,21 @@ mImage mDomain::findImage(const char *name)
     return mono_assembly_get_image(mono_domain_assembly_open(mGetDomain().get(), name));
 }
 
+const char* mAssembly::stringifyAssemblyName() const
+{
+    return mono_stringify_assembly_name(&m_rep->aname);
+}
+
+void mAssembly::freeAssemblyName(const char *aname)
+{
+    g_free((void*)aname);
+}
+
+mAssembly mImage::getAssembly()
+{
+    return mono_image_get_assembly(m_rep);
+}
+
 mClass mImage::findClass(const char *namespace_, const char *class_name)
 {
     return mono_class_from_name(m_rep, namespace_, class_name);
@@ -132,32 +147,36 @@ mMethod mMethod::instantiate(mClass *params, size_t nparams, void *& mem)
 
 const char* mClass::getName() const
 {
-    if (!m_rep) { return nullptr; }
     return mono_class_get_name(m_rep);
+}
+
+const char* mClass::getNamespace() const
+{
+    return mono_class_get_namespace(m_rep);
+}
+
+mImage mClass::getImage() const
+{
+    return mono_class_get_image(m_rep);
 }
 
 mType mClass::getType() const
 {
-    if (!m_rep) { return nullptr; }
     return mono_class_get_type(m_rep);
 }
 
 mField mClass::findField(const char *name) const
 {
-    if (!m_rep) { return nullptr; }
     return mono_class_get_field_from_name(m_rep, name);
 }
 
 mProperty mClass::findProperty(const char *name) const
 {
-    if (!m_rep) { return nullptr; }
     return mono_class_get_property_from_name(m_rep, name);
 }
 
 mMethod mClass::findMethod(const char *name, int num_args, const char **typenames) const
 {
-    if (!m_rep) { return nullptr; }
-
     if (typenames) {
         for (mClass mc = m_rep; mc; mc = mc.getParent()) {
             MonoMethod *method;
@@ -325,6 +344,26 @@ mObject mObject::invoke(mMethod method, void *a0, void *a1, void *a2)
     return mono_runtime_invoke(method.get(), m_rep, args, nullptr);
 }
 
+mObject mObject::sinvoke(mMethod method)
+{
+    return mono_runtime_invoke(method.get(), nullptr, nullptr, nullptr);
+}
+mObject mObject::sinvoke(mMethod method, void *a0)
+{
+    void *args[] = { a0 };
+    return mono_runtime_invoke(method.get(), nullptr, args, nullptr);
+}
+mObject mObject::sinvoke(mMethod method, void *a0, void *a1)
+{
+    void *args[] = { a0, a1 };
+    return mono_runtime_invoke(method.get(), nullptr, args, nullptr);
+}
+mObject mObject::sinvoke(mMethod method, void *a0, void *a1, void *a2)
+{
+    void *args[] = { a0, a1, a2 };
+    return mono_runtime_invoke(method.get(), nullptr, args, nullptr);
+}
+
 
 struct cpsLessCString
 {
@@ -442,6 +481,10 @@ mDefBuiltinType(mDouble, mono_get_double_class, "System.Double" );
 mDefBuiltinType(mObject, mono_get_object_class, "System.Object" );
 mDefBuiltinType(mString, mono_get_string_class, "System.String" );
 #undef mDefBuiltinType
+
+mString mToMString(const char *s) { return mString::New(s); }
+std::string mToCString(mObject v) { return mString(v.get()).toUTF8(); }
+
 
 uint32_t mPin(mObject obj)
 {
@@ -726,6 +769,8 @@ static tls<MonoThread*> g_mthreads;
 
 void mAttachThread()
 {
+    if (mono_thread_current() != nullptr) { return; }
+
     auto *& mthread = g_mthreads.local();
     if (!mthread) {
         mthread = mono_thread_attach(mGetDomain().get());
@@ -744,7 +789,9 @@ void mDetachThread()
 void mDetachAllThreads()
 {
     g_mthreads.each([](auto *& mthread) {
-        mono_thread_detach(mthread);
-        mthread = nullptr;
+        if (mthread) {
+            mono_thread_detach(mthread);
+            mthread = nullptr;
+        }
     });
 }

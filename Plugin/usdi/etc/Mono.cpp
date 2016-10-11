@@ -10,9 +10,14 @@
 // mono functions
 void *g_mono_dll;
 
+void            (*g_free)(void *ptr);
+
 MonoDomain*     (*mono_domain_get)(void);
 MonoAssembly*   (*mono_domain_assembly_open)(MonoDomain *domain, const char *assemblyName);
 MonoImage*      (*mono_assembly_get_image)(MonoAssembly *assembly);
+gboolean        (*mono_assembly_fill_assembly_name)(MonoImage *image, MonoAssemblyName *aname);
+MonoAssembly*   (*mono_image_get_assembly)(MonoImage *image);
+char*           (*mono_stringify_assembly_name)(MonoAssemblyName *aname);
 
 MonoThread*     (*mono_thread_current)(void);
 MonoThread*     (*mono_thread_attach)(MonoDomain *domain);
@@ -29,6 +34,7 @@ MonoClass*      (*mono_type_get_class)(MonoType *type);
 
 MonoClass*      (*mono_class_from_name)(MonoImage *image, const char *namespaceString, const char *classnameString);
 const char*     (*mono_class_get_name)(MonoClass *klass);
+const char*     (*mono_class_get_namespace)(MonoClass *klass);
 MonoType*       (*mono_class_get_type)(MonoClass *klass);
 MonoMethod*     (*mono_class_get_method_from_name)(MonoClass *klass, const char *name, int param_count);
 MonoClassField* (*mono_class_get_field_from_name)(MonoClass *klass, const char *name);
@@ -39,6 +45,7 @@ MonoMethod*     (*mono_class_get_methods)(MonoClass* klass, gpointer *iter);
 MonoClassField* (*mono_class_get_fields)(MonoClass* klass, gpointer *iter);
 MonoProperty*   (*mono_class_get_properties)(MonoClass* klass, gpointer *iter);
 MonoClass*      (*mono_class_get_parent)(MonoClass *klass);
+MonoImage*      (*mono_class_get_image)(MonoClass *klass);
 
 const char*     (*mono_method_get_name)(MonoMethod *method);
 MonoMethodSignature* (*mono_method_signature)(MonoMethod *method);
@@ -107,9 +114,14 @@ void ImportMonoFunctions()
     if (mono) {
 #define Import(Name) (void*&)Name = ::GetProcAddress(mono, #Name)
 
+        Import(g_free);
+
         Import(mono_domain_get);
         Import(mono_domain_assembly_open);
         Import(mono_assembly_get_image);
+        Import(mono_assembly_fill_assembly_name);
+        Import(mono_image_get_assembly);
+        Import(mono_stringify_assembly_name);
 
         Import(mono_thread_current);
         Import(mono_thread_attach);
@@ -126,6 +138,7 @@ void ImportMonoFunctions()
 
         Import(mono_class_from_name);
         Import(mono_class_get_name);
+        Import(mono_class_get_namespace);
         Import(mono_class_get_type);
         Import(mono_class_get_method_from_name);
         Import(mono_class_get_field_from_name);
@@ -136,6 +149,7 @@ void ImportMonoFunctions()
         Import(mono_class_get_fields);
         Import(mono_class_get_properties);
         Import(mono_class_get_parent);
+        Import(mono_class_get_image);
 
         Import(mono_method_get_name);
         Import(mono_method_signature);

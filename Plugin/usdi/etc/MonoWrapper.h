@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 struct MonoDomain;
+struct MonoAssembly;
 struct MonoImage;
 struct MonoType;
 struct MonoClassField;
@@ -32,6 +33,7 @@ template<class T> const char* mTypenameArray() { return T::_getTypenameArray(); 
 
 #define mDeclImage(Name) mImage& mGet##Name##Image();
 #define mDefImage(Name, AssemblyName) mImage& mGet##Name##Image() { static mImage& s_image=mCreateImageCache(AssemblyName); return s_image; }
+#define mGetImage(Name) mGet##Name##Image()
 
 #define mDeclTraits()\
     static mClass& _getClass();\
@@ -42,7 +44,7 @@ template<class T> const char* mTypenameArray() { return T::_getTypenameArray(); 
 #define mDefTraits(Img, Namespace, MonoTypename, Type)\
     mClass& Type::_getClass()\
     {\
-        static mClass& s_class=mCreateClassCache(mGet##Img##Image(), Namespace, MonoTypename);\
+        static mClass& s_class=mCreateClassCache(mGetImage(Img), Namespace, MonoTypename);\
         return s_class;\
     }\
     const char* Type::_getTypename() { return #Namespace "." MonoTypename; }\
@@ -65,6 +67,21 @@ protected:
     MonoDomain *m_rep;
 };
 
+class mAssembly
+{
+public:
+    mAssembly(MonoAssembly *m) : m_rep(m) {}
+    operator bool() const { return m_rep != nullptr; }
+    bool operator==(mAssembly other) const { return m_rep == other.m_rep; }
+    bool operator!=(mAssembly other) const { return m_rep != other.m_rep; }
+    MonoAssembly* get() { return m_rep; }
+    const char* stringifyAssemblyName() const; // !!! caller must freeAssemblyName() returned string !!!
+    void freeAssemblyName( const char *aname);
+
+private:
+    MonoAssembly *m_rep;
+};
+
 class mImage
 {
 public:
@@ -74,7 +91,8 @@ public:
     bool operator!=(mImage other) const { return m_rep != other.m_rep; }
     MonoImage* get() { return m_rep; }
 
-    mClass findClass(const char *namespace_, const char *class_name);
+    mAssembly   getAssembly();
+    mClass      findClass(const char *namespace_, const char *class_name);
 
 protected:
     MonoImage *m_rep;
@@ -168,6 +186,8 @@ public:
 
     MonoClass* get() const { return m_rep; }
     const char* getName() const;
+    const char* getNamespace() const;
+    mImage    getImage() const;
     mType     getType() const;
     mClass    getParent() const;
 
@@ -224,6 +244,10 @@ public:
     mObject invoke(mMethod method, void *a0);
     mObject invoke(mMethod method, void *a0, void *a1);
     mObject invoke(mMethod method, void *a0, void *a1, void *a2);
+    static mObject sinvoke(mMethod method);
+    static mObject sinvoke(mMethod method, void *a0);
+    static mObject sinvoke(mMethod method, void *a0, void *a1);
+    static mObject sinvoke(mMethod method, void *a0, void *a1, void *a2);
 
 protected:
     MonoObject *m_rep;
@@ -239,6 +263,7 @@ public:
 
     mString(MonoObject *o = nullptr) : mObject(o) {}
     mString(MonoString *o) : mObject((MonoObject*)o) {}
+    operator bool() const { return m_rep != nullptr; }
     MonoString* get() { return (MonoString*)m_rep; }
 
     size_t size() const;
@@ -253,6 +278,7 @@ public:
     static mArray New(mClass klass, size_t size);
 
     mArray(MonoArray *o = nullptr) : mObject((MonoObject*)o) {}
+    operator bool() const { return m_rep != nullptr; }
     MonoArray* get() { return (MonoArray*)m_rep; }
 
     size_t size() const;
@@ -389,9 +415,11 @@ void mResize(mPTArray<T>& a, size_t s)
     a.reset(mTArray<T>::New(s));
 }
 
+mString mToMString(const char *s);
+std::string mToCString(mObject v);
 
-bool     mIsSubclassOf(mClass parent, mClass child);
-void     mAddMethod(const char *name, void *addr);
+bool mIsSubclassOf(mClass parent, mClass child);
+void mAddMethod(const char *name, void *addr);
 
 mDomain& mGetDomain();
 mImage& mCreateImageCache(const char *name);
@@ -408,3 +436,26 @@ void mRebindCache();
 void mAttachThread();
 void mDetachThread();
 void mDetachAllThreads();
+
+
+
+// debug mechanism
+
+#define mThisClass mTypeof<std::remove_reference<decltype(*this)>::type>()
+
+#ifdef usdiDebug
+    #define mTypeCheck(T1, T2)\
+        if((T1)!=(T2)) {\
+            auto *typename1 = (T1).getName();\
+            auto *typename2 = (T2).getName();\
+            assert((T1)!=(T2));\
+        }
+    #define mTypeCheckThis()\
+        if(!isNull() && getClass() != mThisClass) {\
+            auto *type_name = getClass().getName();\
+            assert(getClass() == mThisClass);\
+        }
+#else
+    #define mTypeCheck(...)
+    #define mTypeCheckThis()
+#endif

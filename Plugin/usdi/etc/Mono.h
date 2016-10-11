@@ -44,6 +44,45 @@ struct MonoString;
 struct MonoVTable;
 struct MonoThreadsSync;
 
+struct GSList {
+    gpointer data;
+    GSList *next;
+};
+
+#define MONO_PUBLIC_KEY_TOKEN_LENGTH	17
+
+struct MonoAssemblyName
+{
+    const char *name;
+    const char *culture;
+    const char *hash_value;
+    const guint8* public_key;
+    guchar public_key_token[MONO_PUBLIC_KEY_TOKEN_LENGTH];
+    guint32 hash_alg;
+    guint32 hash_len;
+    guint32 flags;
+    guint16 major, minor, build, revision;
+};
+
+struct MonoAssembly
+{
+    int ref_count;
+    char *basedir;
+    MonoAssemblyName aname;
+    MonoImage *image;
+    GSList *friend_assembly_names;
+    guint8 friend_assembly_names_inited;
+    guint8 in_gac;
+    guint8 dynamic;
+    guint8 corlib_internal;
+    gboolean ref_only;
+    guint32 ecma : 2;
+    guint32 aptc : 2;
+    guint32 fulltrust : 2;
+    guint32 unmanaged : 2;
+    guint32 skipverification : 2;
+};
+
 #define MONO_ZERO_LEN_ARRAY 1
 
 struct MonoObject {
@@ -85,9 +124,14 @@ struct MonoGenericContext {
 
 extern void *g_mono_dll;
 
+extern void (*g_free)(void *ptr);
+
 extern MonoDomain*      (*mono_domain_get)(void);
 extern MonoAssembly*    (*mono_domain_assembly_open)(MonoDomain *domain, const char *assemblyName);
 extern MonoImage*       (*mono_assembly_get_image)(MonoAssembly *assembly);
+extern gboolean         (*mono_assembly_fill_assembly_name)(MonoImage *image, MonoAssemblyName *aname);
+extern MonoAssembly*    (*mono_image_get_assembly)(MonoImage *image);
+extern char*            (*mono_stringify_assembly_name)(MonoAssemblyName *aname);
 
 extern MonoThread*      (*mono_thread_current)(void);
 extern MonoThread*      (*mono_thread_attach)(MonoDomain *domain);
@@ -104,6 +148,7 @@ extern MonoClass*       (*mono_type_get_class)(MonoType *type);
 
 extern MonoClass*       (*mono_class_from_name)(MonoImage *image, const char *namespaceString, const char *classnameString);
 extern const char*      (*mono_class_get_name)(MonoClass *klass);
+extern const char*      (*mono_class_get_namespace)(MonoClass *klass);
 extern MonoType*        (*mono_class_get_type)(MonoClass *klass);
 extern MonoMethod*      (*mono_class_get_method_from_name)(MonoClass *klass, const char *name, int param_count);
 extern MonoClassField*  (*mono_class_get_field_from_name)(MonoClass *klass, const char *name);
@@ -114,7 +159,7 @@ extern MonoMethod*      (*mono_class_get_methods)(MonoClass* klass, gpointer *it
 extern MonoClassField*  (*mono_class_get_fields)(MonoClass* klass, gpointer *iter);
 extern MonoProperty*    (*mono_class_get_properties)(MonoClass* klass, gpointer *iter);
 extern MonoClass*       (*mono_class_get_parent)(MonoClass *klass);
-
+extern MonoImage*       (*mono_class_get_image)(MonoClass *klass);
 
 extern const char*      (*mono_method_get_name)(MonoMethod *method);
 extern MonoMethodSignature* (*mono_method_signature)(MonoMethod *method);

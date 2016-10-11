@@ -44,7 +44,7 @@ public:
 
     ~tls()
     {
-        std::unique_lock<std::mutex> lock;
+        std::unique_lock<std::mutex> lock(m_mutex);
         for (auto p : m_locals) { delete p; }
         m_locals.clear();
     }
@@ -64,7 +64,7 @@ public:
             value = v;
 
             {
-                std::unique_lock<std::mutex> lock;
+                std::unique_lock<std::mutex> lock(m_mutex);
                 m_locals.push_back(v);
             }
             on_first(*v);
@@ -75,7 +75,7 @@ public:
     template<class Body>
     void each(const Body& body)
     {
-        std::unique_lock<std::mutex> lock;
+        std::unique_lock<std::mutex> lock(m_mutex);
         for (auto p : m_locals) { body(*p); }
     }
 

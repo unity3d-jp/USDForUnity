@@ -188,6 +188,7 @@ void StreamUpdator::onUnload()
 
 void StreamUpdator::asyncUpdate(Time t)
 {
+#define usdiDbgForceSingleThread
 #ifdef usdiDbgForceSingleThread
     for (auto& s : m_children) { s->asyncUpdate(t); }
 #else
@@ -199,6 +200,7 @@ void StreamUpdator::asyncUpdate(Time t)
             mAttachThread();
             size_t grain = std::max<size_t>(m_children.size() / 32, 1);
             tbb::parallel_for(tbb::blocked_range<size_t>(0, m_children.size(), grain), [t, this](const auto& r) {
+                mAttachThread();
                 for (size_t i = r.begin(); i != r.end(); ++i) {
                     m_children[i]->asyncUpdate(t);
                 }
@@ -313,6 +315,22 @@ void CameraUpdator::update(Time time)
 }
 
 
+static void mAssignDefaultMaterial(mMeshRenderer renderer)
+{
+    // only available on editor
+    if (!mGetImage(UnityEditor)) { return; }
+
+    static mClass& s_EditorGUIUtility = mCreateClassCache(mGetImage(UnityEditor), "UnityEditor", "EditorGUIUtility");
+    if (!s_EditorGUIUtility) { return; }
+    static mMethod& s_GetBuiltinExtraResource = mCreateMethodCache(s_EditorGUIUtility, "GetBuiltinExtraResource", 2);
+    if (!s_GetBuiltinExtraResource) { return; }
+
+    void *args[] = { mGetSystemType<mMaterial>().get(), mToMString("Default-Material.mat").get() };
+    auto ret = s_GetBuiltinExtraResource.invoke(nullptr, args);
+    mMaterial material(ret.get());
+    renderer.setSharedMaterial(material);
+}
+
 MeshUpdator::MeshBuffer::MeshBuffer(MeshUpdator *parent, mGameObject go, int nth)
     : m_parent(parent)
     , m_go(go)
@@ -325,7 +343,9 @@ MeshUpdator::MeshBuffer::MeshBuffer(MeshUpdator *parent, mGameObject go, int nth
         m_mmesh = mMesh::New();
         m_mmesh.setName(parent->m_schema->getName());
         m_mfilter.setSharedMesh(m_mmesh);
+        mAssignDefaultMaterial(m_mrenderer);
     }
+    m_mmesh.markDynamic();
     m_prev_vertex_count = m_mmesh.getVertexCount();
 }
 
@@ -417,7 +437,7 @@ void MeshUpdator::MeshBuffer::uploadDataToMonoMesh()
     }
 
     if(flags.indices) {
-        m_mmesh.SetTriangles(m_mindices->get());
+        m_mmesh.setTriangles(m_mindices->get());
     }
 
     m_mmesh.uploadMeshData(false);
@@ -465,10 +485,11 @@ void MeshUpdator::asyncUpdate(Time time)
         m_uflags.normals = m_data.normals && (m_frame == 0 || m_summary.topology_variance != TopologyVariance::Constant);
         m_uflags.uv = m_data.uvs && (m_frame == 0 || m_summary.topology_variance != TopologyVariance::Constant);
         m_uflags.indices = m_data.num_indices_triangulated && (m_frame == 0 || m_summary.topology_variance == TopologyVariance::Heterogenous);
-        m_uflags.directVB =
-            m_parent->getConfig().directVBUpdate && mMesh::hasNativeBufferAPI() &&
-            m_summary.topology_variance == TopologyVariance::Homogenous;
-        bool kick = m_buffers.front()->m_vb != nullptr;
+        //m_uflags.directVB =
+        //    m_parent->getConfig().directVBUpdate && mMesh::hasNativeBufferAPI() &&
+        //    m_summary.topology_variance == TopologyVariance::Homogenous;
+        m_uflags.directVB = false;
+        bool kick_VB_update_tasks = m_buffers.front()->m_vb != nullptr;
 
         if (m_data.num_splits != 0) {
             // get submesh data
@@ -477,7 +498,7 @@ void MeshUpdator::asyncUpdate(Time time)
             m_schema->readSample(m_data, time, false);
         }
 
-        if (kick) {
+        if (kick_VB_update_tasks) {
             for (auto& b : m_buffers) { b->kickVBUpdateTask(); }
         }
         else {

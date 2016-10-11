@@ -12,9 +12,12 @@
     return s_class;
 
 #define mBindMethod(...)\
-    static mMethod& s_method=mCreateMethodCache(mTypeof<std::remove_reference<decltype(*this)>::type>(), __VA_ARGS__);
-#define mBindMethodS(T, ...)\
-    static mMethod& s_method=mCreateMethodCache(mTypeof<T>(), __VA_ARGS__);
+    static mMethod& mBindedMethod=mCreateMethodCache(mTypeof<std::remove_reference<decltype(*this)>::type>(), __VA_ARGS__);
+#define mBindStaticMethod(T, ...)\
+    static mMethod& mBindedMethod=mCreateMethodCache(mTypeof<T>(), __VA_ARGS__);
+#define mBindMethodFull(...)\
+    static mMethod& mBindedMethod=mCreateMethodCache(__VA_ARGS__);
+#define mBindedMethod mBindedMethod
 
 namespace usdi {
 
@@ -109,20 +112,11 @@ void nMesh::setBounds(const AABB &v) { (self()->*NM_Mesh_SetBounds)(v); }
 
 
 
-#define mThisClass mTypeof<std::remove_reference<decltype(*this)>::type>()
-#ifdef usdiDebug
-    #define mTypeCheck() if(!isNull() && getClass() != mThisClass) {\
-        auto *type_name = getClass().getName();\
-        assert(getClass() == mThisClass);\
-    } 
-#else
-    #define mTypeCheck()
-#endif
 
-inline mString ToMString(const char *s) { return mString::New(s); }
-inline std::string ToCString(mObject v) { return mString(v.get()).toUTF8(); }
 
+mDefImage(mscorlib, "mscorlib");
 mDefImage(UnityEngine, "UnityEngine");
+mDefImage(UnityEditor, "UnityEditor");
 
 
 mDefTraits(UnityEngine, "UnityEngine", "Vector2", mVector2);
@@ -132,88 +126,142 @@ mDefTraits(UnityEngine, "UnityEngine", "Quaternion", mQuaternion);
 
 mDefTraits(UnityEngine, "UnityEngine", "Object", mUObject);
 
+
+mObject mGetSystemType(mClass c)
+{
+    static mClass& s_Type = mCreateClassCache(mGetImage(mscorlib), "System", "Type");
+    static mMethod& s_GetType = mCreateMethodCache(s_Type, "GetType", 1);
+
+    auto assembly = c.getImage().getAssembly();
+    char qname[1024];
+    auto* asmname = assembly.stringifyAssemblyName();
+    sprintf(qname, "%s.%s, %s", c.getNamespace(), c.getName(), asmname);
+    assembly.freeAssemblyName(asmname);
+
+    void *args[] = { mToMString(qname).get() };
+    // System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
+    return s_GetType.invoke(nullptr, args);
+}
+
 mUObject::mUObject(MonoObject *rep) : super(rep) {}
+
+mObject mUObject::getType()
+{
+    mBindMethod("GetType", 0);
+    return invoke(mBindedMethod);
+}
 
 void mUObject::setName(const char *name)
 {
     mBindMethod("set_name");
-    invoke(s_method, ToMString(name).get());
+    invoke(mBindedMethod, mToMString(name).get());
 }
 std::string mUObject::getName()
 {
     mBindMethod("get_name");
-    return ToCString(invoke(s_method));
+    return mToCString(invoke(mBindedMethod));
 }
+
+mMethod& mUObject::getInstantiate1()
+{
+    mBindStaticMethod(mUObject, "Instantiate", 1);
+    return mBindedMethod;
+}
+
+#define Instantiate(T)\
+    template<> T mUObject::instantiate()\
+    {\
+        mBindMethodFull(getInstantiate1(), {&mTypeof<T>()});\
+        auto ret = sinvoke(mBindedMethod);\
+        mTypeCheck(ret.getClass(), mTypeof<T>());\
+        return T(ret.get());\
+    }
+
+Instantiate(mMesh);
+Instantiate(mMaterial);
+Instantiate(mGameObject);
+#undef Instantiate
+
+
+mDefTraits(UnityEngine, "UnityEngine", "Material", mMaterial);
+mMaterial::mMaterial(MonoObject *mo) : super(mo) {}
 
 
 mDefTraits(UnityEngine, "UnityEngine", "Mesh", mMesh);
 
 mMesh mMesh::New()
 {
-    mBindMethodS(mMesh, ".ctor");
+    mBindStaticMethod(mMesh, ".ctor");
     auto ret = mObject::New<mMesh>();
-    ret.invoke(s_method);
+    ret.invoke(mBindedMethod);
     return ret;
 }
 
 mMesh::mMesh(MonoObject *mo) : super(mo)
 {
-    mTypeCheck();
+    mTypeCheckThis();
 }
 
 int mMesh::getVertexCount()
 {
     mBindMethod("get_vertexCount", 0);
-    return invoke(s_method).unbox<int>();
+    return invoke(mBindedMethod).unbox<int>();
 }
 
 void mMesh::setVertices(mTArray<mVector3> v)
 {
     mBindMethod("set_vertices", 1);
-    invoke(s_method, v.get());
+    invoke(mBindedMethod, v.get());
 }
 void mMesh::setNormals(mTArray<mVector3> v)
 {
     mBindMethod("set_normals", 1);
-    invoke(s_method, v.get());
+    invoke(mBindedMethod, v.get());
 }
 void mMesh::setUV(mTArray<mVector2> v)
 {
     mBindMethod("set_uv", 1);
-    invoke(s_method, v.get());
+    invoke(mBindedMethod, v.get());
 }
-void mMesh::SetTriangles(mTArray<mInt32> v)
+void mMesh::setTriangles(mTArray<mInt32> v)
 {
     mBindMethod("SetTriangles", {"System.Int32[]", "System.Int32"});
     int zero = 0;
-    invoke(s_method, v.get(), &zero);
+    invoke(mBindedMethod, v.get(), &zero);
 }
 void mMesh::uploadMeshData(bool _fix)
 {
     mBindMethod("UploadMeshData", 1);
     int v = _fix;
-    invoke(s_method, &v);
+    invoke(mBindedMethod, &v);
 }
+
+void mMesh::markDynamic()
+{
+    mBindMethod("MarkDynamic", 0);
+    invoke(mBindedMethod);
+}
+
 void mMesh::setBounds(const AABB& v)
 {
     mBindMethod("set_bounds");
-    invoke(s_method, (void*)&v);
+    invoke(mBindedMethod, (void*)&v);
 }
 
 bool mMesh::hasNativeBufferAPI()
 {
-    mBindMethodS(mMesh, "GetNativeVertexBufferPtr");
-    return s_method;
+    mBindStaticMethod(mMesh, "GetNativeVertexBufferPtr");
+    return mBindedMethod;
 }
 void* mMesh::getNativeVertexBufferPtr(int nth)
 {
-    mBindMethodS(mMesh, "GetNativeVertexBufferPtr", 1);
-    return invoke(s_method, &nth).unbox<void*>();
+    mBindStaticMethod(mMesh, "GetNativeVertexBufferPtr", 1);
+    return invoke(mBindedMethod, &nth).unbox<void*>();
 }
 void* mMesh::getNativeIndexBufferPtr()
 {
-    mBindMethodS(mMesh, "GetNativeIndexBufferPtr", 0);
-    return invoke(s_method).unbox<void*>();
+    mBindStaticMethod(mMesh, "GetNativeIndexBufferPtr", 0);
+    return invoke(mBindedMethod).unbox<void*>();
 }
 
 
@@ -221,56 +269,50 @@ mDefTraits(UnityEngine, "UnityEngine", "GameObject", mGameObject);
 
 mGameObject mGameObject::New(const char *name)
 {
-    mBindMethodS(mGameObject, ".ctor", 1);
+    mBindStaticMethod(mGameObject, ".ctor", 1);
     auto ret = mObject::New<mGameObject>();
-    ret.invoke(s_method, ToMString(name).get());
+    ret.invoke(mBindedMethod, mToMString(name).get());
     return ret;
 }
 
 mGameObject::mGameObject(MonoObject *game_object)
     : super(game_object)
 {
-    mTypeCheck();
+    mTypeCheckThis();
 }
 
 void mGameObject::SetActive(bool v_)
 {
     mBindMethod("SetActive", 1);
     int v = (int)v_;
-    invoke(s_method, &v);
+    invoke(mBindedMethod, &v);
 }
 
 mMethod& mGameObject::getGetComponent()
 {
     mBindMethod("GetComponent", 0);
-    return s_method;
+    return mBindedMethod;
 }
 mMethod& mGameObject::getAddComponent()
 {
     mBindMethod("AddComponent", 0);
-    return s_method;
+    return mBindedMethod;
 }
 
-
-#ifdef usdiDebug
-    #define TypeCheck(T1, T2) assert((T1)=(T2))
-#else
-    #define TypeCheck(...)
-#endif
 
 #define Instantiate(T)\
 template<> T mGameObject::getComponent()\
 {\
-    static mMethod& s_method=mCreateMethodCache(getGetComponent(), {&mTypeof<T>()});\
-    auto ret = invoke(s_method);\
-    TypeCheck(ret.getClass(), mTypeof<T>());\
+    mBindMethodFull(getGetComponent(), {&mTypeof<T>()});\
+    auto ret = invoke(mBindedMethod);\
+    mTypeCheck(ret.getClass(), mTypeof<T>());\
     return T(ret.get());\
 }\
 template<> T mGameObject::addComponent()\
 {\
-    static mMethod& s_method=mCreateMethodCache(getAddComponent(), {&mTypeof<T>()});\
-    auto ret = invoke(s_method);\
-    TypeCheck(ret.getClass(), mTypeof<T>());\
+    mBindMethodFull(getAddComponent(), {&mTypeof<T>()});\
+    auto ret = invoke(mBindedMethod);\
+    mTypeCheck(ret.getClass(), mTypeof<T>());\
     return T(ret.get());\
 }
 Instantiate(mTransform);
@@ -279,7 +321,7 @@ Instantiate(mMeshFilter);
 Instantiate(mMeshRenderer);
 Instantiate(mLight);
 #undef Instantiate
-#undef TypeCheck
+#undef mTypeCheck
 
 
 mDefTraits(UnityEngine, "UnityEngine", "Component", mComponent);
@@ -288,7 +330,7 @@ mComponent::mComponent(MonoObject *component) : super(component) {}
 mGameObject mComponent::getGameObject()
 {
     mBindMethod("get_gameObject", 0);
-    return mGameObject(invoke(s_method).get());
+    return mGameObject(invoke(mBindedMethod).get());
 }
 
 
@@ -296,31 +338,31 @@ mDefTraits(UnityEngine, "UnityEngine", "Transform", mTransform);
 
 mTransform::mTransform(MonoObject *component)
     : super(component)
-{ mTypeCheck(); }
+{ mTypeCheckThis(); }
 void mTransform::setLocalPosition(const float3& v)
 {
     mBindMethod("set_localPosition", 1);
-    invoke(s_method, (void*)&v);
+    invoke(mBindedMethod, (void*)&v);
 }
 void mTransform::setLocalRotation(const quatf& v)
 {
     mBindMethod("set_localRotation", 1);
-    invoke(s_method, (void*)&v);
+    invoke(mBindedMethod, (void*)&v);
 }
 void mTransform::setLocalScale(const float3& v)
 {
     mBindMethod("set_localScale", 1);
-    invoke(s_method, (void*)&v);
+    invoke(mBindedMethod, (void*)&v);
 }
 void mTransform::setParent(mTransform parent)
 {
     mBindMethod("SetParent", 1);
-    invoke(s_method, parent.get());
+    invoke(mBindedMethod, parent.get());
 }
 mTransform mTransform::findChild(const char *name)
 {
     mBindMethod("FindChild", 1);
-    return mTransform(invoke(s_method, ToMString(name).get()).get());
+    return mTransform(invoke(mBindedMethod, mToMString(name).get()).get());
 }
 
 
@@ -329,27 +371,27 @@ mDefTraits(UnityEngine, "UnityEngine", "Camera", mCamera);
 mCamera::mCamera(MonoObject *component)
     : super(component)
 {
-    mTypeCheck();
+    mTypeCheckThis();
 }
 void mCamera::setNearClipPlane(float v)
 {
     mBindMethod("set_nearClipPlane", 1);
-    invoke(s_method, &v);
+    invoke(mBindedMethod, &v);
 }
 void mCamera::setFarClipPlane(float v)
 {
     mBindMethod("set_farClipPlane", 1);
-    invoke(s_method, &v);
+    invoke(mBindedMethod, &v);
 }
 void mCamera::setFieldOfView(float v)
 {
     mBindMethod("set_fieldOfView", 1);
-    invoke(s_method, &v);
+    invoke(mBindedMethod, &v);
 }
 void mCamera::setAspect(float v)
 {
     mBindMethod("set_aspect", 1);
-    invoke(s_method, &v);
+    invoke(mBindedMethod, &v);
 }
 
 
@@ -358,27 +400,33 @@ mDefTraits(UnityEngine, "UnityEngine", "MeshFilter", mMeshFilter);
 mMeshFilter::mMeshFilter(MonoObject *component)
     : super(component)
 {
-    mTypeCheck();
+    mTypeCheckThis();
 }
 mMesh mMeshFilter::getSharedMesh()
 {
     mBindMethod("get_sharedMesh", 0);
-    return mMesh(invoke(s_method).get());
+    return mMesh(invoke(mBindedMethod).get());
 }
 void mMeshFilter::setSharedMesh(mMesh v)
 {
     mBindMethod("set_sharedMesh", 1);
-    invoke(s_method, v.get());
+    invoke(mBindedMethod, v.get());
 }
 
 
 mDefTraits(UnityEngine, "UnityEngine", "MeshRenderer", mMeshRenderer);
 
-mMeshRenderer::mMeshRenderer(MonoObject *component) : super(component) { mTypeCheck(); }
+mMeshRenderer::mMeshRenderer(MonoObject *component) : super(component) { mTypeCheckThis(); }
+
+void mMeshRenderer::setSharedMaterial(mMaterial m)
+{
+    mBindMethod("set_sharedMaterial", 1);
+    invoke(mBindedMethod, m.get());
+}
 
 
 mDefTraits(UnityEngine, "UnityEngine", "Light", mLight);
 
-mLight::mLight(MonoObject *component) : super(component) { mTypeCheck(); }
+mLight::mLight(MonoObject *component) : super(component) { mTypeCheckThis(); }
 
 } // namespace usdi

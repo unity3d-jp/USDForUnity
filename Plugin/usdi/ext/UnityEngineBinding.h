@@ -69,8 +69,12 @@ class mLight;
 class mMesh;
 
 
+mDeclImage(mscorlib);
 mDeclImage(UnityEngine);
+mDeclImage(UnityEditor);
 
+mObject mGetSystemType(mClass c);
+template<class T> mObject mGetSystemType() { return mGetSystemType(mTypeof<T>()); }
 
 struct mVector2
 {
@@ -108,10 +112,23 @@ public:
 
     mUObject(MonoObject *rep = nullptr);
 
+    mObject getType();
     void setName(const char *name);
     std::string getName();
+
+    template<class T> static T instantiate();
+
+private:
+    static mMethod& getInstantiate1();
 };
 
+class mMaterial : public mUObject
+{
+typedef mUObject super;
+public:
+    mDeclTraits();
+    mMaterial(MonoObject *mo = nullptr);
+};
 
 class mMesh : public mUObject
 {
@@ -125,8 +142,9 @@ public:
     void setVertices(mTArray<mVector3> v);
     void setNormals(mTArray<mVector3> v);
     void setUV(mTArray<mVector2> v);
-    void SetTriangles(mTArray<mInt32> v);
+    void setTriangles(mTArray<mInt32> v);
     void uploadMeshData(bool fix);
+    void markDynamic();
     void setBounds(const AABB& v);
 
     static bool hasNativeBufferAPI();
@@ -213,6 +231,7 @@ typedef mComponent super;
 public:
     mDeclTraits();
     mMeshRenderer(MonoObject *component = nullptr);
+    void setSharedMaterial(mMaterial m);
 };
 
 
