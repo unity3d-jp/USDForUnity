@@ -123,35 +123,39 @@ public:
             uint32_t normals : 1;
             uint32_t uv : 1;
             uint32_t indices : 1;
+            uint32_t pad : 12;
             uint32_t directVB : 1;
         };
+
+        uint32_t componentPart() { return all & 0x0000ffff; }
+        uint32_t optionPart() { return all & 0xffff0000; }
     };
 
     class MeshBuffer
     {
     public:
-        MeshBuffer(MeshUpdator *parent, mGameObject go);
+        MeshBuffer(MeshUpdator *parent, mGameObject go, int nth);
         ~MeshBuffer();
+
+        void copyDataToMonoArrays();
 
         // async
         void kickVBUpdateTask();
 
         // async
-        void releaseMonoArrays(UpdateFlags flags, const MeshData &data, int split);
-        // async
-        void copyMeshDataToMonoArrays(UpdateFlags flags, const MeshData &data);
-        // async
-        void copySubmeshDataToMonoArrays(UpdateFlags flags, const MeshData &data, int split);
+        void releaseMonoArrays();
 
         // sync
-        void copyDataToMonoMesh(UpdateFlags flags);
+        void uploadDataToMonoMesh();
 
-    private:
+    public:
         MeshUpdator *m_parent;
         mGameObject m_go;
         mMeshFilter m_mfilter;
         mMeshRenderer m_mrenderer;
         mMesh m_mmesh;
+        int m_nth = 0;
+        int m_prev_vertex_count = 0;
 
         mPTArray<mVector3> m_mvertices;
         mPTArray<mVector3> m_mnormals;
@@ -164,7 +168,7 @@ public:
     };
     typedef std::unique_ptr<MeshBuffer> BufferPtr;
     typedef std::vector<BufferPtr> Buffers;
-    typedef std::vector<SubmeshData> Splits;
+    typedef std::vector<SubmeshData> Submeshes;
 
     MeshUpdator(StreamUpdator *parent, Mesh *mesh, mGameObject go);
     ~MeshUpdator() override;
@@ -175,7 +179,7 @@ private:
     Mesh            *m_schema;
     MeshData        m_data, m_data_prev;
     MeshSummary     m_summary;
-    Splits          m_splits;
+    Submeshes       m_submeshes;
     Buffers         m_buffers;
     UpdateFlags     m_uflags = { 0 };
     int             m_frame = 0;

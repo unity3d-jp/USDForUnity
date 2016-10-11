@@ -215,15 +215,15 @@ void StreamUpdator::update(Time time)
     }
 }
 
-StreamUpdator* StreamUpdator_Ctor(Context *ctx, MonoObject *component) { return new StreamUpdator(ctx, component); }
-void StreamUpdator_Dtor(StreamUpdator *rep) { delete rep; }
-void StreamUpdator_SetConfig(StreamUpdator *rep, StreamUpdator::Config *config) { rep->setConfig(*config); }
-void StreamUpdator_ConstructScene(StreamUpdator *rep) { rep->constructUnityScene(); }
-void StreamUpdator_Add(StreamUpdator *rep, Schema *schema, MonoObject *gameobject) { rep->add(schema, mGameObject(gameobject)); }
-void StreamUpdator_OnLoad(StreamUpdator *rep) { rep->onLoad(); }
-void StreamUpdator_OnUnload(StreamUpdator *rep) { rep->onUnload(); }
-void StreamUpdator_AsyncUpdate(StreamUpdator *rep, double time) { rep->asyncUpdate(time); }
-void StreamUpdator_Update(StreamUpdator *rep, double time) { rep->update(time); }
+static StreamUpdator* StreamUpdator_Ctor(Context *ctx, MonoObject *component) { return new StreamUpdator(ctx, component); }
+static void StreamUpdator_Dtor(StreamUpdator *rep) { delete rep; }
+static void StreamUpdator_SetConfig(StreamUpdator *rep, StreamUpdator::Config *config) { rep->setConfig(*config); }
+static void StreamUpdator_ConstructScene(StreamUpdator *rep) { rep->constructUnityScene(); }
+static void StreamUpdator_Add(StreamUpdator *rep, Schema *schema, MonoObject *gameobject) { rep->add(schema, mGameObject(gameobject)); }
+static void StreamUpdator_OnLoad(StreamUpdator *rep) { rep->onLoad(); }
+static void StreamUpdator_OnUnload(StreamUpdator *rep) { rep->onUnload(); }
+static void StreamUpdator_AsyncUpdate(StreamUpdator *rep, double time) { rep->asyncUpdate(time); }
+static void StreamUpdator_Update(StreamUpdator *rep, double time) { rep->update(time); }
 
 void StreamUpdator::registerICalls()
 {
@@ -312,11 +312,11 @@ void CameraUpdator::update(Time time)
 }
 
 
-MeshUpdator::MeshBuffer::MeshBuffer(MeshUpdator *parent, mGameObject go)
+MeshUpdator::MeshBuffer::MeshBuffer(MeshUpdator *parent, mGameObject go, int nth)
+    : m_parent(parent)
+    , m_go(go)
+    , m_nth(nth)
 {
-    m_parent = parent;
-    m_go = go;
-
     m_mfilter = m_go.getOrAddComponent<mMeshFilter>();
     m_mrenderer = m_go.getOrAddComponent<mMeshRenderer>();
     m_mmesh = m_mfilter.getSharedMesh();
@@ -325,12 +325,62 @@ MeshUpdator::MeshBuffer::MeshBuffer(MeshUpdator *parent, mGameObject go)
         m_mmesh.setName(parent->m_schema->getName());
         m_mfilter.setSharedMesh(m_mmesh);
     }
+    m_prev_vertex_count = m_mmesh.getVertexCount();
 }
 
 MeshUpdator::MeshBuffer::~MeshBuffer()
 {
     usdi::VertexCommandManager::getInstance().destroyCommand(m_hcommand);
 }
+
+
+void MeshUpdator::MeshBuffer::copyDataToMonoArrays()
+{
+    auto& data = m_parent->m_data;
+    auto& flags = m_parent->m_uflags;
+
+    if (data.submeshes) {
+        // copy submesh data to mono arrays
+        auto& src = m_parent->m_data.submeshes[m_nth];
+        if (flags.points) {
+            mResize(m_mvertices, src.num_points);
+            memcpy(m_mvertices->data(), src.points, sizeof(float3)*src.num_points);
+        }
+        if (flags.normals) {
+            mResize(m_mnormals, src.num_points);
+            memcpy(m_mnormals->data(), src.normals, sizeof(float3)*src.num_points);
+        }
+        if (flags.uv) {
+            mResize(m_muv, src.num_points);
+            memcpy(m_muv->data(), src.uvs, sizeof(float2)*src.num_points);
+        }
+        if (flags.indices) {
+            mResize(m_mindices, src.num_points);
+            memcpy(m_mindices->data(), src.indices, sizeof(int)*src.num_points);
+        }
+    }
+    else {
+        // copy mesh data to mono arrays
+        auto& src = m_parent->m_data;
+        if (flags.points) {
+            mResize(m_mvertices, src.num_points);
+            memcpy(m_mvertices->data(), src.points, sizeof(float3)*src.num_points);
+        }
+        if (flags.normals) {
+            mResize(m_mnormals, src.num_points);
+            memcpy(m_mnormals->data(), src.normals, sizeof(float3)*src.num_points);
+        }
+        if (flags.uv) {
+            mResize(m_muv, src.num_points);
+            memcpy(m_muv->data(), src.uvs, sizeof(float2)*src.num_points);
+        }
+        if (flags.indices) {
+            mResize(m_mindices, src.num_indices_triangulated);
+            memcpy(m_mindices->data(), src.indices_triangulated, sizeof(int)*src.num_indices_triangulated);
+        }
+    }
+}
+
 
 void MeshUpdator::MeshBuffer::kickVBUpdateTask()
 {
@@ -340,7 +390,7 @@ void MeshUpdator::MeshBuffer::kickVBUpdateTask()
     // todo
 }
 
-void MeshUpdator::MeshBuffer::releaseMonoArrays(UpdateFlags flags, const MeshData &data, int split)
+void MeshUpdator::MeshBuffer::releaseMonoArrays()
 {
     m_mvertices.reset();
     m_mnormals.reset();
@@ -348,54 +398,11 @@ void MeshUpdator::MeshBuffer::releaseMonoArrays(UpdateFlags flags, const MeshDat
     m_mindices.reset();
 }
 
-void MeshUpdator::MeshBuffer::copyMeshDataToMonoArrays(UpdateFlags flags, const MeshData &data)
+void MeshUpdator::MeshBuffer::uploadDataToMonoMesh()
 {
-    auto& src = data;
+    auto flags = m_parent->m_uflags;
 
-    if (flags.points) {
-        mResize(m_mvertices, src.num_points);
-        memcpy(m_mvertices->data(), src.points, sizeof(float3)*src.num_points);
-    }
-    if (flags.normals) {
-        mResize(m_mnormals, src.num_points);
-        memcpy(m_mnormals->data(), src.normals, sizeof(float3)*src.num_points);
-    }
-    if (flags.uv) {
-        mResize(m_muv, src.num_points);
-        memcpy(m_muv->data(), src.uvs, sizeof(float2)*src.num_points);
-    }
-    if (flags.indices) {
-        mResize(m_mindices, src.num_indices_triangulated);
-        memcpy(m_mindices->data(), src.indices_triangulated, sizeof(int)*src.num_indices_triangulated);
-    }
-}
-
-void MeshUpdator::MeshBuffer::copySubmeshDataToMonoArrays(UpdateFlags flags, const MeshData &data, int split)
-{
-    auto& src = data.splits[split];
-
-    if (flags.points) {
-        mResize(m_mvertices, src.num_points);
-        memcpy(m_mvertices->data(), src.points, sizeof(float3)*src.num_points);
-    }
-    if (flags.normals) {
-        mResize(m_mnormals, src.num_points);
-        memcpy(m_mnormals->data(), src.normals, sizeof(float3)*src.num_points);
-    }
-    if (flags.uv) {
-        mResize(m_muv, src.num_points);
-        memcpy(m_muv->data(), src.uvs, sizeof(float2)*src.num_points);
-    }
-    if (flags.indices) {
-        mResize(m_mindices, src.num_points);
-        memcpy(m_mindices->data(), src.indices, sizeof(int)*src.num_points);
-    }
-}
-
-
-void MeshUpdator::MeshBuffer::copyDataToMonoMesh(UpdateFlags flags)
-{
-    if (flags.all == 0) { return; }
+    if (flags.componentPart() == 0) { return; }
 
     if (flags.points) {
         m_mmesh.setVertices(m_mvertices->get());
@@ -411,8 +418,10 @@ void MeshUpdator::MeshBuffer::copyDataToMonoMesh(UpdateFlags flags)
         m_mmesh.SetTriangles(m_mindices->get());
     }
 
-    {
-        m_mmesh.uploadMeshData(false);
+    m_mmesh.uploadMeshData(false);
+    if (flags.directVB) {
+        m_vb = m_mmesh.getNativeVertexBufferPtr(0);
+        m_ib = m_mmesh.getNativeIndexBufferPtr();
     }
 }
 
@@ -422,14 +431,14 @@ MeshUpdator::MeshUpdator(StreamUpdator *parent, Mesh *mesh, mGameObject go)
 {
     m_summary = mesh->getSummary();
 
-    m_buffers.emplace_back(new MeshBuffer(this, go));
+    m_buffers.emplace_back(new MeshBuffer(this, go, 0));
 
     // gather existing submeshes
     for (int i = 0; ; ++i) {
         char name[128];
         sprintf(name, "Submesh [%d]", i);
         if (auto c = m_mtrans.findChild(name)) {
-            m_buffers.emplace_back(new MeshBuffer(this, c.getGameObject()));
+            m_buffers.emplace_back(new MeshBuffer(this, c.getGameObject(), (int)m_buffers.size()));
         }
         else {
             break;
@@ -446,7 +455,7 @@ void MeshUpdator::asyncUpdate(Time time)
     super::asyncUpdate(time);
     if (m_schema->needsUpdate()) {
         m_data_prev = m_data;
-        m_data.splits = nullptr;
+        m_data.submeshes = nullptr;
         m_schema->readSample(m_data, time, false);
 
         m_uflags.all = 0;
@@ -458,15 +467,18 @@ void MeshUpdator::asyncUpdate(Time time)
             m_parent->getConfig().directVBUpdate && mMesh::hasNativeBufferAPI() &&
             m_summary.topology_variance == TopologyVariance::Homogenous;
 
-        if (m_data.num_splits == 0) {
-            // no split
-            m_splits.resize(1);
+        if (m_data.num_splits != 0) {
+            // get submesh data
+            m_submeshes.resize(m_data.num_splits);
+            m_data.submeshes = m_submeshes.data();
+            m_schema->readSample(m_data, time, false);
+        }
+
+        if (m_buffers.front()->m_vb) {
+            for (auto& b : m_buffers) { b->kickVBUpdateTask(); }
         }
         else {
-            // split
-            m_splits.resize(m_data.num_splits);
-            m_data.splits = m_splits.data();
-            m_schema->readSample(m_data, time, false);
+            for (auto& b : m_buffers) { b->copyDataToMonoArrays(); }
         }
     }
 }
@@ -475,17 +487,21 @@ void MeshUpdator::update(Time time)
 {
     super::update(time);
     if (m_schema->needsUpdate()) {
-
         // create submesh objects if needed
         while (m_buffers.size() < m_data.num_splits) {
             char name[128];
-            sprintf(name, "Submesh [%d]", (int)m_buffers.size()-1);
+            sprintf(name, "Submesh [%d]", (int)m_buffers.size() - 1);
             auto go = mGameObject::New(name);
             go.getComponent<mTransform>().setParent(m_mtrans);
-            m_buffers.emplace_back(new MeshBuffer(this, go));
+            m_buffers.emplace_back(new MeshBuffer(this, go, (int)m_buffers.size()));
         }
 
-        // todo
+        if (m_buffers.front()->m_vb) {
+            // nothing to do here
+        }
+        else {
+            for (auto& b : m_buffers) { b->uploadDataToMonoMesh(); }
+        }
     }
     ++m_frame;
 }

@@ -54,9 +54,9 @@ public:
 // mono class bindings
 
 
-class mVector2;
-class mVector3;
-class mQuaternion;
+struct mVector2;
+struct mVector3;
+struct mQuaternion;
 
 class mUObject;
 class mGameObject;
@@ -72,22 +72,31 @@ class mMesh;
 mDeclImage(UnityEngine);
 
 
-class mVector2
+struct mVector2
 {
 public:
     mDeclTraits();
+    float x, y;
+    float& operator[](int i) { return ((float*)this)[i]; }
+    const float& operator[](int i) const { return ((float*)this)[i]; }
 };
 
-class mVector3
+struct mVector3
 {
 public:
     mDeclTraits();
+    float x, y, z;
+    float& operator[](int i) { return ((float*)this)[i]; }
+    const float& operator[](int i) const { return ((float*)this)[i]; }
 };
 
-class mQuaternion
+struct mQuaternion
 {
 public:
     mDeclTraits();
+    float x, y, z, w;
+    float& operator[](int i) { return ((float*)this)[i]; }
+    const float& operator[](int i) const { return ((float*)this)[i]; }
 };
 
 
@@ -112,10 +121,11 @@ public:
     static mMesh New();
 
     mMesh(MonoObject *mo = nullptr);
-    void setVertices(MonoArray *v);
-    void setNormals(MonoArray *v);
-    void setUV(MonoArray *v);
-    void SetTriangles(MonoArray *v);
+    int getVertexCount();
+    void setVertices(mTArray<mVector3> v);
+    void setNormals(mTArray<mVector3> v);
+    void setUV(mTArray<mVector2> v);
+    void SetTriangles(mTArray<mInt32> v);
     void uploadMeshData(bool fix);
     void setBounds(const AABB& v);
 

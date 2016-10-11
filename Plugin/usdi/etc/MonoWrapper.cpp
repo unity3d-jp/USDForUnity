@@ -2,9 +2,11 @@
 #include "Mono.h"
 #include "MonoWrapper.h"
 
-mImage mImage::findImage(const char *name)
+
+
+mImage mDomain::findImage(const char *name)
 {
-    return mono_assembly_get_image(mono_domain_assembly_open(mono_domain_get(), name));
+    return mono_assembly_get_image(mono_domain_assembly_open(mGetDomain().get(), name));
 }
 
 mClass mImage::findClass(const char *namespace_, const char *class_name)
@@ -281,7 +283,7 @@ MonoDomain* mObject::getDomain() const
 
 /*static*/ mObject mObject::New(mClass mclass)
 {
-    return mono_object_new(mono_domain_get(), mclass.get());
+    return mono_object_new(mGetDomain().get(), mclass.get());
 }
 
 bool mObject::isNull() const { return !m_rep || !*(void**)(m_rep + 1); }
@@ -378,7 +380,7 @@ void mAddMethod(const char *name, void *addr)
 
 /*static*/ mString mString::New(const mchar8 *str, int len)
 {
-    return mString(mono_string_new_len(mono_domain_get(), str, len == -1 ? (int)strlen(str) : len));
+    return mString(mono_string_new_len(mGetDomain().get(), str, len == -1 ? (int)strlen(str) : len));
 }
 
 /*static*/ mString mString::New(const mchar16 *str, int len)
@@ -388,7 +390,7 @@ void mAddMethod(const char *name, void *addr)
             if (str[len] == 0) { break; }
         }
     }
-    return mString(mono_string_new_utf16(mono_domain_get(), str, len));
+    return mString(mono_string_new_utf16(mGetDomain().get(), str, len));
 }
 
 size_t mString::size() const
@@ -409,17 +411,17 @@ const mchar16* mString::toUTF16()
 
 /*static*/ mArray mArray::New(mClass klass, size_t size)
 {
-    MonoArray *ret = mono_array_new(mono_domain_get(), klass.get(), (mono_array_size_t)size);
+    MonoArray *ret = mono_array_new(mGetDomain().get(), klass.get(), (mono_array_size_t)size);
     return ret;
 }
 
 size_t mArray::size() const
 {
-    return ((MonoArray*)m_rep)->max_length;
+    return m_rep == nullptr ? 0 : ((MonoArray*)m_rep)->max_length;
 }
 void* mArray::data()
 {
-    return ((MonoArray*)m_rep)->vector;
+    return m_rep == nullptr ? nullptr : ((MonoArray*)m_rep)->vector;
 }
 
 #define mDefBuiltinType(Type, ClassGetter, MonoTypename)\
@@ -460,6 +462,14 @@ public:
     virtual ~mICache() {}
     virtual void clear() = 0;
     virtual void rebind() = 0;
+};
+
+class mDomainCache : public mDomain, public mICache
+{
+public:
+    mDomainCache();
+    void clear();
+    void rebind();
 };
 
 class mImageCache : public mImage, public mICache
@@ -566,6 +576,15 @@ void mRebindCache()
     for (auto o : g_mCaches) { o->rebind(); }
 }
 
+mDomainCache::mDomainCache() : mDomain(nullptr) { mRegisterCache(this); }
+void mDomainCache::clear() { m_rep = nullptr; }
+void mDomainCache::rebind() { m_rep = mono_domain_get(); }
+
+mDomain& mGetDomain()
+{
+    static mDomainCache s_domain;
+    return s_domain;
+}
 
 mImageCache::mImageCache(const char *name)
     : mImage(nullptr)
@@ -574,7 +593,7 @@ mImageCache::mImageCache(const char *name)
     mRegisterCache(this);
 }
 void mImageCache::clear() { m_rep = nullptr; }
-void mImageCache::rebind() { m_rep = findImage(m_name).get(); }
+void mImageCache::rebind() { m_rep = mGetDomain().findImage(m_name).get(); }
 
 
 mClassCache::mClassCache(mImage& img, const char *ns, const char *name)
@@ -590,11 +609,17 @@ mClassCache::mClassCache(Initializer init)
     : mClass(nullptr)
     , m_initializer(init)
 {
+    mRegisterCache(this);
 }
 
 void mClassCache::clear() { m_rep = nullptr; }
 void mClassCache::rebind() {
-    m_rep = m_initializer ? m_initializer() : m_image->findClass(m_namespace, m_name).get();
+    if (m_initializer) {
+        m_rep = m_initializer();
+    }
+    else {
+        m_rep = m_image->findClass(m_namespace, m_name).get();
+    }
 }
 
 

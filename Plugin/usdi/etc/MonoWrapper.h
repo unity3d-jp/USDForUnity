@@ -11,6 +11,8 @@ struct MonoObject;
 struct MonoString;
 struct MonoArray;
 
+class mDomain;
+class mImage;
 class mType;
 class mClass;
 class mMethod;
@@ -48,12 +50,24 @@ template<class T> const char* mTypenameArray() { return T::_getTypenameArray(); 
     const char* Type::_getTypenameArray() { return #Namespace "." MonoTypename "[]"; }
 
 
+class mDomain
+{
+public:
+    mDomain(MonoDomain *m) : m_rep(m) {}
+    operator bool() const { return m_rep != nullptr; }
+    bool operator==(mDomain other) const { return m_rep == other.m_rep; }
+    bool operator!=(mDomain other) const { return m_rep != other.m_rep; }
+    MonoDomain* get() { return m_rep; }
+
+    static mImage findImage(const char *name); // name: not includes extensions. ex: "UnityEngine"
+
+protected:
+    MonoDomain *m_rep;
+};
 
 class mImage
 {
 public:
-    static mImage findImage(const char *name); // name: not includes extensions. ex: "UnityEngine"
-
     mImage(MonoImage *m) : m_rep(m) {}
     operator bool() const { return m_rep != nullptr; }
     bool operator==(mImage other) const { return m_rep == other.m_rep; }
@@ -379,6 +393,7 @@ void mResize(mPTArray<T>& a, size_t s)
 bool     mIsSubclassOf(mClass parent, mClass child);
 void     mAddMethod(const char *name, void *addr);
 
+mDomain& mGetDomain();
 mImage& mCreateImageCache(const char *name);
 mClass& mCreateClassCache(mImage& img, const char *ns, const char *name);
 mClass& mCreateClassCache(MonoClass* (*initializer)());

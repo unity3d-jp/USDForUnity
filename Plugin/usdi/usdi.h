@@ -199,7 +199,7 @@ struct MeshData
     int     *indices = nullptr;
     int     *indices_triangulated = nullptr;
 
-    SubmeshData *splits = nullptr;
+    SubmeshData *submeshes = nullptr;
 
     uint    num_points = 0;
     uint    num_counts = 0;

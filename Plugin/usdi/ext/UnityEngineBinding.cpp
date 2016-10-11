@@ -160,25 +160,32 @@ mMesh::mMesh(MonoObject *mo) : super(mo)
 {
     mTypeCheck();
 }
-void mMesh::setVertices(MonoArray *v)
+
+int mMesh::getVertexCount()
+{
+    mBindMethod("get_vertexCount", 0);
+    return invoke(s_method).unbox<int>();
+}
+
+void mMesh::setVertices(mTArray<mVector3> v)
 {
     mBindMethod("set_vertices", 1);
-    invoke(s_method, v);
+    invoke(s_method, v.get());
 }
-void mMesh::setNormals(MonoArray *v)
+void mMesh::setNormals(mTArray<mVector3> v)
 {
     mBindMethod("set_normals", 1);
-    invoke(s_method, v);
+    invoke(s_method, v.get());
 }
-void mMesh::setUV(MonoArray *v)
+void mMesh::setUV(mTArray<mVector2> v)
 {
     mBindMethod("set_uv", 1);
-    invoke(s_method, v);
+    invoke(s_method, v.get());
 }
-void mMesh::SetTriangles(MonoArray *v)
+void mMesh::SetTriangles(mTArray<mInt32> v)
 {
     mBindMethod("SetTriangles", {"System.Int32[]", "System.Int32"});
-    invoke(s_method, v);
+    invoke(s_method, v.get());
 }
 void mMesh::uploadMeshData(bool _fix)
 {
