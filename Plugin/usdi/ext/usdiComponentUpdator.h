@@ -37,7 +37,7 @@ public:
     const Config& getConfig() const;
 
     void constructUnityScene();
-    IUpdator* add(Schema *schema, mGameObject& go);
+    IUpdator* add(Schema *schema, mMGameObject& go);
 
     void onLoad();
     void onUnload();
@@ -45,7 +45,7 @@ public:
     void update(Time time);
 
 private:
-    mTransform createNode(Schema *schema, mTransform parent);
+    mMTransform createNode(Schema *schema, mMTransform& parent);
 
     typedef std::unique_ptr<IUpdator> ChildPtr;
     typedef std::vector<ChildPtr> Children;
@@ -55,7 +55,7 @@ private:
     tbb::task_group m_tasks;
 
     Context *m_ctx;
-    mComponent m_component;
+    mMComponent m_component;
 };
 
 
@@ -63,18 +63,18 @@ private:
 class IUpdator
 {
 public:
-    IUpdator(StreamUpdator *parent, mGameObject go);
+    IUpdator(StreamUpdator *parent, mMGameObject& go);
     virtual ~IUpdator();
     virtual void onLoad();
     virtual void onUnload();
     virtual void asyncUpdate(Time time);
     virtual void update(Time time);
 
-    mGameObject& getGO() { return m_go; }
+    mMGameObject& getGO() { return m_go; }
 
 protected:
     StreamUpdator *m_parent;
-    mGameObject m_go;
+    mMGameObject m_go;
 };
 
 
@@ -82,7 +82,7 @@ class XformUpdator : public IUpdator
 {
 typedef IUpdator super;
 public:
-    XformUpdator(StreamUpdator *parent, Xform *xf, mGameObject go);
+    XformUpdator(StreamUpdator *parent, Xform *xf, mMGameObject& go);
     ~XformUpdator() override;
     void asyncUpdate(Time time) override;
     void update(Time time) override;
@@ -91,7 +91,7 @@ private:
     Xform       *m_schema;
     XformData   m_data;
 protected:
-    mTransform  m_mtrans;
+    mMTransform  m_mtrans;
 };
 
 
@@ -99,7 +99,7 @@ class CameraUpdator : public XformUpdator
 {
 typedef XformUpdator super;
 public:
-    CameraUpdator(StreamUpdator *parent, Camera *cam, mGameObject go);
+    CameraUpdator(StreamUpdator *parent, Camera *cam, mMGameObject& go);
     ~CameraUpdator() override;
     void asyncUpdate(Time time) override;
     void update(Time time) override;
@@ -107,7 +107,7 @@ public:
 private:
     Camera      *m_schema;
     CameraData  m_data;
-    mCamera     m_mcamera;
+    mMCamera     m_mcamera;
 };
 
 
@@ -134,26 +134,24 @@ public:
     class MeshBuffer
     {
     public:
-        MeshBuffer(MeshUpdator *parent, mGameObject go, int nth);
+        MeshBuffer(MeshUpdator *parent, mMGameObject& go, int nth);
         ~MeshBuffer();
 
+        // async
         void copyDataToMonoArrays();
-
         // async
         void kickVBUpdateTask();
-
         // async
         void releaseMonoArrays();
-
         // sync
         void uploadDataToMonoMesh();
 
     public:
         MeshUpdator *m_parent;
-        mGameObject m_go;
-        mMeshFilter m_mfilter;
-        mMeshRenderer m_mrenderer;
-        mMesh m_mmesh;
+        mMGameObject m_go;
+        mMMeshFilter m_mfilter;
+        mMMeshRenderer m_mrenderer;
+        mMMesh m_mmesh;
         int m_nth = 0;
         int m_prev_vertex_count = 0;
 
@@ -170,7 +168,7 @@ public:
     typedef std::vector<BufferPtr> Buffers;
     typedef std::vector<SubmeshData> Submeshes;
 
-    MeshUpdator(StreamUpdator *parent, Mesh *mesh, mGameObject go);
+    MeshUpdator(StreamUpdator *parent, Mesh *mesh, mMGameObject& go);
     ~MeshUpdator() override;
     void asyncUpdate(Time time) override;
     void update(Time time) override;
@@ -190,7 +188,7 @@ class PointsUpdator : public XformUpdator
 {
 typedef XformUpdator super;
 public:
-    PointsUpdator(StreamUpdator *parent, Points *cam, mGameObject go);
+    PointsUpdator(StreamUpdator *parent, Points *cam, mMGameObject& go);
     ~PointsUpdator() override;
     void asyncUpdate(Time time) override;
     void update(Time time) override;

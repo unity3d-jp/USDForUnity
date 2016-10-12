@@ -32,6 +32,10 @@ template<class T> using mRemoveManagedT = typename mRemoveManaged<T>::type;
 template<class T> struct mRemovePM { using type = typename mRemoveManaged<typename mRemovePinned<T>::type>::type; };
 template<class T> using mRemovePMT = typename mRemovePM<T>::type;
 
+template<class T> struct mAddManaged { using type = mManaged<T>; };
+template<class T> struct mAddManaged<mManaged<T>> { using type = mManaged<T>; };
+template<class T> using mAddManagedT = typename mAddManaged<T>::type;
+
 
 // builtin types
 
@@ -91,29 +95,29 @@ public:
 
     mPinned() {}
     mPinned(T v) { reset(v); }
-    mPinned(mPinned&& v) : m_obj(v.m_obj), m_gch(v.m_gch) { v.m_obj = nullptr; v.m_gch = 0; }
+    mPinned(mPinned&& v) : m_obj(v.m_obj), m_handle(v.m_handle) { v.m_obj = nullptr; v.m_handle = 0; }
     ~mPinned() { reset(); }
-    mPinned& operator=(const mPinned&& v)
+    mPinned& operator=(mPinned&& v)
     {
         reset();
         std::swap(m_obj, v.m_obj);
-        std::swap(m_gch, v.m_gch);
+        std::swap(m_handle, v.m_handle);
         return *this;
     }
 
-    operator bool() const { return (bool)m_obj; }
-    T&       operator*() { return m_obj; }
-    const T& operator*() const { return m_obj; }
-    T*       operator->() { return &m_obj; }
+    operator bool() const       { return (bool)m_obj; }
+    T&       operator*()        { return m_obj; }
+    const T& operator*() const  { return m_obj; }
+    T*       operator->()       { return &m_obj; }
     const T* operator->() const { return &m_obj; }
-    T&       get() { return m_obj; }
-    const T& get() const { return m_obj; }
+    T&       get()              { return m_obj; }
+    const T& get() const        { return m_obj; }
 
     void reset()
     {
-        if (m_gch) {
-            mUnpin(m_obj);
-            m_gch = 0;
+        if (m_handle) {
+            mGCHandleFree(m_obj);
+            m_handle = 0;
             m_obj = nullptr;
         }
     }
@@ -124,12 +128,12 @@ public:
         m_obj = obj;
         if (m_obj.get())
         {
-            m_gch = mPin(m_obj);
+            m_handle = mGCHandleAllocate(m_obj, true);
         }
     }
 protected:
     T m_obj;
-    uint32_t m_gch = 0;
+    uint32_t m_handle = 0;
 };
 
 
@@ -141,43 +145,47 @@ public:
     mManaged& operator=(const mManaged& v) = delete;
 
     mManaged() {}
-    mManaged(T v) { reset(v); }
-    mManaged(mManaged&& v) : m_ml(v.m_ml) { v.m_ml = nullptr; }
+    mManaged(mObject v) { reset(v); }
+    mManaged(mManaged&& v) : m_handle(v.m_handle) { v.m_handle = 0; }
     ~mManaged() { reset(); }
-    mManaged& operator=(const mManaged&& v)
+    mManaged& operator=(mManaged&& v)
     {
         reset();
-        std::swap(m_ml, v.m_ml);
+        std::swap(m_handle, v.m_handle);
         return *this;
     }
 
-    operator bool() const { return m_ml && (bool)get(); }
-    T&       operator*() { return get(); }
-    const T& operator*() const { return get(); }
-    T*       operator->() { return &get(); }
-    const T* operator->() const { return &get(); }
-    T&       get() { m_obj = mGetObject(m_ml); return m_obj; }
-    const T& get() const { m_obj = mGetObject(m_ml); return m_obj; }
+    operator bool() const       { return m_handle && (bool)sync(); }
+    T&       operator*()        { return sync(); }
+    const T& operator*() const  { return sync(); }
+    T*       operator->()       { return &sync(); }
+    const T* operator->() const { return &sync(); }
+    T&       get()              { return sync(); }
+    const T& get() const        { return sync(); }
 
     void reset()
     {
-        if (m_ml) {
-            mUnmanage(m_ml);
-            m_ml = nullptr;
+        if (m_handle) {
+            mGCHandleFree(m_handle);
+            m_handle = 0;
         }
     }
 
-    void reset(T obj)
+    void reset(mObject v)
     {
         reset();
-        if (v.get()) {
-            m_ml = mManage(v);
-        }
+        m_handle = mGCHandleAllocate(v, false);
     }
 
 protected:
-    mutable T m_obj;
-    mMList m_ml;
+    T& sync() const
+    {
+        m_buf = mGCHandleGetObject(m_handle).get();
+        return m_buf;
+    }
+
+    mutable T m_buf;
+    uint32_t m_handle = 0;
 };
 
 

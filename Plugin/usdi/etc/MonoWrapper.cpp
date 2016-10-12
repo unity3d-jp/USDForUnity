@@ -465,16 +465,20 @@ mString mToMString(const char *s) { return mString::New(s); }
 std::string mToCString(mObject v) { return mString(v.get()).toUTF8(); }
 
 
-uint32_t mPin(mObject obj)
+uint32_t mGCHandleAllocate(mObject obj, bool pin)
 {
-    return mono_gchandle_new(obj.get(), 1);
+    return mono_gchandle_new(obj.get(), (gboolean)pin);
 }
 
-void mUnpin(uint32_t handle)
+void mGCHandleFree(uint32_t handle)
 {
     mono_gchandle_free(handle);
 }
 
+mObject mGCHandleGetObject(uint32_t handle)
+{
+    return mono_gchandle_get_target(handle);
+}
 
 
 

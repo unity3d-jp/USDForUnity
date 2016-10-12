@@ -156,9 +156,9 @@ mMethod& mUObject::getInstantiate1()
         return T(ret.get());\
     }
 
-Instantiate(mMesh);
-Instantiate(mMaterial);
-Instantiate(mGameObject);
+Instantiate(mMMesh);
+Instantiate(mMMaterial);
+Instantiate(mMGameObject);
 #undef Instantiate
 
 
@@ -279,26 +279,26 @@ mMethod& mGameObject::getAddComponent()
 }
 
 
-#define Instantiate(T)\
-template<> T mGameObject::getComponent()\
+#define Instantiate(C)\
+template<> C mGameObject::getComponent()\
 {\
-    mBindMethodFull(getGetComponent(), {&mTypeof<T>()});\
+    mBindMethodFull(getGetComponent(), {&mTypeof<C>()});\
     auto ret = invoke(mBindedMethod);\
-    mTypeCheck(ret.getClass(), mTypeof<T>());\
-    return T(ret.get());\
+    mTypeCheck(ret.getClass(), mTypeof<C>());\
+    return C(ret.get());\
 }\
-template<> T mGameObject::addComponent()\
+template<> C mGameObject::addComponent()\
 {\
-    mBindMethodFull(getAddComponent(), {&mTypeof<T>()});\
+    mBindMethodFull(getAddComponent(), {&mTypeof<C>()});\
     auto ret = invoke(mBindedMethod);\
-    mTypeCheck(ret.getClass(), mTypeof<T>());\
-    return T(ret.get());\
+    mTypeCheck(ret.getClass(), mTypeof<C>());\
+    return C(ret.get());\
 }
-Instantiate(mTransform);
-Instantiate(mCamera);
-Instantiate(mMeshFilter);
-Instantiate(mMeshRenderer);
-Instantiate(mLight);
+Instantiate(mMTransform);
+Instantiate(mMCamera);
+Instantiate(mMMeshFilter);
+Instantiate(mMMeshRenderer);
+Instantiate(mMLight);
 #undef Instantiate
 #undef mTypeCheck
 
@@ -306,10 +306,10 @@ Instantiate(mLight);
 mDefTraits(UnityEngine, "UnityEngine", "Component", mComponent);
 
 mComponent::mComponent(MonoObject *component) : super(component) {}
-mGameObject mComponent::getGameObject()
+mMGameObject mComponent::getGameObject()
 {
     mBindMethod("get_gameObject", 0);
-    return mGameObject(invoke(mBindedMethod).get());
+    return mMGameObject(invoke(mBindedMethod).get());
 }
 
 
@@ -333,15 +333,15 @@ void mTransform::setLocalScale(const float3& v)
     mBindMethod("set_localScale", 1);
     invoke(mBindedMethod, (void*)&v);
 }
-void mTransform::setParent(mTransform parent)
+void mTransform::setParent(const mMTransform& parent)
 {
     mBindMethod("SetParent", 1);
-    invoke(mBindedMethod, parent.get());
+    invoke(mBindedMethod, parent->get());
 }
-mTransform mTransform::findChild(const char *name)
+mMTransform mTransform::findChild(const char *name)
 {
     mBindMethod("FindChild", 1);
-    return mTransform(invoke(mBindedMethod, mToMString(name).get()).get());
+    return mMTransform(invoke(mBindedMethod, mToMString(name).get()).get());
 }
 
 
@@ -381,15 +381,15 @@ mMeshFilter::mMeshFilter(MonoObject *component)
 {
     mTypeCheckThis();
 }
-mMesh mMeshFilter::getSharedMesh()
+mMMesh mMeshFilter::getSharedMesh()
 {
     mBindMethod("get_sharedMesh", 0);
-    return mMesh(invoke(mBindedMethod).get());
+    return mMMesh(invoke(mBindedMethod).get());
 }
-void mMeshFilter::setSharedMesh(mMesh v)
+void mMeshFilter::setSharedMesh(const mMMesh& v)
 {
     mBindMethod("set_sharedMesh", 1);
-    invoke(mBindedMethod, v.get());
+    invoke(mBindedMethod, v->get());
 }
 
 
@@ -397,10 +397,10 @@ mDefTraits(UnityEngine, "UnityEngine", "MeshRenderer", mMeshRenderer);
 
 mMeshRenderer::mMeshRenderer(MonoObject *component) : super(component) { mTypeCheckThis(); }
 
-void mMeshRenderer::setSharedMaterial(mMaterial m)
+void mMeshRenderer::setSharedMaterial(const mMMaterial& m)
 {
     mBindMethod("set_sharedMaterial", 1);
-    invoke(mBindedMethod, m.get());
+    invoke(mBindedMethod, m->get());
 }
 
 

@@ -81,7 +81,19 @@ char*           (*mono_string_to_utf8)(MonoString *string_obj);
 gunichar2*      (*mono_string_to_utf16)(MonoString *string_obj);
 
 guint32         (*mono_gchandle_new)(MonoObject *obj, gboolean pinned);
+guint32         (*mono_gchandle_new_weakref)(MonoObject *obj, gboolean track_resurrection);
+MonoObject*     (*mono_gchandle_get_target)(guint32 gchandle);
 void            (*mono_gchandle_free)(guint32 gchandle);
+
+MonoMList*      (*mono_mlist_alloc)(MonoObject *data);
+MonoObject*     (*mono_mlist_get_data)(MonoMList* list);
+void            (*mono_mlist_set_data)(MonoMList* list, MonoObject *data);
+int             (*mono_mlist_length)(MonoMList* list);
+MonoMList*      (*mono_mlist_next)(MonoMList* list);
+MonoMList*      (*mono_mlist_last)(MonoMList* list);
+MonoMList*      (*mono_mlist_prepend)(MonoMList* list, MonoObject *data);
+MonoMList*      (*mono_mlist_append)(MonoMList* list, MonoObject *data);
+MonoMList*      (*mono_mlist_remove_item)(MonoMList* list, MonoMList *item);
 
 MonoClass* (*mono_get_object_class)();
 MonoClass* (*mono_get_byte_class)();
@@ -185,7 +197,19 @@ void ImportMonoFunctions()
         Import(mono_string_to_utf16);
 
         Import(mono_gchandle_new);
+        Import(mono_gchandle_new_weakref);
+        Import(mono_gchandle_get_target);
         Import(mono_gchandle_free);
+
+        Import(mono_mlist_alloc);
+        Import(mono_mlist_get_data);
+        Import(mono_mlist_set_data);
+        Import(mono_mlist_length);
+        Import(mono_mlist_next);
+        Import(mono_mlist_last);
+        Import(mono_mlist_prepend);
+        Import(mono_mlist_append);
+        Import(mono_mlist_remove_item);
 
         Import(mono_get_object_class);
         Import(mono_get_byte_class);

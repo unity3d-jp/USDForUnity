@@ -43,6 +43,7 @@ struct MonoArray;
 struct MonoString;
 struct MonoVTable;
 struct MonoThreadsSync;
+struct MonoMList;
 
 struct GSList {
     gpointer data;
@@ -85,7 +86,6 @@ struct MonoAssembly
 
 #define MONO_ZERO_LEN_ARRAY 1
 
-/* This macro is used to make bit field packing compatible with MSVC */
 #if defined(_MSC_VER) && defined(PLATFORM_IPHONE_XCOMP)
 #   define USE_UINT8_BIT_FIELD(type, field) guint8 field 
 #else
@@ -94,26 +94,20 @@ struct MonoAssembly
 
 typedef gpointer MonoRuntimeGenericContext;
 
-/* the interface_offsets array is stored in memory before this struct */
 struct MonoVTable {
     MonoClass  *klass;
-    /*
-    * According to comments in gc_gcj.h, this should be the second word in
-    * the vtable.
-    */
     void *gc_descr;
-    MonoDomain *domain;  /* each object/vtable belongs to exactly one domain */
-    gpointer    data; /* to store static class data */
+    MonoDomain *domain;
+    gpointer    data;
     gpointer    type; /* System.Type type for klass */
     guint8     *interface_bitmap;
     guint16     max_interface_id;
     guint8      rank;
-    USE_UINT8_BIT_FIELD(guint, remote      : 1); /* class is remotely activated */
-    USE_UINT8_BIT_FIELD(guint, initialized : 1); /* cctor has been run */
-    USE_UINT8_BIT_FIELD(guint, init_failed : 1); /* cctor execution failed */
+    USE_UINT8_BIT_FIELD(guint, remote      : 1);
+    USE_UINT8_BIT_FIELD(guint, initialized : 1);
+    USE_UINT8_BIT_FIELD(guint, init_failed : 1);
     guint32     imt_collisions_bitmap;
     MonoRuntimeGenericContext *runtime_generic_context;
-    /* do not add any fields after vtable, the structure is dynamically extended */
     gpointer    vtable[MONO_ZERO_LEN_ARRAY];
 };
 
@@ -150,6 +144,12 @@ struct MonoGenericInst {
 struct MonoGenericContext {
     MonoGenericInst *class_inst;
     MonoGenericInst *method_inst;
+};
+
+struct MonoMList {
+    MonoObject object;
+    MonoMList *next;
+    MonoObject *data;
 };
 
 
@@ -227,7 +227,19 @@ extern char*            (*mono_string_to_utf8)(MonoString *string_obj);
 extern gunichar2*       (*mono_string_to_utf16)(MonoString *string_obj);
 
 extern guint32          (*mono_gchandle_new)(MonoObject *obj, gboolean pinned);
+extern guint32          (*mono_gchandle_new_weakref)(MonoObject *obj, gboolean track_resurrection);
+extern MonoObject*      (*mono_gchandle_get_target)(guint32 gchandle);
 extern void             (*mono_gchandle_free)(guint32 gchandle);
+
+extern MonoMList*       (*mono_mlist_alloc)(MonoObject *data);
+extern MonoObject*      (*mono_mlist_get_data)(MonoMList* list);
+extern void             (*mono_mlist_set_data)(MonoMList* list, MonoObject *data);
+extern int              (*mono_mlist_length)(MonoMList* list);
+extern MonoMList*       (*mono_mlist_next)(MonoMList* list);
+extern MonoMList*       (*mono_mlist_last)(MonoMList* list);
+extern MonoMList*       (*mono_mlist_prepend)(MonoMList* list, MonoObject *data);
+extern MonoMList*       (*mono_mlist_append)(MonoMList* list, MonoObject *data);
+extern MonoMList*       (*mono_mlist_remove_item)(MonoMList* list, MonoMList *item);
 
 extern MonoClass* (*mono_get_object_class)();
 extern MonoClass* (*mono_get_byte_class)();

@@ -243,6 +243,8 @@ public:
     void*       unboxValue();
     template<class T> T& unbox() { return *(T*)unbox(); }
     template<class T> T& unboxValue() { return *(T*)unboxValue(); }
+    template<class T> T& unbox() const { return *(T*)const_cast<mObject*>(this)->unbox(); }
+    template<class T> T& unboxValue() const { return *(T*)const_cast<mObject*>(this)->unboxValue(); }
 
     // redirect to mClass
     mField    findField(const char *name) const;
@@ -273,7 +275,7 @@ public:
     mString(MonoObject *o = nullptr) : mObject(o) {}
     mString(MonoString *o) : mObject((MonoObject*)o) {}
     operator bool() const { return m_rep != nullptr; }
-    MonoString* get() { return (MonoString*)m_rep; }
+    MonoString* get() const { return (MonoString*)m_rep; }
 
     size_t size() const;
     const mchar8*    toUTF8();
@@ -288,38 +290,20 @@ public:
 
     mArray(MonoArray *o = nullptr) : mObject((MonoObject*)o) {}
     operator bool() const { return m_rep != nullptr; }
-    MonoArray* get() { return (MonoArray*)m_rep; }
+    MonoArray* get() const { return (MonoArray*)m_rep; }
 
     size_t size() const;
     void* data();
 };
 
 
-class mMList
-{
-public:
-    mMList(MonoMList *v = nullptr) : m_rep(v) {}
-    operator bool() const { return m_rep != nullptr; }
-    bool operator==(mMList other) const { return m_rep == other.m_rep; }
-    bool operator!=(mMList other) const { return m_rep != other.m_rep; }
-    MonoMList* get() const { return m_rep; }
-
-protected:
-    MonoMList *m_rep;
-};
 
 
 // gc control
 
-uint32_t mPin(mObject obj);
-void     mUnpin(uint32_t handle);
-
-// ** single threaded for now... **
-mMList  mManage(mObject obj);
-void    mUnmanage(mMList ml);
-mObject mGetObject(mMList ml);
-
-
+uint32_t mGCHandleAllocate(mObject obj, bool pin);
+void     mGCHandleFree(uint32_t handle);
+mObject  mGCHandleGetObject(uint32_t handle);
 
 
 template<class T> inline void mResize(mTArray<T>& a, size_t s);

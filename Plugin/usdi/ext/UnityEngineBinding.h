@@ -164,13 +164,17 @@ public:
 
     mGameObject(MonoObject *game_object = nullptr);
     void SetActive(bool v);
-    template<class Component> Component getComponent();
-    template<class Component> Component addComponent();
 
-    template<class Component> Component getOrAddComponent()
+    // C must be managed component class
+    template<class C> C getComponent();
+    // C must be managed component class
+    template<class C> C addComponent();
+
+    // C must be managed component class
+    template<class C> C getOrAddComponent()
     {
-        if (auto c = getComponent<Component>()) { return c; }
-        return addComponent<Component>();
+        if (auto c = getComponent<C>()) { return c; }
+        return addComponent<C>();
     }
 
 private:
@@ -185,7 +189,7 @@ typedef mUObject super;
 public:
     mDeclTraits();
     mComponent(MonoObject *component = nullptr);
-    mGameObject getGameObject();
+    mMGameObject getGameObject();
 };
 
 
@@ -198,8 +202,8 @@ public:
     void setLocalPosition(const float3& v);
     void setLocalRotation(const quatf& v);
     void setLocalScale(const float3& v);
-    void setParent(mTransform parent);
-    mTransform findChild(const char *name);
+    void setParent(const mMTransform& parent);
+    mMTransform findChild(const char *name);
 };
 
 
@@ -222,8 +226,8 @@ typedef mComponent super;
 public:
     mDeclTraits();
     mMeshFilter(MonoObject *component = nullptr);
-    mMesh getSharedMesh();
-    void setSharedMesh(mMesh v);
+    mMMesh getSharedMesh();
+    void setSharedMesh(const mMMesh& v);
 };
 
 
@@ -233,7 +237,7 @@ typedef mComponent super;
 public:
     mDeclTraits();
     mMeshRenderer(MonoObject *component = nullptr);
-    void setSharedMaterial(mMaterial m);
+    void setSharedMaterial(const mMMaterial& m);
 };
 
 
