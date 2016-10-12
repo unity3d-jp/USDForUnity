@@ -41,7 +41,7 @@ Context::~Context()
 
 #ifdef usdiEnableUnityExtension
     if (g_ctx_count == 0) {
-        mDetachAllThreads();
+        //mDetachAllThreads();
         usdi::ClearInternalMethodsCache();
     }
 #endif // usdiEnableUnityExtension

@@ -188,7 +188,6 @@ void StreamUpdator::onUnload()
 
 void StreamUpdator::asyncUpdate(Time t)
 {
-#define usdiDbgForceSingleThread
 #ifdef usdiDbgForceSingleThread
     for (auto& s : m_children) { s->asyncUpdate(t); }
 #else
