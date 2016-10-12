@@ -1,5 +1,8 @@
 ﻿#pragma once
 
+typedef char        mchar8;
+typedef uint16_t    mchar16;
+
 struct MonoDomain;
 struct MonoAssembly;
 struct MonoImage;
@@ -11,6 +14,7 @@ struct MonoClass;
 struct MonoObject;
 struct MonoString;
 struct MonoArray;
+struct MonoMList;
 
 class mDomain;
 class mImage;
@@ -23,13 +27,17 @@ class mObject;
 class mArray;
 class mString;
 
-typedef char        mchar8;
-typedef uint16_t    mchar16;
+template<class T> class mPinned;
+template<class T> class mManaged;
+template<class T> class mTArray;
+template<class T> using mPTArray = mPinned<mTArray<T>>;
+template<class T> using mMTArray = mManaged<mTArray<T>>;
 
-template<class T> mClass&     mTypeof() { return T::_getClass(); }
-template<class T> const char* mTypename() { return T::_getTypename(); }
-template<class T> const char* mTypenameRef() { return T::_getTypenameRef(); }
-template<class T> const char* mTypenameArray() { return T::_getTypenameArray(); }
+template<class T> inline mClass&     mTypeof();
+template<class T> inline const char* mTypename();
+template<class T> inline const char* mTypenameRef();
+template<class T> inline const char* mTypenameArray();
+
 
 #define mDeclImage(Name) mImage& mGet##Name##Image();
 #define mDefImage(Name, AssemblyName) mImage& mGet##Name##Image() { static mImage& s_image=mCreateImageCache(AssemblyName); return s_image; }
@@ -67,6 +75,7 @@ protected:
     MonoDomain *m_rep;
 };
 
+
 class mAssembly
 {
 public:
@@ -75,12 +84,12 @@ public:
     bool operator==(mAssembly other) const { return m_rep == other.m_rep; }
     bool operator!=(mAssembly other) const { return m_rep != other.m_rep; }
     MonoAssembly* get() { return m_rep; }
-    const char* stringifyAssemblyName() const; // !!! caller must freeAssemblyName() returned string !!!
-    void freeAssemblyName( const char *aname);
+    std::string getAssemblyName() const;
 
 private:
     MonoAssembly *m_rep;
 };
+
 
 class mImage
 {
@@ -285,50 +294,19 @@ public:
     void* data();
 };
 
-template<class T>
-class mTArray : public mArray
+
+class mMList
 {
-typedef mArray super;
 public:
-    typedef T           value_type;
-    typedef T&          reference;
-    typedef const T&    const_reference;
-    typedef T*          pointer;
-    typedef const T*    const_pointer;
-    typedef T*          iterator;
-    typedef const T*    const_iterator;
+    mMList(MonoMList *v = nullptr) : m_rep(v) {}
+    operator bool() const { return m_rep != nullptr; }
+    bool operator==(mMList other) const { return m_rep == other.m_rep; }
+    bool operator!=(mMList other) const { return m_rep != other.m_rep; }
+    MonoMList* get() const { return m_rep; }
 
-    static mTArray New(size_t size) { return mTArray<T>(super::New(mTypeof<T>(), size).get()); }
-
-    mTArray(MonoArray *o = nullptr) : super(o) {}
-    pointer         data() { return (pointer)super::data(); }
-    reference       operator[](size_t i)        { return data()[i]; }
-    const_reference operator[](size_t i) const  { return data()[i]; }
-    iterator        begin()                     { return data(); }
-    iterator        end()                       { return data() + size(); }
-    const_iterator  begin() const               { return data(); }
-    const_iterator  end() const                 { return data() + size(); }
+protected:
+    MonoMList *m_rep;
 };
-
-// builtin types
-
-#define mDeclBuiltinType(MonoType, ValueType)\
-    struct MonoType\
-    {\
-        mDeclTraits();\
-        operator ValueType&() { return value; }\
-        ValueType value = {};\
-    };\
-
-struct mVoid { mDeclTraits(); };
-mDeclBuiltinType(mIntPtr, void*);
-mDeclBuiltinType(mBool, int);
-mDeclBuiltinType(mByte, uint8_t);
-mDeclBuiltinType(mInt32, int32_t);
-mDeclBuiltinType(mEnum, int32_t);
-mDeclBuiltinType(mSingle, float);
-mDeclBuiltinType(mDouble, double);
-#undef mDeclBuiltinType
 
 
 // gc control
@@ -336,84 +314,18 @@ mDeclBuiltinType(mDouble, double);
 uint32_t mPin(mObject obj);
 void     mUnpin(uint32_t handle);
 
-template<class T>
-class mPinned
-{
-typedef T super;
-public:
-    mPinned() {}
-    mPinned(T v) { reset(v); }
-    mPinned(mPinned&& v) : m_obj(v.m_obj) , m_gch(v.m_gch) { v.m_obj=nullptr; v.m_gch=0; }
-    ~mPinned() { reset(); }
+// ** single threaded for now... **
+mMList  mManage(mObject obj);
+void    mUnmanage(mMList ml);
+mObject mGetObject(mMList ml);
 
-    mPinned(const mPinned& v) = delete;
-    mPinned& operator=(const mPinned& v) = delete;
-    mPinned& operator=(const mPinned&& v)
-    {
-        reset();
-        std::swap(m_obj, v.m_obj);
-        std::swap(m_gch, v.m_gch);
-        return *this;
-    }
 
-    operator bool() const       { return (bool)m_obj; }
-    T&       operator*()        { return m_obj; }
-    const T& operator*() const  { return m_obj; }
-    T*       operator->()       { return &m_obj; }
-    const T* operator->() const { return &m_obj; }
-    T&       get()              { return m_obj; }
-    const T& get() const        { return m_obj; }
 
-    void reset()
-    {
-        unpin();
-        m_obj = nullptr;
-    }
 
-    void reset(T obj)
-    {
-        unpin();
-        m_obj = obj;
-        pin();
-    }
+template<class T> inline void mResize(mTArray<T>& a, size_t s);
+template<class T> inline void mResize(mPTArray<T>& a, size_t s);
+template<class T> inline void mResize(mMTArray<T>& a, size_t s);
 
-protected:
-    void pin()
-    {
-        if (m_obj && !m_gch)
-        {
-            m_gch = mPin(m_obj);
-        }
-    }
-
-    void unpin()
-    {
-        if (m_gch) {
-            mUnpin(m_obj);
-            m_gch = 0;
-        }
-    }
-
-protected:
-    T m_obj;
-    uint32_t m_gch = 0;
-};
-
-template<class T> using mPTArray = mPinned<mTArray<T>>;
-
-template<class T>
-void mResize(mTArray<T>& a, size_t s)
-{
-    if (a.size() == s) { return; }
-    a = mTArray<T>::New(s);
-}
-
-template<class T>
-void mResize(mPTArray<T>& a, size_t s)
-{
-    if (a->size() == s) { return; }
-    a.reset(mTArray<T>::New(s));
-}
 
 mString mToMString(const char *s);
 std::string mToCString(mObject v);
@@ -437,6 +349,9 @@ void mAttachThread();
 void mDetachThread();
 void mDetachAllThreads();
 
+mObject mGetSystemType(mClass c);
+template<class T> mObject mGetSystemType() { return mGetSystemType(mTypeof<T>()); }
+
 
 
 // debug mechanism
@@ -459,3 +374,5 @@ void mDetachAllThreads();
     #define mTypeCheck(...)
     #define mTypeCheckThis()
 #endif
+
+#include "MonoWrapperImpl.h"

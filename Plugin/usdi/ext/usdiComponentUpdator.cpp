@@ -485,10 +485,10 @@ void MeshUpdator::asyncUpdate(Time time)
         m_uflags.normals = m_data.normals && (m_frame == 0 || m_summary.topology_variance != TopologyVariance::Constant);
         m_uflags.uv = m_data.uvs && (m_frame == 0 || m_summary.topology_variance != TopologyVariance::Constant);
         m_uflags.indices = m_data.num_indices_triangulated && (m_frame == 0 || m_summary.topology_variance == TopologyVariance::Heterogenous);
-        //m_uflags.directVB =
-        //    m_parent->getConfig().directVBUpdate && mMesh::hasNativeBufferAPI() &&
-        //    m_summary.topology_variance == TopologyVariance::Homogenous;
-        m_uflags.directVB = false;
+        m_uflags.directVB =
+            m_parent->getConfig().directVBUpdate && mMesh::hasNativeBufferAPI() &&
+            m_summary.topology_variance == TopologyVariance::Homogenous;
+        //m_uflags.directVB = false;
         bool kick_VB_update_tasks = m_buffers.front()->m_vb != nullptr;
 
         if (m_data.num_splits != 0) {

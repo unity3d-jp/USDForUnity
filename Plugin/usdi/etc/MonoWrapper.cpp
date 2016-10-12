@@ -10,14 +10,13 @@ mImage mDomain::findImage(const char *name)
     return mono_assembly_get_image(mono_domain_assembly_open(mGetDomain().get(), name));
 }
 
-const char* mAssembly::stringifyAssemblyName() const
+std::string mAssembly::getAssemblyName() const
 {
-    return mono_stringify_assembly_name(&m_rep->aname);
-}
-
-void mAssembly::freeAssemblyName(const char *aname)
-{
+    char *aname = mono_stringify_assembly_name(&m_rep->aname);
+    std::string ret = aname;
     g_free((void*)aname);
+    return ret;
+
 }
 
 mAssembly mImage::getAssembly()
@@ -92,27 +91,6 @@ mMethod mProperty::getSetter() const
 }
 
 
-
-#define METHOD_ATTRIBUTE_MEMBER_ACCESS_MASK        0x0007
-#define METHOD_ATTRIBUTE_COMPILER_CONTROLLED       0x0000
-#define METHOD_ATTRIBUTE_PRIVATE                   0x0001
-#define METHOD_ATTRIBUTE_FAM_AND_ASSEM             0x0002
-#define METHOD_ATTRIBUTE_ASSEM                     0x0003
-#define METHOD_ATTRIBUTE_FAMILY                    0x0004
-#define METHOD_ATTRIBUTE_FAM_OR_ASSEM              0x0005
-#define METHOD_ATTRIBUTE_PUBLIC                    0x0006
-#define METHOD_ATTRIBUTE_STATIC                    0x0010
-#define METHOD_ATTRIBUTE_FINAL                     0x0020
-#define METHOD_ATTRIBUTE_VIRTUAL                   0x0040
-#define METHOD_ATTRIBUTE_HIDE_BY_SIG               0x0080
-#define METHOD_ATTRIBUTE_VTABLE_LAYOUT_MASK        0x0100
-#define METHOD_ATTRIBUTE_REUSE_SLOT                0x0000
-#define METHOD_ATTRIBUTE_NEW_SLOT                  0x0100
-#define METHOD_ATTRIBUTE_STRICT                    0x0200
-#define METHOD_ATTRIBUTE_ABSTRACT                  0x0400
-#define METHOD_ATTRIBUTE_SPECIAL_NAME              0x0800
-#define METHOD_ATTRIBUTE_PINVOKE_IMPL              0x2000
-#define METHOD_ATTRIBUTE_UNMANAGED_EXPORT          0x0008
 
 
 const char* mMethod::getName() const
@@ -464,6 +442,7 @@ void* mArray::data()
     return m_rep == nullptr ? nullptr : ((MonoArray*)m_rep)->vector;
 }
 
+
 #define mDefBuiltinType(Type, ClassGetter, MonoTypename)\
     mClass& Type::_getClass() { static mClass& s_class=mCreateClassCache(ClassGetter); return s_class; }\
     const char* Type::_getTypename() { return MonoTypename; }\
@@ -498,269 +477,6 @@ void mUnpin(uint32_t handle)
 
 
 
-// cache manager
-
-class mICache
-{
-public:
-    virtual ~mICache() {}
-    virtual void clear() = 0;
-    virtual void rebind() = 0;
-};
-
-class mDomainCache : public mDomain, public mICache
-{
-public:
-    mDomainCache();
-    void clear();
-    void rebind();
-};
-
-class mImageCache : public mImage, public mICache
-{
-public:
-    mImageCache(const char *name);
-    void clear();
-    void rebind();
-
-private:
-    const char *m_name;
-};
-
-class mClassCache : public mClass, public mICache
-{
-public:
-    typedef MonoClass* (*Initializer)();
-
-    mClassCache(mImage& img, const char *ns, const char *name);
-    mClassCache(Initializer init);
-    void clear() override;
-    void rebind() override;
-
-private:
-    mImage *m_image = nullptr;
-    const char *m_name = nullptr;
-    const char *m_namespace = nullptr;
-    Initializer m_initializer = nullptr;
-};
-
-class mFieldCache : public mField, public mICache
-{
-public:
-    mFieldCache(mClass& mclass, const char *name);
-    void clear() override;
-    void rebind() override;
-
-private:
-    mClass *m_class;
-    const char *m_name;
-};
-
-class mMethodCache : public mMethod, public mICache
-{
-public:
-    mMethodCache(mClass& mclass, const char *name, int nargs = -1);
-    mMethodCache(mClass& mclass, const char *name, std::vector<const char*> arg_types);
-    void clear() override;
-    void rebind() override;
-
-private:
-    mClass *m_class;
-    const char *m_name;
-    int m_num_args = -1;
-    std::vector<const char*> m_typenames;
-};
-
-class mIMethodCache : public mMethod, public mICache
-{
-public:
-    mIMethodCache(mMethod& generics, std::vector<mClass*>& param);
-    template<class T> mIMethodCache(mMethod& generics) { mIMethodCache(generics, mTypeof<T>()); }
-    void clear() override;
-    void rebind() override;
-
-private:
-    mMethod *m_generics;
-    std::vector<mClass*> m_params;
-    void *m_mem = nullptr;
-};
-
-class mPropertyCache : public mProperty, public mICache
-{
-public:
-    mPropertyCache(mClass& mclass, const char *name);
-    void clear() override;
-    void rebind() override;
-
-private:
-    mClass *m_class;
-    const char *m_name;
-};
-
-static std::vector<mICache*> g_mCaches;
-static std::mutex g_mCache_mutex;
-
-static void mRegisterCache(mICache *v)
-{
-    v->rebind();
-
-    std::unique_lock<std::mutex> l(g_mCache_mutex);
-    g_mCaches.push_back(v);
-}
-
-void mClearCache()
-{
-    std::unique_lock<std::mutex> l(g_mCache_mutex);
-    for (auto o : g_mCaches) { o->clear(); }
-}
-
-void mRebindCache()
-{
-    std::unique_lock<std::mutex> l(g_mCache_mutex);
-    for (auto o : g_mCaches) { o->rebind(); }
-}
-
-mDomainCache::mDomainCache() : mDomain(nullptr) { mRegisterCache(this); }
-void mDomainCache::clear() { m_rep = nullptr; }
-void mDomainCache::rebind() { m_rep = mono_domain_get(); }
-
-mDomain& mGetDomain()
-{
-    static mDomainCache s_domain;
-    return s_domain;
-}
-
-mImageCache::mImageCache(const char *name)
-    : mImage(nullptr)
-    , m_name(name)
-{
-    mRegisterCache(this);
-}
-void mImageCache::clear() { m_rep = nullptr; }
-void mImageCache::rebind() { m_rep = mGetDomain().findImage(m_name).get(); }
-
-
-mClassCache::mClassCache(mImage& img, const char *ns, const char *name)
-    : mClass(nullptr)
-    , m_image(&img)
-    , m_namespace(ns)
-    , m_name(name)
-{
-    mRegisterCache(this);
-}
-
-mClassCache::mClassCache(Initializer init)
-    : mClass(nullptr)
-    , m_initializer(init)
-{
-    mRegisterCache(this);
-}
-
-void mClassCache::clear() { m_rep = nullptr; }
-void mClassCache::rebind() {
-    if (m_initializer) {
-        m_rep = m_initializer();
-    }
-    else {
-        m_rep = m_image->findClass(m_namespace, m_name).get();
-    }
-}
-
-
-mFieldCache::mFieldCache(mClass& mclass, const char *name)
-    : mField(nullptr)
-    , m_class(&mclass)
-    , m_name(name)
-{
-    mRegisterCache(this);
-}
-void mFieldCache::clear() { m_rep = nullptr; }
-void mFieldCache::rebind() { m_rep = m_class->findField(m_name).get(); }
-
-
-mMethodCache::mMethodCache(mClass& mclass, const char *name, int nargs)
-    : mMethod(nullptr)
-    , m_class(&mclass)
-    , m_name(name)
-    , m_num_args(nargs)
-{
-    mRegisterCache(this);
-}
-mMethodCache::mMethodCache(mClass& mclass, const char *name, std::vector<const char*> typenames)
-    : mMethod(nullptr)
-    , m_class(&mclass)
-    , m_name(name)
-    , m_typenames(typenames)
-{
-    mRegisterCache(this);
-}
-void mMethodCache::clear() { m_rep = nullptr; }
-void mMethodCache::rebind() {
-    if (m_typenames.empty()) {
-        m_rep = m_class->findMethod(m_name, m_num_args).get();
-    }
-    else {
-        m_rep = m_class->findMethod(m_name, (int)m_typenames.size(), m_typenames.data()).get();
-    }
-}
-
-mIMethodCache::mIMethodCache(mMethod& generics, std::vector<mClass*>& param)
-    : mMethod(nullptr)
-    , m_generics(&generics)
-    , m_params(param)
-{
-    mRegisterCache(this);
-}
-void mIMethodCache::clear() { m_rep = nullptr; }
-void mIMethodCache::rebind() {
-    std::vector<mClass> params;
-    for (auto *c : m_params) { params.push_back(*c); }
-    m_rep = m_generics->instantiate(params.data(), params.size(), m_mem).get();
-}
-
-mPropertyCache::mPropertyCache(mClass& mclass, const char *name)
-    : mProperty(nullptr)
-    , m_class(&mclass)
-    , m_name(name)
-{
-    mRegisterCache(this);
-}
-void mPropertyCache::clear() { m_rep = nullptr; }
-void mPropertyCache::rebind() { m_rep = m_class->findProperty(m_name).get(); }
-
-
-mImage& mCreateImageCache(const char *name)
-{
-    return *new mImageCache(name);
-}
-mClass& mCreateClassCache(mImage& img, const char *ns, const char *name)
-{
-    return *new mClassCache(img, ns, name);
-}
-mClass& mCreateClassCache(MonoClass* (*initializer)())
-{
-    return *new mClassCache(initializer);
-}
-mField& mCreateFieldCache(mClass& mclass, const char *name)
-{
-    return *new mFieldCache(mclass, name);
-}
-mMethod& mCreateMethodCache(mClass& mclass, const char *name, int nargs)
-{
-    return *new mMethodCache(mclass, name, nargs);
-}
-mMethod& mCreateMethodCache(mClass& mclass, const char *name, std::vector<const char*> typenames)
-{
-    return *new mMethodCache(mclass, name, typenames);
-}
-mMethod& mCreateMethodCache(mMethod& generics, std::vector<mClass*> params)
-{
-    return *new mIMethodCache(generics, params);
-}
-mProperty& mCreatePropertyCache(mClass& mclass, const char *name)
-{
-    return *new mPropertyCache(mclass, name);
-}
 
 
 // thread management
@@ -794,4 +510,20 @@ void mDetachAllThreads()
             mthread = nullptr;
         }
     });
+}
+
+
+mDefImage(mscorlib, "mscorlib");
+
+mObject mGetSystemType(mClass c)
+{
+    static mClass& s_Type = mCreateClassCache(mGetImage(mscorlib), "System", "Type");
+    static mMethod& s_GetType = mCreateMethodCache(s_Type, "GetType", 1);
+
+    char qname[1024];
+    sprintf(qname, "%s.%s, %s",
+        c.getNamespace(), c.getName(), c.getImage().getAssembly().getAssemblyName().c_str());
+
+    void *args[] = { mToMString(qname).get() };
+    return s_GetType.invoke(nullptr, args);
 }

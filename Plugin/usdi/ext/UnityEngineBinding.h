@@ -58,23 +58,23 @@ struct mVector2;
 struct mVector3;
 struct mQuaternion;
 
-class mUObject;
-class mGameObject;
-class mComponent;
-class mTransform;
-class mCamera;
-class mMeshFilter;
-class mMeshRenderer;
-class mLight;
-class mMesh;
+#define DeclUClass(Type) class m##Type; using mM##Type = mManaged<m##Type>;
+DeclUClass(UObject);
+DeclUClass(Material);
+DeclUClass(Mesh);
+DeclUClass(GameObject);
+DeclUClass(Component);
+DeclUClass(Transform);
+DeclUClass(Camera);
+DeclUClass(MeshFilter);
+DeclUClass(MeshRenderer);
+DeclUClass(Light);
+DeclUClass(Light);
+#undef DeclManeged
 
 
-mDeclImage(mscorlib);
 mDeclImage(UnityEngine);
 mDeclImage(UnityEditor);
-
-mObject mGetSystemType(mClass c);
-template<class T> mObject mGetSystemType() { return mGetSystemType(mTypeof<T>()); }
 
 struct mVector2
 {
@@ -112,7 +112,7 @@ public:
 
     mUObject(MonoObject *rep = nullptr);
 
-    mObject getType();
+    mObject getSystemType();
     void setName(const char *name);
     std::string getName();
 
@@ -122,6 +122,7 @@ private:
     static mMethod& getInstantiate1();
 };
 
+
 class mMaterial : public mUObject
 {
 typedef mUObject super;
@@ -129,6 +130,7 @@ public:
     mDeclTraits();
     mMaterial(MonoObject *mo = nullptr);
 };
+
 
 class mMesh : public mUObject
 {

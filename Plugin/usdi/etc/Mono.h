@@ -85,6 +85,38 @@ struct MonoAssembly
 
 #define MONO_ZERO_LEN_ARRAY 1
 
+/* This macro is used to make bit field packing compatible with MSVC */
+#if defined(_MSC_VER) && defined(PLATFORM_IPHONE_XCOMP)
+#   define USE_UINT8_BIT_FIELD(type, field) guint8 field 
+#else
+#   define USE_UINT8_BIT_FIELD(type, field) type field
+#endif
+
+typedef gpointer MonoRuntimeGenericContext;
+
+/* the interface_offsets array is stored in memory before this struct */
+struct MonoVTable {
+    MonoClass  *klass;
+    /*
+    * According to comments in gc_gcj.h, this should be the second word in
+    * the vtable.
+    */
+    void *gc_descr;
+    MonoDomain *domain;  /* each object/vtable belongs to exactly one domain */
+    gpointer    data; /* to store static class data */
+    gpointer    type; /* System.Type type for klass */
+    guint8     *interface_bitmap;
+    guint16     max_interface_id;
+    guint8      rank;
+    USE_UINT8_BIT_FIELD(guint, remote      : 1); /* class is remotely activated */
+    USE_UINT8_BIT_FIELD(guint, initialized : 1); /* cctor has been run */
+    USE_UINT8_BIT_FIELD(guint, init_failed : 1); /* cctor execution failed */
+    guint32     imt_collisions_bitmap;
+    MonoRuntimeGenericContext *runtime_generic_context;
+    /* do not add any fields after vtable, the structure is dynamically extended */
+    gpointer    vtable[MONO_ZERO_LEN_ARRAY];
+};
+
 struct MonoObject {
     MonoVTable *vtable;
     MonoThreadsSync *synchronisation;

@@ -196,12 +196,13 @@ namespace UTJ
             }
 
             m_updator = new usdiStreamUpdator(m_ctx, this);
-            usdiCreateNodeRecursive(GetComponent<Transform>(), usdi.usdiGetRoot(m_ctx),
-                (e, schema) => {
-                    m_elements.Add(e);
-                    m_updator.Add(schema, e.gameObject);
-                });
+            m_updator.ConstructScene();
             m_updator.OnLoad();
+            //usdiCreateNodeRecursive(GetComponent<Transform>(), usdi.usdiGetRoot(m_ctx),
+            //    (e, schema) => {
+            //        m_elements.Add(e);
+            //        //m_updator.Add(schema, e.gameObject);
+            //    });
 
             usdiAsyncUpdate(m_time);
             usdiUpdate(m_time);
@@ -239,30 +240,28 @@ namespace UTJ
             if (t == m_prevUpdateTime) { return; }
 
             usdiApplyImportConfig();
-            //m_updator.AsyncUpdate(t);
+            m_updator.AsyncUpdate(t);
 
-            usdi.usdiUpdateAllSamples(m_ctx, t);
-
-            // update all elements
-            int c = m_elements.Count;
-            for (int i = 0; i < c; ++i)
-            {
-                m_elements[i].usdiAsyncUpdate(t);
-            }
+            //usdi.usdiUpdateAllSamples(m_ctx, t);
+            //int c = m_elements.Count;
+            //for (int i = 0; i < c; ++i)
+            //{
+            //    m_elements[i].usdiAsyncUpdate(t);
+            //}
         }
 
         void usdiUpdate(double t)
         {
             if (t == m_prevUpdateTime) { return; }
 
-            //m_updator.Update(t);
+            m_updator.Update(t);
 
-            // update all elements
-            int c = m_elements.Count;
-            for(int i=0; i<c; ++i)
-            {
-                m_elements[i].usdiUpdate(t);
-            }
+            //// update all elements
+            //int c = m_elements.Count;
+            //for(int i=0; i<c; ++i)
+            //{
+            //    m_elements[i].usdiUpdate(t);
+            //}
 
             m_prevUpdateTime = t;
         }
@@ -270,29 +269,31 @@ namespace UTJ
 
         void usdiKickAsyncUpdateTask()
         {
-            // kick async update tasks
-#if UNITY_EDITOR
-            if (m_forceSingleThread)
-            {
-                usdiAsyncUpdate(m_time);
-            }
-            else
-#endif
-            {
-                if (m_asyncUpdate == null)
-                {
-                    m_asyncUpdate = new usdi.DelegateTask(
-                        (arg) =>
-                        {
-                            try
-                            {
-                                usdiAsyncUpdate(m_time);
-                            }
-                            finally { }
-                        }, "usdiStream: " + gameObject.name);
-                }
-                m_asyncUpdate.Run();
-            }
+            usdiAsyncUpdate(m_time);
+
+//            // kick async update tasks
+//#if UNITY_EDITOR
+//            if (m_forceSingleThread)
+//            {
+//                usdiAsyncUpdate(m_time);
+//            }
+//            else
+//#endif
+//            {
+//                if (m_asyncUpdate == null)
+//                {
+//                    m_asyncUpdate = new usdi.DelegateTask(
+//                        (arg) =>
+//                        {
+//                            try
+//                            {
+//                                usdiAsyncUpdate(m_time);
+//                            }
+//                            finally { }
+//                        }, "usdiStream: " + gameObject.name);
+//                }
+//                m_asyncUpdate.Run();
+//            }
         }
 
         void usdiWaitAsyncUpdateTask()
@@ -354,6 +355,7 @@ namespace UTJ
             else if(!EditorApplication.isCompiling && m_isCompiling)
             {
                 m_isCompiling = false;
+                usdi.usdiInitialize();
                 usdiLoad(m_path);
             }
 #endif

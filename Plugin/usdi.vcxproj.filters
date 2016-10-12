@@ -67,6 +67,9 @@
     <ClCompile Include="usdi\etc\MonoWrapper.cpp">
       <Filter>usdi\etc</Filter>
     </ClCompile>
+    <ClCompile Include="usdi\etc\MonoWrapper_Cache.cpp">
+      <Filter>usdi\etc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="usdi\pch.h">
@@ -139,6 +142,9 @@
       <Filter>usdi\etc</Filter>
     </ClInclude>
     <ClInclude Include="usdi\etc\tls.h">
+      <Filter>usdi\etc</Filter>
+    </ClInclude>
+    <ClInclude Include="usdi\etc\MonoWrapperImpl.h">
       <Filter>usdi\etc</Filter>
     </ClInclude>
   </ItemGroup>

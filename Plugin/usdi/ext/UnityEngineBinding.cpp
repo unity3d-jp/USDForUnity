@@ -7,10 +7,6 @@
 //#define usdiDbgForceMono
 
 
-#define mBindClass(...)\
-    static mClass& s_class=mCreateClassCache(__VA_ARGS__);\
-    return s_class;
-
 #define mBindMethod(...)\
     static mMethod& mBindedMethod=mCreateMethodCache(mTypeof<std::remove_reference<decltype(*this)>::type>(), __VA_ARGS__);
 #define mBindStaticMethod(T, ...)\
@@ -114,7 +110,6 @@ void nMesh::setBounds(const AABB &v) { (self()->*NM_Mesh_SetBounds)(v); }
 
 
 
-mDefImage(mscorlib, "mscorlib");
 mDefImage(UnityEngine, "UnityEngine");
 mDefImage(UnityEditor, "UnityEditor");
 
@@ -127,25 +122,9 @@ mDefTraits(UnityEngine, "UnityEngine", "Quaternion", mQuaternion);
 mDefTraits(UnityEngine, "UnityEngine", "Object", mUObject);
 
 
-mObject mGetSystemType(mClass c)
-{
-    static mClass& s_Type = mCreateClassCache(mGetImage(mscorlib), "System", "Type");
-    static mMethod& s_GetType = mCreateMethodCache(s_Type, "GetType", 1);
-
-    auto assembly = c.getImage().getAssembly();
-    char qname[1024];
-    auto* asmname = assembly.stringifyAssemblyName();
-    sprintf(qname, "%s.%s, %s", c.getNamespace(), c.getName(), asmname);
-    assembly.freeAssemblyName(asmname);
-
-    void *args[] = { mToMString(qname).get() };
-    // System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089
-    return s_GetType.invoke(nullptr, args);
-}
-
 mUObject::mUObject(MonoObject *rep) : super(rep) {}
 
-mObject mUObject::getType()
+mObject mUObject::getSystemType()
 {
     mBindMethod("GetType", 0);
     return invoke(mBindedMethod);
