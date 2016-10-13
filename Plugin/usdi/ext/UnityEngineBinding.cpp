@@ -3,6 +3,7 @@
 #include "UnityEngineBinding.h"
 #include "usdiComponentUpdator.h"
 #include "etc/Hook.h"
+#include "etc/Mono.h"
 
 //#define usdiDbgForceMono
 
@@ -13,7 +14,7 @@
     static mMethod& mBindedMethod=mCreateMethodCache(mTypeof<T>(), __VA_ARGS__);
 #define mBindMethodFull(...)\
     static mMethod& mBindedMethod=mCreateMethodCache(__VA_ARGS__);
-#define mBindedMethod mBindedMethod
+#define mBindedMethod s_method
 
 namespace usdi {
 
@@ -123,6 +124,8 @@ mDefTraits(UnityEngine, "UnityEngine", "Object", mUObject);
 
 
 mUObject::mUObject(MonoObject *rep) : super(rep) {}
+
+bool mUObject::isNull() const { return !m_rep || !*(void**)(m_rep + 1); }
 
 mObject mUObject::getSystemType()
 {
@@ -278,7 +281,6 @@ mMethod& mGameObject::getAddComponent()
     return mBindedMethod;
 }
 
-
 #define Instantiate(C)\
 template<> C mGameObject::getComponent()\
 {\
@@ -291,16 +293,16 @@ template<> C mGameObject::addComponent()\
 {\
     mBindMethodFull(getAddComponent(), {&mTypeof<C>()});\
     auto ret = invoke(mBindedMethod);\
-    mTypeCheck(ret.getClass(), mTypeof<C>());\
     return C(ret.get());\
 }
+
 Instantiate(mMTransform);
 Instantiate(mMCamera);
 Instantiate(mMMeshFilter);
 Instantiate(mMMeshRenderer);
 Instantiate(mMLight);
+
 #undef Instantiate
-#undef mTypeCheck
 
 
 mDefTraits(UnityEngine, "UnityEngine", "Component", mComponent);

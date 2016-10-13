@@ -233,7 +233,6 @@ void StreamUpdator::registerICalls()
     mAddMethod("UTJ.usdiStreamUpdator::_Dtor", StreamUpdator_Dtor);
     mAddMethod("UTJ.usdiStreamUpdator::_SetConfig", StreamUpdator_SetConfig);
     mAddMethod("UTJ.usdiStreamUpdator::_ConstructScene", StreamUpdator_ConstructScene);
-    mAddMethod("UTJ.usdiStreamUpdator::_Add", StreamUpdator_Add);
     mAddMethod("UTJ.usdiStreamUpdator::_OnLoad", StreamUpdator_OnLoad);
     mAddMethod("UTJ.usdiStreamUpdator::_OnUnload", StreamUpdator_OnUnload);
     mAddMethod("UTJ.usdiStreamUpdator::_AsyncUpdate", StreamUpdator_AsyncUpdate);
@@ -404,6 +403,8 @@ void MeshUpdator::MeshBuffer::copyDataToMonoArrays()
 
 void MeshUpdator::MeshBuffer::kickVBUpdateTask()
 {
+    if (!m_vb) { return; }
+
     if (!m_hcommand) {
         m_hcommand = usdi::VertexCommandManager::getInstance().createCommand();
     }
@@ -484,10 +485,9 @@ void MeshUpdator::asyncUpdate(Time time)
         m_uflags.normals = m_data.normals && (m_frame == 0 || m_summary.topology_variance != TopologyVariance::Constant);
         m_uflags.uv = m_data.uvs && (m_frame == 0 || m_summary.topology_variance != TopologyVariance::Constant);
         m_uflags.indices = m_data.num_indices_triangulated && (m_frame == 0 || m_summary.topology_variance == TopologyVariance::Heterogenous);
-        //m_uflags.directVB =
-        //    m_parent->getConfig().directVBUpdate && mMesh::hasNativeBufferAPI() &&
-        //    m_summary.topology_variance == TopologyVariance::Homogenous;
-        m_uflags.directVB = false;
+        m_uflags.directVB =
+            m_parent->getConfig().directVBUpdate && mMesh::hasNativeBufferAPI() &&
+            m_summary.topology_variance == TopologyVariance::Homogenous;
         bool kick_VB_update_tasks = m_buffers.front()->m_vb != nullptr;
 
         if (m_data.num_splits != 0) {

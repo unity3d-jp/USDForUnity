@@ -4,7 +4,7 @@
 #include "usdiInternal.h"
 #include "etc/Hook.h"
 #include "etc/Mono.h"
-
+#include "etc/MonoWrapper.h"
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {

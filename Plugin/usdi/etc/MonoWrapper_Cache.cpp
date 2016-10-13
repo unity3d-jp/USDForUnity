@@ -64,7 +64,7 @@ class mMethodCache : public mMethod, public mICache
 {
 public:
     mMethodCache(mClass& mclass, const char *name, int nargs = -1);
-    mMethodCache(mClass& mclass, const char *name, std::vector<const char*> arg_types);
+    mMethodCache(mClass& mclass, const char *name, const std::vector<const char*> arg_types);
     void clear() override;
     void rebind() override;
 
@@ -78,7 +78,7 @@ private:
 class mIMethodCache : public mMethod, public mICache
 {
 public:
-    mIMethodCache(mMethod& generics, std::vector<mClass*>& param);
+    mIMethodCache(mMethod& generics, const std::vector<mClass*>& param);
     template<class T> mIMethodCache(mMethod& generics) { mIMethodCache(generics, mTypeof<T>()); }
     void clear() override;
     void rebind() override;
@@ -190,7 +190,7 @@ mMethodCache::mMethodCache(mClass& mclass, const char *name, int nargs)
 {
     mRegisterCache(this);
 }
-mMethodCache::mMethodCache(mClass& mclass, const char *name, std::vector<const char*> typenames)
+mMethodCache::mMethodCache(mClass& mclass, const char *name, const std::vector<const char*> typenames)
     : mMethod(nullptr)
     , m_class(&mclass)
     , m_name(name)
@@ -208,7 +208,7 @@ void mMethodCache::rebind() {
     }
 }
 
-mIMethodCache::mIMethodCache(mMethod& generics, std::vector<mClass*>& param)
+mIMethodCache::mIMethodCache(mMethod& generics, const std::vector<mClass*>& param)
     : mMethod(nullptr)
     , m_generics(&generics)
     , m_params(param)
@@ -219,7 +219,7 @@ void mIMethodCache::clear() { m_rep = nullptr; }
 void mIMethodCache::rebind() {
     std::vector<mClass> params;
     for (auto *c : m_params) { params.push_back(*c); }
-    m_rep = m_generics->instantiate(params.data(), params.size(), m_mem).get();
+    m_rep = m_generics->inflate(params.data(), params.size(), m_mem).get();
 }
 
 mPropertyCache::mPropertyCache(mClass& mclass, const char *name)
@@ -253,11 +253,11 @@ mMethod& mCreateMethodCache(mClass& mclass, const char *name, int nargs)
 {
     return *new mMethodCache(mclass, name, nargs);
 }
-mMethod& mCreateMethodCache(mClass& mclass, const char *name, std::vector<const char*> typenames)
+mMethod& mCreateMethodCache(mClass& mclass, const char *name, const std::vector<const char*> typenames)
 {
     return *new mMethodCache(mclass, name, typenames);
 }
-mMethod& mCreateMethodCache(mMethod& generics, std::vector<mClass*> params)
+mMethod& mCreateMethodCache(mMethod& generics, const std::vector<mClass*> params)
 {
     return *new mIMethodCache(generics, params);
 }

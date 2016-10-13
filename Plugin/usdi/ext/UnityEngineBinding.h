@@ -111,9 +111,11 @@ public:
     mDeclTraits();
 
     mUObject(MonoObject *rep = nullptr);
+    operator bool() const { return !isNull(); }
 
-    mObject getSystemType();
-    void setName(const char *name);
+    bool        isNull() const;
+    mObject     getSystemType();
+    void        setName(const char *name);
     std::string getName();
 
     template<class T> static T instantiate();

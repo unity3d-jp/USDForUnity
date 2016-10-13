@@ -95,30 +95,34 @@ mMethod mProperty::getSetter() const
 
 const char* mMethod::getName() const
 {
-    if (!m_rep) { return nullptr; }
     return mono_method_get_name(m_rep);
 }
 
+mClass mMethod::getClass() const
+{
+    return mono_method_get_class(m_rep);
+}
 
 mObject mMethod::invoke(mObject obj, void **args)
 {
-    if (!m_rep) { return nullptr; }
     return mono_runtime_invoke(m_rep, obj.get(), args, nullptr);
 }
 
-mMethod mMethod::instantiate(mClass *params, size_t nparams, void *& mem)
+mMethod mMethod::inflate(mClass *params, size_t nparams, void *& mem)
 {
     if (mem == nullptr) {
         mem = malloc(sizeof(MonoGenericInst) + (sizeof(void*)*(nparams - 1)));
     }
-    MonoGenericInst *gi = (MonoGenericInst*)mem;
-    gi->id = -1;
-    gi->is_open = 0; // must be zero!
-    gi->type_argc = nparams;
+
+    auto *minst = (MonoGenericInst*)mem;
+    minst->id = -1;
+    minst->is_open = 0; // must be zero!
+    minst->type_argc = nparams;
     for (size_t i = 0; i < nparams; ++i) {
-        gi->type_argv[i++] = params[i].getType().get();
+        minst->type_argv[i++] = params[i].getType().get();
     }
-    MonoGenericContext ctx = { nullptr, gi };
+
+    MonoGenericContext ctx = { nullptr, minst };
     return mono_class_inflate_generic_method(m_rep, &ctx);
 }
 
@@ -283,8 +287,6 @@ MonoDomain* mObject::getDomain() const
 {
     return mono_object_new(mGetDomain().get(), mclass.get());
 }
-
-bool mObject::isNull() const { return !m_rep || !*(void**)(m_rep + 1); }
 
 void* mObject::unbox() { return m_rep + 1; }
 void* mObject::unboxValue() { return m_rep; }

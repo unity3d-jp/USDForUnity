@@ -137,6 +137,8 @@ protected:
 };
 
 
+// managed object:
+// MonoObject may "move" on memory for compaction. this class track MonoObject by GC handle.
 template<class T>
 class mManaged
 {

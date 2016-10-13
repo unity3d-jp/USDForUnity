@@ -21,8 +21,8 @@ template<class Body> inline void ForceWrite(void *dst, size_t size, const Body& 
 // return next address of last written byte (from+5 or from+14).
 void* EmitJumpInstruction(void* from, const void* to);
 
-void* OverrideDLLImport(void *module, const char *target_module, const char *target_funcname, void *replacement);
-void* OverrideDLLExportByName(void *module, const char *funcname, void *replacement);
+void* OverrideDLLImport(void *target_module, const char *modname, const char *funcname, void *replacement);
+void* OverrideDLLExport(void *target_module, const char *funcname, void *replacement);
 
 
 void* FindSymbolByName(const char *name);

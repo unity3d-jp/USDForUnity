@@ -65,8 +65,8 @@ class mDomain
 public:
     mDomain(MonoDomain *m) : m_rep(m) {}
     operator bool() const { return m_rep != nullptr; }
-    bool operator==(mDomain other) const { return m_rep == other.m_rep; }
-    bool operator!=(mDomain other) const { return m_rep != other.m_rep; }
+    bool operator==(const mDomain& other) const { return m_rep == other.m_rep; }
+    bool operator!=(const mDomain& other) const { return m_rep != other.m_rep; }
     MonoDomain* get() { return m_rep; }
 
     static mImage findImage(const char *name); // name: not includes extensions. ex: "UnityEngine"
@@ -81,8 +81,8 @@ class mAssembly
 public:
     mAssembly(MonoAssembly *m) : m_rep(m) {}
     operator bool() const { return m_rep != nullptr; }
-    bool operator==(mAssembly other) const { return m_rep == other.m_rep; }
-    bool operator!=(mAssembly other) const { return m_rep != other.m_rep; }
+    bool operator==(const mAssembly& other) const { return m_rep == other.m_rep; }
+    bool operator!=(const mAssembly& other) const { return m_rep != other.m_rep; }
     MonoAssembly* get() { return m_rep; }
     std::string getAssemblyName() const;
 
@@ -96,8 +96,8 @@ class mImage
 public:
     mImage(MonoImage *m) : m_rep(m) {}
     operator bool() const { return m_rep != nullptr; }
-    bool operator==(mImage other) const { return m_rep == other.m_rep; }
-    bool operator!=(mImage other) const { return m_rep != other.m_rep; }
+    bool operator==(const mImage& other) const { return m_rep == other.m_rep; }
+    bool operator!=(const mImage& other) const { return m_rep != other.m_rep; }
     MonoImage* get() { return m_rep; }
 
     mAssembly   getAssembly();
@@ -113,8 +113,8 @@ class mType
 public:
     mType(MonoType *m) : m_rep(m) {}
     operator bool() const { return m_rep != nullptr; }
-    bool operator==(mType other) const { return m_rep == other.m_rep; }
-    bool operator!=(mType other) const { return m_rep != other.m_rep; }
+    bool operator==(const mType& other) const { return m_rep == other.m_rep; }
+    bool operator!=(const mType& other) const { return m_rep != other.m_rep; }
     MonoType* get() const { return m_rep; }
 
     const char* getName() const;
@@ -130,8 +130,8 @@ class mField
 public:
     mField(MonoClassField *mc) : m_rep(mc) {}
     operator bool() const { return m_rep != nullptr; }
-    bool operator==(mField other) const { return m_rep == other.m_rep; }
-    bool operator!=(mField other) const { return m_rep != other.m_rep; }
+    bool operator==(const mField& other) const { return m_rep == other.m_rep; }
+    bool operator!=(const mField& other) const { return m_rep != other.m_rep; }
     MonoClassField* get() const { return m_rep; }
 
     const char* getName() const;
@@ -154,8 +154,8 @@ class mProperty
 public:
     mProperty(MonoProperty *mc) : m_rep(mc) {}
     operator bool() const { return m_rep != nullptr; }
-    bool operator==(mProperty other) const { return m_rep == other.m_rep; }
-    bool operator!=(mProperty other) const { return m_rep != other.m_rep; }
+    bool operator==(const mProperty& other) const { return m_rep == other.m_rep; }
+    bool operator!=(const mProperty& other) const { return m_rep != other.m_rep; }
     MonoProperty* get() const { return m_rep; }
 
     const char* getName() const;
@@ -172,13 +172,14 @@ class mMethod
 public:
     mMethod(MonoMethod *mm) : m_rep(mm) {}
     operator bool() const { return m_rep != nullptr; }
-    bool operator==(mMethod other) const { return m_rep == other.m_rep; }
-    bool operator!=(mMethod other) const { return m_rep != other.m_rep; }
+    bool operator==(const mMethod& other) const { return m_rep == other.m_rep; }
+    bool operator!=(const mMethod& other) const { return m_rep != other.m_rep; }
     MonoMethod* get() const { return m_rep; }
 
     const char* getName() const;
+    mClass getClass() const;
     mObject invoke(mObject obj, void **args=nullptr);
-    mMethod instantiate(mClass *params, size_t nparams, void *& mem);
+    mMethod inflate(mClass *params, size_t nparams, void *& mem);
 
 protected:
     MonoMethod *m_rep;
@@ -190,8 +191,8 @@ class mClass
 public:
     mClass(MonoClass *mc) : m_rep(mc) {}
     operator bool() const { return m_rep != nullptr; }
-    bool operator==(mClass other) const { return m_rep == other.m_rep; }
-    bool operator!=(mClass other) const { return m_rep != other.m_rep; }
+    bool operator==(const mClass& other) const { return m_rep == other.m_rep; }
+    bool operator!=(const mClass& other) const { return m_rep != other.m_rep; }
 
     MonoClass* get() const { return m_rep; }
     const char* getName() const;
@@ -231,12 +232,11 @@ public:
     template<class T> static T New() { return T(New(mTypeof<T>()).get()); }
 
     mObject(MonoObject *o = nullptr) : m_rep(o) {}
-    operator bool() const { return !isNull(); }
-    bool operator==(mObject other) const { return m_rep == other.m_rep; }
-    bool operator!=(mObject other) const { return m_rep != other.m_rep; }
+    operator bool() const { return m_rep != nullptr; }
+    bool operator==(const mObject& other) const { return m_rep == other.m_rep; }
+    bool operator!=(const mObject& other) const { return m_rep != other.m_rep; }
     MonoObject* get() const { return m_rep; }
 
-    bool        isNull() const;
     MonoDomain* getDomain() const;
     mClass      getClass() const;
     void*       unbox();
@@ -275,6 +275,8 @@ public:
     mString(MonoObject *o = nullptr) : mObject(o) {}
     mString(MonoString *o) : mObject((MonoObject*)o) {}
     operator bool() const { return m_rep != nullptr; }
+    bool operator==(const mString& other) const { return m_rep == other.m_rep; }
+    bool operator!=(const mString& other) const { return m_rep != other.m_rep; }
     MonoString* get() const { return (MonoString*)m_rep; }
 
     size_t size() const;
@@ -290,6 +292,8 @@ public:
 
     mArray(MonoArray *o = nullptr) : mObject((MonoObject*)o) {}
     operator bool() const { return m_rep != nullptr; }
+    bool operator==(const mArray& other) const { return m_rep == other.m_rep; }
+    bool operator!=(const mArray& other) const { return m_rep != other.m_rep; }
     MonoArray* get() const { return (MonoArray*)m_rep; }
 
     size_t size() const;
@@ -344,10 +348,10 @@ template<class T> mObject mGetSystemType() { return mGetSystemType(mTypeof<T>())
 
 #ifdef usdiDebug
     #define mTypeCheck(T1, T2)\
-        if((T1)!=(T2)) {\
-            auto *typename1 = (T1).getName();\
-            auto *typename2 = (T2).getName();\
-            assert((T1)!=(T2));\
+        if(T1 != T2) {\
+            auto *typename1 = T1.getName();\
+            auto *typename2 = T2.getName();\
+            assert(T1 == T2);\
         }
     #define mTypeCheckThis()\
         if(!isNull() && getClass() != mThisClass) {\

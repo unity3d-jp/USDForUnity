@@ -3,7 +3,7 @@
 
 namespace usdi {
 
-int g_debug_level = 4;
+int g_debug_level = 3;
 
 void LogImpl(int level, const char *format, ...)
 {

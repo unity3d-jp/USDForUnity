@@ -185,6 +185,7 @@ extern MonoType*        (*mono_class_get_type)(MonoClass *klass);
 extern MonoMethod*      (*mono_class_get_method_from_name)(MonoClass *klass, const char *name, int param_count);
 extern MonoClassField*  (*mono_class_get_field_from_name)(MonoClass *klass, const char *name);
 extern MonoMethod*      (*mono_class_inflate_generic_method)(MonoMethod *method, MonoGenericContext *context);
+extern MonoMethod*      (*mono_class_inflate_generic_method_full)(MonoMethod *method, MonoClass *klass_hint, MonoGenericContext *context);
 extern gboolean         (*mono_class_is_subclass_of)(MonoClass *klass, MonoClass *klassc, gboolean check_interfaces);
 extern MonoProperty*    (*mono_class_get_property_from_name)(MonoClass *klass, const char *name);
 extern MonoMethod*      (*mono_class_get_methods)(MonoClass* klass, gpointer *iter);
@@ -194,6 +195,7 @@ extern MonoClass*       (*mono_class_get_parent)(MonoClass *klass);
 extern MonoImage*       (*mono_class_get_image)(MonoClass *klass);
 
 extern const char*      (*mono_method_get_name)(MonoMethod *method);
+extern MonoClass*       (*mono_method_get_class)(MonoMethod *method);
 extern MonoMethodSignature* (*mono_method_signature)(MonoMethod *method);
 extern guint32          (*mono_signature_get_param_count)(MonoMethodSignature *sig);
 extern MonoType*        (*mono_signature_get_params)(MonoMethodSignature *sig, gpointer *iter);

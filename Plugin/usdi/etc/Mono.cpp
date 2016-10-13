@@ -39,6 +39,7 @@ MonoType*       (*mono_class_get_type)(MonoClass *klass);
 MonoMethod*     (*mono_class_get_method_from_name)(MonoClass *klass, const char *name, int param_count);
 MonoClassField* (*mono_class_get_field_from_name)(MonoClass *klass, const char *name);
 MonoMethod*     (*mono_class_inflate_generic_method)(MonoMethod *method, MonoGenericContext *context);
+MonoMethod*     (*mono_class_inflate_generic_method_full)(MonoMethod *method, MonoClass *klass_hint, MonoGenericContext *context);
 gboolean        (*mono_class_is_subclass_of)(MonoClass *klass, MonoClass *klassc, gboolean check_interfaces);
 MonoProperty*   (*mono_class_get_property_from_name)(MonoClass *klass, const char *name);
 MonoMethod*     (*mono_class_get_methods)(MonoClass* klass, gpointer *iter);
@@ -48,6 +49,7 @@ MonoClass*      (*mono_class_get_parent)(MonoClass *klass);
 MonoImage*      (*mono_class_get_image)(MonoClass *klass);
 
 const char*     (*mono_method_get_name)(MonoMethod *method);
+MonoClass*      (*mono_method_get_class)(MonoMethod *method);
 MonoMethodSignature* (*mono_method_signature)(MonoMethod *method);
 guint32         (*mono_signature_get_param_count)(MonoMethodSignature *sig);
 MonoType*       (*mono_signature_get_params)(MonoMethodSignature *sig, gpointer *iter);
@@ -155,6 +157,7 @@ void ImportMonoFunctions()
         Import(mono_class_get_method_from_name);
         Import(mono_class_get_field_from_name);
         Import(mono_class_inflate_generic_method);
+        Import(mono_class_inflate_generic_method_full);
         Import(mono_class_is_subclass_of);
         Import(mono_class_get_property_from_name);
         Import(mono_class_get_methods);
@@ -164,6 +167,7 @@ void ImportMonoFunctions()
         Import(mono_class_get_image);
 
         Import(mono_method_get_name);
+        Import(mono_method_get_class);
         Import(mono_method_signature);
         Import(mono_signature_get_param_count);
         Import(mono_signature_get_params);
