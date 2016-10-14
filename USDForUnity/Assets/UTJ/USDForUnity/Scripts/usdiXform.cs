@@ -35,7 +35,7 @@ namespace UTJ
 
         public override void usdiUpdate(double time)
         {
-            usdi.usdiUniTransformAssignXform(m_trans, ref m_xfData);
+            usdi.usdiUniTransformAssign(m_trans, ref m_xfData);
 
             //// fall back
             //if ((m_xfData.flags & (int)usdi.XformData.Flags.UpdatedPosition) != 0)

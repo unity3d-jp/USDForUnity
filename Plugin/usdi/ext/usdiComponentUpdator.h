@@ -5,17 +5,23 @@
 
 namespace usdi {
 
-extern void (*TransformAssignXform)(MonoObject *trans, XformData *data);
-void TransformAssignXformCpp(MonoObject *trans, XformData *data);
-void TransformAssignXformMono(MonoObject *trans, XformData *data);
+extern void (*TransformAssign)(MonoObject *trans, XformData *data);
+void TransformAssignN(MonoObject *trans, XformData *data);
+void TransformAssignM(MonoObject *trans, XformData *data);
 
 extern void (*TransformNotfyChange)(MonoObject *trans);
-void TransformNotfyChangeCpp(MonoObject *trans);
-void TransformNotfyChangeMono(MonoObject *trans);
+void TransformNotfyChangeN(MonoObject *trans);
+void TransformNotfyChangeM(MonoObject *trans);
+
+extern void(*CameraAssign)(MonoObject *trans, CameraData *data);
+void CameraAssignN(MonoObject *trans, CameraData *data);
+void CameraAssignM(MonoObject *trans, CameraData *data);
+
+extern void(*TransformNotfyChange)(MonoObject *trans);
 
 extern void (*MeshAssignBounds)(MonoObject *mesh, float3 *center, float3  *extents);
-void MeshAssignBoundsCpp(MonoObject *mesh, float3 *center, float3  *extents);
-void MeshAssignBoundsMono(MonoObject *mesh, float3 *center, float3  *extents);
+void MeshAssignBoundsN(MonoObject *mesh, float3 *center, float3  *extents);
+void MeshAssignBoundsM(MonoObject *mesh, float3 *center, float3  *extents);
 
 
 class IUpdator;

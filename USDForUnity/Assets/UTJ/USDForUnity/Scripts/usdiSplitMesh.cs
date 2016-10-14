@@ -91,7 +91,7 @@ namespace UTJ
         }
 
 
-        public void usdiAllocateMeshData(ref usdi.SplitedMeshData data)
+        public void usdiAllocateMeshData(ref usdi.SubmeshData data)
         {
             // skip if already allocated
             if (m_indices == null || m_indices.Length != data.num_points)
@@ -109,7 +109,7 @@ namespace UTJ
             if (m_uvs != null) { data.uvs = usdi.GetArrayPtr(m_uvs); }
         }
 
-        public void usdiFreeMeshData(ref usdi.SplitedMeshData data)
+        public void usdiFreeMeshData(ref usdi.SubmeshData data)
         {
             m_positions = null;
             m_normals = null;

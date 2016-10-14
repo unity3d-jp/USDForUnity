@@ -13,12 +13,13 @@
 
 namespace usdi {
 
-void(*TransformAssignXform)(MonoObject *trans, XformData *data);
+void(*TransformAssign)(MonoObject *trans, XformData *data);
 void(*TransformNotfyChange)(MonoObject *trans);
+void(*CameraAssign)(MonoObject *camera, CameraData *data);
 void(*MeshAssignBounds)(MonoObject *mesh, float3 *center, float3  *extents);
 
 
-void TransformAssignXformCpp(MonoObject *trans, XformData *data_)
+void TransformAssignN(MonoObject *trans, XformData *data_)
 {
     auto& data = *data_;
     auto t = mObject(trans).unbox<nTransform>();
@@ -40,7 +41,7 @@ void TransformAssignXformCpp(MonoObject *trans, XformData *data_)
     }
 }
 
-void TransformAssignXformMono(MonoObject *trans, XformData *data_)
+void TransformAssignM(MonoObject *trans, XformData *data_)
 {
     auto& data = *data_;
     auto t = mTransform(trans);
@@ -60,20 +61,37 @@ void TransformAssignXformMono(MonoObject *trans, XformData *data_)
 }
 
 
-void TransformNotfyChangeCpp(MonoObject *trans)
+void TransformNotfyChangeN(MonoObject *trans)
 {
     auto t = mObject(trans).unbox<nTransform>();
     t.sendTransformChanged(0x1 | 0x2 | 0x8);
 }
 
-void TransformNotfyChangeMono(MonoObject *trans)
+void TransformNotfyChangeM(MonoObject *trans)
 {
     // nothing to do
 }
 
 
+void CameraAssignN(MonoObject *trans, CameraData *data)
+{
+    // todo: implement this if possible
+    CameraAssignM(trans, data);
+}
 
-void MeshAssignBoundsCpp(MonoObject *mesh, float3 *center, float3  *extents)
+void CameraAssignM(MonoObject *cam_, CameraData *data_)
+{
+    auto& data = *data_;
+    auto cam = mCamera(cam_);
+
+    cam.setNearClipPlane(data.near_clipping_plane);
+    cam.setFarClipPlane(data.far_clipping_plane);
+    cam.setFieldOfView(data.field_of_view);
+    //cam.setAspect(data.aspect_ratio);
+}
+
+
+void MeshAssignBoundsN(MonoObject *mesh, float3 *center, float3  *extents)
 {
     AABB bounds = { *center, *extents };
 
@@ -81,7 +99,7 @@ void MeshAssignBoundsCpp(MonoObject *mesh, float3 *center, float3  *extents)
     m.setBounds(bounds);
 }
 
-void MeshAssignBoundsMono(MonoObject *mesh, float3 *center, float3  *extents)
+void MeshAssignBoundsM(MonoObject *mesh, float3 *center, float3  *extents)
 {
     AABB bounds = { *center, *extents };
 
@@ -277,7 +295,7 @@ void XformUpdator::asyncUpdate(Time time)
 void XformUpdator::update(Time time)
 {
     if (m_schema->needsUpdate() && m_mtrans) {
-        TransformAssignXform(m_mtrans->get(), &m_data);
+        TransformAssign(m_mtrans->get(), &m_data);
     }
 }
 

@@ -70,7 +70,7 @@ namespace UTJ
         double m_timeRead;
 
         List<usdiSplitMesh> m_children = new List<usdiSplitMesh>();
-        usdi.SplitedMeshData[] m_splitedData;
+        usdi.SubmeshData[] m_splitedData;
 
         usdi.Task m_asyncRead;
         usdi.VertexUpdateCommand m_vuCmd;
@@ -249,7 +249,7 @@ namespace UTJ
             m_meshData = md;
             if (m_meshData.num_splits != 0)
             {
-                m_splitedData = new usdi.SplitedMeshData[m_meshData.num_splits];
+                m_splitedData = new usdi.SubmeshData[m_meshData.num_splits];
                 m_meshData.splits = usdi.GetArrayPtr(m_splitedData);
                 usdi.usdiMeshReadSample(m_mesh, ref m_meshData, t, true);
 

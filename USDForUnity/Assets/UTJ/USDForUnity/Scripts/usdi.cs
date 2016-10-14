@@ -251,7 +251,7 @@ namespace UTJ
             public Bool has_velocities;
         };
 
-        public struct SplitedMeshData
+        public struct SubmeshData
         {
             public IntPtr   points;
             public IntPtr   normals;
@@ -262,11 +262,11 @@ namespace UTJ
             public Vector3  center;
             public Vector3  extents;
 
-            public static SplitedMeshData default_value
+            public static SubmeshData default_value
             {
                 get
                 {
-                    return default(SplitedMeshData);
+                    return default(SubmeshData);
                 }
             }
         };
@@ -442,9 +442,11 @@ namespace UTJ
 
 
         [MethodImpl(MethodImplOptions.InternalCall)]
-        public static extern void usdiUniTransformAssignXform(UnityEngine.Transform trans, ref XformData data);
+        public static extern void usdiUniTransformAssign(UnityEngine.Transform trans, ref XformData data);
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern void usdiUniTransformNotfyChange(UnityEngine.Transform trans);
+        [MethodImpl(MethodImplOptions.InternalCall)]
+        public static extern void usdiUniCameraAssign(UnityEngine.Camera cam, ref CameraData data);
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern void usdiUniMeshAssignBounds(UnityEngine.Mesh mesh, ref Vector3 center, ref Vector3 extents);
 
@@ -536,6 +538,15 @@ namespace UTJ
         }
 
 
+        public static T GetOrAddComponent<T>(GameObject go) where T : Component
+        {
+            var c = go.GetComponent<T>();
+            if (c == null)
+            {
+                c = go.AddComponent<T>();
+            }
+            return c;
+        }
 
         public static string S(IntPtr cstring) { return Marshal.PtrToStringAnsi(cstring); }
         public static IntPtr GetArrayPtr(Array v) { return v == null ? IntPtr.Zero : Marshal.UnsafeAddrOfPinnedArrayElement(v, 0); }

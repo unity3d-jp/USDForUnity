@@ -64,12 +64,14 @@ void InitializeInternalMethods()
 #undef NMethod
 #endif // usdiDbgForceMono
 
-        TransformAssignXform = NM_Transform_SetLocalPositionWithoutNotification ? TransformAssignXformCpp : TransformAssignXformMono;
-        TransformNotfyChange = NM_Transform_SendTransformChanged ? TransformNotfyChangeCpp : TransformNotfyChangeMono;
-        MeshAssignBounds = NM_Mesh_SetBounds ? MeshAssignBoundsCpp : MeshAssignBoundsMono;
+        TransformAssign = NM_Transform_SetLocalPositionWithoutNotification ? TransformAssignN : TransformAssignM;
+        TransformNotfyChange = NM_Transform_SendTransformChanged ? TransformNotfyChangeN : TransformNotfyChangeM;
+        CameraAssign = CameraAssignM;
+        MeshAssignBounds = NM_Mesh_SetBounds ? MeshAssignBoundsN : MeshAssignBoundsM;
 
-        mAddMethod("UTJ.usdi::usdiUniTransformAssignXform", TransformAssignXform);
+        mAddMethod("UTJ.usdi::usdiUniTransformAssign", TransformAssign);
         mAddMethod("UTJ.usdi::usdiUniTransformNotfyChange", TransformNotfyChange);
+        mAddMethod("UTJ.usdi::usdiUniCameraAssign", CameraAssign);
         mAddMethod("UTJ.usdi::usdiUniMeshAssignBounds", MeshAssignBounds);
         StreamUpdator::registerICalls();
     });
