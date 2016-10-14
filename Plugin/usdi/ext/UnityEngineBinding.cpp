@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "usdiInternal.h"
 #include "UnityEngineBinding.h"
-#include "usdiComponentUpdator.h"
+#include "usdiComponentUpdater.h"
 #include "etc/Hook.h"
 #include "etc/Mono.h"
 
@@ -73,7 +73,7 @@ void InitializeInternalMethods()
         mAddMethod("UTJ.usdi::usdiUniTransformNotfyChange", TransformNotfyChange);
         mAddMethod("UTJ.usdi::usdiUniCameraAssign", CameraAssign);
         mAddMethod("UTJ.usdi::usdiUniMeshAssignBounds", MeshAssignBounds);
-        StreamUpdator::registerICalls();
+        StreamUpdater::registerICalls();
     });
 
     mRebindCache();

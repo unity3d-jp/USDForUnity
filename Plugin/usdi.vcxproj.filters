@@ -61,14 +61,14 @@
     <ClCompile Include="usdi\ext\UnityEngineBinding.cpp">
       <Filter>usdi\ext</Filter>
     </ClCompile>
-    <ClCompile Include="usdi\ext\usdiComponentUpdator.cpp">
-      <Filter>usdi\ext</Filter>
-    </ClCompile>
     <ClCompile Include="usdi\etc\MonoWrapper.cpp">
       <Filter>usdi\etc</Filter>
     </ClCompile>
     <ClCompile Include="usdi\etc\MonoWrapper_Cache.cpp">
       <Filter>usdi\etc</Filter>
+    </ClCompile>
+    <ClCompile Include="usdi\ext\usdiComponentUpdater.cpp">
+      <Filter>usdi\ext</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -135,9 +135,6 @@
     <ClInclude Include="usdi\ext\UnityEngineBinding.h">
       <Filter>usdi\ext</Filter>
     </ClInclude>
-    <ClInclude Include="usdi\ext\usdiComponentUpdator.h">
-      <Filter>usdi\ext</Filter>
-    </ClInclude>
     <ClInclude Include="usdi\etc\MonoWrapper.h">
       <Filter>usdi\etc</Filter>
     </ClInclude>
@@ -146,6 +143,9 @@
     </ClInclude>
     <ClInclude Include="usdi\etc\MonoWrapperImpl.h">
       <Filter>usdi\etc</Filter>
+    </ClInclude>
+    <ClInclude Include="usdi\ext\usdiComponentUpdater.h">
+      <Filter>usdi\ext</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace UTJ
 {
-    abstract class usdiIStreamUpdator
+    abstract class usdiIStreamUpdater
     {
         public struct Config
         {
@@ -22,12 +22,12 @@ namespace UTJ
     }
 
 
-    class usdiStreamUpdator : usdiIStreamUpdator
+    class usdiStreamUpdater : usdiIStreamUpdater
     {
         IntPtr m_rep;
 
-        public usdiStreamUpdator(usdi.Context usd, usdiStream stream) { m_rep = _Ctor(usd, stream); }
-        ~usdiStreamUpdator() { _Dtor(m_rep); }
+        public usdiStreamUpdater(usdi.Context usd, usdiStream stream) { m_rep = _Ctor(usd, stream); }
+        ~usdiStreamUpdater() { _Dtor(m_rep); }
 
         override public void SetConfig(ref Config config) { _SetConfig(m_rep, ref config); }
         override public void ConstructScene() { _ConstructScene(m_rep); }
@@ -57,10 +57,10 @@ namespace UTJ
     }
 
 
-    class usdiStreamUpdatorM : usdiIStreamUpdator
+    class usdiStreamUpdaterM : usdiIStreamUpdater
     {
         #region impl
-        abstract class IUpdator
+        abstract class IUpdater
         {
             abstract public void OnLoad();
             abstract public void OnUnload();
@@ -68,13 +68,13 @@ namespace UTJ
             abstract public void Update(double time);
         }
 
-        class XformUpdator : IUpdator
+        class XformUpdater : IUpdater
         {
             usdi.Xform m_rep;
             usdi.XformData m_data;
             Transform m_trans;
 
-            public XformUpdator(usdi.Xform rep, GameObject go)
+            public XformUpdater(usdi.Xform rep, GameObject go)
             {
                 m_rep = rep;
                 m_trans = go.GetComponent<Transform>();
@@ -100,13 +100,13 @@ namespace UTJ
             }
         }
 
-        class CameraUpdator : XformUpdator
+        class CameraUpdater : XformUpdater
         {
             usdi.Camera m_rep;
             usdi.CameraData m_data;
             Camera m_cam;
 
-            public CameraUpdator(usdi.Camera rep, GameObject go)
+            public CameraUpdater(usdi.Camera rep, GameObject go)
                 : base(rep, go)
             {
                 m_rep = rep;
@@ -137,7 +137,7 @@ namespace UTJ
             }
         }
 
-        class MeshUpdator : XformUpdator
+        class MeshUpdater : XformUpdater
         {
             class Submesh
             {
@@ -159,7 +159,7 @@ namespace UTJ
             usdi.VertexUpdateCommand m_vuCmd;
 
 
-            public MeshUpdator(usdi.Mesh rep, GameObject go)
+            public MeshUpdater(usdi.Mesh rep, GameObject go)
                 : base(rep, go)
             {
                 m_rep = rep;
@@ -189,12 +189,12 @@ namespace UTJ
             }
         }
 
-        class PointsUpdator : XformUpdator
+        class PointsUpdater : XformUpdater
         {
             usdi.Points m_rep;
             usdi.PointsData m_data;
 
-            public PointsUpdator(usdi.Points rep, GameObject go)
+            public PointsUpdater(usdi.Points rep, GameObject go)
                 : base(rep, go)
             {
                 m_rep = rep;
@@ -225,16 +225,16 @@ namespace UTJ
         #endregion impl
 
 
-        List<IUpdator> m_children;
+        List<IUpdater> m_children;
         Transform m_trans;
 
 
-        public usdiStreamUpdatorM(usdi.Context usd, usdiStream stream)
+        public usdiStreamUpdaterM(usdi.Context usd, usdiStream stream)
         {
             m_trans = stream.GetComponent<Transform>();
         }
 
-        ~usdiStreamUpdatorM()
+        ~usdiStreamUpdaterM()
         {
         }
 

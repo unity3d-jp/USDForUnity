@@ -10,7 +10,6 @@ namespace usdi {
     typedef void(__stdcall *MonoDelegate)(void*);
 
     class Task;
-    class MeshUpdator;
 } // namespace usdi
 
 extern "C" {

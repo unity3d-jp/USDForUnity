@@ -41,7 +41,7 @@ namespace UTJ
         List<usdiElement> m_elements = new List<usdiElement>();
         double m_prevUpdateTime = Double.NaN;
         usdi.Task m_asyncUpdate;
-        usdiStreamUpdator m_updator;
+        usdiStreamUpdater m_updater;
         #endregion
 
 
@@ -195,9 +195,9 @@ namespace UTJ
                 return false;
             }
 
-            m_updator = new usdiStreamUpdator(m_ctx, this);
-            m_updator.ConstructScene();
-            m_updator.OnLoad();
+            m_updater = new usdiStreamUpdater(m_ctx, this);
+            m_updater.ConstructScene();
+            m_updater.OnLoad();
             //usdiCreateNodeRecursive(GetComponent<Transform>(), usdi.usdiGetRoot(m_ctx),
             //    (e, schema) => {
             //        m_elements.Add(e);
@@ -223,8 +223,8 @@ namespace UTJ
                 {
                     m_elements[i].usdiOnUnload();
                 }
-                m_updator.OnUnload();
-                m_updator = null;
+                m_updater.OnUnload();
+                m_updater = null;
 
                 usdi.usdiDestroyContext(m_ctx);
                 m_ctx = default(usdi.Context);
@@ -240,7 +240,7 @@ namespace UTJ
             if (t == m_prevUpdateTime) { return; }
 
             usdiApplyImportConfig();
-            m_updator.AsyncUpdate(t);
+            m_updater.AsyncUpdate(t);
 
             //usdi.usdiUpdateAllSamples(m_ctx, t);
             //int c = m_elements.Count;
@@ -254,7 +254,7 @@ namespace UTJ
         {
             if (t == m_prevUpdateTime) { return; }
 
-            m_updator.Update(t);
+            m_updater.Update(t);
 
             //// update all elements
             //int c = m_elements.Count;

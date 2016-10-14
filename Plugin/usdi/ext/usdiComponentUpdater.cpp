@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "usdiInternal.h"
 #include "UnityEngineBinding.h"
-#include "usdiComponentUpdator.h"
+#include "usdiComponentUpdater.h"
 
 #include "usdiContext.h"
 #include "usdiSchema.h"
@@ -109,21 +109,21 @@ void MeshAssignBoundsM(MonoObject *mesh, float3 *center, float3  *extents)
 
 
 
-StreamUpdator::StreamUpdator(Context *ctx, MonoObject *component)
+StreamUpdater::StreamUpdater(Context *ctx, MonoObject *component)
     : m_ctx(ctx)
     , m_component(component)
 {
 }
 
-StreamUpdator::~StreamUpdator()
+StreamUpdater::~StreamUpdater()
 {
     m_tasks.wait();
 }
 
-void StreamUpdator::setConfig(const Config& conf) { m_config = conf; }
-const StreamUpdator::Config& StreamUpdator::getConfig() const { return m_config; }
+void StreamUpdater::setConfig(const Config& conf) { m_config = conf; }
+const StreamUpdater::Config& StreamUpdater::getConfig() const { return m_config; }
 
-mMTransform StreamUpdator::createNode(Schema *schema, mMTransform& parent)
+mMTransform StreamUpdater::createNode(Schema *schema, mMTransform& parent)
 {
     mMGameObject go;
     mMTransform trans;
@@ -155,7 +155,7 @@ mMTransform StreamUpdator::createNode(Schema *schema, mMTransform& parent)
     return trans;
 }
 
-void StreamUpdator::constructUnityScene()
+void StreamUpdater::constructUnityScene()
 {
     if (!m_ctx || !m_component) { return; }
 
@@ -164,27 +164,27 @@ void StreamUpdator::constructUnityScene()
     createNode(m_ctx->getRootNode(), trans);
 }
 
-IUpdator* StreamUpdator::add(Schema *schema, mMGameObject& go)
+IUpdater* StreamUpdater::add(Schema *schema, mMGameObject& go)
 {
     if (!schema || schema->getUserData()==this) { return nullptr; }
     schema->setUserData(this);
 
-    IUpdator *iu = nullptr;
+    IUpdater *iu = nullptr;
     if (auto *cam = dynamic_cast<Camera*>(schema)) {
         if(!go) go = mGameObject::New(schema->getName());
-        iu = new CameraUpdator(this, cam, go);
+        iu = new CameraUpdater(this, cam, go);
     }
     else if (auto *mesh = dynamic_cast<Mesh*>(schema)) {
         if (!go) go = mGameObject::New(schema->getName());
-        iu = new MeshUpdator(this, mesh, go);
+        iu = new MeshUpdater(this, mesh, go);
     }
     else if (auto *points = dynamic_cast<Points*>(schema)) {
         if (!go) go = mGameObject::New(schema->getName());
-        iu = new PointsUpdator(this, points, go);
+        iu = new PointsUpdater(this, points, go);
     }
     else if (auto *xf = dynamic_cast<Xform*>(schema)) {
         if (!go) go = mGameObject::New(schema->getName());
-        iu = new XformUpdator(this, xf, go);
+        iu = new XformUpdater(this, xf, go);
     }
 
     if (iu) {
@@ -193,18 +193,18 @@ IUpdator* StreamUpdator::add(Schema *schema, mMGameObject& go)
     return iu;
 }
 
-void StreamUpdator::onLoad()
+void StreamUpdater::onLoad()
 {
     for (auto& c : m_children) { c->onLoad(); }
 }
 
-void StreamUpdator::onUnload()
+void StreamUpdater::onUnload()
 {
     m_tasks.wait();
     for (auto& c : m_children) { c->onUnload(); }
 }
 
-void StreamUpdator::asyncUpdate(Time t)
+void StreamUpdater::asyncUpdate(Time t)
 {
 #ifdef usdiDbgForceSingleThread
     for (auto& s : m_children) { s->asyncUpdate(t); }
@@ -227,7 +227,7 @@ void StreamUpdator::asyncUpdate(Time t)
 #endif
 }
 
-void StreamUpdator::update(Time time)
+void StreamUpdater::update(Time time)
 {
     m_tasks.wait();
     for (auto& c : m_children) {
@@ -235,56 +235,56 @@ void StreamUpdator::update(Time time)
     }
 }
 
-static StreamUpdator* StreamUpdator_Ctor(Context *ctx, MonoObject *component) { return new StreamUpdator(ctx, component); }
-static void StreamUpdator_Dtor(StreamUpdator *rep) { delete rep; }
-static void StreamUpdator_SetConfig(StreamUpdator *rep, StreamUpdator::Config *config) { rep->setConfig(*config); }
-static void StreamUpdator_ConstructScene(StreamUpdator *rep) { rep->constructUnityScene(); }
-static void StreamUpdator_Add(StreamUpdator *rep, Schema *schema, MonoObject *gameobject) { rep->add(schema, mMGameObject(gameobject)); }
-static void StreamUpdator_OnLoad(StreamUpdator *rep) { rep->onLoad(); }
-static void StreamUpdator_OnUnload(StreamUpdator *rep) { rep->onUnload(); }
-static void StreamUpdator_AsyncUpdate(StreamUpdator *rep, double time) { rep->asyncUpdate(time); }
-static void StreamUpdator_Update(StreamUpdator *rep, double time) { rep->update(time); }
+static StreamUpdater* StreamUpdater_Ctor(Context *ctx, MonoObject *component) { return new StreamUpdater(ctx, component); }
+static void StreamUpdater_Dtor(StreamUpdater *rep) { delete rep; }
+static void StreamUpdater_SetConfig(StreamUpdater *rep, StreamUpdater::Config *config) { rep->setConfig(*config); }
+static void StreamUpdater_ConstructScene(StreamUpdater *rep) { rep->constructUnityScene(); }
+static void StreamUpdater_Add(StreamUpdater *rep, Schema *schema, MonoObject *gameobject) { rep->add(schema, mMGameObject(gameobject)); }
+static void StreamUpdater_OnLoad(StreamUpdater *rep) { rep->onLoad(); }
+static void StreamUpdater_OnUnload(StreamUpdater *rep) { rep->onUnload(); }
+static void StreamUpdater_AsyncUpdate(StreamUpdater *rep, double time) { rep->asyncUpdate(time); }
+static void StreamUpdater_Update(StreamUpdater *rep, double time) { rep->update(time); }
 
-void StreamUpdator::registerICalls()
+void StreamUpdater::registerICalls()
 {
-    mAddMethod("UTJ.usdiStreamUpdator::_Ctor", StreamUpdator_Ctor);
-    mAddMethod("UTJ.usdiStreamUpdator::_Dtor", StreamUpdator_Dtor);
-    mAddMethod("UTJ.usdiStreamUpdator::_SetConfig", StreamUpdator_SetConfig);
-    mAddMethod("UTJ.usdiStreamUpdator::_ConstructScene", StreamUpdator_ConstructScene);
-    mAddMethod("UTJ.usdiStreamUpdator::_OnLoad", StreamUpdator_OnLoad);
-    mAddMethod("UTJ.usdiStreamUpdator::_OnUnload", StreamUpdator_OnUnload);
-    mAddMethod("UTJ.usdiStreamUpdator::_AsyncUpdate", StreamUpdator_AsyncUpdate);
-    mAddMethod("UTJ.usdiStreamUpdator::_Update", StreamUpdator_Update);
+    mAddMethod("UTJ.usdiStreamUpdater::_Ctor", StreamUpdater_Ctor);
+    mAddMethod("UTJ.usdiStreamUpdater::_Dtor", StreamUpdater_Dtor);
+    mAddMethod("UTJ.usdiStreamUpdater::_SetConfig", StreamUpdater_SetConfig);
+    mAddMethod("UTJ.usdiStreamUpdater::_ConstructScene", StreamUpdater_ConstructScene);
+    mAddMethod("UTJ.usdiStreamUpdater::_OnLoad", StreamUpdater_OnLoad);
+    mAddMethod("UTJ.usdiStreamUpdater::_OnUnload", StreamUpdater_OnUnload);
+    mAddMethod("UTJ.usdiStreamUpdater::_AsyncUpdate", StreamUpdater_AsyncUpdate);
+    mAddMethod("UTJ.usdiStreamUpdater::_Update", StreamUpdater_Update);
 }
 
 
 
 
 
-IUpdator::IUpdator(StreamUpdator *parent, mMGameObject& go)
+IUpdater::IUpdater(StreamUpdater *parent, mMGameObject& go)
     : m_parent(parent)
     , m_go(go.get())
 {}
-IUpdator::~IUpdator() {}
-void IUpdator::onLoad() {}
-void IUpdator::onUnload() {}
-void IUpdator::asyncUpdate(Time time) {}
-void IUpdator::update(Time time) {}
+IUpdater::~IUpdater() {}
+void IUpdater::onLoad() {}
+void IUpdater::onUnload() {}
+void IUpdater::asyncUpdate(Time time) {}
+void IUpdater::update(Time time) {}
 
 
-XformUpdator::XformUpdator(StreamUpdator *parent, Xform *xf, mMGameObject& go)
+XformUpdater::XformUpdater(StreamUpdater *parent, Xform *xf, mMGameObject& go)
     : super(parent, go)
     , m_schema(xf)
 {
     m_mtrans = m_go->getOrAddComponent<mMTransform>();
 }
 
-XformUpdator::~XformUpdator()
+XformUpdater::~XformUpdater()
 {
 
 }
 
-void XformUpdator::asyncUpdate(Time time)
+void XformUpdater::asyncUpdate(Time time)
 {
     m_schema->updateSample(time);
     if (m_schema->needsUpdate()) {
@@ -292,7 +292,7 @@ void XformUpdator::asyncUpdate(Time time)
     }
 }
 
-void XformUpdator::update(Time time)
+void XformUpdater::update(Time time)
 {
     if (m_schema->needsUpdate() && m_mtrans) {
         TransformAssign(m_mtrans->get(), &m_data);
@@ -300,18 +300,18 @@ void XformUpdator::update(Time time)
 }
 
 
-CameraUpdator::CameraUpdator(StreamUpdator *parent, Camera *cam, mMGameObject& go)
+CameraUpdater::CameraUpdater(StreamUpdater *parent, Camera *cam, mMGameObject& go)
     : super(parent, cam, go)
     , m_schema(cam)
 {
     m_mcamera = m_go->getOrAddComponent<mMCamera>();
 }
 
-CameraUpdator::~CameraUpdator()
+CameraUpdater::~CameraUpdater()
 {
 }
 
-void CameraUpdator::asyncUpdate(Time time)
+void CameraUpdater::asyncUpdate(Time time)
 {
     super::asyncUpdate(time);
     if (m_schema->needsUpdate()) {
@@ -319,7 +319,7 @@ void CameraUpdator::asyncUpdate(Time time)
     }
 }
 
-void CameraUpdator::update(Time time)
+void CameraUpdater::update(Time time)
 {
     super::update(time);
     if (m_schema->needsUpdate() && m_mcamera) {
@@ -347,7 +347,7 @@ static void mAssignDefaultMaterial(mMMeshRenderer& renderer)
     renderer->setSharedMaterial(material);
 }
 
-MeshUpdator::MeshBuffer::MeshBuffer(MeshUpdator *parent, mMGameObject& go, int nth)
+MeshUpdater::MeshBuffer::MeshBuffer(MeshUpdater *parent, mMGameObject& go, int nth)
     : m_parent(parent)
     , m_go(go.get())
     , m_nth(nth)
@@ -365,13 +365,13 @@ MeshUpdator::MeshBuffer::MeshBuffer(MeshUpdator *parent, mMGameObject& go, int n
     m_prev_vertex_count = m_mmesh->getVertexCount();
 }
 
-MeshUpdator::MeshBuffer::~MeshBuffer()
+MeshUpdater::MeshBuffer::~MeshBuffer()
 {
     usdi::VertexCommandManager::getInstance().destroyCommand(m_hcommand);
 }
 
 
-void MeshUpdator::MeshBuffer::copyDataToMonoArrays()
+void MeshUpdater::MeshBuffer::copyDataToMonoArrays()
 {
     auto& data = m_parent->m_data;
     auto& flags = m_parent->m_uflags;
@@ -419,7 +419,7 @@ void MeshUpdator::MeshBuffer::copyDataToMonoArrays()
 }
 
 
-void MeshUpdator::MeshBuffer::kickVBUpdateTask()
+void MeshUpdater::MeshBuffer::kickVBUpdateTask()
 {
     if (!m_vb) { return; }
 
@@ -430,7 +430,7 @@ void MeshUpdator::MeshBuffer::kickVBUpdateTask()
         .update(m_hcommand, &m_parent->m_data, m_vb, nullptr);
 }
 
-void MeshUpdator::MeshBuffer::releaseMonoArrays()
+void MeshUpdater::MeshBuffer::releaseMonoArrays()
 {
     m_mvertices.reset();
     m_mnormals.reset();
@@ -438,7 +438,7 @@ void MeshUpdator::MeshBuffer::releaseMonoArrays()
     m_mindices.reset();
 }
 
-void MeshUpdator::MeshBuffer::uploadDataToMonoMesh()
+void MeshUpdater::MeshBuffer::uploadDataToMonoMesh()
 {
     auto flags = m_parent->m_uflags;
 
@@ -465,7 +465,7 @@ void MeshUpdator::MeshBuffer::uploadDataToMonoMesh()
     }
 }
 
-MeshUpdator::MeshUpdator(StreamUpdator *parent, Mesh *mesh, mMGameObject& go)
+MeshUpdater::MeshUpdater(StreamUpdater *parent, Mesh *mesh, mMGameObject& go)
     : super(parent, mesh, go)
     , m_schema(mesh)
 {
@@ -486,11 +486,11 @@ MeshUpdator::MeshUpdator(StreamUpdator *parent, Mesh *mesh, mMGameObject& go)
     }
 }
 
-MeshUpdator::~MeshUpdator()
+MeshUpdater::~MeshUpdater()
 {
 }
 
-void MeshUpdator::asyncUpdate(Time time)
+void MeshUpdater::asyncUpdate(Time time)
 {
     super::asyncUpdate(time);
     if (m_schema->needsUpdate()) {
@@ -524,7 +524,7 @@ void MeshUpdator::asyncUpdate(Time time)
     }
 }
 
-void MeshUpdator::update(Time time)
+void MeshUpdater::update(Time time)
 {
     super::update(time);
     if (m_schema->needsUpdate()) {
@@ -548,17 +548,17 @@ void MeshUpdator::update(Time time)
 }
 
 
-PointsUpdator::PointsUpdator(StreamUpdator *parent, Points *points, mMGameObject& go)
+PointsUpdater::PointsUpdater(StreamUpdater *parent, Points *points, mMGameObject& go)
     : super(parent, points, go)
     , m_schema(points)
 {
 }
 
-PointsUpdator::~PointsUpdator()
+PointsUpdater::~PointsUpdater()
 {
 }
 
-void PointsUpdator::asyncUpdate(Time time)
+void PointsUpdater::asyncUpdate(Time time)
 {
     super::asyncUpdate(time);
     if (m_schema->needsUpdate()) {
@@ -567,7 +567,7 @@ void PointsUpdator::asyncUpdate(Time time)
     }
 }
 
-void PointsUpdator::update(Time time)
+void PointsUpdater::update(Time time)
 {
     super::update(time);
     if (m_schema->needsUpdate()) {

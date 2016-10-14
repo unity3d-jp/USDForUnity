@@ -24,9 +24,9 @@ void MeshAssignBoundsN(MonoObject *mesh, float3 *center, float3  *extents);
 void MeshAssignBoundsM(MonoObject *mesh, float3 *center, float3  *extents);
 
 
-class IUpdator;
+class IUpdater;
 
-class StreamUpdator
+class StreamUpdater
 {
 public:
     static void registerICalls();
@@ -37,13 +37,13 @@ public:
         bool directVBUpdate = true;
     };
 
-    StreamUpdator(Context *ctx, MonoObject *component);
-    ~StreamUpdator();
+    StreamUpdater(Context *ctx, MonoObject *component);
+    ~StreamUpdater();
     void setConfig(const Config& conf);
     const Config& getConfig() const;
 
     void constructUnityScene();
-    IUpdator* add(Schema *schema, mMGameObject& go);
+    IUpdater* add(Schema *schema, mMGameObject& go);
 
     void onLoad();
     void onUnload();
@@ -53,7 +53,7 @@ public:
 private:
     mMTransform createNode(Schema *schema, mMTransform& parent);
 
-    typedef std::unique_ptr<IUpdator> ChildPtr;
+    typedef std::unique_ptr<IUpdater> ChildPtr;
     typedef std::vector<ChildPtr> Children;
 
     Config m_config;
@@ -66,11 +66,11 @@ private:
 
 
 
-class IUpdator
+class IUpdater
 {
 public:
-    IUpdator(StreamUpdator *parent, mMGameObject& go);
-    virtual ~IUpdator();
+    IUpdater(StreamUpdater *parent, mMGameObject& go);
+    virtual ~IUpdater();
     virtual void onLoad();
     virtual void onUnload();
     virtual void asyncUpdate(Time time);
@@ -79,17 +79,17 @@ public:
     mMGameObject& getGO() { return m_go; }
 
 protected:
-    StreamUpdator *m_parent;
+    StreamUpdater *m_parent;
     mMGameObject m_go;
 };
 
 
-class XformUpdator : public IUpdator
+class XformUpdater : public IUpdater
 {
-typedef IUpdator super;
+typedef IUpdater super;
 public:
-    XformUpdator(StreamUpdator *parent, Xform *xf, mMGameObject& go);
-    ~XformUpdator() override;
+    XformUpdater(StreamUpdater *parent, Xform *xf, mMGameObject& go);
+    ~XformUpdater() override;
     void asyncUpdate(Time time) override;
     void update(Time time) override;
 
@@ -101,12 +101,12 @@ protected:
 };
 
 
-class CameraUpdator : public XformUpdator
+class CameraUpdater : public XformUpdater
 {
-typedef XformUpdator super;
+typedef XformUpdater super;
 public:
-    CameraUpdator(StreamUpdator *parent, Camera *cam, mMGameObject& go);
-    ~CameraUpdator() override;
+    CameraUpdater(StreamUpdater *parent, Camera *cam, mMGameObject& go);
+    ~CameraUpdater() override;
     void asyncUpdate(Time time) override;
     void update(Time time) override;
 
@@ -117,9 +117,9 @@ private:
 };
 
 
-class MeshUpdator : public XformUpdator
+class MeshUpdater : public XformUpdater
 {
-typedef XformUpdator super;
+typedef XformUpdater super;
 public:
     union UpdateFlags
     {
@@ -140,7 +140,7 @@ public:
     class MeshBuffer
     {
     public:
-        MeshBuffer(MeshUpdator *parent, mMGameObject& go, int nth);
+        MeshBuffer(MeshUpdater *parent, mMGameObject& go, int nth);
         ~MeshBuffer();
 
         // async
@@ -153,7 +153,7 @@ public:
         void uploadDataToMonoMesh();
 
     public:
-        MeshUpdator *m_parent;
+        MeshUpdater *m_parent;
         mMGameObject m_go;
         mMMeshFilter m_mfilter;
         mMMeshRenderer m_mrenderer;
@@ -174,8 +174,8 @@ public:
     typedef std::vector<BufferPtr> Buffers;
     typedef std::vector<SubmeshData> Submeshes;
 
-    MeshUpdator(StreamUpdator *parent, Mesh *mesh, mMGameObject& go);
-    ~MeshUpdator() override;
+    MeshUpdater(StreamUpdater *parent, Mesh *mesh, mMGameObject& go);
+    ~MeshUpdater() override;
     void asyncUpdate(Time time) override;
     void update(Time time) override;
 
@@ -190,12 +190,12 @@ private:
 };
 
 
-class PointsUpdator : public XformUpdator
+class PointsUpdater : public XformUpdater
 {
-typedef XformUpdator super;
+typedef XformUpdater super;
 public:
-    PointsUpdator(StreamUpdator *parent, Points *cam, mMGameObject& go);
-    ~PointsUpdator() override;
+    PointsUpdater(StreamUpdater *parent, Points *cam, mMGameObject& go);
+    ~PointsUpdater() override;
     void asyncUpdate(Time time) override;
     void update(Time time) override;
 
