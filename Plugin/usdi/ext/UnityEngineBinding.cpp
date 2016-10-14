@@ -146,25 +146,11 @@ std::string mUObject::getName()
     return mToCString(invoke(mBindedMethod));
 }
 
-mMethod& mUObject::getInstantiate1()
+mUObject mUObject::instantiate(mUObject original)
 {
-    mBindStaticMethod(mUObject, "Instantiate", 1);
-    return mBindedMethod;
+    mBindStaticMethod(mUObject, "Instantiate", {"UnityEngine.Object"});
+    return mUObject(sinvoke(mBindedMethod, original.get()).get());
 }
-
-#define Instantiate(T)\
-    template<> T mUObject::instantiate()\
-    {\
-        mBindMethodFull(getInstantiate1(), {&mTypeof<T>()});\
-        auto ret = sinvoke(mBindedMethod);\
-        mTypeCheck(ret.getClass(), mTypeof<T>());\
-        return T(ret.get());\
-    }
-
-Instantiate(mMMesh);
-Instantiate(mMMaterial);
-Instantiate(mMGameObject);
-#undef Instantiate
 
 
 mDefTraits(UnityEngine, "UnityEngine", "Material", mMaterial);
@@ -272,39 +258,17 @@ void mGameObject::SetActive(bool v_)
     invoke(mBindedMethod, &v);
 }
 
-mMethod& mGameObject::getGetComponent()
+mObject mGameObject::getComponent(mObject type)
 {
-    mBindMethod("GetComponent", 0);
-    return mBindedMethod;
+    mBindMethod("GetComponent", { "System.Type" });
+    return invoke(mBindedMethod, type.get());
 }
-mMethod& mGameObject::getAddComponent()
+
+mObject mGameObject::addComponent(mObject type)
 {
-    mBindMethod("AddComponent", 0);
-    return mBindedMethod;
+    mBindMethod("AddComponent", { "System.Type" });
+    return invoke(mBindedMethod, type.get());
 }
-
-#define Instantiate(C)\
-template<> C mGameObject::getComponent()\
-{\
-    mBindMethodFull(getGetComponent(), {&mTypeof<C>()});\
-    auto ret = invoke(mBindedMethod);\
-    mTypeCheck(ret.getClass(), mTypeof<C>());\
-    return C(ret.get());\
-}\
-template<> C mGameObject::addComponent()\
-{\
-    mBindMethodFull(getAddComponent(), {&mTypeof<C>()});\
-    auto ret = invoke(mBindedMethod);\
-    return C(ret.get());\
-}
-
-Instantiate(mMTransform);
-Instantiate(mMCamera);
-Instantiate(mMMeshFilter);
-Instantiate(mMMeshRenderer);
-Instantiate(mMLight);
-
-#undef Instantiate
 
 
 mDefTraits(UnityEngine, "UnityEngine", "Component", mComponent);

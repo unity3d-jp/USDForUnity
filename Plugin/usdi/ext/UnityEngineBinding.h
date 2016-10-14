@@ -118,10 +118,7 @@ public:
     void        setName(const char *name);
     std::string getName();
 
-    template<class T> static T instantiate();
-
-private:
-    static mMethod& getInstantiate1();
+    static mUObject instantiate(mUObject original);
 };
 
 
@@ -167,21 +164,16 @@ public:
     mGameObject(MonoObject *game_object = nullptr);
     void SetActive(bool v);
 
-    // C must be managed component class
-    template<class C> C getComponent();
-    // C must be managed component class
-    template<class C> C addComponent();
+    mObject getComponent(mObject type);
+    mObject addComponent(mObject type);
 
-    // C must be managed component class
+    template<class C> C getComponent() { return C(getComponent(mGetSystemType<C>())); }
+    template<class C> C addComponent() { return C(addComponent(mGetSystemType<C>())); }
     template<class C> C getOrAddComponent()
     {
         if (auto c = getComponent<C>()) { return c; }
         return addComponent<C>();
     }
-
-private:
-    mMethod& getGetComponent();
-    mMethod& getAddComponent();
 };
 
 
