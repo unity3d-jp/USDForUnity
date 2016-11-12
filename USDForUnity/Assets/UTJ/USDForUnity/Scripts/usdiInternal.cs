@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
+#if usdiEnableComponentUpdator
 namespace UTJ
 {
     abstract class usdiIStreamUpdater
@@ -36,7 +37,7 @@ namespace UTJ
         override public void AsyncUpdate(double time) { _AsyncUpdate(m_rep, time); }
         override public void Update(double time) { _Update(m_rep, time); }
 
-        #region internal
+#region internal
         [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern IntPtr _Ctor(usdi.Context usd, usdiStream stream);
         [MethodImpl(MethodImplOptions.InternalCall)]
@@ -53,13 +54,13 @@ namespace UTJ
         private static extern void _AsyncUpdate(IntPtr rep, double time);
         [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern void _Update(IntPtr rep, double time);
-        #endregion
+#endregion
     }
 
 
     class usdiStreamUpdaterM : usdiIStreamUpdater
     {
-        #region impl
+#region impl
         abstract class IUpdater
         {
             abstract public void OnLoad();
@@ -222,7 +223,7 @@ namespace UTJ
                 base.Update(time);
             }
         }
-        #endregion impl
+#endregion impl
 
 
         List<IUpdater> m_children;
@@ -275,3 +276,4 @@ namespace UTJ
     }
 
 }
+#endif // usdiEnableComponentUpdator

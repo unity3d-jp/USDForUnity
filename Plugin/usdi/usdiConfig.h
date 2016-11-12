@@ -1,6 +1,7 @@
 #pragma once
 
-#define usdiMonoThreadGuard
+#define usdiEnableMonoThreadGuard
+//#define usdiEnableComponentUpdator
 
 // debug options
 //#define usdiDbgForceSingleThread

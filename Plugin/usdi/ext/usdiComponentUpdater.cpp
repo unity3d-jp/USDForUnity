@@ -107,7 +107,7 @@ void MeshAssignBoundsM(MonoObject *mesh, float3 *center, float3  *extents)
 }
 
 
-
+#ifdef usdiEnableComponentUpdator
 
 StreamUpdater::StreamUpdater(Context *ctx, MonoObject *component)
     : m_ctx(ctx)
@@ -574,5 +574,5 @@ void PointsUpdater::update(Time time)
         // todo
     }
 }
-
+#endif // usdiEnableComponentUpdator
 } // namespace usdi

@@ -41,7 +41,6 @@ namespace UTJ
         List<usdiElement> m_elements = new List<usdiElement>();
         double m_prevUpdateTime = Double.NaN;
         usdi.Task m_asyncUpdate;
-        usdiStreamUpdater m_updater;
         #endregion
 
 
@@ -195,14 +194,11 @@ namespace UTJ
                 return false;
             }
 
-            m_updater = new usdiStreamUpdater(m_ctx, this);
-            m_updater.ConstructScene();
-            m_updater.OnLoad();
-            //usdiCreateNodeRecursive(GetComponent<Transform>(), usdi.usdiGetRoot(m_ctx),
-            //    (e, schema) => {
-            //        m_elements.Add(e);
-            //        //m_updator.Add(schema, e.gameObject);
-            //    });
+            usdiCreateNodeRecursive(GetComponent<Transform>(), usdi.usdiGetRoot(m_ctx),
+                (e, schema) =>
+                {
+                    m_elements.Add(e);
+                });
 
             usdiAsyncUpdate(m_time);
             usdiUpdate(m_time);
@@ -223,8 +219,6 @@ namespace UTJ
                 {
                     m_elements[i].usdiOnUnload();
                 }
-                m_updater.OnUnload();
-                m_updater = null;
 
                 usdi.usdiDestroyContext(m_ctx);
                 m_ctx = default(usdi.Context);
@@ -240,28 +234,25 @@ namespace UTJ
             if (t == m_prevUpdateTime) { return; }
 
             usdiApplyImportConfig();
-            m_updater.AsyncUpdate(t);
 
-            //usdi.usdiUpdateAllSamples(m_ctx, t);
-            //int c = m_elements.Count;
-            //for (int i = 0; i < c; ++i)
-            //{
-            //    m_elements[i].usdiAsyncUpdate(t);
-            //}
+            usdi.usdiUpdateAllSamples(m_ctx, t);
+            int c = m_elements.Count;
+            for (int i = 0; i < c; ++i)
+            {
+                m_elements[i].usdiAsyncUpdate(t);
+            }
         }
 
         void usdiUpdate(double t)
         {
             if (t == m_prevUpdateTime) { return; }
 
-            m_updater.Update(t);
-
-            //// update all elements
-            //int c = m_elements.Count;
-            //for(int i=0; i<c; ++i)
-            //{
-            //    m_elements[i].usdiUpdate(t);
-            //}
+            // update all elements
+            int c = m_elements.Count;
+            for (int i = 0; i < c; ++i)
+            {
+                m_elements[i].usdiUpdate(t);
+            }
 
             m_prevUpdateTime = t;
         }
@@ -269,31 +260,29 @@ namespace UTJ
 
         void usdiKickAsyncUpdateTask()
         {
-            usdiAsyncUpdate(m_time);
-
-//            // kick async update tasks
-//#if UNITY_EDITOR
-//            if (m_forceSingleThread)
-//            {
-//                usdiAsyncUpdate(m_time);
-//            }
-//            else
-//#endif
-//            {
-//                if (m_asyncUpdate == null)
-//                {
-//                    m_asyncUpdate = new usdi.DelegateTask(
-//                        (arg) =>
-//                        {
-//                            try
-//                            {
-//                                usdiAsyncUpdate(m_time);
-//                            }
-//                            finally { }
-//                        }, "usdiStream: " + gameObject.name);
-//                }
-//                m_asyncUpdate.Run();
-//            }
+            // kick async update tasks
+#if UNITY_EDITOR
+            if (m_forceSingleThread)
+            {
+                usdiAsyncUpdate(m_time);
+            }
+            else
+#endif
+            {
+                if (m_asyncUpdate == null)
+                {
+                    m_asyncUpdate = new usdi.DelegateTask(
+                        (arg) =>
+                        {
+                            try
+                            {
+                                usdiAsyncUpdate(m_time);
+                            }
+                            finally { }
+                        }, "usdiStream: " + gameObject.name);
+                }
+                m_asyncUpdate.Run();
+            }
         }
 
         void usdiWaitAsyncUpdateTask()

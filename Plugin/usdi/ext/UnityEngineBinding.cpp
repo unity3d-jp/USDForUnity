@@ -73,7 +73,9 @@ void InitializeInternalMethods()
         mAddMethod("UTJ.usdi::usdiUniTransformNotfyChange", TransformNotfyChange);
         mAddMethod("UTJ.usdi::usdiUniCameraAssign", CameraAssign);
         mAddMethod("UTJ.usdi::usdiUniMeshAssignBounds", MeshAssignBounds);
+#ifdef usdiEnableComponentUpdator
         StreamUpdater::registerICalls();
+#endif // usdiEnableComponentUpdator
     });
 
     mRebindCache();

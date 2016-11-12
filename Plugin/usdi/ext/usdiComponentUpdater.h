@@ -23,6 +23,7 @@ extern void (*MeshAssignBounds)(MonoObject *mesh, float3 *center, float3  *exten
 void MeshAssignBoundsN(MonoObject *mesh, float3 *center, float3  *extents);
 void MeshAssignBoundsM(MonoObject *mesh, float3 *center, float3  *extents);
 
+#ifdef usdiEnableComponentUpdator
 
 class IUpdater;
 
@@ -204,4 +205,5 @@ private:
     PointsData  m_data, m_data_prev;
 };
 
+#endif // usdiEnableComponentUpdator
 } // namespace usdi
