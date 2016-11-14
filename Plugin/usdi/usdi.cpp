@@ -110,11 +110,11 @@ usdiAPI bool usdiSave(usdi::Context *ctx)
     return ctx->save();
 }
 
-usdiAPI bool usdiWrite(usdi::Context *ctx, const char *path)
+usdiAPI bool usdiSaveAs(usdi::Context *ctx, const char *path)
 {
     usdiTraceFunc();
     if (!ctx || !path) return false;
-    return ctx->write(path);
+    return ctx->saveAs(path);
 }
 
 usdiAPI void usdiSetImportConfig(usdi::Context *ctx, const usdi::ImportConfig *conf)

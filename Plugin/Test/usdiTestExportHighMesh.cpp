@@ -12,7 +12,7 @@ using usdi::quatf;
 
 const int WaveMeshResolution = 512;
 
-void GenerateWaveMeshTopology(std::vector<int>& counts, std::vector<int>& indices)
+static void GenerateWaveMeshTopology(std::vector<int>& counts, std::vector<int>& indices)
 {
     const int num_faces = (WaveMeshResolution - 1) * (WaveMeshResolution - 1);
     const int num_indices = num_faces * 4;
@@ -32,7 +32,7 @@ void GenerateWaveMeshTopology(std::vector<int>& counts, std::vector<int>& indice
     }
 }
 
-void GenerateWaveMesh(std::vector<float3>& vertices, usdi::Time t)
+static void GenerateWaveMesh(std::vector<float3>& vertices, usdi::Time t)
 {
     const float hald_res = (float)(WaveMeshResolution / 2);
     int num_vertices = WaveMeshResolution * WaveMeshResolution;

@@ -23,7 +23,7 @@ namespace UTJ
     public class usdiStream : MonoBehaviour
     {
         #region fields 
-        [SerializeField] string m_path;
+        [SerializeField] DataPath m_path;
         [SerializeField] usdiImportOptions m_importOptions = new usdiImportOptions();
         [SerializeField] double m_time;
         [SerializeField] double m_timeScale = 1.0;
@@ -45,7 +45,7 @@ namespace UTJ
 
 
         #region properties
-        public string usdPath { get { return m_path; } }
+        public DataPath usdPath { get { return m_path; } }
         public usdiImportOptions importOptions
         {
             get { return m_importOptions; }
@@ -181,16 +181,23 @@ namespace UTJ
 
         public bool usdiLoad(string path)
         {
+            return usdiLoad(new DataPath(path));
+        }
+
+        public bool usdiLoad(DataPath path)
+        {
             usdiUnload();
 
             m_path = path;
             m_ctx = usdi.usdiCreateContext();
             usdiApplyImportConfig();
-            if (!usdi.usdiOpen(m_ctx, Application.streamingAssetsPath + "/" + m_path))
+
+            var fullpath = m_path.GetFullPath();
+            if (!usdi.usdiOpen(m_ctx, fullpath))
             {
                 usdi.usdiDestroyContext(m_ctx);
                 m_ctx = default(usdi.Context);
-                usdiLog("usdiStream: failed to load " + m_path);
+                usdiLog("usdiStream: failed to load " + fullpath);
                 return false;
             }
 
@@ -203,7 +210,7 @@ namespace UTJ
             usdiAsyncUpdate(m_time);
             usdiUpdate(m_time);
 
-            usdiLog("usdiStream: loaded " + m_path);
+            usdiLog("usdiStream: loaded " + fullpath);
             return true;
         }
 
@@ -223,7 +230,7 @@ namespace UTJ
                 usdi.usdiDestroyContext(m_ctx);
                 m_ctx = default(usdi.Context);
 
-                usdiLog("usdiStream: unloaded " + m_path);
+                usdiLog("usdiStream: unloaded " + m_path.GetFullPath());
             }
         }
 

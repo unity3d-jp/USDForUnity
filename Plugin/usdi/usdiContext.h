@@ -13,7 +13,8 @@ public:
     bool                createStage(const char *identifier);
     bool                open(const char *path);
     bool                save();
-    bool                write(const char *path);
+    // path must *not* be same as identifier (parameter of createStage() or open())
+    bool                saveAs(const char *path);
 
     const ImportConfig& getImportConfig() const;
     void                setImportConfig(const ImportConfig& v);

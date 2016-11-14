@@ -10,7 +10,7 @@ using usdi::quatf;
 
 
 template<class T>
-void AddAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type, const T& v)
+static void AddAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type, const T& v)
 {
     usdi::Time t = 0.0;
     auto *attr = usdiCreateAttribute(schema, name, type);
@@ -24,7 +24,7 @@ void AddAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType ty
     }
 }
 template<class T, size_t N>
-void AddAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type, const T (&v)[N])
+static void AddAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type, const T (&v)[N])
 {
     usdi::Time t = 0.0;
     auto *attr = usdiCreateAttribute(schema, name, type);
@@ -38,7 +38,7 @@ void AddAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType ty
     }
 }
 
-void AddAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type, const void *&v)
+static void AddAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type, const void *&v)
 {
     usdi::Time t = 0.0;
     auto *attr = usdiCreateAttribute(schema, name, type);
@@ -53,7 +53,7 @@ void AddAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType ty
 }
 
 
-void TestAttributes(usdi::Schema *schema)
+static void TestAttributes(usdi::Schema *schema)
 {
     {
         int v = 123;

@@ -356,7 +356,7 @@ namespace UTJ
         [DllImport ("usdi")] public static extern Bool          usdiOpen(Context ctx, string path);
         [DllImport ("usdi")] public static extern Bool          usdiCreateStage(Context ctx, string path);
         [DllImport ("usdi")] public static extern Bool          usdiSave(Context ctx);
-        [DllImport ("usdi")] public static extern Bool          usdiWrite(Context ctx, string path);
+        [DllImport ("usdi")] public static extern Bool          usdiSaveAs(Context ctx, string path);
 
         [DllImport ("usdi")] public static extern void          usdiSetImportConfig(Context ctx, ref ImportConfig conf);
         [DllImport ("usdi")] public static extern void          usdiGetImportConfig(Context ctx, ref ImportConfig conf);

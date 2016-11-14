@@ -262,7 +262,8 @@ usdiAPI void             usdiDestroyContext(usdi::Context *ctx);
 usdiAPI bool             usdiOpen(usdi::Context *ctx, const char *path);
 usdiAPI bool             usdiCreateStage(usdi::Context *ctx, const char *path);
 usdiAPI bool             usdiSave(usdi::Context *ctx);
-usdiAPI bool             usdiWrite(usdi::Context *ctx, const char *path);
+// path must *not* be same as identifier (parameter of usdiOpen() or usdiCreateStage())
+usdiAPI bool             usdiSaveAs(usdi::Context *ctx, const char *path);
 usdiAPI void             usdiSetImportConfig(usdi::Context *ctx, const usdi::ImportConfig *conf);
 usdiAPI void             usdiGetImportConfig(usdi::Context *ctx, usdi::ImportConfig *conf);
 usdiAPI void             usdiSetExportConfig(usdi::Context *ctx, const usdi::ExportConfig *conf);

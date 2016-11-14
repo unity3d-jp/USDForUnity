@@ -11,8 +11,7 @@ public class USDTestMenu
     [MenuItem("Assets/Test/Benchmark USD")]
     public static void ImportUSD()
     {
-        var path = UTJ.usdiMenu.MakeRelativePath(EditorUtility.OpenFilePanel("Select USD or Alembic file (.usd, .usda, .usdc, .abc)",
-            Application.streamingAssetsPath, ""));
+        var path = EditorUtility.OpenFilePanel("Select USD or Alembic file (.usd, .usda, .usdc, .abc)", Application.streamingAssetsPath, "");
         if (path == null || path == "") { return; }
 
         var root = new GameObject("root").GetComponent<Transform>();

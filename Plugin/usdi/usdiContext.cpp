@@ -202,7 +202,7 @@ bool Context::save()
     return m_stage->GetRootLayer()->Save();
 }
 
-bool Context::write(const char *path)
+bool Context::saveAs(const char *path)
 {
     if (!m_stage) {
         usdiLogError("m_stage is null\n");
