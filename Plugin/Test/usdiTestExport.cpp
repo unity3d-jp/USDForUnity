@@ -123,7 +123,7 @@ void TestAttributes(usdi::Schema *schema)
 
 }
 
-void TestExport(const char *filename)
+void TestExportMesh(const char *filename)
 {
     auto *ctx = usdiCreateContext();
     usdiCreateStage(ctx, filename);
@@ -168,24 +168,24 @@ void TestExport(const char *filename)
 
     TestAttributes(xf);
 
-    usdiWrite(ctx, filename);
+    usdiSave(ctx);
     usdiDestroyContext(ctx);
 }
 
+void TestExportHighMesh(const char *filename);
 
 int main(int argc, char *argv[])
 {
-    const char *path = "test.usda";
     int int_value;
     for (int i = 1; i < argc; ++i) {
         auto *arg = argv[i];
         if (sscanf(arg, "debug_level=%d", &int_value)) {
             usdiSetDebugLevel(int_value);
         }
-        else {
-            path = arg;
-        }
     }
 
-    TestExport(path);
+    TestExportMesh("TestExport.usda");
+    TestExportMesh("TestExport.usdc");
+    TestExportHighMesh("HighMesh.usda");
+    TestExportHighMesh("HighMesh.usdc");
 }

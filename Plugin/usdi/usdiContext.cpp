@@ -85,7 +85,9 @@ bool Context::createStage(const char *identifier)
     else {
         // create output directory if not exist
         fs::path path = {identifier};
-        fs::create_directories(path.remove_filename());
+        if (path.has_parent_path()) {
+            fs::create_directories(path.remove_filename());
+        }
     }
 
     m_stage = UsdStage::CreateNew(identifier);
@@ -188,6 +190,10 @@ bool Context::open(const char *path)
 
 bool Context::save()
 {
+    if (!m_stage) {
+        usdiLogError("m_stage is null\n");
+        return false;
+    }
     usdiLogInfo( "Context::save():\n");
     usdiLogTrace("  scale: %f\n", m_export_config.scale);
     usdiLogTrace("  swap_handedness: %d\n", (int)m_export_config.swap_handedness);
@@ -198,6 +204,10 @@ bool Context::save()
 
 bool Context::write(const char *path)
 {
+    if (!m_stage) {
+        usdiLogError("m_stage is null\n");
+        return false;
+    }
     usdiLogInfo( "Context::write(): %s\n", path);
     usdiLogTrace("  scale: %f\n", m_export_config.scale);
     usdiLogTrace("  swap_handedness: %d\n", (int)m_export_config.swap_handedness);

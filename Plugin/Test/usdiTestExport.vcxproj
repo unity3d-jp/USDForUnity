@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="usdiTestExport.cpp" />
+    <ClCompile Include="usdiTestExportHighMesh.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\usdi.vcxproj">

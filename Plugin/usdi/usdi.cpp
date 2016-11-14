@@ -267,8 +267,9 @@ usdiAPI usdi::Xform* usdiAsXform(usdi::Schema *schema)
 usdiAPI usdi::Xform* usdiCreateXform(usdi::Context *ctx, usdi::Schema *parent, const char *name)
 {
     usdiTraceFunc();
-    if (!ctx) { usdiLogWarning("usdiCreateCamera(): ctx must be set\n"); return nullptr; }
-    if (!name) { usdiLogWarning("usdiCreateXform(): name must be set\n"); return nullptr; }
+    if (!ctx) { usdiLogWarning("usdiCreateXform(): ctx must not be null\n"); return nullptr; }
+    if (!ctx->getUSDStage()) { usdiLogWarning("usdiCreateXform(): stage must not be null\n"); return nullptr; }
+    if (!name) { usdiLogWarning("usdiCreateXform(): name must not be null\n"); return nullptr; }
     return new usdi::Xform(ctx, parent, name);
 }
 
@@ -308,8 +309,9 @@ usdiAPI usdi::Camera* usdiAsCamera(usdi::Schema *schema)
 usdiAPI usdi::Camera* usdiCreateCamera(usdi::Context *ctx, usdi::Schema *parent, const char *name)
 {
     usdiTraceFunc();
-    if (!ctx) { usdiLogWarning("usdiCreateCamera(): ctx must be set\n"); return nullptr; }
-    if (!name) { usdiLogWarning("usdiCreateCamera(): name must be set\n"); return nullptr; }
+    if (!ctx) { usdiLogWarning("usdiCreateCamera(): ctx must not be null\n"); return nullptr; }
+    if (!ctx->getUSDStage()) { usdiLogWarning("usdiCreateCamera(): stage must not be null\n"); return nullptr; }
+    if (!name) { usdiLogWarning("usdiCreateCamera(): name must not be null\n"); return nullptr; }
     return new usdi::Camera(ctx, parent, name);
 }
 
@@ -349,8 +351,9 @@ usdiAPI usdi::Mesh* usdiAsMesh(usdi::Schema *schema)
 usdiAPI usdi::Mesh* usdiCreateMesh(usdi::Context *ctx, usdi::Schema *parent, const char *name)
 {
     usdiTraceFunc();
-    if (!ctx) { usdiLogWarning("usdiCreateMesh(): ctx must be set\n"); return nullptr; }
-    if (!name) { usdiLogWarning("usdiCreateMesh(): name must be set\n"); return nullptr; }
+    if (!ctx) { usdiLogWarning("usdiCreateMesh(): ctx must not be null\n"); return nullptr; }
+    if (!ctx->getUSDStage()) { usdiLogWarning("usdiCreateMesh(): stage must not be null\n"); return nullptr; }
+    if (!name) { usdiLogWarning("usdiCreateMesh(): name must not be null\n"); return nullptr; }
     return new usdi::Mesh(ctx, parent, name);
 }
 
@@ -390,10 +393,10 @@ usdiAPI usdi::Points* usdiAsPoints(usdi::Schema *schema)
 usdiAPI usdi::Points* usdiCreatePoints(usdi::Context *ctx, usdi::Schema *parent, const char *name)
 {
     usdiTraceFunc();
-    if (!ctx) { usdiLogWarning("usdiCreatePoints(): ctx must be set\n"); return nullptr; }
-    if (!name) { usdiLogWarning("usdiCreatePoints(): name must be set\n"); return nullptr; }
+    if (!ctx) { usdiLogWarning("usdiCreatePoints(): ctx must not be null\n"); return nullptr; }
+    if (!ctx->getUSDStage()) { usdiLogWarning("usdiCreatePoints(): stage must not be null\n"); return nullptr; }
+    if (!name) { usdiLogWarning("usdiCreatePoints(): name must not be null\n"); return nullptr; }
     return new usdi::Points(ctx, parent, name);
-    return nullptr;
 }
 
 usdiAPI void usdiPointsGetSummary(usdi::Points *points, usdi::PointsSummary *dst)

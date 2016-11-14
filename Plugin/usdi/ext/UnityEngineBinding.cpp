@@ -69,13 +69,15 @@ void InitializeInternalMethods()
         CameraAssign = CameraAssignM;
         MeshAssignBounds = NM_Mesh_SetBounds ? MeshAssignBoundsN : MeshAssignBoundsM;
 
-        mAddMethod("UTJ.usdi::usdiUniTransformAssign", TransformAssign);
-        mAddMethod("UTJ.usdi::usdiUniTransformNotfyChange", TransformNotfyChange);
-        mAddMethod("UTJ.usdi::usdiUniCameraAssign", CameraAssign);
-        mAddMethod("UTJ.usdi::usdiUniMeshAssignBounds", MeshAssignBounds);
+        if (g_mono_dll) {
+            mAddMethod("UTJ.usdi::usdiUniTransformAssign", TransformAssign);
+            mAddMethod("UTJ.usdi::usdiUniTransformNotfyChange", TransformNotfyChange);
+            mAddMethod("UTJ.usdi::usdiUniCameraAssign", CameraAssign);
+            mAddMethod("UTJ.usdi::usdiUniMeshAssignBounds", MeshAssignBounds);
 #ifdef usdiEnableComponentUpdator
-        StreamUpdater::registerICalls();
+            StreamUpdater::registerICalls();
 #endif // usdiEnableComponentUpdator
+        }
     });
 
     mRebindCache();

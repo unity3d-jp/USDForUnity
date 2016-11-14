@@ -44,7 +44,7 @@
                     }
                 }
             }, 
-            "LibraryPath": "../lib/usdHydra.dll", 
+            "LibraryPath": "../lib/libusdHydra.dll", 
             "Name": "usdHydra", 
             "ResourcePath": "resources", 
             "Root": "..", 

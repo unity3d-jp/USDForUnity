@@ -74,7 +74,7 @@
                     }
                 }
             }, 
-            "LibraryPath": "../lib/usdRi.dll", 
+            "LibraryPath": "../lib/libusdRi.dll", 
             "Name": "usdRi", 
             "ResourcePath": "resources", 
             "Root": "..", 

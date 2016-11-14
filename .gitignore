@@ -42,5 +42,6 @@ CMakeFiles/
 CMakeCache.txt
 USDForUnity/*.sln
 USDForUnity/*.csproj
+bin/
 
 MeshUtilsCore.h
