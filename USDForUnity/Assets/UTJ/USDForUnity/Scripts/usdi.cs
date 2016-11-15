@@ -338,10 +338,10 @@ namespace UTJ
         };
 
 
-        [DllImport ("AddDLLSearchPath")] public static extern IntPtr GetModulePath();
-        [DllImport ("AddDLLSearchPath")] public static extern void AddDLLSearchPath(IntPtr path);
-        [DllImport ("AddDLLSearchPath")] public static extern void AddDLLSearchPath(string path);
-        [DllImport ("AddDLLSearchPath")] public static extern void SetEnv(string name, string value);
+        [DllImport ("usdiHelper")] public static extern IntPtr GetModulePath();
+        [DllImport ("usdiHelper")] public static extern void AddDLLSearchPath(IntPtr path);
+        [DllImport ("usdiHelper")] public static extern void AddDLLSearchPath(string path);
+        [DllImport ("usdiHelper")] public static extern void usdiSetPluginPath(string path);
 
 
         [DllImport("usdi")] public static extern void usdiInitialize();
@@ -558,7 +558,7 @@ namespace UTJ
 
             var usdPluginDir = Application.streamingAssetsPath + "/UTJ/USDForUnity/plugins";
             usdi.AddDLLSearchPath(usdPluginDir + "/lib");
-            usdi.SetEnv("PXR_PLUGINPATH_NAME", usdPluginDir);
+            usdi.usdiSetPluginPath(usdPluginDir);
         }
 
         // separate pass because loading usdi.dll will fail in InitializePluginPass1()

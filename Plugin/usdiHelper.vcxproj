@@ -19,12 +19,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AddDLLSearchPath\AddDLLSearchPath.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="setup.vcxproj">
       <Project>{1c5de91b-7ae9-4304-9fa1-0de1aba8c02d}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="usdiHelper\usdiHelper.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="usdiHelper\usdiHelper.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{66397903-6FF2-46C6-B51E-B323FD248FAD}</ProjectGuid>

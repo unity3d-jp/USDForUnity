@@ -23,7 +23,7 @@ template<> void P<const char*>(const char* v) { printf("\"%s\"", v); }
 
 
 template<class T>
-void P(const std::vector<T>& data)
+static void P(const std::vector<T>& data)
 {
     printf("[");
     auto n = data.size();
@@ -34,7 +34,7 @@ void P(const std::vector<T>& data)
     printf("]");
 }
 
-void InspectAttribute(usdi::Attribute *attr)
+static void InspectAttribute(usdi::Attribute *attr)
 {
 
     usdi::Time t = 0.0;
@@ -99,7 +99,7 @@ void InspectAttribute(usdi::Attribute *attr)
     printf("\n");
 }
 
-void InspectRecursive(usdi::Schema *schema)
+static void InspectRecursive(usdi::Schema *schema)
 {
     if (!schema) { return; }
 
@@ -132,22 +132,4 @@ bool TestImport(const char *path)
     usdiDestroyContext(ctx);
 
     return true;
-}
-
-
-int main(int argc, char *argv[])
-{
-    const char *path = "test.usda";
-    int int_value;
-    for (int i = 1; i < argc; ++i) {
-        auto *arg = argv[i];
-        if (sscanf(arg, "debug_level=%d", &int_value)) {
-            usdiSetDebugLevel(int_value);
-        }
-        else {
-            path = arg;
-        }
-    }
-
-    TestImport(path);
 }

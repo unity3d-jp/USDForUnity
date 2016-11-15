@@ -1,6 +1,5 @@
 #pragma once
 
-#define usdiCLinkage extern "C"
 #ifdef _WIN32
     #ifndef usdiStaticLink
         #ifdef usdiImpl

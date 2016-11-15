@@ -11,15 +11,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="usdiTestImport.cpp" />
+    <ClCompile Include="usdiTestsMain.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\usdi.vcxproj">
-      <Project>{08361722-5520-47ac-a0c2-31e8a062b73f}</Project>
+    <ProjectReference Include="..\usdiHelper.vcxproj">
+      <Project>{66397903-6ff2-46c6-b51e-b323fd248fad}</Project>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{B0B40791-0679-4CFC-AF9F-CD547CCE6161}</ProjectGuid>
+    <ProjectGuid>{11990C37-1C63-418F-9AB1-74076C470584}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
   </PropertyGroup>

@@ -171,21 +171,3 @@ void TestExportMesh(const char *filename)
     usdiSave(ctx);
     usdiDestroyContext(ctx);
 }
-
-void TestExportHighMesh(const char *filename);
-
-int main(int argc, char *argv[])
-{
-    int int_value;
-    for (int i = 1; i < argc; ++i) {
-        auto *arg = argv[i];
-        if (sscanf(arg, "debug_level=%d", &int_value)) {
-            usdiSetDebugLevel(int_value);
-        }
-    }
-
-    TestExportMesh("TestExport.usda");
-    TestExportMesh("TestExport.usdc");
-    TestExportHighMesh("HighMesh.usda");
-    TestExportHighMesh("HighMesh.usdc");
-}

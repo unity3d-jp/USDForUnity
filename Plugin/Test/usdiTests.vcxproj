@@ -13,25 +13,30 @@
   <ItemGroup>
     <ClCompile Include="usdiTestExport.cpp" />
     <ClCompile Include="usdiTestExportHighMesh.cpp" />
+    <ClCompile Include="usdiTestImport.cpp" />
+    <ClCompile Include="usdiTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\usdi.vcxproj">
       <Project>{08361722-5520-47ac-a0c2-31e8a062b73f}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="usdiTests.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{11990C37-1C63-418F-9AB1-74076C470584}</ProjectGuid>
+    <ProjectGuid>{89E3D0A3-3CCB-43E3-9B92-F70EB5731429}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <PlatformToolset>v140</PlatformToolset>
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Master|x64'" Label="Configuration">
     <PlatformToolset>v140</PlatformToolset>
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
