@@ -198,16 +198,16 @@ struct MeshData
     int     *indices = nullptr;
     int     *indices_triangulated = nullptr;
 
-    SubmeshData *submeshes = nullptr;
-
     uint    num_points = 0;
     uint    num_counts = 0;
     uint    num_indices = 0;
     uint    num_indices_triangulated = 0;
-    uint    num_splits = 0;
 
     float3  center = { 0.0f, 0.0f, 0.0f };
     float3  extents = { 0.0f, 0.0f, 0.0f };
+
+    SubmeshData *submeshes = nullptr;
+    uint    num_submeshes = 0;
 };
 
 

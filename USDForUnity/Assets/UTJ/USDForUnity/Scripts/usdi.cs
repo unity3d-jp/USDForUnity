@@ -256,8 +256,8 @@ namespace UTJ
             public IntPtr   points;
             public IntPtr   normals;
             public IntPtr   uvs;
-            public IntPtr   indices;
-            public int      num_points;
+            public IntPtr   indices; // always triangulated
+            public int      num_points; // == num_indices
 
             public Vector3  center;
             public Vector3  extents;
@@ -281,16 +281,16 @@ namespace UTJ
             public IntPtr   indices;
             public IntPtr   indices_triangulated;
 
-            public IntPtr   splits;
-
             public int      num_points;
             public int      num_counts;
             public int      num_indices;
             public int      num_indices_triangulated;
-            public int      num_splits;
 
             public Vector3  center;
             public Vector3  extents;
+
+            public IntPtr   submeshes; // pointer to array of SubmeshData
+            public int      num_submeshes;
 
             public static MeshData default_value
             {
@@ -425,6 +425,7 @@ namespace UTJ
         [DllImport("usdi")] public static extern IntPtr usdiVtxCmdCreate(string dbg_name);
         [DllImport("usdi")] public static extern void usdiVtxCmdDestroy(IntPtr h);
         [DllImport("usdi")] public static extern void usdiVtxCmdUpdate(IntPtr h, ref MeshData data, IntPtr vb, IntPtr ib);
+        [DllImport("usdi")] public static extern void usdiVtxCmdUpdateSub(IntPtr h, ref SubmeshData data, IntPtr vb, IntPtr ib);
         [DllImport("usdi")] public static extern void usdiVtxCmdWait();
 
 
@@ -469,6 +470,11 @@ namespace UTJ
             public void Update(ref MeshData data, IntPtr vb, IntPtr ib)
             {
                 usdiVtxCmdUpdate(handle, ref data, vb, ib);
+            }
+
+            public void Update(ref SubmeshData data, IntPtr vb, IntPtr ib)
+            {
+                usdiVtxCmdUpdateSub(handle, ref data, vb, ib);
             }
         }
 

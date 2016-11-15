@@ -40,9 +40,30 @@ VertexUpdateCommand::~VertexUpdateCommand()
     ifs->releaseStagingResource(m_ctx_ib);
 }
 
-void VertexUpdateCommand::update(const usdi::MeshData *mesh_data, void *vb, void *ib)
+void VertexUpdateCommand::update(const usdi::MeshData *data, void *vb, void *ib)
 {
-    m_mesh_data = *mesh_data;
+    m_src_points    = data->points;
+    m_src_normals   = data->normals;
+    m_src_uvs       = data->uvs;
+    m_src_indices   = data->indices_triangulated;
+    m_num_points    = data->num_points;
+    m_num_indices   = data->num_indices_triangulated;
+
+    m_ctx_vb.resource = vb;
+    m_ctx_ib.resource = ib;
+
+    m_dirty = true;
+}
+
+void VertexUpdateCommand::update(const usdi::SubmeshData *data, void *vb, void *ib)
+{
+    m_src_points    = data->points;
+    m_src_normals   = data->normals;
+    m_src_uvs       = data->uvs;
+    m_src_indices   = data->indices;
+    m_num_points    = data->num_points;
+    m_num_indices   = data->num_points; // num points == num indices on submesh
+
     m_ctx_vb.resource = vb;
     m_ctx_ib.resource = ib;
 
@@ -58,7 +79,7 @@ void VertexUpdateCommand::map()
 {
     auto ifs = gi::GetGraphicsInterface();
     ifs->mapBuffer(m_ctx_vb);
-    if (m_mesh_data.indices_triangulated) {
+    if (m_src_indices) {
         ifs->mapBuffer(m_ctx_ib);
     }
 }
@@ -67,33 +88,31 @@ void VertexUpdateCommand::copy()
 {
     auto *ifs = gi::GetGraphicsInterface();
     auto& buf = GetTemporaryBuffer();
-    auto& mesh_data = m_mesh_data;
-    auto& ctx_vb = m_ctx_vb;
-    auto& ctx_ib = m_ctx_ib;
 
-    if (ctx_vb.data_ptr) {
-        if (m_mesh_data.uvs) {
+    if (m_ctx_vb.data_ptr) {
+        if (m_src_uvs) {
             using vertex_t = vertex_v3n3u2;
-            vertex_t::source_t src = { m_mesh_data.points, m_mesh_data.normals, m_mesh_data.uvs };
-            InterleaveBuffered(buf, src, (size_t)mesh_data.num_points);
+            vertex_t::source_t src = { m_src_points, m_src_normals, m_src_uvs };
+            InterleaveBuffered(buf, src, (size_t)m_num_points);
         }
         else {
             using vertex_t = vertex_v3n3;
-            vertex_t::source_t src = { mesh_data.points, mesh_data.normals };
-            InterleaveBuffered(buf, src, (size_t)mesh_data.num_points);
+            vertex_t::source_t src = { m_src_points, m_src_normals };
+            InterleaveBuffered(buf, src, (size_t)m_num_points);
         }
-        memcpy(ctx_vb.data_ptr, buf.cdata(), buf.size());
+        memcpy(m_ctx_vb.data_ptr, buf.data(), buf.size());
     }
 
-    if (ctx_ib.data_ptr && mesh_data.indices_triangulated) {
-        // need to convert 32 bit IB -> 16 bit IB...
+    if (m_ctx_ib.data_ptr && m_src_indices) {
+        // Unity's mesh index is 16 bit
+        // convert 32 bit indices -> 16 bit indices
         using index_t = uint16_t;
-        buf.resize(sizeof(index_t) * mesh_data.num_indices_triangulated);
-        index_t *indices = (index_t*)buf.cdata();
-        for (size_t i = 0; i < mesh_data.num_indices_triangulated; ++i) {
-            indices[i] = (index_t)mesh_data.indices_triangulated[i];
+        buf.resize(sizeof(index_t) * m_num_indices);
+        index_t *indices = (index_t*)buf.data();
+        for (size_t i = 0; i < m_num_indices; ++i) {
+            indices[i] = (index_t)m_src_indices[i];
         }
-        memcpy(ctx_ib.data_ptr, buf.cdata(), buf.size());
+        memcpy(m_ctx_ib.data_ptr, buf.data(), buf.size());
     }
 }
 
@@ -137,6 +156,13 @@ void VertexCommandManager::destroyCommand(Handle h)
 }
 
 void VertexCommandManager::update(Handle h, const usdi::MeshData *src, void *vb, void *ib)
+{
+    if (auto *cmd = get(h)) {
+        cmd->update(src, vb, ib);
+    }
+}
+
+void VertexCommandManager::update(Handle h, const usdi::SubmeshData *src, void *vb, void *ib)
 {
     if (auto *cmd = get(h)) {
         cmd->update(src, vb, ib);

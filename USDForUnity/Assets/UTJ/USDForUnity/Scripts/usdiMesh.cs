@@ -69,8 +69,8 @@ namespace UTJ
         int m_frame;
         double m_timeRead;
 
-        List<usdiSplitMesh> m_children = new List<usdiSplitMesh>();
-        usdi.SubmeshData[] m_splitedData;
+        List<usdiSubmesh> m_submeshes = new List<usdiSubmesh>();
+        usdi.SubmeshData[] m_submeshData;
 
         usdi.Task m_asyncRead;
         usdi.VertexUpdateCommand m_vuCmd;
@@ -131,42 +131,42 @@ namespace UTJ
             return mesh;
         }
 
-        usdiSplitMesh usdiAddSplit()
+        usdiSubmesh usdiAddSubmesh()
         {
-            usdiSplitMesh split;
-            if (m_children.Count == 0)
+            usdiSubmesh split;
+            if (m_submeshes.Count == 0)
             {
-                split = GetOrAddComponent<usdiSplitMesh>();
+                split = GetOrAddComponent<usdiSubmesh>();
             }
             else
             {
-                var child = new GameObject("Split[" + m_children.Count + "]");
+                var child = new GameObject("Split[" + m_submeshes.Count + "]");
                 child.GetComponent<Transform>().SetParent(GetComponent<Transform>(), false);
-                split = child.AddComponent<usdiSplitMesh>();
+                split = child.AddComponent<usdiSubmesh>();
             }
-            split.usdiOnLoad(this, m_children.Count);
-            m_children.Add(split);
+            split.usdiOnLoad(this, m_submeshes.Count);
+            m_submeshes.Add(split);
             return split;
         }
 
         void usdiAllocateChildMeshes(int n)
         {
-            if(n <= m_children.Count + 1) { return; }
+            if(n <= m_submeshes.Count + 1) { return; }
 
-            while(m_children.Count + 1 < n)
+            while(m_submeshes.Count + 1 < n)
             {
-                usdiAddSplit();
+                usdiAddSubmesh();
             }
         }
 
 
-        void usdiGatherExistingSplits()
+        void usdiGatherExistingSubmeshes()
         {
             {
-                var child = GetComponent<usdiSplitMesh>();
+                var child = GetComponent<usdiSubmesh>();
                 if(child != null)
                 {
-                    m_children.Add(child);
+                    m_submeshes.Add(child);
                 }
             }
 
@@ -176,8 +176,8 @@ namespace UTJ
                 var child = t.FindChild("Split[" + i + "]");
                 if (child == null) { break; }
 
-                var split = child.GetComponent<usdiSplitMesh>();
-                if (child != null) { m_children.Add(split); }
+                var split = child.GetComponent<usdiSubmesh>();
+                if (child != null) { m_submeshes.Add(split); }
             }
         }
 
@@ -211,10 +211,10 @@ namespace UTJ
 
             m_renderer = GetComponent<MeshRenderer>();
 
-            usdiGatherExistingSplits();
-            for (int i = 0; i < m_children.Count; ++i)
+            usdiGatherExistingSubmeshes();
+            for (int i = 0; i < m_submeshes.Count; ++i)
             {
-                m_children[i].usdiOnLoad(this, m_children.Count);
+                m_submeshes[i].usdiOnLoad(this, m_submeshes.Count);
             }
         }
 
@@ -247,20 +247,20 @@ namespace UTJ
             }
 
             m_meshData = md;
-            if (m_meshData.num_splits != 0)
+            if (m_meshData.num_submeshes != 0)
             {
-                m_splitedData = new usdi.SubmeshData[m_meshData.num_splits];
-                m_meshData.splits = usdi.GetArrayPtr(m_splitedData);
+                m_submeshData = new usdi.SubmeshData[m_meshData.num_submeshes];
+                m_meshData.submeshes = usdi.GetArrayPtr(m_submeshData);
                 usdi.usdiMeshReadSample(m_mesh, ref m_meshData, t, true);
 
-                while (m_children.Count < m_meshData.num_splits)
+                while (m_submeshes.Count < m_meshData.num_submeshes)
                 {
-                    usdiAddSplit();
+                    usdiAddSubmesh();
                 }
 
-                for (int i = 0; i < m_children.Count; ++i)
+                for (int i = 0; i < m_submeshes.Count; ++i)
                 {
-                    m_children[i].usdiAllocateMeshData(ref m_splitedData[i]);
+                    m_submeshes[i].usdiAllocateMeshData(ref m_submeshData[i]);
                 }
             }
             else
@@ -300,11 +300,11 @@ namespace UTJ
         {
             if (m_directVBUpdate) { return; }
 
-            if (m_meshData.num_splits != 0)
+            if (m_meshData.num_submeshes != 0)
             {
-                for (int i = 0; i < m_children.Count; ++i)
+                for (int i = 0; i < m_submeshes.Count; ++i)
                 {
-                    m_children[i].usdiUploadMeshData(topology, close);
+                    m_submeshes[i].usdiUploadMeshData(topology, close);
                 }
             }
             else

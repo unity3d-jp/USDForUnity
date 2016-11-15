@@ -260,7 +260,7 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
     dst.num_counts = (uint)sample.counts.size();
     dst.num_indices = (uint)sample.indices.size();
     dst.num_indices_triangulated = m_num_indices_triangulated;
-    dst.num_splits = (uint)splits.size();
+    dst.num_submeshes = (uint)splits.size();
     dst.center = sample.center;
     dst.extents = sample.extents;
 
@@ -288,7 +288,7 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
         }
 
         if (dst.submeshes) {
-            for (size_t i = 0; i < dst.num_splits; ++i) {
+            for (size_t i = 0; i < dst.num_submeshes; ++i) {
                 const auto& ssrc = splits[i];
                 auto& sdst = dst.submeshes[i];
                 sdst.num_points = (uint)ssrc.points.size();
@@ -320,7 +320,7 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
         dst.indices_triangulated = (int*)sample.indices_triangulated.cdata();
 
         if (dst.submeshes) {
-            for (size_t i = 0; i < dst.num_splits; ++i) {
+            for (size_t i = 0; i < dst.num_submeshes; ++i) {
                 const auto& ssrc = splits[i];
                 auto& sdst = dst.submeshes[i];
                 sdst.num_points = (uint)ssrc.points.size();

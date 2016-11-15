@@ -8,14 +8,14 @@ using UnityEditor;
 namespace UTJ
 {
 
-    public class usdiSplitMesh : MonoBehaviour
+    public class usdiSubmesh : MonoBehaviour
     {
         #region fields
         usdiMesh m_parent;
         int m_nth;
 
         Mesh m_umesh;
-        Vector3[] m_positions;
+        Vector3[] m_points;
         Vector3[] m_normals;
         Vector2[] m_uvs;
         int[] m_indices;
@@ -79,6 +79,69 @@ namespace UTJ
         }
 #endif
 
+
+        public void usdiAllocateMeshData(ref usdi.MeshData data)
+        {
+            var summary = m_parent.meshSummary;
+
+            {
+                m_points = new Vector3[data.num_points];
+                data.points = usdi.GetArrayPtr(m_points);
+            }
+            if (summary.has_normals)
+            {
+                m_normals = new Vector3[data.num_points];
+                data.normals = usdi.GetArrayPtr(m_normals);
+            }
+            if (summary.has_uvs)
+            {
+                m_uvs = new Vector2[data.num_points];
+                data.uvs = usdi.GetArrayPtr(m_uvs);
+            }
+            {
+                m_indices = new int[data.num_indices_triangulated];
+                data.indices_triangulated = usdi.GetArrayPtr(m_indices);
+            }
+        }
+
+        public void usdiAllocateMeshData(ref usdi.SubmeshData data)
+        {
+            var summary = m_parent.meshSummary;
+
+            {
+                m_points = new Vector3[data.num_points];
+                data.points = usdi.GetArrayPtr(m_points);
+            }
+            if (summary.has_normals)
+            {
+                m_normals = new Vector3[data.num_points];
+                data.normals = usdi.GetArrayPtr(m_normals);
+            }
+            if (summary.has_uvs)
+            {
+                m_uvs = new Vector2[data.num_points];
+                data.uvs = usdi.GetArrayPtr(m_uvs);
+            }
+            {
+                m_indices = new int[data.num_points];
+                data.indices = usdi.GetArrayPtr(m_indices);
+            }
+        }
+
+        public void usdiFreeMeshData(ref usdi.SubmeshData data)
+        {
+            m_points = null;
+            m_normals = null;
+            m_uvs = null;
+            m_indices = null;
+
+            data.points = IntPtr.Zero;
+            data.normals = IntPtr.Zero;
+            data.uvs = IntPtr.Zero;
+            data.indices = IntPtr.Zero;
+        }
+
+
         public void usdiOnLoad(usdiMesh parent, int nth)
         {
             m_parent = parent;
@@ -91,42 +154,17 @@ namespace UTJ
         }
 
 
-        public void usdiAllocateMeshData(ref usdi.SubmeshData data)
-        {
-            // skip if already allocated
-            if (m_indices == null || m_indices.Length != data.num_points)
-            {
-                var sumamry = m_parent.meshSummary;
-                m_indices = new int[data.num_points];
-                m_positions = new Vector3[data.num_points];
-                if (sumamry.has_normals) { m_normals = new Vector3[data.num_points]; }
-                if (sumamry.has_uvs) { m_uvs = new Vector2[data.num_points]; }
-            }
-
-            data.points = usdi.GetArrayPtr(m_positions);
-            data.indices = usdi.GetArrayPtr(m_indices);
-            if (m_normals != null) { data.normals = usdi.GetArrayPtr(m_normals); }
-            if (m_uvs != null) { data.uvs = usdi.GetArrayPtr(m_uvs); }
-        }
-
-        public void usdiFreeMeshData(ref usdi.SubmeshData data)
-        {
-            m_positions = null;
-            m_normals = null;
-            m_uvs = null;
-            m_indices = null;
-
-            data.points = IntPtr.Zero;
-            data.normals = IntPtr.Zero;
-            data.uvs = IntPtr.Zero;
-            data.indices = IntPtr.Zero;
-        }
-
         public void usdiUploadMeshData(bool topology, bool close)
         {
-            if (!m_parent.directVBUpdate)
+            bool directVBUpdate = m_parent.directVBUpdate && m_VB != null;
+
+            if (directVBUpdate)
             {
-                m_umesh.vertices = m_positions;
+
+            }
+            else
+            {
+                m_umesh.vertices = m_points;
                 if (m_normals != null) { m_umesh.normals = m_normals; }
                 if (m_uvs != null) { m_umesh.uv = m_uvs; }
 
@@ -141,7 +179,7 @@ namespace UTJ
                 if(m_parent.stream.directVBUpdate)
                 {
                     m_VB = m_umesh.GetNativeVertexBufferPtr(0);
-                    //m_IB = m_umesh.GetNativeIndexBufferPtr();
+                    m_IB = m_umesh.GetNativeIndexBufferPtr();
                 }
 #endif
             }

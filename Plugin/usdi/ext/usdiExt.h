@@ -17,6 +17,7 @@ extern "C" {
 usdiAPI usdi::Handle    usdiVtxCmdCreate(const char *dbg_name);
 usdiAPI void            usdiVtxCmdDestroy(usdi::Handle h);
 usdiAPI void            usdiVtxCmdUpdate(usdi::Handle h, const usdi::MeshData *src, void *vb, void *ib);
+usdiAPI void            usdiVtxCmdUpdateSub(usdi::Handle h, const usdi::SubmeshData *src, void *vb, void *ib);
 usdiAPI void            usdiVtxCmdProcess();
 usdiAPI void            usdiVtxCmdWait();
 

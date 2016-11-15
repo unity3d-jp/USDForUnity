@@ -37,6 +37,12 @@ usdiAPI void usdiVtxCmdUpdate(usdi::Handle h, const usdi::MeshData *src, void *v
     usdi::VertexCommandManager::getInstance().update(h, src, vb, ib);
 }
 
+usdiAPI void usdiVtxCmdUpdateSub(usdi::Handle h, const usdi::SubmeshData *src, void *vb, void *ib)
+{
+    usdiTraceFunc();
+    usdi::VertexCommandManager::getInstance().update(h, src, vb, ib);
+}
+
 usdiAPI void usdiVtxCmdProcess()
 {
     usdiTraceFunc();

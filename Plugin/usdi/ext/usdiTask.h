@@ -20,12 +20,12 @@ using MapContext = gi::MapContext;
 
 class VertexUpdateCommand
 {
-
 public:
     VertexUpdateCommand(const char *dbg_name);
     ~VertexUpdateCommand();
 
-    void update(const usdi::MeshData *mesh_data, void *vb, void *ib);
+    void update(const usdi::MeshData *data, void *vb, void *ib);
+    void update(const usdi::SubmeshData *data, void *vb, void *ib);
     bool isDirty() const;
 
     void map();
@@ -39,7 +39,14 @@ private:
     typedef tbb::spin_mutex::scoped_lock lock_t;
 
     std::string m_dbg_name;
-    usdi::MeshData m_mesh_data;
+
+    const float3 *m_src_points;
+    const float3 *m_src_normals;
+    const float2 *m_src_uvs;
+    const int    *m_src_indices;
+    int          m_num_points;
+    int          m_num_indices;
+
     MapContext m_ctx_vb;
     MapContext m_ctx_ib;
     std::atomic_bool m_dirty;
@@ -56,6 +63,7 @@ public:
     Handle createCommand(const char *dbg_name = "");
     void destroyCommand(Handle h);
     void update(Handle h, const usdi::MeshData *src, void *vb, void *ib);
+    void update(Handle h, const usdi::SubmeshData *src, void *vb, void *ib);
 
     void process();
     void wait();

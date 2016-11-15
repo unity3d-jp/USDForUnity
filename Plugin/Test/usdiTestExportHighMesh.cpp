@@ -10,7 +10,7 @@ using usdi::float3;
 using usdi::float4;
 using usdi::quatf;
 
-const int WaveMeshResolution = 512;
+const int WaveMeshResolution = 256;
 
 static void GenerateWaveMeshTopology(std::vector<int>& counts, std::vector<int>& indices)
 {

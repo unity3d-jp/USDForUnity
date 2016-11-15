@@ -508,9 +508,9 @@ void MeshUpdater::asyncUpdate(Time time)
             m_summary.topology_variance == TopologyVariance::Homogenous;
         bool kick_VB_update_tasks = m_buffers.front()->m_vb != nullptr;
 
-        if (m_data.num_splits != 0) {
+        if (m_data.num_submeshes != 0) {
             // get submesh data
-            m_submeshes.resize(m_data.num_splits);
+            m_submeshes.resize(m_data.num_submeshes);
             m_data.submeshes = m_submeshes.data();
             m_schema->readSample(m_data, time, false);
         }
@@ -529,7 +529,7 @@ void MeshUpdater::update(Time time)
     super::update(time);
     if (m_schema->needsUpdate()) {
         // create submesh objects if needed
-        while (m_buffers.size() < m_data.num_splits) {
+        while (m_buffers.size() < m_data.num_submeshes) {
             char name[128];
             sprintf(name, "Submesh [%d]", (int)m_buffers.size() - 1);
             mMGameObject go(mGameObject::New(name));
