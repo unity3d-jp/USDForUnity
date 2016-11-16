@@ -21,6 +21,11 @@ void(*MeshAssignBounds)(MonoObject *mesh, float3 *center, float3  *extents);
 
 void TransformAssignN(MonoObject *trans, XformData *data_)
 {
+    if (!trans || !data_) {
+        usdiLogError("TransformAssignN(): invalid parameter\n");
+        return;
+    }
+
     auto& data = *data_;
     auto t = mObject(trans).unbox<nTransform>();
 
@@ -43,6 +48,11 @@ void TransformAssignN(MonoObject *trans, XformData *data_)
 
 void TransformAssignM(MonoObject *trans, XformData *data_)
 {
+    if (!trans || !data_) {
+        usdiLogError("TransformAssignM(): invalid parameter\n");
+        return;
+    }
+
     auto& data = *data_;
     auto t = mTransform(trans);
 
@@ -63,6 +73,11 @@ void TransformAssignM(MonoObject *trans, XformData *data_)
 
 void TransformNotfyChangeN(MonoObject *trans)
 {
+    if (!trans) {
+        usdiLogError("TransformNotfyChangeN(): invalid parameter\n");
+        return;
+    }
+
     auto t = mObject(trans).unbox<nTransform>();
     t.sendTransformChanged(0x1 | 0x2 | 0x8);
 }
@@ -81,9 +96,13 @@ void CameraAssignN(MonoObject *trans, CameraData *data)
 
 void CameraAssignM(MonoObject *cam_, CameraData *data_)
 {
+    if (!cam_ || !data_) {
+        usdiLogError("CameraAssignM(): invalid parameter\n");
+        return;
+    }
+
     auto& data = *data_;
     auto cam = mCamera(cam_);
-
     cam.setNearClipPlane(data.near_clipping_plane);
     cam.setFarClipPlane(data.far_clipping_plane);
     cam.setFieldOfView(data.field_of_view);
@@ -93,16 +112,24 @@ void CameraAssignM(MonoObject *cam_, CameraData *data_)
 
 void MeshAssignBoundsN(MonoObject *mesh, float3 *center, float3  *extents)
 {
-    AABB bounds = { *center, *extents };
+    if (!mesh || !center || !extents) {
+        usdiLogError("MeshAssignBoundsN(): invalid parameter\n");
+        return;
+    }
 
+    AABB bounds = { *center, *extents };
     auto m = mObject(mesh).unbox<nMesh>();
     m.setBounds(bounds);
 }
 
 void MeshAssignBoundsM(MonoObject *mesh, float3 *center, float3  *extents)
 {
-    AABB bounds = { *center, *extents };
+    if (!mesh || !center || !extents) {
+        usdiLogError("MeshAssignBoundsM(): invalid parameter\n");
+        return;
+    }
 
+    AABB bounds = { *center, *extents };
     mMesh(mesh).setBounds(bounds);
 }
 

@@ -8,7 +8,7 @@
 
 namespace usdi {
 
-const int usdiMaxVertices = 65000;
+const int usdiMaxVertices = 64998;
 
 static inline void CountIndices(const VtArray<int> &counts, int& num_indices, int& num_indices_triangulated)
 {

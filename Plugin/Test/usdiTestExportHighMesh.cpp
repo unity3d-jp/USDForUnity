@@ -25,9 +25,9 @@ static void GenerateWaveMeshTopology(std::vector<int>& counts, std::vector<int>&
             int i = (WaveMeshResolution-1)*iy + ix;
             counts[i] = 4;
             indices[i * 4 + 0] = WaveMeshResolution*iy + ix;
-            indices[i * 4 + 1] = WaveMeshResolution*iy + (ix + 1);
+            indices[i * 4 + 1] = WaveMeshResolution*(iy + 1) + ix;
             indices[i * 4 + 2] = WaveMeshResolution*(iy + 1) + (ix + 1);
-            indices[i * 4 + 3] = WaveMeshResolution*(iy + 1) + ix;
+            indices[i * 4 + 3] = WaveMeshResolution*iy + (ix + 1);
         }
     }
 }
@@ -64,11 +64,7 @@ void TestExportHighMesh(const char *filename)
     {
         usdi::XformData data;
         usdi::Time t = 0.0;
-        for (int i = 0; i < 150; ++i) {
-            data.position.x += 0.2f;
-            t += 1.0 / 30.0;
-            usdiXformWriteSample(xf, &data, t);
-        }
+        usdiXformWriteSample(xf, &data, t);
     }
 
     auto *mesh = usdiCreateMesh(ctx, xf, "WaveMesh");
@@ -89,7 +85,7 @@ void TestExportHighMesh(const char *filename)
         data.num_counts = counts.size();
         data.num_indices = indices.size();
 
-        for (int i = 0; i < 5; ++i) {
+        for (int i = 0; i < 150; ++i) {
             t += 1.0 / 30.0;
             GenerateWaveMesh(vertices, t);
             usdiMeshWriteSample(mesh, &data, t);

@@ -12,187 +12,48 @@ namespace UTJ
     [ExecuteInEditMode]
     public class usdiMesh : usdiXform
     {
-        class MeshBuffer
-        {
-            public Vector3[] positions;
-            public Vector3[] normals;
-            public Vector2[] uvs;
-            public int[] indices;
-
-            public void Allocate(ref usdi.MeshSummary summary, ref usdi.MeshData md)
-            {
-                {
-                    positions = new Vector3[md.num_points];
-                    md.points = usdi.GetArrayPtr(positions);
-                }
-                if (summary.has_normals)
-                {
-                    normals = new Vector3[md.num_points];
-                    md.normals = usdi.GetArrayPtr(normals);
-                }
-                if (summary.has_uvs)
-                {
-                    uvs = new Vector2[md.num_points];
-                    md.uvs = usdi.GetArrayPtr(uvs);
-                }
-                {
-                    indices = new int[md.num_indices_triangulated];
-                    md.indices_triangulated = usdi.GetArrayPtr(indices);
-                }
-            }
-
-            public void Clear()
-            {
-                positions = null;
-                normals = null;
-                uvs = null;
-                indices = null;
-            }
-        }
-
-
         #region fields
         usdi.Mesh m_mesh;
         usdi.MeshData m_meshData;
+        usdi.SubmeshData[] m_submeshData;
         usdi.MeshSummary m_meshSummary;
-        MeshBuffer m_buf = new MeshBuffer();
 
-        Renderer m_renderer;
-        Mesh m_umesh;
-        Mesh[] m_childMeshes;
         bool m_needsAllocateMeshData;
         bool m_needsUploadMeshData;
 
-        int m_meshVertexCount;
         int m_prevVertexCount;
         int m_prevIndexCount;
         int m_frame;
         double m_timeRead;
 
         List<usdiSubmesh> m_submeshes = new List<usdiSubmesh>();
-        usdi.SubmeshData[] m_submeshData;
-
         usdi.Task m_asyncRead;
-        usdi.VertexUpdateCommand m_vuCmd;
 
         // for Unity 5.5 or later
         bool m_directVBUpdate;
-        IntPtr m_VB, m_IB;
         #endregion
-
 
 
         #region properties
         public usdi.MeshSummary meshSummary { get { return m_meshSummary; } }
-        public usdi.MeshData meshData { get { return m_meshData; } }
+        public usdi.MeshData meshData {
+            get { return m_meshData; }
+            set { m_meshData = value; }
+        }
+        public usdi.SubmeshData[] submeshData { get { return m_submeshData; } }
+        public List<usdiSubmesh> submeshes { get { return m_submeshes; } }
         public bool directVBUpdate { get { return m_directVBUpdate; } }
         #endregion
 
 
-
         #region impl
-        Mesh usdiGetOrAddMeshComponents()
-        {
-            Mesh mesh = null;
-
-            var go = gameObject;
-            MeshFilter meshFilter = go.GetComponent<MeshFilter>();
-
-            if (meshFilter == null || meshFilter.sharedMesh == null)
-            {
-                mesh = new Mesh();
-
-                if (meshFilter == null)
-                {
-                    meshFilter = go.AddComponent<MeshFilter>();
-                }
-
-                meshFilter.sharedMesh = mesh;
-
-                MeshRenderer renderer = go.GetComponent<MeshRenderer>();
-
-                if (renderer == null)
-                {
-                    renderer = go.AddComponent<MeshRenderer>();
-                }
-
-#if UNITY_EDITOR
-                Material material = UnityEngine.Object.Instantiate(GetDefaultMaterial());
-                material.name = "Material_0";
-                renderer.sharedMaterial = material;
-#endif
-            }
-            else
-            {
-                mesh = meshFilter.sharedMesh;
-            }
-
-            mesh.MarkDynamic();
-            return mesh;
-        }
-
         usdiSubmesh usdiAddSubmesh()
         {
-            usdiSubmesh split;
-            if (m_submeshes.Count == 0)
-            {
-                split = GetOrAddComponent<usdiSubmesh>();
-            }
-            else
-            {
-                var child = new GameObject("Split[" + m_submeshes.Count + "]");
-                child.GetComponent<Transform>().SetParent(GetComponent<Transform>(), false);
-                split = child.AddComponent<usdiSubmesh>();
-            }
-            split.usdiOnLoad(this, m_submeshes.Count);
-            m_submeshes.Add(split);
-            return split;
+            var sm = new usdiSubmesh();
+            sm.usdiOnLoad(this, m_submeshes.Count);
+            m_submeshes.Add(sm);
+            return sm;
         }
-
-        void usdiAllocateChildMeshes(int n)
-        {
-            if(n <= m_submeshes.Count + 1) { return; }
-
-            while(m_submeshes.Count + 1 < n)
-            {
-                usdiAddSubmesh();
-            }
-        }
-
-
-        void usdiGatherExistingSubmeshes()
-        {
-            {
-                var child = GetComponent<usdiSubmesh>();
-                if(child != null)
-                {
-                    m_submeshes.Add(child);
-                }
-            }
-
-            var t = GetComponent<Transform>();
-            for (int i=1; ; ++i)
-            {
-                var child = t.FindChild("Split[" + i + "]");
-                if (child == null) { break; }
-
-                var split = child.GetComponent<usdiSubmesh>();
-                if (child != null) { m_submeshes.Add(split); }
-            }
-        }
-
-#if UNITY_EDITOR
-        static MethodInfo s_GetBuiltinExtraResourcesMethod;
-        public static Material GetDefaultMaterial()
-        {
-            if (s_GetBuiltinExtraResourcesMethod == null)
-            {
-                BindingFlags bfs = BindingFlags.NonPublic | BindingFlags.Static;
-                s_GetBuiltinExtraResourcesMethod = typeof(EditorGUIUtility).GetMethod("GetBuiltinExtraResource", bfs);
-            }
-            return (Material)s_GetBuiltinExtraResourcesMethod.Invoke(null, new object[] { typeof(Material), "Default-Material.mat" });
-        }
-#endif
 
         public override void usdiOnLoad(usdi.Schema schema)
         {
@@ -206,16 +67,7 @@ namespace UTJ
             }
 
             usdi.usdiMeshGetSummary(m_mesh, ref m_meshSummary);
-            m_umesh = usdiGetOrAddMeshComponents();
-            m_meshVertexCount = m_umesh.vertexCount;
-
-            m_renderer = GetComponent<MeshRenderer>();
-
-            usdiGatherExistingSubmeshes();
-            for (int i = 0; i < m_submeshes.Count; ++i)
-            {
-                m_submeshes[i].usdiOnLoad(this, m_submeshes.Count);
-            }
+            usdiAddSubmesh();
         }
 
         public override void usdiOnUnload()
@@ -229,7 +81,6 @@ namespace UTJ
             }
 
             m_mesh = default(usdi.Mesh);
-            m_buf.Clear();
         }
 
 
@@ -247,7 +98,11 @@ namespace UTJ
             }
 
             m_meshData = md;
-            if (m_meshData.num_submeshes != 0)
+            if (m_meshData.num_submeshes == 0)
+            {
+                m_submeshes[0].usdiAllocateMeshData();
+            }
+            else
             {
                 m_submeshData = new usdi.SubmeshData[m_meshData.num_submeshes];
                 m_meshData.submeshes = usdi.GetArrayPtr(m_submeshData);
@@ -257,89 +112,12 @@ namespace UTJ
                 {
                     usdiAddSubmesh();
                 }
-
-                for (int i = 0; i < m_submeshes.Count; ++i)
+                for (int i = 0; i < m_meshData.num_submeshes; ++i)
                 {
-                    m_submeshes[i].usdiAllocateMeshData(ref m_submeshData[i]);
-                }
-            }
-            else
-            {
-                m_buf.Allocate(ref m_meshSummary, ref m_meshData);
-            }
-        }
-
-        // async
-        void usdiReadMeshData(double t)
-        {
-            if (m_directVBUpdate)
-            {
-                usdi.usdiMeshReadSample(m_mesh, ref m_meshData, t, false);
-            }
-            else
-            {
-#if UNITY_EDITOR
-                if (m_stream.forceSingleThread)
-                {
-                    usdi.usdiMeshReadSample(m_mesh, ref m_meshData, t, true);
-                }
-                else
-#endif
-                {
-                    if (m_asyncRead == null)
-                    {
-                        m_asyncRead = new usdi.Task(usdi.usdiTaskCreateMeshReadSample(m_mesh, ref m_meshData, ref m_timeRead));
-                    }
-                    m_asyncRead.Run();
+                    m_submeshes[i].usdiAllocateMeshData();
                 }
             }
         }
-
-        // sync
-        void usdiUploadMeshData(double t, bool topology, bool close)
-        {
-            if (m_directVBUpdate) { return; }
-
-            if (m_meshData.num_submeshes != 0)
-            {
-                for (int i = 0; i < m_submeshes.Count; ++i)
-                {
-                    m_submeshes[i].usdiUploadMeshData(topology, close);
-                }
-            }
-            else
-            {
-                m_umesh.vertices = m_buf.positions;
-                if (m_meshSummary.has_normals)
-                {
-                    m_umesh.normals = m_buf.normals;
-                }
-                if (m_meshSummary.has_uvs)
-                {
-                    m_umesh.uv = m_buf.uvs;
-                }
-
-                if (topology)
-                {
-                    m_umesh.SetIndices(m_buf.indices, MeshTopology.Triangles, 0);
-                }
-
-                m_umesh.UploadMeshData(close);
-                m_meshVertexCount = m_umesh.vertexCount;
-
-#if UNITY_5_5_OR_NEWER
-                if (m_stream.directVBUpdate)
-                {
-                    m_VB = m_umesh.GetNativeVertexBufferPtr(0);
-                    //m_IB = m_umesh.GetNativeIndexBufferPtr();
-                }
-#endif
-            }
-
-            m_prevVertexCount = m_meshData.num_points;
-            m_prevIndexCount = m_meshData.num_indices_triangulated;
-        }
-
 
         // async
         public override void usdiAsyncUpdate(double time)
@@ -354,21 +132,68 @@ namespace UTJ
             m_timeRead = time;
 
             m_needsAllocateMeshData =
-                m_meshVertexCount == 0 ||
-                (m_buf.positions == null && m_meshSummary.topology_variance != usdi.TopologyVariance.Constant) ||
+                m_prevVertexCount == 0 ||
                 m_meshSummary.topology_variance == usdi.TopologyVariance.Heterogenous;
 
             m_needsUploadMeshData =
                 m_needsAllocateMeshData ||
                 m_meshSummary.topology_variance != usdi.TopologyVariance.Constant;
 
-            // todo: update heterogenous mesh if possible
+            // todo: update heterogenous mesh when possible
             m_directVBUpdate =
-                m_stream.directVBUpdate && !m_needsAllocateMeshData && m_VB != IntPtr.Zero &&
+#if UNITY_5_5_OR_NEWER
+                m_prevVertexCount != 0 &&
+                m_stream.directVBUpdate && !m_needsAllocateMeshData &&
                 m_meshSummary.topology_variance == usdi.TopologyVariance.Homogenous;
+#else
+                false;
+#endif
 
-            if (m_needsAllocateMeshData) { usdiAllocateMeshData(time); }
-            if (m_needsUploadMeshData) { usdiReadMeshData(time); }
+            if (m_needsAllocateMeshData)
+            {
+                usdiAllocateMeshData(m_timeRead);
+            }
+
+            if (m_needsUploadMeshData)
+            {
+                if (m_directVBUpdate)
+                {
+                    usdi.usdiMeshReadSample(m_mesh, ref m_meshData, m_timeRead, false);
+                }
+                else
+                {
+#if UNITY_EDITOR
+                    if (m_stream.forceSingleThread)
+                    {
+                        usdi.usdiMeshReadSample(m_mesh, ref m_meshData, m_timeRead, true);
+                    }
+                    else
+#endif
+                    {
+                        if (m_asyncRead == null)
+                        {
+                            m_asyncRead = new usdi.Task(usdi.usdiTaskCreateMeshReadSample(m_mesh, ref m_meshData, ref m_timeRead));
+                        }
+                        m_asyncRead.Run();
+                    }
+                }
+            }
+        }
+
+
+        // sync
+        void usdiUploadMeshData(double t, bool topology, bool close)
+        {
+            if (m_directVBUpdate) { return; }
+
+            int num_submeshes = m_meshData.num_submeshes == 0 ? 1 : m_meshData.num_submeshes;
+            for (int i = 0; i < num_submeshes; ++i)
+            {
+                m_submeshes[i].usdiUploadMeshData(topology, close);
+            }
+
+            m_prevVertexCount = m_meshData.num_points;
+            m_prevIndexCount = m_meshData.num_indices_triangulated;
         }
 
         // sync
@@ -382,12 +207,29 @@ namespace UTJ
                 m_asyncRead.Wait();
             }
 
-            if(m_needsUploadMeshData)
-            {
-                usdi.usdiUniMeshAssignBounds(m_umesh, ref m_meshData.center, ref m_meshData.extents);
+            int num_submeshes = m_meshData.num_submeshes == 0 ? 1 : m_meshData.num_submeshes;
 
-                //// fall back
-                // m_umesh.bounds = new Bounds(m_meshData.center, m_meshData.extents);
+            for (int i = 0; i < num_submeshes; ++i)
+            {
+                m_submeshes[i].usdiSetupMeshComponents();
+            }
+
+            // enable / disable submesh objects
+            for (int i = 0; i < num_submeshes; ++i)
+            {
+                m_submeshes[i].usdiSetActive(true);
+            }
+            for (int i = num_submeshes; i < m_submeshes.Count; ++i)
+            {
+                m_submeshes[i].usdiSetActive(false);
+            }
+
+            if (m_needsUploadMeshData)
+            {
+                for (int i = 0; i < num_submeshes; ++i)
+                {
+                    m_submeshes[i].usdiUpdateBounds();
+                }
             }
 
             if (m_needsAllocateMeshData && m_frame == 0)
@@ -395,26 +237,22 @@ namespace UTJ
                 bool close = m_meshSummary.topology_variance == usdi.TopologyVariance.Constant;
                 usdiUploadMeshData(time, true, close);
             }
-
-            bool active = isActiveAndEnabled && m_renderer.isVisible;
-            if (m_directVBUpdate)
-            {
-                if (m_vuCmd == null)
-                {
-                    m_vuCmd = new usdi.VertexUpdateCommand(usdi.usdiGetNameS(m_mesh));
-                }
-
-                if (active)
-                {
-                    m_vuCmd.Update(ref m_meshData, m_VB, m_IB);
-                }
-            }
             else
             {
-                if (active && m_needsUploadMeshData && m_frame > 1 && !m_directVBUpdate)
+                if (m_directVBUpdate)
                 {
-                    bool updateIndices = m_meshSummary.topology_variance == usdi.TopologyVariance.Heterogenous;
-                    usdiUploadMeshData(m_timeRead, updateIndices, false);
+                    for (int i = 0; i < num_submeshes; ++i)
+                    {
+                        m_submeshes[i].usdiKickVBUpdateTask();
+                    }
+                }
+                else
+                {
+                    if (m_needsUploadMeshData && m_frame > 1 && !m_directVBUpdate)
+                    {
+                        bool updateIndices = m_meshSummary.topology_variance == usdi.TopologyVariance.Heterogenous;
+                        usdiUploadMeshData(m_timeRead, updateIndices, false);
+                    }
                 }
             }
 
