@@ -181,6 +181,8 @@ void Mesh::updateSample(Time t_)
                 needs_calculate_normals = true;
             }
             else {
+                // no normal data is present and no recalculation is required.
+                // just allocate empty normal array.
                 sample.normals.resize(sample.points.size());
                 memset(sample.normals.data(), 0, sizeof(float3)*sample.normals.size());
             }
@@ -207,7 +209,7 @@ void Mesh::updateSample(Time t_)
     }
 
     // bounds
-    ComputeBounds((float3*)sample.points.cdata(), sample.points.size(), sample.bounds_min, sample.bounds_max);
+    ComputeBounds((const float3*)sample.points.cdata(), sample.points.size(), sample.bounds_min, sample.bounds_max);
     sample.center = (sample.bounds_min + sample.bounds_max) * 0.5f;
     sample.extents = (sample.bounds_max - sample.bounds_min) * 0.5f;
 

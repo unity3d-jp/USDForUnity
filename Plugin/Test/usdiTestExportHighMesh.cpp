@@ -3,6 +3,8 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
+#include <future>
+#include <tbb/tbb.h>
 #include "../usdi/usdi.h"
 
 using usdi::float2;
@@ -32,13 +34,12 @@ static void GenerateWaveMeshTopology(std::vector<int>& counts, std::vector<int>&
     }
 }
 
-static void GenerateWaveMesh(std::vector<float3>& vertices, usdi::Time t)
+static void GenerateWaveMesh(std::vector<float3> &vertices, usdi::Time t)
 {
     const float hald_res = (float)(WaveMeshResolution / 2);
     int num_vertices = WaveMeshResolution * WaveMeshResolution;
 
     vertices.resize(num_vertices);
-
     for (int iy = 0; iy < WaveMeshResolution; ++iy) {
         for (int ix = 0; ix < WaveMeshResolution; ++ix) {
             int i = WaveMeshResolution*iy + ix;
@@ -69,25 +70,31 @@ void TestExportHighMesh(const char *filename)
 
     auto *mesh = usdiCreateMesh(ctx, xf, "WaveMesh");
     {
-        std::vector<float3> vertices;
         std::vector<int> counts;
         std::vector<int> indices;
 
         usdi::Time t = 0.0;
         GenerateWaveMeshTopology(counts, indices);
-        GenerateWaveMesh(vertices, t);
 
-        usdi::MeshData data;
-        data.points = vertices.data();
-        data.counts = counts.data();
-        data.indices = indices.data();
-        data.num_points = vertices.size();
-        data.num_counts = counts.size();
-        data.num_indices = indices.size();
+        const int max_frame = 150;
+        std::vector<std::vector<float3>> wavedata(max_frame);
+        tbb::parallel_for(0, max_frame, [&wavedata](int i) {
+            usdi::Time t = 1.0 / 30.0 * i;
+            GenerateWaveMesh(wavedata[i], t);
+        });
+        for (int i = 0; i < max_frame; ++i) {
+            auto& vertices = wavedata[i];
 
-        for (int i = 0; i < 150; ++i) {
-            t += 1.0 / 30.0;
-            GenerateWaveMesh(vertices, t);
+            usdi::Time t = 1.0 / 30.0 * i;
+            usdi::MeshData data;
+            data.points = vertices.data();
+            data.num_points = vertices.size();
+            if (i == 0) {
+                data.counts = counts.data();
+                data.indices = indices.data();
+                data.num_counts = counts.size();
+                data.num_indices = indices.size();
+            }
             usdiMeshWriteSample(mesh, &data, t);
         }
     }

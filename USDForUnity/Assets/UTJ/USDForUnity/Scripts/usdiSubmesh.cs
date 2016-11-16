@@ -13,6 +13,7 @@ namespace UTJ
         #region fields
         usdiMesh m_parent;
         int m_nth;
+        bool m_setupRequierd = true;
 
         Transform m_trans;
         MeshFilter m_meshFilter;
@@ -33,7 +34,8 @@ namespace UTJ
         #region impl
         public void usdiSetupMeshComponents()
         {
-            if (m_umesh != null) { return; }
+            if (!m_setupRequierd) { return; }
+            m_setupRequierd = false;
 
             GameObject go;
             if(m_nth == 0)
@@ -111,7 +113,6 @@ namespace UTJ
                     m_points = new Vector3[data.num_points];
                     data.points = usdi.GetArrayPtr(m_points);
                 }
-                if (summary.has_normals)
                 {
                     m_normals = new Vector3[data.num_points];
                     data.normals = usdi.GetArrayPtr(m_normals);
@@ -134,7 +135,6 @@ namespace UTJ
                     m_points = new Vector3[data.num_points];
                     data.points = usdi.GetArrayPtr(m_points);
                 }
-                if (summary.has_normals)
                 {
                     m_normals = new Vector3[data.num_points];
                     data.normals = usdi.GetArrayPtr(m_normals);
@@ -160,42 +160,38 @@ namespace UTJ
             m_indices = null;
         }
 
-        public void usdiKickVBUpdateTask()
+        public void usdiKickVBUpdateTask(ref usdi.MeshData data)
         {
-            bool active = m_trans.gameObject.activeInHierarchy && m_renderer.isVisible;
-
+            bool active = m_renderer.isVisible;
             if(active)
             {
                 if (m_vuCmd == null)
                 {
                     m_vuCmd = new usdi.VertexUpdateCommand(usdi.usdiGetNameS(m_parent.usdiObject));
                 }
-
-                var meshData = m_parent.meshData;
-                if (meshData.num_submeshes == 0)
+                m_vuCmd.Update(ref data, m_VB, IntPtr.Zero);
+            }
+        }
+        public void usdiKickVBUpdateTask(ref usdi.SubmeshData data)
+        {
+            bool active = m_renderer.isVisible;
+            if (active)
+            {
+                if (m_vuCmd == null)
                 {
-                    m_vuCmd.Update(ref meshData, m_VB, IntPtr.Zero);
+                    m_vuCmd = new usdi.VertexUpdateCommand(usdi.usdiGetNameS(m_parent.usdiObject));
                 }
-                else
-                {
-                    var submeshData = m_parent.submeshData;
-                    m_vuCmd.Update(ref submeshData[m_nth], m_VB, IntPtr.Zero);
-                }
+                m_vuCmd.Update(ref data, m_VB, IntPtr.Zero);
             }
         }
 
-        public void usdiUpdateBounds()
+        public void usdiUpdateBounds(ref usdi.MeshData data)
         {
-            var meshData = m_parent.meshData;
-            if (meshData.num_submeshes == 0)
-            {
-                usdi.usdiUniMeshAssignBounds(m_umesh, ref meshData.center, ref meshData.extents);
-            }
-            else
-            {
-                var submeshData = m_parent.submeshData;
-                usdi.usdiUniMeshAssignBounds(m_umesh, ref submeshData[m_nth].center, ref submeshData[m_nth].extents);
-            }
+            usdi.usdiUniMeshAssignBounds(m_umesh, ref data.center, ref data.extents);
+        }
+        public void usdiUpdateBounds(ref usdi.SubmeshData data)
+        {
+            usdi.usdiUniMeshAssignBounds(m_umesh, ref data.center, ref data.extents);
         }
 
         public void usdiSetActive(bool v)

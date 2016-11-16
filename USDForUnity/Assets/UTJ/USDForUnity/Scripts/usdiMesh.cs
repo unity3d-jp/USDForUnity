@@ -214,21 +214,31 @@ namespace UTJ
                 m_submeshes[i].usdiSetupMeshComponents();
             }
 
-            // enable / disable submesh objects
-            for (int i = 0; i < num_submeshes; ++i)
+            if(num_submeshes > 1 && m_meshSummary.topology_variance == usdi.TopologyVariance.Heterogenous)
             {
-                m_submeshes[i].usdiSetActive(true);
-            }
-            for (int i = num_submeshes; i < m_submeshes.Count; ++i)
-            {
-                m_submeshes[i].usdiSetActive(false);
+                // number of active submeshes may change over time if topology is dynamic.
+                for (int i = 0; i < num_submeshes; ++i)
+                {
+                    m_submeshes[i].usdiSetActive(true);
+                }
+                for (int i = num_submeshes; i < m_submeshes.Count; ++i)
+                {
+                    m_submeshes[i].usdiSetActive(false);
+                }
             }
 
             if (m_needsUploadMeshData)
             {
-                for (int i = 0; i < num_submeshes; ++i)
+                if(m_meshData.num_submeshes == 0)
                 {
-                    m_submeshes[i].usdiUpdateBounds();
+                    m_submeshes[0].usdiUpdateBounds(ref m_meshData);
+                }
+                else
+                {
+                    for (int i = 0; i < num_submeshes; ++i)
+                    {
+                        m_submeshes[i].usdiUpdateBounds(ref m_submeshData[i]);
+                    }
                 }
             }
 
@@ -241,9 +251,16 @@ namespace UTJ
             {
                 if (m_directVBUpdate)
                 {
-                    for (int i = 0; i < num_submeshes; ++i)
+                    if (m_meshData.num_submeshes == 0)
                     {
-                        m_submeshes[i].usdiKickVBUpdateTask();
+                        m_submeshes[0].usdiKickVBUpdateTask(ref m_meshData);
+                    }
+                    else
+                    {
+                        for (int i = 0; i < num_submeshes; ++i)
+                        {
+                            m_submeshes[i].usdiKickVBUpdateTask(ref m_submeshData[i]);
+                        }
                     }
                 }
                 else
