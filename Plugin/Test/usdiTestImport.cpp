@@ -103,7 +103,12 @@ static void InspectRecursive(usdi::Schema *schema)
 {
     if (!schema) { return; }
 
-    printf("  %s (%s)\n", usdiGetPath(schema), usdiGetTypeName(schema));
+    printf("  %s (%s)", usdiGetPath(schema), usdiGetTypeName(schema));
+    if (usdiIsInstance(schema)) {
+        printf(" (instance -> %s)", usdiGetPath(usdiGetMaster(schema)));
+    }
+    printf("\n");
+
     {
         int nattr = usdiGetNumAttributes(schema);
         for (int i = 0; i < nattr; ++i) {
@@ -129,6 +134,7 @@ bool TestImport(const char *path)
     else {
         InspectRecursive(usdiGetRoot(ctx));
     }
+
     usdiDestroyContext(ctx);
 
     return true;

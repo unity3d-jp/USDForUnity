@@ -267,9 +267,11 @@ usdiAPI void             usdiSetImportConfig(usdi::Context *ctx, const usdi::Imp
 usdiAPI void             usdiGetImportConfig(usdi::Context *ctx, usdi::ImportConfig *conf);
 usdiAPI void             usdiSetExportConfig(usdi::Context *ctx, const usdi::ExportConfig *conf);
 usdiAPI void             usdiGetExportConfig(usdi::Context *ctx, usdi::ExportConfig *conf);
-usdiAPI bool             usdiAddReference(usdi::Context *ctx, const char *dstprim, const char *assetpath, const char *srcprim);
+// create external reference if assetpath is valid, otherwise create internal reference
+usdiAPI bool             usdiCreateReference(usdi::Context *ctx, const char *dstprim, const char *assetpath, const char *srcprim);
 usdiAPI void             usdiFlatten(usdi::Context *ctx);
 usdiAPI usdi::Schema*    usdiGetRoot(usdi::Context *ctx);
+usdiAPI usdi::Schema*    usdiGetNodeByPath(usdi::Context *ctx, const char *path);
 usdiAPI void             usdiUpdateAllSamples(usdi::Context *ctx, usdi::Time t);
 usdiAPI void             usdiInvalidateAllSamples(usdi::Context *ctx);
 
@@ -278,6 +280,10 @@ usdiAPI int              usdiGetID(usdi::Schema *schema);
 usdiAPI const char*      usdiGetPath(usdi::Schema *schema);
 usdiAPI const char*      usdiGetName(usdi::Schema *schema);
 usdiAPI const char*      usdiGetTypeName(usdi::Schema *schema);
+//usdiAPI bool             usdiIsReference(usdi::Schema *schema);
+//usdiAPI usdi::Schema*    usdiGetReferenceSource(usdi::Schema *schema);
+usdiAPI bool             usdiIsInstance(usdi::Schema *schema);
+usdiAPI usdi::Schema*    usdiGetMaster(usdi::Schema *schema);
 usdiAPI usdi::Schema*    usdiGetParent(usdi::Schema *schema);
 usdiAPI int              usdiGetNumChildren(usdi::Schema *schema);
 usdiAPI usdi::Schema*    usdiGetChild(usdi::Schema *schema, int i);

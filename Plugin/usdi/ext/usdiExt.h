@@ -1,9 +1,6 @@
 #pragma once
 
-#ifdef usdiEnableUnityExtension
 #include "usdi.h"
-
-// ext
 
 namespace usdi {
     typedef size_t Handle;
@@ -32,4 +29,3 @@ usdiAPI usdi::Task*     usdiTaskCreateAttrReadSample(usdi::Attribute *attr, usdi
 usdiAPI usdi::Task*     usdiTaskCreateComposite(usdi::Task **tasks, int num);
 
 } // extern "C"
-#endif // usdiEnableUnityExtension

@@ -75,6 +75,23 @@ Schema::~Schema()
 
 Context*    Schema::getContext() const      { return m_ctx; }
 int         Schema::getID() const           { return m_id; }
+
+bool Schema::isInstance() const
+{
+    return m_prim.IsInstance();
+}
+
+Schema* Schema::getMaster() const
+{
+    return m_ctx->getNodeByPath(m_prim.GetMaster().GetPath().GetText());
+}
+
+
+bool Schema::isMaster() const
+{
+    return m_prim.IsMaster();
+}
+
 Schema*     Schema::getParent() const       { return m_parent; }
 size_t      Schema::getNumChildren() const  { return m_children.size(); }
 Schema*     Schema::getChild(int i) const   { return (size_t)i >= m_children.size() ? nullptr : m_children[i]; }

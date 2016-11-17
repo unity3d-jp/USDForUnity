@@ -22,6 +22,7 @@ public:
     void                setExportConfig(const ExportConfig& v);
 
     Schema*             getRootNode();
+    Schema*             getNodeByPath(const char *path);
 
     UsdStageRefPtr      getUSDStage() const;
     void                addSchema(Schema *schema);
@@ -30,7 +31,7 @@ public:
     void                updateAllSamples(Time t);
     void                invalidateAllSamples();
 
-    bool                addReference(const char *dstprim, const char *assetpath, const char *srcprim);
+    bool                createReference(const char *dstprim, const char *assetpath, const char *srcprim);
     void                flatten();
 
 private:

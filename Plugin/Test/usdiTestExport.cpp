@@ -123,13 +123,13 @@ static void TestAttributes(usdi::Schema *schema)
 
 }
 
-void TestExportMesh(const char *filename)
+void TestExport(const char *filename)
 {
     auto *ctx = usdiCreateContext();
     usdiCreateStage(ctx, filename);
     auto *root = usdiGetRoot(ctx);
 
-    auto *xf = usdiCreateXform(ctx, root, "child");
+    auto *xf = usdiCreateXform(ctx, root, "Child");
     {
         usdi::XformData data;
         usdi::Time t = 0.0;
@@ -140,7 +140,7 @@ void TestExportMesh(const char *filename)
         }
     }
 
-    auto *mesh = usdiCreateMesh(ctx, xf, "mesh[](){}<>+-");
+    auto *mesh = usdiCreateMesh(ctx, xf, "Mesh[](){}<>+-");
     {
         float3 vertices[] = {
             { -0.5f, -0.5f, 0.0f },
@@ -166,9 +166,13 @@ void TestExportMesh(const char *filename)
         }
     }
 
+    usdiCreateReference(ctx, "/Ref", "", "/Child");
+    usdiFlatten(ctx);
+
     TestAttributes(xf);
 
     usdiSave(ctx);
+    usdiSaveAs(ctx, "Hoge.usda");
     usdiDestroyContext(ctx);
 }
 
@@ -176,8 +180,7 @@ void TestExportReference(const char *filename, const char *flatten)
 {
     auto *ctx = usdiCreateContext();
     usdiCreateStage(ctx, filename);
-    usdiAddReference(ctx, "/Test", "TestExport.usda", "/child");
-    //usdiAddReference(ctx, "/HighMesh", "HighMesh.usda");
+    usdiCreateReference(ctx, "/Test", "TestExport.usda", "/Child");
     usdiSave(ctx);
 
     usdiFlatten(ctx);

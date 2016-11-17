@@ -150,11 +150,19 @@ usdiAPI usdi::Schema* usdiGetRoot(usdi::Context *ctx)
     return ctx->getRootNode();
 }
 
-usdiAPI bool usdiAddReference(usdi::Context *ctx, const char *dstprim, const char *assetpath, const char *srcprim)
+usdiAPI usdi::Schema* usdiGetNodeByPath(usdi::Context *ctx, const char *path)
+{
+    usdiTraceFunc();
+    if (!ctx) return nullptr;
+
+    return ctx->getNodeByPath(path);
+}
+
+usdiAPI bool usdiCreateReference(usdi::Context *ctx, const char *dstprim, const char *assetpath, const char *srcprim)
 {
     usdiTraceFunc();
     if (!ctx) return false;
-    return ctx->addReference(dstprim, assetpath, srcprim);
+    return ctx->createReference(dstprim, assetpath, srcprim);
 }
 
 usdiAPI void usdiFlatten(usdi::Context *ctx)
@@ -211,6 +219,35 @@ usdiAPI const char* usdiGetTypeName(usdi::Schema *schema)
     if (!schema) { return ""; }
     return schema->getTypeName();
 }
+
+//usdiAPI bool usdiIsReference(usdi::Schema *schema)
+//{
+//    usdiTraceFunc();
+//    if (!schema) { return nullptr; }
+//    return schema->isReference();
+//}
+
+//usdiAPI usdi::Schema* usdiGetReferenceSource(usdi::Schema *schema)
+//{
+//    usdiTraceFunc();
+//    if (!schema) { return nullptr; }
+//    return schema->getReferenceSource();
+//}
+
+
+usdiAPI bool usdiIsInstance(usdi::Schema *schema)
+{
+    usdiTraceFunc();
+    if (!schema) { return nullptr; }
+    return schema->isInstance();
+}
+usdiAPI usdi::Schema* usdiGetMaster(usdi::Schema *schema)
+{
+    usdiTraceFunc();
+    if (!schema) { return nullptr; }
+    return schema->getMaster();
+}
+
 
 usdiAPI usdi::Schema* usdiGetParent(usdi::Schema *schema)
 {

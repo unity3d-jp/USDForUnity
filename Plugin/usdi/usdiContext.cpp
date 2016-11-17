@@ -191,27 +191,20 @@ bool Context::open(const char *path)
 bool Context::save()
 {
     if (!m_stage) {
-        usdiLogError("m_stage is null\n");
+        usdiLogError("Context::save(): m_stage is null\n");
         return false;
     }
-    usdiLogInfo( "Context::save():\n");
-    usdiLogTrace("  scale: %f\n", m_export_config.scale);
-    usdiLogTrace("  swap_handedness: %d\n", (int)m_export_config.swap_handedness);
-    usdiLogTrace("  swap_faces: %d\n", (int)m_export_config.swap_faces);
 
+    usdiLogInfo( "Context::save():\n");
     return m_stage->GetRootLayer()->Save();
 }
 
 bool Context::saveAs(const char *path)
 {
     if (!m_stage) {
-        usdiLogError("m_stage is null\n");
+        usdiLogError("Context::saveAs(): m_stage is null\n");
         return false;
     }
-    usdiLogInfo( "Context::write(): %s\n", path);
-    usdiLogTrace("  scale: %f\n", m_export_config.scale);
-    usdiLogTrace("  swap_handedness: %d\n", (int)m_export_config.swap_handedness);
-    usdiLogTrace("  swap_faces: %d\n", (int)m_export_config.swap_faces);
 
     {
         // UsdStage::Export() fail if dst file is not exist. workaround for it 
@@ -221,6 +214,7 @@ bool Context::saveAs(const char *path)
         }
     }
 
+    usdiLogInfo("Context::saveAs(): %s\n", path);
     return m_stage->Export(path);
 }
 
@@ -251,11 +245,25 @@ Schema* Context::getRootNode()
     return m_schemas.empty() ? nullptr : m_schemas.front().get();
 }
 
+Schema* Context::getNodeByPath(const char *path)
+{
+    // obviously this is very slow. I need to improve this if this method is called very often.
+    for (auto& n : m_schemas) {
+        if (strcmp(n->getPath(), path) == 0) {
+            return n.get();
+        }
+    }
+    return nullptr;
+}
+
 UsdStageRefPtr Context::getUSDStage() const { return m_stage; }
 
 void Context::addSchema(Schema *schema)
 {
-    if (!schema) { return; }
+    if (!schema) {
+        usdiLogError("Context::addSchema(): invalid parameter\n");
+        return;
+    }
     usdiLogTrace("Context::addSchema(): %s\n", schema->getName());
     m_schemas.emplace_back(schema);
 }
@@ -288,23 +296,32 @@ void Context::invalidateAllSamples()
     }
 }
 
-bool Context::addReference(const char *dstprim, const char *assetpath, const char *srcprim)
+bool Context::createReference(const char *dstprim, const char *assetpath, const char *srcprim)
 {
-    if (!m_stage) { return false ; }
+    if (!m_stage ) {
+        usdiLogError("Context::createReference(): m_stage is null\n");
+        return false;
+    }
+    if (!dstprim || !srcprim) {
+        usdiLogError("Context::createReference(): invalid parameter\n");
+        return false;
+    }
+
+    if (!assetpath) { assetpath = ""; }
     if (auto prim = m_stage->OverridePrim(SdfPath(dstprim))) {
-        if (srcprim) {
-            return prim.GetReferences().Add(SdfReference(assetpath, SdfPath(srcprim)));
-        }
-        else {
-            return prim.GetReferences().Add(SdfReference(assetpath));
-        }
+        return prim.GetReferences().Add(SdfReference(assetpath, SdfPath(srcprim)));
     }
     return false;
 }
 
+
 void Context::flatten()
 {
-    if (!m_stage) { return; }
+    if (!m_stage) {
+        usdiLogError("Context::flatten(): m_stage is null\n");
+        return;
+    }
+
     m_stage->Flatten();
 }
 

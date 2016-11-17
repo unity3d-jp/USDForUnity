@@ -16,6 +16,12 @@ public:
     size_t              getNumChildren() const;
     Schema*             getChild(int i) const;
 
+    bool                isReference() const;
+    Schema*             getReferenceSource() const;
+    bool                isInstance() const;
+    Schema*             getMaster() const;
+    bool                isMaster() const;
+
     size_t              getNumAttributes() const;
     Attribute*          getAttribute(int i) const;
     Attribute*          findAttribute(const char *name) const;
@@ -56,8 +62,8 @@ protected:
     typedef std::vector<AttributePtr> Attributes;
 
 
-    Context     *m_ctx;
-    Schema      *m_parent;
+    Context     *m_ctx = nullptr;
+    Schema      *m_parent = nullptr;
     UsdPrim     m_prim;
     Children    m_children;
     Attributes  m_attributes;
