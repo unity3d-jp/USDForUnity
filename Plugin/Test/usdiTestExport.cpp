@@ -171,3 +171,17 @@ void TestExportMesh(const char *filename)
     usdiSave(ctx);
     usdiDestroyContext(ctx);
 }
+
+void TestExportReference(const char *filename, const char *flatten)
+{
+    auto *ctx = usdiCreateContext();
+    usdiCreateStage(ctx, filename);
+    usdiAddReference(ctx, "/Test", "TestExport.usda", "/child");
+    //usdiAddReference(ctx, "/HighMesh", "HighMesh.usda");
+    usdiSave(ctx);
+
+    usdiFlatten(ctx);
+    usdiSaveAs(ctx, flatten);
+
+    usdiDestroyContext(ctx);
+}

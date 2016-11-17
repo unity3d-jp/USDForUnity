@@ -12,10 +12,10 @@ int main(int argc, char *argv[])
     usdiSetPluginPath((cpath + "\\plugins").c_str());
 
     if (auto *mod_test = DLLLoad("usdiTests.dll")) {
-        void(*RunTests)() = nullptr;
-        (void*&)RunTests = DLLGetSymbol(mod_test, "RunTests");
-        if (RunTests) {
-            RunTests();
+        void(*TestMain)(int, char**) = nullptr;
+        (void*&)TestMain = DLLGetSymbol(mod_test, "TestMain");
+        if (TestMain) {
+            TestMain(argc, argv);
         }
     }
 }

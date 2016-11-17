@@ -150,6 +150,20 @@ usdiAPI usdi::Schema* usdiGetRoot(usdi::Context *ctx)
     return ctx->getRootNode();
 }
 
+usdiAPI bool usdiAddReference(usdi::Context *ctx, const char *dstprim, const char *assetpath, const char *srcprim)
+{
+    usdiTraceFunc();
+    if (!ctx) return false;
+    return ctx->addReference(dstprim, assetpath, srcprim);
+}
+
+usdiAPI void usdiFlatten(usdi::Context *ctx)
+{
+    usdiTraceFunc();
+    if (!ctx) return;
+    ctx->flatten();
+}
+
 usdiAPI void usdiUpdateAllSamples(usdi::Context *ctx, usdi::Time t)
 {
     usdiTraceFunc();

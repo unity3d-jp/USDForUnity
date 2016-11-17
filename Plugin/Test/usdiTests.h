@@ -11,5 +11,5 @@
 #endif
 
 extern "C" {
-testsAPI void RunTests();
+testsAPI void TestMain(int argc, char *argv[]);
 } // extern "C"

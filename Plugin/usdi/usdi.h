@@ -267,6 +267,8 @@ usdiAPI void             usdiSetImportConfig(usdi::Context *ctx, const usdi::Imp
 usdiAPI void             usdiGetImportConfig(usdi::Context *ctx, usdi::ImportConfig *conf);
 usdiAPI void             usdiSetExportConfig(usdi::Context *ctx, const usdi::ExportConfig *conf);
 usdiAPI void             usdiGetExportConfig(usdi::Context *ctx, usdi::ExportConfig *conf);
+usdiAPI bool             usdiAddReference(usdi::Context *ctx, const char *dstprim, const char *assetpath, const char *srcprim);
+usdiAPI void             usdiFlatten(usdi::Context *ctx);
 usdiAPI usdi::Schema*    usdiGetRoot(usdi::Context *ctx);
 usdiAPI void             usdiUpdateAllSamples(usdi::Context *ctx, usdi::Time t);
 usdiAPI void             usdiInvalidateAllSamples(usdi::Context *ctx);

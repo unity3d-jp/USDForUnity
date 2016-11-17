@@ -30,6 +30,9 @@ public:
     void                updateAllSamples(Time t);
     void                invalidateAllSamples();
 
+    bool                addReference(const char *dstprim, const char *assetpath, const char *srcprim);
+    void                flatten();
+
 private:
     void    applyImportConfig();
     void    createNodeRecursive(Schema *parent, UsdPrim prim, int depth);

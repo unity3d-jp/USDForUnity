@@ -213,6 +213,14 @@ bool Context::saveAs(const char *path)
     usdiLogTrace("  swap_handedness: %d\n", (int)m_export_config.swap_handedness);
     usdiLogTrace("  swap_faces: %d\n", (int)m_export_config.swap_faces);
 
+    {
+        // UsdStage::Export() fail if dst file is not exist. workaround for it 
+        FILE *f = fopen(path, "wb");
+        if (f) {
+            fclose(f);
+        }
+    }
+
     return m_stage->Export(path);
 }
 
@@ -278,6 +286,26 @@ void Context::invalidateAllSamples()
     for (auto& s : m_schemas) {
         s->invalidateSample();
     }
+}
+
+bool Context::addReference(const char *dstprim, const char *assetpath, const char *srcprim)
+{
+    if (!m_stage) { return false ; }
+    if (auto prim = m_stage->OverridePrim(SdfPath(dstprim))) {
+        if (srcprim) {
+            return prim.GetReferences().Add(SdfReference(assetpath, SdfPath(srcprim)));
+        }
+        else {
+            return prim.GetReferences().Add(SdfReference(assetpath));
+        }
+    }
+    return false;
+}
+
+void Context::flatten()
+{
+    if (!m_stage) { return; }
+    m_stage->Flatten();
 }
 
 } // namespace usdi
