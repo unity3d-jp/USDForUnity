@@ -13,7 +13,7 @@ template<class T>
 static void AddAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type, const T& v)
 {
     usdi::Time t = 0.0;
-    auto *attr = usdiCreateAttribute(schema, name, type);
+    auto *attr = usdiPrimCreateAttribute(schema, name, type);
 
     usdi::AttributeData data;
     data.data = (void*)&v;
@@ -27,7 +27,7 @@ template<class T, size_t N>
 static void AddAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type, const T (&v)[N])
 {
     usdi::Time t = 0.0;
-    auto *attr = usdiCreateAttribute(schema, name, type);
+    auto *attr = usdiPrimCreateAttribute(schema, name, type);
 
     usdi::AttributeData data;
     data.data = (void*)v;
@@ -41,7 +41,7 @@ static void AddAttribute(usdi::Schema *schema, const char *name, usdi::Attribute
 static void AddAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type, const void *&v)
 {
     usdi::Time t = 0.0;
-    auto *attr = usdiCreateAttribute(schema, name, type);
+    auto *attr = usdiPrimCreateAttribute(schema, name, type);
 
     usdi::AttributeData data;
     data.data = (void*)v;

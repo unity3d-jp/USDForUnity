@@ -372,7 +372,7 @@ namespace UTJ
                 }
                 if (m_captureRotations)
                 {
-                    m_attr_rotatrions = usdi.usdiCreateAttribute(m_usd, "rotations", usdi.AttributeType.Float4Array);
+                    m_attr_rotatrions = usdi.usdiPrimCreateAttribute(m_usd, "rotations", usdi.AttributeType.Float4Array);
                 }
             }
 

@@ -6,7 +6,7 @@ class Schema
 {
 friend class Context;
 protected:
-    Schema(Context *ctx, Schema *parent, Schema *master, std::string path, const UsdPrim& p);
+    Schema(Context *ctx, Schema *parent, Schema *master, const std::string& path, const UsdPrim& p);
     Schema(Context *ctx, Schema *parent, const UsdPrim& p);
     Schema(Context *ctx, Schema *parent, const char *name, const char *type); // for export
     void init();
@@ -14,35 +14,41 @@ protected:
 public:
     virtual ~Schema();
 
-    Context*            getContext() const;
-    int                 getID() const;
-    Schema*             getParent() const;
-    size_t              getNumChildren() const;
-    Schema*             getChild(int i) const;
+    Context*        getContext() const;
+    int             getID() const;
+    Schema*         getParent() const;
+    int             getNumChildren() const;
+    Schema*         getChild(int i) const;
 
-    size_t              getNumAttributes() const;
-    Attribute*          getAttribute(int i) const;
-    Attribute*          findAttribute(const char *name) const;
-    Attribute*          createAttribute(const char *name, AttributeType type);
+    int             getNumAttributes() const;
+    Attribute*      getAttribute(int i) const;
+    Attribute*      findAttribute(const char *name) const;
+    Attribute*      createAttribute(const char *name, AttributeType type);
 
-    Schema*             getMaster() const;
-    bool                isInstance() const;
-    bool                isInstanceable() const;
-    bool                isMaster() const;
-    void                setInstanceable(bool v);
+    int             getNumVariantSets() const;
+    const char*     getVariantSetName(int iset) const;
+    int             getNumVariants(int iset) const;
+    const char*     getVariantName(int iset, int ival) const;
+    bool            setVariantSelection(int iset, int ival);
 
-    const char*         getPath() const;
-    const char*         getName() const;
-    const char*         getTypeName() const;
-    void                getTimeRange(Time& start, Time& end) const;
-    UsdPrim             getUSDPrim() const;
+    Schema*         getMaster() const;
+    bool            isInstance() const;
+    bool            isInstanceable() const;
+    bool            isMaster() const;
+    void            setInstanceable(bool v);
 
-    bool                needsUpdate() const;
-    virtual void        updateSample(Time t);
-    virtual void        invalidateSample();
+    const char*     getPath() const;
+    const char*     getName() const;
+    const char*     getTypeName() const;
+    void            getTimeRange(Time& start, Time& end) const;
+    UsdPrim         getUSDPrim() const;
 
-    void                setUserData(void *v);
-    void*               getUserData() const;
+    bool            needsUpdate() const;
+    virtual void    updateSample(Time t);
+    virtual void    invalidateSample();
+
+    void            setUserData(void *v);
+    void*           getUserData() const;
 
     template<class Body>
     void each(const Body& body)
@@ -74,6 +80,14 @@ protected:
     typedef std::unique_ptr<Attribute> AttributePtr;
     typedef std::vector<AttributePtr> Attributes;
 
+    struct VariantSet
+    {
+        std::string name;
+        std::vector<std::string> variants;
+    };
+
+    void syncAttributes();
+    void syncVariantSets();
 
     Context         *m_ctx = nullptr;
     Schema          *m_parent = nullptr;
@@ -84,6 +98,9 @@ protected:
     UsdPrim         m_prim;
     Children        m_children;
     Attributes      m_attributes;
+
+    std::vector<VariantSet> m_variant_sets;
+
     Time            m_time_start = usdiInvalidTime, m_time_end = usdiInvalidTime;
     Time            m_time_prev = usdiInvalidTime;
     bool            m_needs_update = true;

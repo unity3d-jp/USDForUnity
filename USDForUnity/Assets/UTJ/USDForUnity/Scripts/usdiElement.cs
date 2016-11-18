@@ -8,6 +8,7 @@ namespace UTJ
         #region fields
         protected usdiStream m_stream;
         protected usdi.Schema m_schema;
+        public usdi.VariantSet[] m_variantSets;
         #endregion
 
 
@@ -22,7 +23,11 @@ namespace UTJ
 
 
         #region impl
-        public virtual void usdiOnLoad(usdi.Schema schema) { m_schema = schema; }
+        public virtual void usdiOnLoad(usdi.Schema schema)
+        {
+            m_schema = schema;
+            m_variantSets = usdi.usdiPrimGetVariantSets(m_schema);
+        }
         public abstract void usdiOnUnload();
         public abstract void usdiAsyncUpdate(double time);
         public abstract void usdiUpdate(double time);

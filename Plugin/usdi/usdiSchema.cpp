@@ -6,7 +6,7 @@
 
 namespace usdi {
 
-Schema::Schema(Context *ctx, Schema *parent, Schema *master, std::string path, const UsdPrim& p)
+Schema::Schema(Context *ctx, Schema *parent, Schema *master, const std::string& path, const UsdPrim& p)
     : m_ctx(ctx)
     , m_parent(parent)
     , m_master(master)
@@ -39,21 +39,14 @@ Schema::Schema(Context *ctx, Schema *parent, const char *name, const char *type)
 
 void Schema::init()
 {
-    if (m_parent) {
-        m_parent->addChild(this);
-    }
-
     if (m_prim && !m_master) {
+        m_path = m_prim.GetPath().GetString();
+
         // gather attributes
-        auto attrs = m_prim.GetAuthoredAttributes();
-        for (auto attr : attrs) {
-            if (auto *ret = WrapExistingAttribute(this, attr)) {
-                m_attributes.emplace_back(ret);
-            }
-        }
-        if (m_path.empty()) {
-            m_path = m_prim.GetPath().GetString();
-        }
+        syncAttributes();
+
+        // gather variant sets
+        syncVariantSets();
 
         // get start & end time
         double lower = 0.0, upper = 0.0;
@@ -77,6 +70,31 @@ void Schema::init()
     }
 }
 
+void Schema::syncAttributes()
+{
+    m_attributes.clear();
+    auto attrs = m_prim.GetAuthoredAttributes();
+    for (auto attr : attrs) {
+        if (auto *ret = WrapExistingAttribute(this, attr)) {
+            m_attributes.emplace_back(ret);
+        }
+    }
+}
+
+void Schema::syncVariantSets()
+{
+    std::vector<std::string> names;
+    auto vsets = m_prim.GetVariantSets();
+    vsets.GetNames(&names);
+    m_variant_sets.resize(names.size());
+    for (size_t i = 0; i < names.size(); ++i) {
+        auto vset = vsets.GetVariantSet(names[i]);
+        m_variant_sets[i].name = names[i];
+        m_variant_sets[i].variants = vset.GetVariantNames();
+    }
+}
+
+
 void Schema::setup()
 {
 }
@@ -97,9 +115,9 @@ void        Schema::setInstanceable(bool v) { m_prim.SetInstanceable(v); }
 
 Schema*     Schema::getParent() const       { return m_parent; }
 
-size_t Schema::getNumChildren() const
+int Schema::getNumChildren() const
 {
-    return m_children.size();
+    return (int)m_children.size();
 }
 Schema* Schema::getChild(int i) const
 {
@@ -107,7 +125,7 @@ Schema* Schema::getChild(int i) const
 }
 
 
-size_t      Schema::getNumAttributes() const { return m_attributes.size(); }
+int         Schema::getNumAttributes() const { return (int)m_attributes.size(); }
 Attribute*  Schema::getAttribute(int i) const { return (size_t)i >= m_attributes.size() ? nullptr : m_attributes[i].get(); }
 
 Attribute* Schema::findAttribute(const char *name) const
@@ -129,6 +147,25 @@ Attribute* Schema::createAttribute(const char *name, AttributeType type)
         return c;
     }
     return nullptr;
+}
+
+int         Schema::getNumVariantSets() const               { return (int)m_variant_sets.size(); }
+const char* Schema::getVariantSetName(int iset) const       { return m_variant_sets[iset].name.c_str(); }
+int         Schema::getNumVariants(int iset) const          { return (int)m_variant_sets[iset].variants.size(); }
+const char* Schema::getVariantName(int iset, int ival) const{ return m_variant_sets[iset].variants[ival].c_str(); }
+
+bool Schema::setVariantSelection(int iset, int ival)
+{
+    if (iset >= m_variant_sets.size()) {
+        usdiLogError("Schema::setVariantSelection(): iset >= m_variant_sets.size()\n");
+        return false;
+    }
+    auto& vset = m_variant_sets[iset];
+    if (ival >= vset.variants.size()) {
+        usdiLogError("Schema::setVariantSelection(): ival >= vset.variants.size()\n");
+        return false;
+    }
+    return m_prim.GetVariantSets().SetSelection(vset.name, vset.variants[ival]);
 }
 
 const char* Schema::getPath() const         { return m_path.c_str(); }

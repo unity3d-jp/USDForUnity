@@ -29,7 +29,7 @@ namespace UTJ
 
         public override void usdiAsyncUpdate(double time)
         {
-            m_needsUpdate = usdi.usdiNeedsUpdate(m_xf);
+            m_needsUpdate = usdi.usdiPrimNeedsUpdate(m_xf);
             usdi.usdiXformReadSample(m_xf, ref m_xfData, time);
         }
 

@@ -110,6 +110,13 @@ namespace UTJ
             get { return Double.NaN; }
         }
 
+        [Serializable]
+        public class VariantSet
+        {
+            public string name;
+            public string[] variants;
+        }
+
         public struct ImportConfig
         {
             public InterpolationType interpolation;
@@ -364,51 +371,87 @@ namespace UTJ
         [DllImport ("usdi")] public static extern void          usdiGetImportConfig(Context ctx, ref ImportConfig conf);
         [DllImport ("usdi")] public static extern void          usdiSetExportConfig(Context ctx, ref ExportConfig conf);
         [DllImport ("usdi")] public static extern void          usdiGetExportConfig(Context ctx, ref ExportConfig conf);
+
+        [DllImport ("usdi")] public static extern Xform         usdiCreateXform(Context ctx, Schema parent, string name);
+        [DllImport ("usdi")] public static extern Camera        usdiCreateCamera(Context ctx, Schema parent, string name);
+        [DllImport ("usdi")] public static extern Mesh          usdiCreateMesh(Context ctx, Schema parent, string name);
+        [DllImport ("usdi")] public static extern Points        usdiCreatePoints(Context ctx, Schema parent, string name);
+        [DllImport ("usdi")] public static extern Schema        usdiCreateReference(Context ctx, string dstprim, string assetpath, string srcprim);
         [DllImport ("usdi")] public static extern Schema        usdiGetRoot(Context ctx);
+        [DllImport ("usdi")] public static extern Schema        usdiFindSchema(Context ctx, string path);
 
         [DllImport ("usdi")] public static extern void          usdiUpdateAllSamples(Context ctx, double t);
         [DllImport ("usdi")] public static extern void          usdiInvalidateAllSamples(Context ctx);
 
-        // Schema interface
-        [DllImport ("usdi")] public static extern int           usdiGetID(Schema schema);
-        [DllImport ("usdi")] public static extern IntPtr        usdiGetPath(Schema schema);
-        [DllImport ("usdi")] public static extern IntPtr        usdiGetName(Schema schema);
-        [DllImport ("usdi")] public static extern IntPtr        usdiGetTypeName(Schema schema);
-        [DllImport ("usdi")] public static extern Schema        usdiGetParent(Schema schema);
-        [DllImport ("usdi")] public static extern int           usdiGetNumChildren(Schema schema);
-        [DllImport ("usdi")] public static extern Schema        usdiGetChild(Schema schema, int i);
-        [DllImport ("usdi")] public static extern int           usdiGetNumAttributes(Schema schema);
-        [DllImport ("usdi")] public static extern Attribute     usdiGetAttribute(Schema schema, int i);
-        [DllImport ("usdi")] public static extern Attribute     usdiFindAttribute(Schema schema, string name);
-        [DllImport ("usdi")] public static extern Attribute     usdiCreateAttribute(Schema schema, string name, AttributeType type);
-        [DllImport ("usdi")] public static extern Bool          usdiNeedsUpdate(Schema schema);
+        // Prim interface
+        [DllImport ("usdi")] public static extern int           usdiPrimGetID(Schema schema);
+        [DllImport ("usdi")] public static extern IntPtr        usdiPrimGetPath(Schema schema);
+        [DllImport ("usdi")] public static extern IntPtr        usdiPrimGetName(Schema schema);
+        [DllImport ("usdi")] public static extern IntPtr        usdiPrimGetTypeName(Schema schema);
 
-        public static string usdiGetPathS(Schema schema) { return Marshal.PtrToStringAnsi(usdiGetPath(schema)); }
-        public static string usdiGetNameS(Schema schema) { return Marshal.PtrToStringAnsi(usdiGetName(schema)); }
-        public static string usdiGetTypeNameS(Schema schema) { return Marshal.PtrToStringAnsi(usdiGetTypeName(schema)); }
+        [DllImport ("usdi")] public static extern Schema        usdiPrimGetMaster(Schema schema);
+        [DllImport ("usdi")] public static extern void          usdiPrimSetInstanceable(Schema schema, Bool v);
+
+        [DllImport ("usdi")] public static extern Schema        usdiPrimGetParent(Schema schema);
+        [DllImport ("usdi")] public static extern int           usdiPrimGetNumChildren(Schema schema);
+        [DllImport ("usdi")] public static extern Schema        usdiPrimGetChild(Schema schema, int i);
+
+        [DllImport ("usdi")] public static extern int           usdiPrimGetNumAttributes(Schema schema);
+        [DllImport ("usdi")] public static extern Attribute     usdiPrimGetAttribute(Schema schema, int i);
+        [DllImport ("usdi")] public static extern Attribute     usdiPrimFindAttribute(Schema schema, string name);
+        [DllImport ("usdi")] public static extern Attribute     usdiPrimCreateAttribute(Schema schema, string name, AttributeType type);
+        
+        [DllImport ("usdi")] public static extern int           usdiPrimGetNumVariantSets(Schema schema);
+        [DllImport ("usdi")] public static extern IntPtr        usdiPrimGetVariantSetName(Schema schema, int iset);
+        [DllImport ("usdi")] public static extern int           usdiPrimGetNumVariants(Schema schema, int iset);
+        [DllImport ("usdi")] public static extern IntPtr        usdiPrimGetVariantName(Schema schema, int iset, int ival);
+        [DllImport ("usdi")] public static extern Bool          usdiPrimSetVariantSelection(Schema schema, int iset, int ival);
+
+        [DllImport ("usdi")] public static extern Bool          usdiPrimNeedsUpdate(Schema schema);
+
+        public static VariantSet[] usdiPrimGetVariantSets(Schema schema)
+        {
+            int nset = usdiPrimGetNumVariantSets(schema);
+            var vsets = new VariantSet[nset];
+            for (int iset = 0; iset < nset; ++iset)
+            {
+                var name = S(usdiPrimGetVariantSetName(schema, iset));
+                int nval = usdiPrimGetNumVariants(schema, iset);
+                var vals = new string[nval];
+                for (int ival = 0; ival < nval; ++ival)
+                {
+                    vals[ival] = S(usdiPrimGetVariantName(schema, iset, ival));
+                }
+                vsets[iset] = new VariantSet {
+                    name = name,
+                    variants = vals,
+                };
+            }
+            return vsets;
+        }
+
+        public static string usdiPrimGetPathS(Schema schema) { return S(usdiPrimGetPath(schema)); }
+        public static string usdiPrimGetNameS(Schema schema) { return S(usdiPrimGetName(schema)); }
+        public static string usdiPrimGetTypeNameS(Schema schema) { return S(usdiPrimGetTypeName(schema)); }
 
         // Xform interface
         [DllImport ("usdi")] public static extern Xform         usdiAsXform(Schema schema);
-        [DllImport ("usdi")] public static extern Xform         usdiCreateXform(Context ctx, Schema parent, string name);
         [DllImport ("usdi")] public static extern Bool          usdiXformReadSample(Xform xf, ref XformData dst, double t);
         [DllImport ("usdi")] public static extern Bool          usdiXformWriteSample(Xform xf, ref XformData src, double t);
 
         // Camera interface
         [DllImport ("usdi")] public static extern Camera        usdiAsCamera(Schema schema);
-        [DllImport ("usdi")] public static extern Camera        usdiCreateCamera(Context ctx, Schema parent, string name);
         [DllImport ("usdi")] public static extern Bool          usdiCameraReadSample(Camera cam, ref CameraData dst, double t);
         [DllImport ("usdi")] public static extern Bool          usdiCameraWriteSample(Camera cam, ref CameraData src, double t);
 
         // Mesh interface
         [DllImport ("usdi")] public static extern Mesh          usdiAsMesh(Schema schema);
-        [DllImport ("usdi")] public static extern Mesh          usdiCreateMesh(Context ctx, Schema parent, string name);
         [DllImport ("usdi")] public static extern void          usdiMeshGetSummary(Mesh mesh, ref MeshSummary dst);
         [DllImport ("usdi")] public static extern Bool          usdiMeshReadSample(Mesh mesh, ref MeshData dst, double t, Bool copy);
         [DllImport ("usdi")] public static extern Bool          usdiMeshWriteSample(Mesh mesh, ref MeshData src, double t);
 
         // Points interface
         [DllImport ("usdi")] public static extern Points        usdiAsPoints(Schema schema);
-        [DllImport ("usdi")] public static extern Points        usdiCreatePoints(Context ctx, Schema parent, string name);
         [DllImport ("usdi")] public static extern void          usdiPointsGetSummary(Points points, ref PointsSummary dst);
         [DllImport ("usdi")] public static extern Bool          usdiPointsReadSample(Points points, ref PointsData dst, double t, Bool copy);
         [DllImport ("usdi")] public static extern Bool          usdiPointsWriteSample(Points points, ref PointsData src, double t);

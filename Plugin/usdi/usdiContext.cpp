@@ -130,19 +130,11 @@ bool Context::open(const char *path)
     m_start_time = m_stage->GetStartTimeCode();
     m_end_time = m_stage->GetEndTimeCode();
 
-    //UsdPrim root_prim = m_stage->GetDefaultPrim();
-    UsdPrim root_prim = m_stage->GetPseudoRoot();
-
-    // Check if prim exists.  Exit if not
+    auto root_prim = m_stage->GetPseudoRoot();
     if (!root_prim.IsValid()) {
         usdiLogWarning("Context::open(): root prim is not valid\n");
         initialize();
         return false;
-    }
-
-    // Set the variants on the usdRootPrim
-    for (auto it = m_variants.begin(); it != m_variants.end(); ++it) {
-        root_prim.GetVariantSet(it->first).SetVariantSelection(it->second);
     }
 
     createSchemaRecursive(nullptr, root_prim);
@@ -206,7 +198,7 @@ Schema* Context::getRootSchema()
     return m_schemas.empty() ? nullptr : m_schemas.front().get();
 }
 
-Schema* Context::findSchemaByPath(const char *path)
+Schema* Context::findSchema(const char *path)
 {
     // obviously this is very slow. I need to improve this if this method is called very often.
     for (auto& n : m_schemas) {
@@ -263,6 +255,7 @@ T* Context::createSchema(Schema *parent, const char *name)
 {
     T *ret = new T(this, parent, name);
     addSchema(ret);
+    if (parent) { parent->addChild(ret); }
     return ret;
 }
 template<class T>
@@ -270,6 +263,7 @@ T* Context::createSchema(Schema *parent, const UsdPrim& t)
 {
     T *ret = new T(this, parent, t);
     addSchema(ret);
+    if (parent) { parent->addChild(ret); }
     return ret;
 }
 #define Instanciate(T)\
@@ -304,7 +298,16 @@ Schema* Context::createSchema(Schema *parent, UsdPrim prim)
 
     if (ret) {
         addSchema(ret);
+        if (parent) { parent->addChild(ret); }
     }
+    return ret;
+}
+
+Schema* Context::createSchema(Schema *parent, Schema *master, const std::string& path, UsdPrim prim)
+{
+    auto *ret = new Schema(this, parent, master, path, prim);
+    addSchema(ret);
+    if (parent) { parent->addChild(ret); }
     return ret;
 }
 
@@ -314,7 +317,7 @@ Schema* Context::createSchemaRecursive(Schema *parent, UsdPrim prim)
 
     auto *ret = createSchema(parent, prim);
     if (prim.IsInstance()) {
-        if (!findSchemaByPath(prim.GetMaster().GetPath().GetText())) {
+        if (!findSchema(prim.GetMaster().GetPath().GetText())) {
             createSchemaRecursive(nullptr, prim.GetMaster());
         }
         auto children = prim.GetMaster().GetChildren();
@@ -333,7 +336,7 @@ Schema* Context::createSchemaRecursive(Schema *parent, UsdPrim prim)
 
 Schema* Context::createReferenceSchemaRecursive(Schema *parent, UsdPrim prim)
 {
-    Schema *master = findSchemaByPath(prim.GetPath().GetText());
+    Schema *master = findSchema(prim.GetPath().GetText());
 
     std::string path = parent ? parent->getPath() : "/";
     if (path.back() != '/') {
@@ -341,10 +344,7 @@ Schema* Context::createReferenceSchemaRecursive(Schema *parent, UsdPrim prim)
     }
     path += prim.GetName();
 
-
-    auto *ret = new Schema(this, parent, master, path, prim);
-    addSchema(ret);
-
+    auto *ret = createSchema(parent, master, path, prim);
     auto children = prim.GetChildren();
     for (auto c : children) {
         createReferenceSchemaRecursive(ret, c);
@@ -367,7 +367,7 @@ Schema* Context::createReference(const char *dstprim, const char *assetpath, con
     if (auto prim = m_stage->OverridePrim(SdfPath(dstprim))) {
         if (prim.GetReferences().Add(SdfReference(assetpath, SdfPath(srcprim)))) {
             // created successfully
-            auto *ret = findSchemaByPath(dstprim);
+            auto *ret = findSchema(dstprim);
             if (!ret) {
                 ret = new Schema(this, nullptr, prim);
                 addSchema(ret);

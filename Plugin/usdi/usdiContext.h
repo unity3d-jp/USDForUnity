@@ -22,7 +22,7 @@ public:
     void                setExportConfig(const ExportConfig& v);
 
     Schema*             getRootSchema();
-    Schema*             findSchemaByPath(const char *path);
+    Schema*             findSchema(const char *path);
 
     UsdStageRefPtr      getUSDStage() const;
     int                 generateID();
@@ -34,6 +34,7 @@ public:
     template<class T> T* createSchema(Schema *parent, const char *name);
     template<class T> T* createSchema(Schema *parent, const UsdPrim& t);
     Schema*              createSchema(Schema *parent, UsdPrim prim);
+    Schema*              createSchema(Schema *parent, Schema *master, const std::string& path, UsdPrim prim);
     Schema*              createSchemaRecursive(Schema *parent, UsdPrim prim);
     Schema*              createReferenceSchemaRecursive(Schema *parent, UsdPrim prim);
     Schema*              createReference(const char *dstprim, const char *assetpath, const char *srcprim);
@@ -44,14 +45,12 @@ private:
     void    applyImportConfig();
 
 private:
-    typedef std::map<std::string, std::string> Variants;
     typedef std::unique_ptr<Schema> SchemaPtr;
     typedef std::vector<SchemaPtr> Schemas;
 
     UsdStageRefPtr  m_stage;
     Schemas         m_schemas;
     std::string     m_prim_root;
-    Variants        m_variants;
 
     ImportConfig    m_import_config;
     ExportConfig    m_export_config;

@@ -150,12 +150,12 @@ usdiAPI usdi::Schema* usdiGetRoot(usdi::Context *ctx)
     return ctx->getRootSchema();
 }
 
-usdiAPI usdi::Schema* usdiFindSchemaByPath(usdi::Context *ctx, const char *path)
+usdiAPI usdi::Schema* usdiFindSchema(usdi::Context *ctx, const char *path)
 {
     usdiTraceFunc();
     if (!ctx) return nullptr;
 
-    return ctx->findSchemaByPath(path);
+    return ctx->findSchema(path);
 }
 
 usdiAPI usdi::Schema* usdiCreateReference(usdi::Context *ctx, const char *dstprim, const char *assetpath, const char *srcprim)
@@ -192,59 +192,56 @@ usdiAPI void usdiInvalidateAllSamples(usdi::Context *ctx)
 
 // Schema interface
 
-usdiAPI int usdiGetID(usdi::Schema *schema)
+usdiAPI int usdiPrimGetID(usdi::Schema *schema)
 {
     usdiTraceFunc();
     if (!schema) { return 0; }
     return schema->getID();
 }
-
-usdiAPI const char* usdiGetPath(usdi::Schema *schema)
+usdiAPI const char* usdiPrimGetPath(usdi::Schema *schema)
 {
     usdiTraceFunc();
     if (!schema) { return ""; }
     return schema->getPath();
 }
-
-usdiAPI const char* usdiGetName(usdi::Schema *schema)
+usdiAPI const char* usdiPrimGetName(usdi::Schema *schema)
 {
     usdiTraceFunc();
     if (!schema) { return ""; }
     return schema->getName();
 }
-
-usdiAPI const char* usdiGetTypeName(usdi::Schema *schema)
+usdiAPI const char* usdiPrimGetTypeName(usdi::Schema *schema)
 {
     usdiTraceFunc();
     if (!schema) { return ""; }
     return schema->getTypeName();
 }
 
-usdiAPI usdi::Schema* usdiGetMaster(usdi::Schema *schema)
+usdiAPI usdi::Schema* usdiPrimGetMaster(usdi::Schema *schema)
 {
     usdiTraceFunc();
     if (!schema) { return nullptr; }
     return schema->getMaster();
 }
-usdiAPI bool usdiIsInstance(usdi::Schema *schema)
+usdiAPI bool usdiPrimIsInstance(usdi::Schema *schema)
 {
     usdiTraceFunc();
     if (!schema) { return nullptr; }
     return schema->isInstance();
 }
-usdiAPI bool usdiIsInstanceable(usdi::Schema *schema)
+usdiAPI bool usdiPrimIsInstanceable(usdi::Schema *schema)
 {
     usdiTraceFunc();
     if (!schema) { return nullptr; }
     return schema->isInstanceable();
 }
-usdiAPI bool usdiIsMaster(usdi::Schema *schema)
+usdiAPI bool usdiPrimIsMaster(usdi::Schema *schema)
 {
     usdiTraceFunc();
     if (!schema) { return nullptr; }
     return schema->isMaster();
 }
-usdiAPI void usdiSetInstanceable(usdi::Schema *schema, bool v)
+usdiAPI void usdiPrimSetInstanceable(usdi::Schema *schema, bool v)
 {
     usdiTraceFunc();
     if (!schema) { return; }
@@ -252,56 +249,82 @@ usdiAPI void usdiSetInstanceable(usdi::Schema *schema, bool v)
 }
 
 
-usdiAPI usdi::Schema* usdiGetParent(usdi::Schema *schema)
+usdiAPI usdi::Schema* usdiPrimGetParent(usdi::Schema *schema)
 {
     usdiTraceFunc();
     if (!schema) { return nullptr; }
     return schema->getParent();
 }
-
-usdiAPI int usdiGetNumChildren(usdi::Schema *schema)
+usdiAPI int usdiPrimGetNumChildren(usdi::Schema *schema)
 {
     usdiTraceFunc();
     if (!schema) return 0;
     return (int)schema->getNumChildren();
 }
-
-usdiAPI usdi::Schema* usdiGetChild(usdi::Schema *schema, int i)
+usdiAPI usdi::Schema* usdiPrimGetChild(usdi::Schema *schema, int i)
 {
     usdiTraceFunc();
     if (!schema) return nullptr;
     return schema->getChild(i);
 
 }
-usdiAPI int usdiGetNumAttributes(usdi::Schema *schema)
+usdiAPI int usdiPrimGetNumAttributes(usdi::Schema *schema)
 {
     usdiTraceFunc();
     if (!schema) { return 0; }
     return (int)schema->getNumAttributes();
 }
-
-usdiAPI usdi::Attribute* usdiGetAttribute(usdi::Schema *schema, int i)
+usdiAPI usdi::Attribute* usdiPrimGetAttribute(usdi::Schema *schema, int i)
 {
     usdiTraceFunc();
     if (!schema) { return nullptr; }
     return schema->getAttribute(i);
 }
-
-usdiAPI usdi::Attribute* usdiFindAttribute(usdi::Schema *schema, const char *name)
+usdiAPI usdi::Attribute* usdiPrimFindAttribute(usdi::Schema *schema, const char *name)
 {
     usdiTraceFunc();
     if (!schema) { return nullptr; }
     return schema->findAttribute(name);
 }
-
-usdiAPI usdi::Attribute* usdiCreateAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type)
+usdiAPI usdi::Attribute* usdiPrimCreateAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type)
 {
     usdiTraceFunc();
     if (!schema) { return nullptr; }
     return schema->createAttribute(name, type);
 }
 
-usdiAPI bool usdiNeedsUpdate(usdi::Schema *schema)
+usdiAPI int usdiPrimGetNumVariantSets(usdi::Schema *schema)
+{
+    usdiTraceFunc();
+    if (!schema) { return 0; }
+    return schema->getNumVariantSets();
+}
+usdiAPI const char* usdiPrimGetVariantSetName(usdi::Schema *schema, int iset)
+{
+    usdiTraceFunc();
+    if (!schema) { return ""; }
+    return schema->getVariantSetName(iset);
+}
+usdiAPI int usdiPrimGetNumVariants(usdi::Schema *schema, int iset)
+{
+    usdiTraceFunc();
+    if (!schema) { return 0; }
+    return schema->getNumVariants(iset);
+}
+usdiAPI const char* usdiPrimGetVariantName(usdi::Schema *schema, int iset, int ival)
+{
+    usdiTraceFunc();
+    if (!schema) { return ""; }
+    return schema->getVariantName(iset, ival);
+}
+usdiAPI bool usdiPrimSetVariantSelection(usdi::Schema *schema, int iset, int ival)
+{
+    usdiTraceFunc();
+    if (!schema) { return false; }
+    return schema->setVariantSelection(iset, ival);
+}
+
+usdiAPI bool usdiPrimNeedsUpdate(usdi::Schema *schema)
 {
     usdiTraceFunc();
     if (!schema) { return false; }

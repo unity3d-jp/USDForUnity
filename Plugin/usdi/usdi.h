@@ -277,29 +277,38 @@ usdiAPI usdi::Points*    usdiCreatePoints(usdi::Context *ctx, usdi::Schema *pare
 // create external reference if assetpath is valid, otherwise create internal reference
 usdiAPI usdi::Schema*    usdiCreateReference(usdi::Context *ctx, const char *dstprim, const char *assetpath, const char *srcprim);
 usdiAPI usdi::Schema*    usdiGetRoot(usdi::Context *ctx);
-usdiAPI usdi::Schema*    usdiFindSchemaByPath(usdi::Context *ctx, const char *path);
+usdiAPI usdi::Schema*    usdiFindSchema(usdi::Context *ctx, const char *path);
 
 usdiAPI void             usdiUpdateAllSamples(usdi::Context *ctx, usdi::Time t);
 usdiAPI void             usdiInvalidateAllSamples(usdi::Context *ctx);
 
-// Schema interface
-usdiAPI int              usdiGetID(usdi::Schema *schema);
-usdiAPI const char*      usdiGetPath(usdi::Schema *schema);
-usdiAPI const char*      usdiGetName(usdi::Schema *schema);
-usdiAPI const char*      usdiGetTypeName(usdi::Schema *schema);
-usdiAPI usdi::Schema*    usdiGetMaster(usdi::Schema *schema);
-usdiAPI bool             usdiIsInstance(usdi::Schema *schema);
-usdiAPI bool             usdiIsInstanceable(usdi::Schema *schema);
-usdiAPI bool             usdiIsMaster(usdi::Schema *schema);
-usdiAPI void             usdiSetInstanceable(usdi::Schema *schema, bool v);
-usdiAPI usdi::Schema*    usdiGetParent(usdi::Schema *schema);
-usdiAPI int              usdiGetNumChildren(usdi::Schema *schema);
-usdiAPI usdi::Schema*    usdiGetChild(usdi::Schema *schema, int i);
-usdiAPI int              usdiGetNumAttributes(usdi::Schema *schema);
-usdiAPI usdi::Attribute* usdiGetAttribute(usdi::Schema *schema, int i);
-usdiAPI usdi::Attribute* usdiFindAttribute(usdi::Schema *schema, const char *name);
-usdiAPI usdi::Attribute* usdiCreateAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type);
-usdiAPI bool             usdiNeedsUpdate(usdi::Schema *schema);
+// Prim interface
+usdiAPI int              usdiPrimGetID(usdi::Schema *schema);
+usdiAPI const char*      usdiPrimGetPath(usdi::Schema *schema);
+usdiAPI const char*      usdiPrimGetName(usdi::Schema *schema);
+usdiAPI const char*      usdiPrimGetTypeName(usdi::Schema *schema);
+
+usdiAPI usdi::Schema*    usdiPrimGetMaster(usdi::Schema *schema);
+usdiAPI bool             usdiPrimIsInstance(usdi::Schema *schema);
+usdiAPI bool             usdiPrimIsInstanceable(usdi::Schema *schema);
+usdiAPI bool             usdiPrimIsMaster(usdi::Schema *schema);
+usdiAPI void             usdiPrimSetInstanceable(usdi::Schema *schema, bool v);
+
+usdiAPI usdi::Schema*    usdiPrimGetParent(usdi::Schema *schema);
+usdiAPI int              usdiPrimGetNumChildren(usdi::Schema *schema);
+usdiAPI usdi::Schema*    usdiPrimGetChild(usdi::Schema *schema, int i);
+
+usdiAPI int              usdiPrimGetNumAttributes(usdi::Schema *schema);
+usdiAPI usdi::Attribute* usdiPrimGetAttribute(usdi::Schema *schema, int i);
+usdiAPI usdi::Attribute* usdiPrimFindAttribute(usdi::Schema *schema, const char *name);
+usdiAPI usdi::Attribute* usdiPrimCreateAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type);
+
+usdiAPI int              usdiPrimGetNumVariantSets(usdi::Schema *schema);
+usdiAPI int              usdiPrimGetNumVariants(usdi::Schema *schema, int iset);
+usdiAPI const char*      usdiPrimGetVariantName(usdi::Schema *schema, int iset, int ival);
+usdiAPI bool             usdiPrimSetVariantSelection(usdi::Schema *schema, int iset, int ival);
+
+usdiAPI bool             usdiPrimNeedsUpdate(usdi::Schema *schema);
 
 // Xform interface
 usdiAPI usdi::Xform*     usdiAsXform(usdi::Schema *schema); // dynamic cast to Xform

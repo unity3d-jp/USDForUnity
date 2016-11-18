@@ -40,7 +40,7 @@ namespace UTJ
                 return;
             }
             usdi.usdiPointsGetSummary(m_points, ref m_summary);
-            m_attrRot = usdi.usdiFindAttribute(m_points, "rotations");
+            m_attrRot = usdi.usdiPrimFindAttribute(m_points, "rotations");
         }
 
         public override void usdiOnUnload()

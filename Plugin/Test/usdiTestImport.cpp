@@ -103,32 +103,32 @@ static void InspectRecursive(usdi::Schema *schema)
 {
     if (!schema) { return; }
 
-    printf("  %s [%p] (%s", usdiGetPath(schema), schema, usdiGetTypeName(schema));
-    if (usdiIsInstanceable(schema)) {
+    printf("  %s [%p] (%s", usdiPrimGetPath(schema), schema, usdiPrimGetTypeName(schema));
+    if (usdiPrimIsInstanceable(schema)) {
         printf(", instanceable");
     }
-    if (usdiIsInstance(schema)) {
-        printf(", instance of %s", usdiGetPath(usdiGetMaster(schema)));
+    if (usdiPrimIsInstance(schema)) {
+        printf(", instance of %s", usdiPrimGetPath(usdiPrimGetMaster(schema)));
     }
-    if (usdiIsMaster(schema)) {
+    if (usdiPrimIsMaster(schema)) {
         printf(", master");
     }
     printf(")\n");
 
     {
         usdi::Schema *r = schema;
-        if (usdiIsInstance(schema)) {
-            r = usdiGetMaster(schema);
+        if (auto master = usdiPrimGetMaster(schema)) {
+            r = master;
         }
-        int nattr = usdiGetNumAttributes(r);
+        int nattr = usdiPrimGetNumAttributes(r);
         for (int i = 0; i < nattr; ++i) {
-            InspectAttribute(usdiGetAttribute(r, i));
+            InspectAttribute(usdiPrimGetAttribute(r, i));
         }
     }
 
-    int num_children = usdiGetNumChildren(schema);
+    int num_children = usdiPrimGetNumChildren(schema);
     for (int i = 0; i < num_children; ++i) {
-        auto child = usdiGetChild(schema, i);
+        auto child = usdiPrimGetChild(schema, i);
         InspectRecursive(child);
     }
 }

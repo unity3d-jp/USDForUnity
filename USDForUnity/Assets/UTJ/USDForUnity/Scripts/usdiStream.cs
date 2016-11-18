@@ -87,7 +87,7 @@ namespace UTJ
         static usdiElement usdiCreateNode(Transform parent, usdi.Schema schema)
         {
             {
-                var name = usdi.S(usdi.usdiGetName(schema));
+                var name = usdi.S(usdi.usdiPrimGetName(schema));
                 var child = parent.FindChild(name);
                 if (child != null)
                 {
@@ -138,7 +138,7 @@ namespace UTJ
             if(go != null)
             {
                 go.GetComponent<Transform>().SetParent(parent);
-                go.name = usdi.S(usdi.usdiGetName(schema));
+                go.name = usdi.S(usdi.usdiPrimGetName(schema));
             }
 
             return elem;
@@ -157,10 +157,10 @@ namespace UTJ
             }
 
             var trans = elem == null ? parent : elem.GetComponent<Transform>();
-            int num_children = usdi.usdiGetNumChildren(schema);
+            int num_children = usdi.usdiPrimGetNumChildren(schema);
             for(int ci = 0; ci < num_children; ++ci)
             {
-                var child = usdi.usdiGetChild(schema, ci);
+                var child = usdi.usdiPrimGetChild(schema, ci);
                 usdiCreateNodeRecursive(trans, child, node_handler);
             }
         }
