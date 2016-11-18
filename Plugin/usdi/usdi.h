@@ -267,11 +267,17 @@ usdiAPI void             usdiSetImportConfig(usdi::Context *ctx, const usdi::Imp
 usdiAPI void             usdiGetImportConfig(usdi::Context *ctx, usdi::ImportConfig *conf);
 usdiAPI void             usdiSetExportConfig(usdi::Context *ctx, const usdi::ExportConfig *conf);
 usdiAPI void             usdiGetExportConfig(usdi::Context *ctx, usdi::ExportConfig *conf);
+
+usdiAPI usdi::Xform*     usdiCreateXform(usdi::Context *ctx, usdi::Schema *parent, const char *name);
+usdiAPI usdi::Camera*    usdiCreateCamera(usdi::Context *ctx, usdi::Schema *parent, const char *name);
+usdiAPI usdi::Mesh*      usdiCreateMesh(usdi::Context *ctx, usdi::Schema *parent, const char *name);
+usdiAPI usdi::Points*    usdiCreatePoints(usdi::Context *ctx, usdi::Schema *parent, const char *name);
 // create external reference if assetpath is valid, otherwise create internal reference
-usdiAPI bool             usdiCreateReference(usdi::Context *ctx, const char *dstprim, const char *assetpath, const char *srcprim);
+usdiAPI usdi::Schema*    usdiCreateReference(usdi::Context *ctx, const char *dstprim, const char *assetpath, const char *srcprim);
 usdiAPI void             usdiFlatten(usdi::Context *ctx);
 usdiAPI usdi::Schema*    usdiGetRoot(usdi::Context *ctx);
-usdiAPI usdi::Schema*    usdiGetNodeByPath(usdi::Context *ctx, const char *path);
+usdiAPI usdi::Schema*    usdiFindSchemaByPath(usdi::Context *ctx, const char *path);
+
 usdiAPI void             usdiUpdateAllSamples(usdi::Context *ctx, usdi::Time t);
 usdiAPI void             usdiInvalidateAllSamples(usdi::Context *ctx);
 
@@ -280,10 +286,10 @@ usdiAPI int              usdiGetID(usdi::Schema *schema);
 usdiAPI const char*      usdiGetPath(usdi::Schema *schema);
 usdiAPI const char*      usdiGetName(usdi::Schema *schema);
 usdiAPI const char*      usdiGetTypeName(usdi::Schema *schema);
-//usdiAPI bool             usdiIsReference(usdi::Schema *schema);
-//usdiAPI usdi::Schema*    usdiGetReferenceSource(usdi::Schema *schema);
+usdiAPI void             usdiSetInstanceable(usdi::Schema *schema, bool v);
 usdiAPI bool             usdiIsInstance(usdi::Schema *schema);
 usdiAPI usdi::Schema*    usdiGetMaster(usdi::Schema *schema);
+usdiAPI bool             usdiIsMaster(usdi::Schema *schema);
 usdiAPI usdi::Schema*    usdiGetParent(usdi::Schema *schema);
 usdiAPI int              usdiGetNumChildren(usdi::Schema *schema);
 usdiAPI usdi::Schema*    usdiGetChild(usdi::Schema *schema, int i);
@@ -295,28 +301,24 @@ usdiAPI bool             usdiNeedsUpdate(usdi::Schema *schema);
 
 // Xform interface
 usdiAPI usdi::Xform*     usdiAsXform(usdi::Schema *schema); // dynamic cast to Xform
-usdiAPI usdi::Xform*     usdiCreateXform(usdi::Context *ctx, usdi::Schema *parent, const char *name);
 usdiAPI void             usdiXformGetSummary(usdi::Xform *xf, usdi::XformSummary *dst);
 usdiAPI bool             usdiXformReadSample(usdi::Xform *xf, usdi::XformData *dst, usdi::Time t);
 usdiAPI bool             usdiXformWriteSample(usdi::Xform *xf, const usdi::XformData *src, usdi::Time t);
 
 // Camera interface
 usdiAPI usdi::Camera*    usdiAsCamera(usdi::Schema *schema); // dynamic cast to Camera
-usdiAPI usdi::Camera*    usdiCreateCamera(usdi::Context *ctx, usdi::Schema *parent, const char *name);
 usdiAPI void             usdiCameraGetSummary(usdi::Camera *cam, usdi::CameraSummary *dst);
 usdiAPI bool             usdiCameraReadSample(usdi::Camera *cam, usdi::CameraData *dst, usdi::Time t);
 usdiAPI bool             usdiCameraWriteSample(usdi::Camera *cam, const usdi::CameraData *src, usdi::Time t);
 
 // Mesh interface
 usdiAPI usdi::Mesh*      usdiAsMesh(usdi::Schema *schema); // dynamic cast to Mesh
-usdiAPI usdi::Mesh*      usdiCreateMesh(usdi::Context *ctx, usdi::Schema *parent, const char *name);
 usdiAPI void             usdiMeshGetSummary(usdi::Mesh *mesh, usdi::MeshSummary *dst);
 usdiAPI bool             usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t, bool copy);
 usdiAPI bool             usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t);
 
 // Points interface
 usdiAPI usdi::Points*    usdiAsPoints(usdi::Schema *schema); // dynamic cast to Points
-usdiAPI usdi::Points*    usdiCreatePoints(usdi::Context *ctx, usdi::Schema *parent, const char *name);
 usdiAPI void             usdiPointsGetSummary(usdi::Points *points, usdi::PointsSummary *dst);
 usdiAPI bool             usdiPointsReadSample(usdi::Points *points, usdi::PointsData *dst, usdi::Time t, bool copy);
 usdiAPI bool             usdiPointsWriteSample(usdi::Points *points, const usdi::PointsData *src, usdi::Time t);

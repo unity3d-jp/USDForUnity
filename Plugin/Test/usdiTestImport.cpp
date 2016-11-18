@@ -107,6 +107,9 @@ static void InspectRecursive(usdi::Schema *schema)
     if (usdiIsInstance(schema)) {
         printf(" (instance -> %s)", usdiGetPath(usdiGetMaster(schema)));
     }
+    if (usdiIsMaster(schema)) {
+        printf(" (master)");
+    }
     printf("\n");
 
     {

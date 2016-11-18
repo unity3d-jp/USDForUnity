@@ -147,18 +147,18 @@ usdiAPI usdi::Schema* usdiGetRoot(usdi::Context *ctx)
     usdiTraceFunc();
     if (!ctx) return nullptr;
 
-    return ctx->getRootNode();
+    return ctx->getRootSchema();
 }
 
-usdiAPI usdi::Schema* usdiGetNodeByPath(usdi::Context *ctx, const char *path)
+usdiAPI usdi::Schema* usdiFindSchemaByPath(usdi::Context *ctx, const char *path)
 {
     usdiTraceFunc();
     if (!ctx) return nullptr;
 
-    return ctx->getNodeByPath(path);
+    return ctx->findSchemaByPath(path);
 }
 
-usdiAPI bool usdiCreateReference(usdi::Context *ctx, const char *dstprim, const char *assetpath, const char *srcprim)
+usdiAPI usdi::Schema* usdiCreateReference(usdi::Context *ctx, const char *dstprim, const char *assetpath, const char *srcprim)
 {
     usdiTraceFunc();
     if (!ctx) return false;
@@ -220,21 +220,12 @@ usdiAPI const char* usdiGetTypeName(usdi::Schema *schema)
     return schema->getTypeName();
 }
 
-//usdiAPI bool usdiIsReference(usdi::Schema *schema)
-//{
-//    usdiTraceFunc();
-//    if (!schema) { return nullptr; }
-//    return schema->isReference();
-//}
-
-//usdiAPI usdi::Schema* usdiGetReferenceSource(usdi::Schema *schema)
-//{
-//    usdiTraceFunc();
-//    if (!schema) { return nullptr; }
-//    return schema->getReferenceSource();
-//}
-
-
+usdiAPI void usdiSetInstanceable(usdi::Schema *schema, bool v)
+{
+    usdiTraceFunc();
+    if (!schema) { return; }
+    return schema->setInstanceable(v);
+}
 usdiAPI bool usdiIsInstance(usdi::Schema *schema)
 {
     usdiTraceFunc();
@@ -246,6 +237,12 @@ usdiAPI usdi::Schema* usdiGetMaster(usdi::Schema *schema)
     usdiTraceFunc();
     if (!schema) { return nullptr; }
     return schema->getMaster();
+}
+usdiAPI bool usdiIsMaster(usdi::Schema *schema)
+{
+    usdiTraceFunc();
+    if (!schema) { return nullptr; }
+    return schema->isMaster();
 }
 
 
@@ -321,7 +318,7 @@ usdiAPI usdi::Xform* usdiCreateXform(usdi::Context *ctx, usdi::Schema *parent, c
     if (!ctx) { usdiLogWarning("usdiCreateXform(): ctx must not be null\n"); return nullptr; }
     if (!ctx->getUSDStage()) { usdiLogWarning("usdiCreateXform(): stage must not be null\n"); return nullptr; }
     if (!name) { usdiLogWarning("usdiCreateXform(): name must not be null\n"); return nullptr; }
-    return new usdi::Xform(ctx, parent, name);
+    return ctx->createSchema<usdi::Xform>(parent, name);
 }
 
 usdiAPI void usdiXformGetSummary(usdi::Xform *xf, usdi::XformSummary *dst)
@@ -363,7 +360,7 @@ usdiAPI usdi::Camera* usdiCreateCamera(usdi::Context *ctx, usdi::Schema *parent,
     if (!ctx) { usdiLogWarning("usdiCreateCamera(): ctx must not be null\n"); return nullptr; }
     if (!ctx->getUSDStage()) { usdiLogWarning("usdiCreateCamera(): stage must not be null\n"); return nullptr; }
     if (!name) { usdiLogWarning("usdiCreateCamera(): name must not be null\n"); return nullptr; }
-    return new usdi::Camera(ctx, parent, name);
+    return ctx->createSchema<usdi::Camera>(parent, name);
 }
 
 usdiAPI void usdiCameraGetSummary(usdi::Camera *cam, usdi::CameraSummary *dst)
@@ -405,7 +402,7 @@ usdiAPI usdi::Mesh* usdiCreateMesh(usdi::Context *ctx, usdi::Schema *parent, con
     if (!ctx) { usdiLogWarning("usdiCreateMesh(): ctx must not be null\n"); return nullptr; }
     if (!ctx->getUSDStage()) { usdiLogWarning("usdiCreateMesh(): stage must not be null\n"); return nullptr; }
     if (!name) { usdiLogWarning("usdiCreateMesh(): name must not be null\n"); return nullptr; }
-    return new usdi::Mesh(ctx, parent, name);
+    return ctx->createSchema<usdi::Mesh>(parent, name);
 }
 
 usdiAPI void usdiMeshGetSummary(usdi::Mesh *mesh, usdi::MeshSummary *dst)
@@ -447,7 +444,7 @@ usdiAPI usdi::Points* usdiCreatePoints(usdi::Context *ctx, usdi::Schema *parent,
     if (!ctx) { usdiLogWarning("usdiCreatePoints(): ctx must not be null\n"); return nullptr; }
     if (!ctx->getUSDStage()) { usdiLogWarning("usdiCreatePoints(): stage must not be null\n"); return nullptr; }
     if (!name) { usdiLogWarning("usdiCreatePoints(): name must not be null\n"); return nullptr; }
-    return new usdi::Points(ctx, parent, name);
+    return ctx->createSchema<usdi::Points>(parent, name);
 }
 
 usdiAPI void usdiPointsGetSummary(usdi::Points *points, usdi::PointsSummary *dst)

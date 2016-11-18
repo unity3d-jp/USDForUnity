@@ -15,8 +15,8 @@ Camera::Camera(Context *ctx, Schema *parent, const UsdGeomCamera& cam)
     getTimeRange(m_summary.start, m_summary.end);
 }
 
-Camera::Camera(Context *ctx, Schema *parent, const char *name)
-    : super(ctx, parent, name, "Camera")
+Camera::Camera(Context *ctx, Schema *parent, const char *name, const char *type)
+    : super(ctx, parent, name, type)
     , m_cam(m_prim)
 {
     usdiLogTrace("Camera::Camera(): %s\n", getPath());

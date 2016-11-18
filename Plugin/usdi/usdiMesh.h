@@ -30,10 +30,14 @@ struct MeshSample
 class Mesh : public Xform
 {
 typedef Xform super;
-public:
+friend class Context;
+protected:
     Mesh(Context *ctx, Schema *parent, const UsdGeomMesh& mesh);
-    Mesh(Context *ctx, Schema *parent, const char *name);
+    Mesh(Context *ctx, Schema *parent, const char *name, const char *type = "Mesh");
     ~Mesh() override;
+
+public:
+    using UsdType = UsdGeomMesh;
 
     UsdGeomMesh&        getUSDSchema() override;
     void                updateSample(Time t) override;

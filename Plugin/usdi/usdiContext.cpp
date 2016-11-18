@@ -115,38 +115,11 @@ void Context::createNodeRecursive(Schema *parent, UsdPrim prim, int depth)
 {
     if (!prim.IsValid()) { return; }
 
-    Schema *node = createNode(parent, prim);
+    Schema *node = createSchema(parent, prim);
     auto children = prim.GetChildren();
     for (auto c : children) {
         createNodeRecursive(node, c, depth + 1);
     }
-}
-
-Schema* Context::createNode(Schema *parent, UsdPrim prim)
-{
-    Schema *ret = nullptr;
-
-    UsdGeomPoints points(prim);
-    UsdGeomMesh mesh(prim);
-    UsdGeomCamera cam(prim);
-    UsdGeomXform xf(prim);
-    if (points) {
-        ret = new Points(this, parent, points);
-    }
-    else if (mesh) {
-        ret = new Mesh(this, parent, mesh);
-    }
-    else if (cam) {
-        ret = new Camera(this, parent, cam);
-    }
-    else if (xf) {
-        ret = new Xform(this, parent, xf);
-    }
-    else {
-        ret = new Unknown(this, parent, xf);
-    }
-
-    return ret;
 }
 
 bool Context::open(const char *path)
@@ -240,12 +213,12 @@ void Context::setExportConfig(const ExportConfig& v)
 }
 
 
-Schema* Context::getRootNode()
+Schema* Context::getRootSchema()
 {
     return m_schemas.empty() ? nullptr : m_schemas.front().get();
 }
 
-Schema* Context::getNodeByPath(const char *path)
+Schema* Context::findSchemaByPath(const char *path)
 {
     // obviously this is very slow. I need to improve this if this method is called very often.
     for (auto& n : m_schemas) {
@@ -257,16 +230,6 @@ Schema* Context::getNodeByPath(const char *path)
 }
 
 UsdStageRefPtr Context::getUSDStage() const { return m_stage; }
-
-void Context::addSchema(Schema *schema)
-{
-    if (!schema) {
-        usdiLogError("Context::addSchema(): invalid parameter\n");
-        return;
-    }
-    usdiLogTrace("Context::addSchema(): %s\n", schema->getName());
-    m_schemas.emplace_back(schema);
-}
 
 int Context::generateID()
 {
@@ -296,22 +259,94 @@ void Context::invalidateAllSamples()
     }
 }
 
-bool Context::createReference(const char *dstprim, const char *assetpath, const char *srcprim)
+void Context::addSchema(Schema *schema)
+{
+    if (!schema) {
+        usdiLogError("Context::addSchema(): invalid parameter\n");
+        return;
+    }
+    usdiLogTrace("Context::addSchema(): %s\n", schema->getName());
+    m_schemas.emplace_back(schema);
+}
+
+template<class T>
+T* Context::createSchema(Schema *parent, const char *name)
+{
+    T *ret = new T(this, parent, name);
+    addSchema(ret);
+    return ret;
+}
+template<class T>
+T* Context::createSchema(Schema *parent, const typename T::UsdType& t)
+{
+    T *ret = new T(this, parent, t);
+    addSchema(ret);
+    return ret;
+}
+#define Instanciate(T)\
+    template T* Context::createSchema<T>(Schema *parent, const char *name);\
+    template T* Context::createSchema<T>(Schema *parent, const T::UsdType& t);
+Instanciate(Xform);
+Instanciate(Camera);
+Instanciate(Mesh);
+Instanciate(Points);
+#undef Instanciate
+
+Schema* Context::createSchema(Schema *parent, UsdPrim prim)
+{
+    Schema *ret = nullptr;
+
+    Points::UsdType points(prim);
+    Mesh::UsdType   mesh(prim);
+    Camera::UsdType cam(prim);
+    Xform::UsdType  xf(prim);
+    if (points) {
+        ret = new Points(this, parent, points);
+    }
+    else if (mesh) {
+        ret = new Mesh(this, parent, mesh);
+    }
+    else if (cam) {
+        ret = new Camera(this, parent, cam);
+    }
+    else if (xf) {
+        // Xform must be last because some of others are subclass of Xform
+        ret = new Xform(this, parent, xf);
+    }
+    else {
+        ret = new Unknown(this, parent, xf);
+    }
+
+    if (ret) {
+        addSchema(ret);
+    }
+    return ret;
+}
+
+usdi::Schema* Context::createReference(const char *dstprim, const char *assetpath, const char *srcprim)
 {
     if (!m_stage ) {
         usdiLogError("Context::createReference(): m_stage is null\n");
-        return false;
+        return nullptr;
     }
     if (!dstprim || !srcprim) {
         usdiLogError("Context::createReference(): invalid parameter\n");
-        return false;
+        return nullptr;
     }
 
     if (!assetpath) { assetpath = ""; }
     if (auto prim = m_stage->OverridePrim(SdfPath(dstprim))) {
-        return prim.GetReferences().Add(SdfReference(assetpath, SdfPath(srcprim)));
+        if (prim.GetReferences().Add(SdfReference(assetpath, SdfPath(srcprim)))) {
+            // created successfully
+            auto *ret = findSchemaByPath(dstprim);
+            if (!ret) {
+                ret = new Schema(this, prim);
+                addSchema(ret);
+            }
+            return ret;
+        }
     }
-    return false;
+    return nullptr;
 }
 
 

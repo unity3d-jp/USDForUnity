@@ -5,10 +5,14 @@ namespace usdi {
 class Xform : public Schema
 {
 typedef Schema super;
-public:
+friend class Context;
+protected:
     Xform(Context *ctx, Schema *parent, const UsdGeomXformable& xf);
     Xform(Context *ctx, Schema *parent, const char *name, const char *type = "Xform");
     ~Xform() override;
+
+public:
+    using UsdType = UsdGeomXformable;
 
     UsdGeomXformable&   getUSDSchema() override;
     void                updateSample(Time t) override;

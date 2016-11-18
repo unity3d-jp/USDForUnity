@@ -22,8 +22,8 @@ Points::Points(Context *ctx, Schema *parent, const UsdGeomPoints& points)
     getTimeRange(m_summary.start, m_summary.end);
 }
 
-Points::Points(Context *ctx, Schema *parent, const char *name)
-    : super(ctx, parent, name, "Points")
+Points::Points(Context *ctx, Schema *parent, const char *name, const char *type)
+    : super(ctx, parent, name, type)
     , m_points(m_prim)
 {
     usdiLogTrace("Points::Points(): %s\n", getPath());

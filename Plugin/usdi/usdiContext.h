@@ -21,23 +21,26 @@ public:
     const ExportConfig& getExportConfig() const;
     void                setExportConfig(const ExportConfig& v);
 
-    Schema*             getRootNode();
-    Schema*             getNodeByPath(const char *path);
+    Schema*             getRootSchema();
+    Schema*             findSchemaByPath(const char *path);
 
     UsdStageRefPtr      getUSDStage() const;
-    void                addSchema(Schema *schema);
     int                 generateID();
 
     void                updateAllSamples(Time t);
     void                invalidateAllSamples();
 
-    bool                createReference(const char *dstprim, const char *assetpath, const char *srcprim);
+    // T: Xform, Camera, Mesh, ...
+    template<class T> T* createSchema(Schema *parent, const char *name);
+    template<class T> T* createSchema(Schema *parent, const typename T::UsdType& t);
+    Schema*              createSchema(Schema *parent, UsdPrim prim);
+    Schema*              createReference(const char *dstprim, const char *assetpath, const char *srcprim);
     void                flatten();
 
 private:
+    void    addSchema(Schema *schema);
     void    applyImportConfig();
     void    createNodeRecursive(Schema *parent, UsdPrim prim, int depth);
-    Schema* createNode(Schema *parent, UsdPrim prim);
 
 private:
     typedef std::map<std::string, std::string> Variants;

@@ -130,6 +130,7 @@ void TestExport(const char *filename)
     auto *root = usdiGetRoot(ctx);
 
     auto *xf = usdiCreateXform(ctx, root, "Child");
+    usdiSetInstanceable(xf, true);
     {
         usdi::XformData data;
         usdi::Time t = 0.0;

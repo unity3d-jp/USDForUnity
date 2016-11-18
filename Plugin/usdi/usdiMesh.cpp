@@ -79,8 +79,8 @@ Mesh::Mesh(Context *ctx, Schema *parent, const UsdGeomMesh& mesh)
     }
 }
 
-Mesh::Mesh(Context *ctx, Schema *parent, const char *name)
-    : super(ctx, parent, name, "Mesh")
+Mesh::Mesh(Context *ctx, Schema *parent, const char *name, const char *type)
+    : super(ctx, parent, name, type)
     , m_mesh(m_prim)
 {
     usdiLogTrace("Mesh::Mesh(): %s\n", getPath());

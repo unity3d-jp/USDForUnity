@@ -6,7 +6,17 @@
 
 namespace usdi {
 
-Schema::Schema(Context *ctx, Schema *parent, const UsdTyped& usd_schema)
+Schema::Schema(Context *ctx, const UsdPrim& p)
+    : m_ctx(ctx)
+    , m_parent(nullptr)
+    , m_prim(p)
+    , m_usd_schema(p)
+    , m_id(ctx->generateID())
+{
+    init();
+}
+
+Schema::Schema(Context *ctx, Schema *parent, const UsdSchemaBase& usd_schema)
     : m_ctx(ctx)
     , m_parent(parent)
     , m_prim(usd_schema.GetPrim())
@@ -26,7 +36,6 @@ Schema::Schema(Context *ctx, Schema *parent, const char *name, const char *type)
 
 void Schema::init()
 {
-    m_ctx->addSchema(this);
     if (m_parent) {
         m_parent->addChild(this);
     }
@@ -76,6 +85,11 @@ Schema::~Schema()
 Context*    Schema::getContext() const      { return m_ctx; }
 int         Schema::getID() const           { return m_id; }
 
+void Schema::setInstanceable(bool v)
+{
+    m_prim.SetInstanceable(v);
+}
+
 bool Schema::isInstance() const
 {
     return m_prim.IsInstance();
@@ -83,7 +97,7 @@ bool Schema::isInstance() const
 
 Schema* Schema::getMaster() const
 {
-    return m_ctx->getNodeByPath(m_prim.GetMaster().GetPath().GetText());
+    return m_ctx->findSchemaByPath(m_prim.GetMaster().GetPath().GetText());
 }
 
 
@@ -131,8 +145,9 @@ void Schema::getTimeRange(Time& start, Time& end) const
     end = m_time_end;
 }
 
-UsdPrim     Schema::getUSDPrim() const      { return m_prim; }
-UsdTyped    Schema::getUSDSchema() const    { return const_cast<Schema*>(this)->getUSDSchema(); }
+UsdPrim         Schema::getUSDPrim() const      { return m_prim; }
+UsdSchemaBase&  Schema::getUSDSchema() const    { return const_cast<Schema*>(this)->getUSDSchema(); }
+UsdSchemaBase&  Schema::getUSDSchema() { return m_usd_schema; }
 
 bool Schema::needsUpdate() const
 {
