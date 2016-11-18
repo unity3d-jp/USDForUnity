@@ -33,7 +33,6 @@
     <ClInclude Include="usdi\usdi.h" />
     <ClInclude Include="usdi\usdiPoints.h" />
     <ClInclude Include="usdi\usdiSchema.h" />
-    <ClInclude Include="usdi\usdiUnknown.h" />
     <ClInclude Include="usdi\usdiUtils.h" />
     <ClInclude Include="usdi\usdiXform.h" />
   </ItemGroup>
@@ -61,7 +60,6 @@
     <ClCompile Include="usdi\usdi.cpp" />
     <ClCompile Include="usdi\usdiPoints.cpp" />
     <ClCompile Include="usdi\usdiSchema.cpp" />
-    <ClCompile Include="usdi\usdiUnknown.cpp" />
     <ClCompile Include="usdi\usdiUtils.cpp" />
     <ClCompile Include="usdi\usdiXform.cpp" />
   </ItemGroup>

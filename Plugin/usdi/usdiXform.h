@@ -7,14 +7,14 @@ class Xform : public Schema
 typedef Schema super;
 friend class Context;
 protected:
-    Xform(Context *ctx, Schema *parent, const UsdGeomXformable& xf);
-    Xform(Context *ctx, Schema *parent, const char *name, const char *type = "Xform");
+    Xform(Context *ctx, Schema *parent, const UsdPrim& prim);
+    Xform(Context *ctx, Schema *parent, const char *name, const char *type = UsdTypeName);
     ~Xform() override;
 
 public:
     using UsdType = UsdGeomXformable;
+    static const char *UsdTypeName;
 
-    UsdGeomXformable&   getUSDSchema() override;
     void                updateSample(Time t) override;
 
     const XformSummary& getSummary() const;

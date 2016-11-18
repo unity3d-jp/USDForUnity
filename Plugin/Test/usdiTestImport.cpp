@@ -103,19 +103,26 @@ static void InspectRecursive(usdi::Schema *schema)
 {
     if (!schema) { return; }
 
-    printf("  %s (%s)", usdiGetPath(schema), usdiGetTypeName(schema));
+    printf("  %s [%p] (%s", usdiGetPath(schema), schema, usdiGetTypeName(schema));
+    if (usdiIsInstanceable(schema)) {
+        printf(", instanceable");
+    }
     if (usdiIsInstance(schema)) {
-        printf(" (instance -> %s)", usdiGetPath(usdiGetMaster(schema)));
+        printf(", instance of %s", usdiGetPath(usdiGetMaster(schema)));
     }
     if (usdiIsMaster(schema)) {
-        printf(" (master)");
+        printf(", master");
     }
-    printf("\n");
+    printf(")\n");
 
     {
-        int nattr = usdiGetNumAttributes(schema);
+        usdi::Schema *r = schema;
+        if (usdiIsInstance(schema)) {
+            r = usdiGetMaster(schema);
+        }
+        int nattr = usdiGetNumAttributes(r);
         for (int i = 0; i < nattr; ++i) {
-            InspectAttribute(usdiGetAttribute(schema, i));
+            InspectAttribute(usdiGetAttribute(r, i));
         }
     }
 

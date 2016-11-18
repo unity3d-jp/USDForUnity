@@ -32,15 +32,16 @@ public:
 
     // T: Xform, Camera, Mesh, ...
     template<class T> T* createSchema(Schema *parent, const char *name);
-    template<class T> T* createSchema(Schema *parent, const typename T::UsdType& t);
+    template<class T> T* createSchema(Schema *parent, const UsdPrim& t);
     Schema*              createSchema(Schema *parent, UsdPrim prim);
+    Schema*              createSchemaRecursive(Schema *parent, UsdPrim prim);
+    Schema*              createReferenceSchemaRecursive(Schema *parent, UsdPrim prim);
     Schema*              createReference(const char *dstprim, const char *assetpath, const char *srcprim);
     void                flatten();
 
 private:
     void    addSchema(Schema *schema);
     void    applyImportConfig();
-    void    createNodeRecursive(Schema *parent, UsdPrim prim, int depth);
 
 private:
     typedef std::map<std::string, std::string> Variants;

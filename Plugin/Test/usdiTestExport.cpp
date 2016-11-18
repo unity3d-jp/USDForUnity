@@ -129,9 +129,8 @@ void TestExport(const char *filename)
     usdiCreateStage(ctx, filename);
     auto *root = usdiGetRoot(ctx);
 
-    auto *xf = usdiCreateXform(ctx, root, "Child");
-    usdiSetInstanceable(xf, true);
     {
+        auto *xf = usdiCreateXform(ctx, root, "Child");
         usdi::XformData data;
         usdi::Time t = 0.0;
         for (int i = 0; i < 5; ++i) {
@@ -139,18 +138,45 @@ void TestExport(const char *filename)
             t += 1.0 / 30.0;
             usdiXformWriteSample(xf, &data, t);
         }
-    }
+        TestAttributes(xf);
 
-    auto *mesh = usdiCreateMesh(ctx, xf, "Mesh[](){}<>+-");
+
+        {
+            auto *mesh = usdiCreateMesh(ctx, xf, "TestMesh");
+            float3 vertices[] = {
+                { -0.5f, -0.5f, 0.0f },
+                {  0.5f, -0.5f, 0.0f },
+                {  0.5f,  0.5f, 0.0f },
+                { -0.5f,  0.5f, 0.0f },
+            };
+            int counts[] = { 4 };
+            int indices[] = { 0, 1, 2, 3 };
+
+            usdi::MeshData data;
+            data.points = vertices;
+            data.counts = counts;
+            data.indices = indices;
+            data.num_points = std::extent<decltype(vertices)>::value;
+            data.num_counts = std::extent<decltype(counts)>::value;
+            data.num_indices = std::extent<decltype(indices)>::value;
+
+            usdi::Time t = 0.0;
+            for (int i = 0; i < 5; ++i) {
+                t += 1.0 / 30.0;
+                usdiMeshWriteSample(mesh, &data, t);
+            }
+        }
+    }
     {
+        auto *mesh2 = usdiCreateMesh(ctx, root, "TestRootMesh");
         float3 vertices[] = {
             { -0.5f, -0.5f, 0.0f },
-            {  0.5f, -0.5f, 0.0f },
-            {  0.5f,  0.5f, 0.0f },
+            { 0.5f, -0.5f, 0.0f },
+            { 0.5f,  0.5f, 0.0f },
             { -0.5f,  0.5f, 0.0f },
         };
-        int counts[] = { 4 };
-        int indices[] = { 0, 1, 2, 3 };
+        int counts[] = { 3, 3 };
+        int indices[] = { 0, 1, 2, 0, 2, 3 };
 
         usdi::MeshData data;
         data.points = vertices;
@@ -163,14 +189,14 @@ void TestExport(const char *filename)
         usdi::Time t = 0.0;
         for (int i = 0; i < 5; ++i) {
             t += 1.0 / 30.0;
-            usdiMeshWriteSample(mesh, &data, t);
+            usdiMeshWriteSample(mesh2, &data, t);
         }
     }
 
-    usdiCreateReference(ctx, "/Ref", "", "/Child");
-    usdiFlatten(ctx);
 
-    TestAttributes(xf);
+    usdiCreateReference(ctx, "/Ref", "", "/Child");
+    usdiCreateReference(ctx, "/Ref2", "", "/TestRootMesh");
+    usdiFlatten(ctx);
 
     usdiSave(ctx);
     usdiSaveAs(ctx, "Hoge.usda");

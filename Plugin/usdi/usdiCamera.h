@@ -7,14 +7,14 @@ class Camera : public Xform
 typedef Xform super;
 friend class Context;
 protected:
-    Camera(Context *ctx, Schema *parent, const UsdGeomCamera& xf);
-    Camera(Context *ctx, Schema *parent, const char *name, const char *type = "Camera");
+    Camera(Context *ctx, Schema *parent, const UsdPrim& prim);
+    Camera(Context *ctx, Schema *parent, const char *name, const char *type = UsdTypeName);
     ~Camera() override;
 
 public:
     using UsdType = UsdGeomCamera;
+    static const char *UsdTypeName;
 
-    UsdGeomCamera&      getUSDSchema() override;
     void                updateSample(Time t) override;
 
     const CameraSummary& getSummary() const;

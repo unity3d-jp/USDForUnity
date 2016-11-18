@@ -32,14 +32,14 @@ class Mesh : public Xform
 typedef Xform super;
 friend class Context;
 protected:
-    Mesh(Context *ctx, Schema *parent, const UsdGeomMesh& mesh);
-    Mesh(Context *ctx, Schema *parent, const char *name, const char *type = "Mesh");
+    Mesh(Context *ctx, Schema *parent, const UsdPrim& prim);
+    Mesh(Context *ctx, Schema *parent, const char *name, const char *type = UsdTypeName);
     ~Mesh() override;
 
 public:
     using UsdType = UsdGeomMesh;
+    static const char *UsdTypeName;
 
-    UsdGeomMesh&        getUSDSchema() override;
     void                updateSample(Time t) override;
 
     const MeshSummary&  getSummary() const;

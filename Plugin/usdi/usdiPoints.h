@@ -2,6 +2,7 @@
 
 namespace usdi {
 
+
 struct PointsSample
 {
     VtArray<GfVec3f> points;
@@ -16,14 +17,14 @@ class Points : public Xform
 typedef Xform super;
 friend class Context;
 protected:
-    Points(Context *ctx, Schema *parent, const UsdGeomPoints& xf);
-    Points(Context *ctx, Schema *parent, const char *name, const char *type = "Points");
+    Points(Context *ctx, Schema *parent, const UsdPrim& prim);
+    Points(Context *ctx, Schema *parent, const char *name, const char *type = UsdTypeName);
     ~Points() override;
 
 public:
     using UsdType = UsdGeomPoints;
+    static const char *UsdTypeName;
 
-    UsdGeomPoints&          getUSDSchema() override;
     void                    updateSample(Time t) override;
 
     const PointsSummary&    getSummary() const;

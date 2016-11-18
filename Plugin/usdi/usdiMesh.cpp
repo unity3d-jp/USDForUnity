@@ -64,11 +64,14 @@ static inline void TriangulateIndices(int *triangulated, const CountArray &count
 #define usdiUVAttrName "primvars:uv"
 #define usdiUVAttrName2 "uv"
 
-Mesh::Mesh(Context *ctx, Schema *parent, const UsdGeomMesh& mesh)
-    : super(ctx, parent, UsdGeomXformable(mesh))
-    , m_mesh(mesh)
+const char *Mesh::UsdTypeName = "Mesh";
+
+Mesh::Mesh(Context *ctx, Schema *parent, const UsdPrim& prim)
+    : super(ctx, parent, prim)
+    , m_mesh(prim)
 {
     usdiLogTrace("Mesh::Mesh(): %s\n", getPath());
+    if (!m_mesh) { usdiLogError("Mesh::Mesh(): m_mesh is invalid\n"); }
 
     m_attr_uv = findAttribute(usdiUVAttrName);
     if (!m_attr_uv) {
@@ -84,17 +87,14 @@ Mesh::Mesh(Context *ctx, Schema *parent, const char *name, const char *type)
     , m_mesh(m_prim)
 {
     usdiLogTrace("Mesh::Mesh(): %s\n", getPath());
+    if (!m_mesh) { usdiLogError("Mesh::Mesh(): m_mesh is invalid\n"); }
+
     m_attr_uv = createAttribute(usdiUVAttrName, AttributeType::Float2Array);
 }
 
 Mesh::~Mesh()
 {
     usdiLogTrace("Mesh::~Mesh(): %s\n", getPath());
-}
-
-UsdGeomMesh& Mesh::getUSDSchema()
-{
-    return m_mesh;
 }
 
 void Mesh::updateSummary() const

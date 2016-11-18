@@ -4,11 +4,14 @@ namespace usdi {
 
 class Schema
 {
-public:
-    Schema(Context *ctx, const UsdPrim& p);
-    Schema(Context *ctx, Schema *parent, const UsdSchemaBase& usd_schema); // for import
+friend class Context;
+protected:
+    Schema(Context *ctx, Schema *parent, Schema *master, std::string path, const UsdPrim& p);
+    Schema(Context *ctx, Schema *parent, const UsdPrim& p);
     Schema(Context *ctx, Schema *parent, const char *name, const char *type); // for export
     void init();
+    virtual void setup();
+public:
     virtual ~Schema();
 
     Context*            getContext() const;
@@ -22,18 +25,17 @@ public:
     Attribute*          findAttribute(const char *name) const;
     Attribute*          createAttribute(const char *name, AttributeType type);
 
-    void                setInstanceable(bool v);
-    bool                isInstance() const;
     Schema*             getMaster() const;
+    bool                isInstance() const;
+    bool                isInstanceable() const;
     bool                isMaster() const;
+    void                setInstanceable(bool v);
 
     const char*         getPath() const;
     const char*         getName() const;
     const char*         getTypeName() const;
     void                getTimeRange(Time& start, Time& end) const;
     UsdPrim             getUSDPrim() const;
-    UsdSchemaBase&      getUSDSchema() const;
-    virtual UsdSchemaBase& getUSDSchema();
 
     bool                needsUpdate() const;
     virtual void        updateSample(Time t);
@@ -48,8 +50,19 @@ public:
         for (auto& c : m_children) { body(c); }
     }
 
+    template<class T>
+    T as()
+    {
+        if (auto *m = getMaster()) {
+            return dynamic_cast<T>(m);
+        }
+        else {
+            return dynamic_cast<T>(this);
+        }
+    }
 
-public: // for internal use
+
+protected:
     void addChild(Schema *child);
     std::string makePath(const char *name);
 
@@ -64,19 +77,17 @@ protected:
 
     Context         *m_ctx = nullptr;
     Schema          *m_parent = nullptr;
+    Schema          *m_master = nullptr;
+    int             m_id = 0;
+
+    std::string     m_path;
     UsdPrim         m_prim;
-    UsdSchemaBase   m_usd_schema;
     Children        m_children;
     Attributes      m_attributes;
-    int             m_id = 0;
     Time            m_time_start = usdiInvalidTime, m_time_end = usdiInvalidTime;
     Time            m_time_prev = usdiInvalidTime;
     bool            m_needs_update = true;
     void            *m_userdata = nullptr;
-#ifdef usdiDebug
-    const char *m_dbg_path = nullptr;
-    const char *m_dbg_typename = nullptr;
-#endif
 };
 
 } // namespace usdi

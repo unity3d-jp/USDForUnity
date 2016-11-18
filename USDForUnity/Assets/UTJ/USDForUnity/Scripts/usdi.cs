@@ -142,6 +142,7 @@ namespace UTJ
 
         public struct ExportConfig
         {
+            public Bool instanceable_by_default;
             public float scale;
             public Bool swap_handedness;
             public Bool swap_faces;
@@ -152,6 +153,7 @@ namespace UTJ
                 {
                     return new ExportConfig
                     {
+                        instanceable_by_default = true,
                         scale = 1.0f,
                         swap_handedness = true,
                         swap_faces = true,

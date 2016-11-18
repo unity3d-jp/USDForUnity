@@ -7,18 +7,21 @@
 
 namespace usdi {
 
+
 void PointsSample::clear()
 {
     points.clear();
     velocities.clear();
 }
 
+const char *Points::UsdTypeName = "Points";
 
-Points::Points(Context *ctx, Schema *parent, const UsdGeomPoints& points)
-    : super(ctx, parent, points)
-    , m_points(points)
+Points::Points(Context *ctx, Schema *parent, const UsdPrim& prim)
+    : super(ctx, parent, prim)
+    , m_points(prim)
 {
     usdiLogTrace("Points::Points(): %s\n", getPath());
+    if (!m_points) { usdiLogError("Points::Points(): m_points is invalid\n"); }
     getTimeRange(m_summary.start, m_summary.end);
 }
 
@@ -27,16 +30,12 @@ Points::Points(Context *ctx, Schema *parent, const char *name, const char *type)
     , m_points(m_prim)
 {
     usdiLogTrace("Points::Points(): %s\n", getPath());
+    if (!m_points) { usdiLogError("Points::Points(): m_points is invalid\n"); }
 }
 
 Points::~Points()
 {
     usdiLogTrace("Points::~Points(): %s\n", getPath());
-}
-
-UsdGeomPoints& Points::getUSDSchema()
-{
-    return m_points;
 }
 
 void Points::updateSummary() const

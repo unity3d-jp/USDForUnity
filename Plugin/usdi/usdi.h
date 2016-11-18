@@ -107,6 +107,7 @@ struct ImportConfig
 
 struct ExportConfig
 {
+    bool instanceable_by_default = true;
     float scale = 1.0f;
     bool swap_handedness = true;
     bool swap_faces = true;
@@ -260,6 +261,7 @@ usdiAPI usdi::Context*   usdiCreateContext();
 usdiAPI void             usdiDestroyContext(usdi::Context *ctx);
 usdiAPI bool             usdiOpen(usdi::Context *ctx, const char *path);
 usdiAPI bool             usdiCreateStage(usdi::Context *ctx, const char *path);
+usdiAPI void             usdiFlatten(usdi::Context *ctx);
 usdiAPI bool             usdiSave(usdi::Context *ctx);
 // path must *not* be same as identifier (parameter of usdiOpen() or usdiCreateStage())
 usdiAPI bool             usdiSaveAs(usdi::Context *ctx, const char *path);
@@ -274,7 +276,6 @@ usdiAPI usdi::Mesh*      usdiCreateMesh(usdi::Context *ctx, usdi::Schema *parent
 usdiAPI usdi::Points*    usdiCreatePoints(usdi::Context *ctx, usdi::Schema *parent, const char *name);
 // create external reference if assetpath is valid, otherwise create internal reference
 usdiAPI usdi::Schema*    usdiCreateReference(usdi::Context *ctx, const char *dstprim, const char *assetpath, const char *srcprim);
-usdiAPI void             usdiFlatten(usdi::Context *ctx);
 usdiAPI usdi::Schema*    usdiGetRoot(usdi::Context *ctx);
 usdiAPI usdi::Schema*    usdiFindSchemaByPath(usdi::Context *ctx, const char *path);
 
@@ -286,10 +287,11 @@ usdiAPI int              usdiGetID(usdi::Schema *schema);
 usdiAPI const char*      usdiGetPath(usdi::Schema *schema);
 usdiAPI const char*      usdiGetName(usdi::Schema *schema);
 usdiAPI const char*      usdiGetTypeName(usdi::Schema *schema);
-usdiAPI void             usdiSetInstanceable(usdi::Schema *schema, bool v);
-usdiAPI bool             usdiIsInstance(usdi::Schema *schema);
 usdiAPI usdi::Schema*    usdiGetMaster(usdi::Schema *schema);
+usdiAPI bool             usdiIsInstance(usdi::Schema *schema);
+usdiAPI bool             usdiIsInstanceable(usdi::Schema *schema);
 usdiAPI bool             usdiIsMaster(usdi::Schema *schema);
+usdiAPI void             usdiSetInstanceable(usdi::Schema *schema, bool v);
 usdiAPI usdi::Schema*    usdiGetParent(usdi::Schema *schema);
 usdiAPI int              usdiGetNumChildren(usdi::Schema *schema);
 usdiAPI usdi::Schema*    usdiGetChild(usdi::Schema *schema, int i);

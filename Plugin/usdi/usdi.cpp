@@ -220,11 +220,11 @@ usdiAPI const char* usdiGetTypeName(usdi::Schema *schema)
     return schema->getTypeName();
 }
 
-usdiAPI void usdiSetInstanceable(usdi::Schema *schema, bool v)
+usdiAPI usdi::Schema* usdiGetMaster(usdi::Schema *schema)
 {
     usdiTraceFunc();
-    if (!schema) { return; }
-    return schema->setInstanceable(v);
+    if (!schema) { return nullptr; }
+    return schema->getMaster();
 }
 usdiAPI bool usdiIsInstance(usdi::Schema *schema)
 {
@@ -232,17 +232,23 @@ usdiAPI bool usdiIsInstance(usdi::Schema *schema)
     if (!schema) { return nullptr; }
     return schema->isInstance();
 }
-usdiAPI usdi::Schema* usdiGetMaster(usdi::Schema *schema)
+usdiAPI bool usdiIsInstanceable(usdi::Schema *schema)
 {
     usdiTraceFunc();
     if (!schema) { return nullptr; }
-    return schema->getMaster();
+    return schema->isInstanceable();
 }
 usdiAPI bool usdiIsMaster(usdi::Schema *schema)
 {
     usdiTraceFunc();
     if (!schema) { return nullptr; }
     return schema->isMaster();
+}
+usdiAPI void usdiSetInstanceable(usdi::Schema *schema, bool v)
+{
+    usdiTraceFunc();
+    if (!schema) { return; }
+    return schema->setInstanceable(v);
 }
 
 
@@ -309,7 +315,7 @@ usdiAPI usdi::Xform* usdiAsXform(usdi::Schema *schema)
 {
     usdiTraceFunc();
     if (!schema) return nullptr;
-    return dynamic_cast<usdi::Xform*>(schema);
+    return schema->as<usdi::Xform*>();
 }
 
 usdiAPI usdi::Xform* usdiCreateXform(usdi::Context *ctx, usdi::Schema *parent, const char *name)
@@ -351,7 +357,7 @@ usdiAPI usdi::Camera* usdiAsCamera(usdi::Schema *schema)
 {
     usdiTraceFunc();
     if (!schema) return nullptr;
-    return dynamic_cast<usdi::Camera*>(schema);
+    return schema->as<usdi::Camera*>();
 }
 
 usdiAPI usdi::Camera* usdiCreateCamera(usdi::Context *ctx, usdi::Schema *parent, const char *name)
@@ -393,7 +399,7 @@ usdiAPI usdi::Mesh* usdiAsMesh(usdi::Schema *schema)
 {
     usdiTraceFunc();
     if (!schema) return nullptr;
-    return dynamic_cast<usdi::Mesh*>(schema);
+    return schema->as<usdi::Mesh*>();
 }
 
 usdiAPI usdi::Mesh* usdiCreateMesh(usdi::Context *ctx, usdi::Schema *parent, const char *name)
@@ -435,7 +441,7 @@ usdiAPI usdi::Points* usdiAsPoints(usdi::Schema *schema)
 {
     usdiTraceFunc();
     if (!schema) return nullptr;
-    return dynamic_cast<usdi::Points*>(schema);
+    return schema->as<usdi::Points*>();
 }
 
 usdiAPI usdi::Points* usdiCreatePoints(usdi::Context *ctx, usdi::Schema *parent, const char *name)

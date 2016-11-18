@@ -85,11 +85,14 @@ static void SwapHandedness(quatf& q)
 }
 
 
-Xform::Xform(Context *ctx, Schema *parent, const UsdGeomXformable& xf)
-    : super(ctx, parent, xf)
-    , m_xf(xf)
+const char *Xform::UsdTypeName = "Xform";
+
+Xform::Xform(Context *ctx, Schema *parent, const UsdPrim& prim)
+    : super(ctx, parent, prim)
+    , m_xf(prim)
 {
     usdiLogTrace("Xform::Xform(): %s\n", getPath());
+    if (!m_xf) { usdiLogError("Xform::Xform(): m_xf is invalid\n"); }
     getTimeRange(m_summary.start, m_summary.end);
 }
 
@@ -98,16 +101,12 @@ Xform::Xform(Context *ctx, Schema *parent, const char *name, const char *type)
     , m_xf(m_prim)
 {
     usdiLogTrace("Xform::Xform(): %s\n", getPath());
+    if (!m_xf) { usdiLogError("Xform::Xform(): m_xf is invalid\n"); }
 }
 
 Xform::~Xform()
 {
     usdiLogTrace("Xform::~Xform(): %s\n", getPath());
-}
-
-UsdGeomXformable& Xform::getUSDSchema()
-{
-    return m_xf;
 }
 
 const XformSummary& Xform::getSummary() const

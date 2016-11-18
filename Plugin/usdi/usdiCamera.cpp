@@ -6,12 +6,15 @@
 
 namespace usdi {
 
+const char *Camera::UsdTypeName = "Camera";
 
-Camera::Camera(Context *ctx, Schema *parent, const UsdGeomCamera& cam)
-    : super(ctx, parent, cam)
-    , m_cam(cam)
+Camera::Camera(Context *ctx, Schema *parent, const UsdPrim& prim)
+    : super(ctx, parent, prim)
+    , m_cam(prim)
 {
     usdiLogTrace("Camera::Camera(): %s\n", getPath());
+    if (!m_cam) { usdiLogError("Camera::Camera(): m_cam is invalid\n"); }
+
     getTimeRange(m_summary.start, m_summary.end);
 }
 
@@ -20,18 +23,13 @@ Camera::Camera(Context *ctx, Schema *parent, const char *name, const char *type)
     , m_cam(m_prim)
 {
     usdiLogTrace("Camera::Camera(): %s\n", getPath());
+    if (!m_cam) { usdiLogError("Camera::Camera(): m_cam is invalid\n"); }
 }
 
 Camera::~Camera()
 {
     usdiLogTrace("Camera::~Camera(): %s\n", getPath());
 }
-
-UsdGeomCamera& Camera::getUSDSchema()
-{
-    return m_cam;
-}
-
 
 const usdi::CameraSummary& Camera::getSummary() const
 {

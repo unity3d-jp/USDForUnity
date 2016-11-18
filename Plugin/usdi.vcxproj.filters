@@ -34,9 +34,6 @@
     <ClCompile Include="usdi\usdiSchema.cpp">
       <Filter>usdi</Filter>
     </ClCompile>
-    <ClCompile Include="usdi\usdiUnknown.cpp">
-      <Filter>usdi</Filter>
-    </ClCompile>
     <ClCompile Include="usdi\usdiUtils.cpp">
       <Filter>usdi</Filter>
     </ClCompile>
@@ -97,9 +94,6 @@
       <Filter>usdi</Filter>
     </ClInclude>
     <ClInclude Include="usdi\usdiSchema.h">
-      <Filter>usdi</Filter>
-    </ClInclude>
-    <ClInclude Include="usdi\usdiUnknown.h">
       <Filter>usdi</Filter>
     </ClInclude>
     <ClInclude Include="usdi\usdiUtils.h">

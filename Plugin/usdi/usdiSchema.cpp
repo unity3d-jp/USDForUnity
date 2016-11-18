@@ -6,20 +6,20 @@
 
 namespace usdi {
 
-Schema::Schema(Context *ctx, const UsdPrim& p)
+Schema::Schema(Context *ctx, Schema *parent, Schema *master, std::string path, const UsdPrim& p)
     : m_ctx(ctx)
-    , m_parent(nullptr)
+    , m_parent(parent)
+    , m_master(master)
+    , m_path(path)
     , m_prim(p)
-    , m_usd_schema(p)
-    , m_id(ctx->generateID())
 {
     init();
 }
 
-Schema::Schema(Context *ctx, Schema *parent, const UsdSchemaBase& usd_schema)
+Schema::Schema(Context *ctx, Schema *parent, const UsdPrim& p)
     : m_ctx(ctx)
     , m_parent(parent)
-    , m_prim(usd_schema.GetPrim())
+    , m_prim(p)
     , m_id(ctx->generateID())
 {
     init();
@@ -31,6 +31,9 @@ Schema::Schema(Context *ctx, Schema *parent, const char *name, const char *type)
     , m_id(ctx->generateID())
 {
     m_prim = ctx->getUSDStage()->DefinePrim(SdfPath(makePath(name)), TfToken(type));
+    if (ctx->getExportConfig().instanceable_by_default) {
+        m_prim.SetInstanceable(true);
+    }
     init();
 }
 
@@ -40,7 +43,7 @@ void Schema::init()
         m_parent->addChild(this);
     }
 
-    if (m_prim) {
+    if (m_prim && !m_master) {
         // gather attributes
         auto attrs = m_prim.GetAuthoredAttributes();
         for (auto attr : attrs) {
@@ -48,13 +51,10 @@ void Schema::init()
                 m_attributes.emplace_back(ret);
             }
         }
-#ifdef usdiDebug
-        m_dbg_path = getPath();
-        m_dbg_typename = getTypeName();
-#endif
-    }
+        if (m_path.empty()) {
+            m_path = m_prim.GetPath().GetString();
+        }
 
-    {
         // get start & end time
         double lower = 0.0, upper = 0.0;
         bool first = true;
@@ -77,6 +77,10 @@ void Schema::init()
     }
 }
 
+void Schema::setup()
+{
+}
+
 Schema::~Schema()
 {
     m_attributes.clear();
@@ -85,30 +89,22 @@ Schema::~Schema()
 Context*    Schema::getContext() const      { return m_ctx; }
 int         Schema::getID() const           { return m_id; }
 
-void Schema::setInstanceable(bool v)
-{
-    m_prim.SetInstanceable(v);
-}
-
-bool Schema::isInstance() const
-{
-    return m_prim.IsInstance();
-}
-
-Schema* Schema::getMaster() const
-{
-    return m_ctx->findSchemaByPath(m_prim.GetMaster().GetPath().GetText());
-}
-
-
-bool Schema::isMaster() const
-{
-    return m_prim.IsMaster();
-}
+Schema*     Schema::getMaster() const       { return m_master; }
+bool        Schema::isInstance() const      { return m_master != nullptr || m_prim.IsInstance(); }
+bool        Schema::isInstanceable() const  { return m_prim.IsInstanceable(); }
+bool        Schema::isMaster() const        { return m_prim.IsMaster(); }
+void        Schema::setInstanceable(bool v) { m_prim.SetInstanceable(v); }
 
 Schema*     Schema::getParent() const       { return m_parent; }
-size_t      Schema::getNumChildren() const  { return m_children.size(); }
-Schema*     Schema::getChild(int i) const   { return (size_t)i >= m_children.size() ? nullptr : m_children[i]; }
+
+size_t Schema::getNumChildren() const
+{
+    return m_children.size();
+}
+Schema* Schema::getChild(int i) const
+{
+    return (size_t)i >= m_children.size() ? nullptr : m_children[i];
+}
 
 
 size_t      Schema::getNumAttributes() const { return m_attributes.size(); }
@@ -135,7 +131,7 @@ Attribute* Schema::createAttribute(const char *name, AttributeType type)
     return nullptr;
 }
 
-const char* Schema::getPath() const         { return m_prim.GetPath().GetText(); }
+const char* Schema::getPath() const         { return m_path.c_str(); }
 const char* Schema::getName() const         { return m_prim.GetName().GetText(); }
 const char* Schema::getTypeName() const     { return m_prim.GetTypeName().GetText(); }
 
@@ -146,8 +142,6 @@ void Schema::getTimeRange(Time& start, Time& end) const
 }
 
 UsdPrim         Schema::getUSDPrim() const      { return m_prim; }
-UsdSchemaBase&  Schema::getUSDSchema() const    { return const_cast<Schema*>(this)->getUSDSchema(); }
-UsdSchemaBase&  Schema::getUSDSchema() { return m_usd_schema; }
 
 bool Schema::needsUpdate() const
 {

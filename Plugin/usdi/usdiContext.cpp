@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "usdiInternal.h"
 #include "usdiSchema.h"
-#include "usdiUnknown.h"
 #include "usdiXform.h"
 #include "usdiCamera.h"
 #include "usdiMesh.h"
@@ -111,17 +110,6 @@ void Context::applyImportConfig()
     }
 }
 
-void Context::createNodeRecursive(Schema *parent, UsdPrim prim, int depth)
-{
-    if (!prim.IsValid()) { return; }
-
-    Schema *node = createSchema(parent, prim);
-    auto children = prim.GetChildren();
-    for (auto c : children) {
-        createNodeRecursive(node, c, depth + 1);
-    }
-}
-
 bool Context::open(const char *path)
 {
     initialize();
@@ -157,7 +145,7 @@ bool Context::open(const char *path)
         root_prim.GetVariantSet(it->first).SetVariantSelection(it->second);
     }
 
-    createNodeRecursive(nullptr, root_prim, 0);
+    createSchemaRecursive(nullptr, root_prim);
     return true;
 }
 
@@ -265,6 +253,7 @@ void Context::addSchema(Schema *schema)
         usdiLogError("Context::addSchema(): invalid parameter\n");
         return;
     }
+    schema->setup();
     usdiLogTrace("Context::addSchema(): %s\n", schema->getName());
     m_schemas.emplace_back(schema);
 }
@@ -277,7 +266,7 @@ T* Context::createSchema(Schema *parent, const char *name)
     return ret;
 }
 template<class T>
-T* Context::createSchema(Schema *parent, const typename T::UsdType& t)
+T* Context::createSchema(Schema *parent, const UsdPrim& t)
 {
     T *ret = new T(this, parent, t);
     addSchema(ret);
@@ -285,7 +274,7 @@ T* Context::createSchema(Schema *parent, const typename T::UsdType& t)
 }
 #define Instanciate(T)\
     template T* Context::createSchema<T>(Schema *parent, const char *name);\
-    template T* Context::createSchema<T>(Schema *parent, const T::UsdType& t);
+    template T* Context::createSchema<T>(Schema *parent, const UsdPrim& t);
 Instanciate(Xform);
 Instanciate(Camera);
 Instanciate(Mesh);
@@ -296,25 +285,21 @@ Schema* Context::createSchema(Schema *parent, UsdPrim prim)
 {
     Schema *ret = nullptr;
 
-    Points::UsdType points(prim);
-    Mesh::UsdType   mesh(prim);
-    Camera::UsdType cam(prim);
-    Xform::UsdType  xf(prim);
-    if (points) {
-        ret = new Points(this, parent, points);
+    const auto& tn = prim.GetTypeName();
+    if (tn == Xform::UsdTypeName) {
+        ret = new Xform(this, parent, prim);
     }
-    else if (mesh) {
-        ret = new Mesh(this, parent, mesh);
+    else if (tn == Points::UsdTypeName) {
+        ret = new Points(this, parent, prim);
     }
-    else if (cam) {
-        ret = new Camera(this, parent, cam);
+    else if (tn == Mesh::UsdTypeName) {
+        ret = new Mesh(this, parent, prim);
     }
-    else if (xf) {
-        // Xform must be last because some of others are subclass of Xform
-        ret = new Xform(this, parent, xf);
+    else if (tn == Camera::UsdTypeName) {
+        ret = new Camera(this, parent, prim);
     }
     else {
-        ret = new Unknown(this, parent, xf);
+        ret = new Schema(this, parent, prim);
     }
 
     if (ret) {
@@ -323,7 +308,51 @@ Schema* Context::createSchema(Schema *parent, UsdPrim prim)
     return ret;
 }
 
-usdi::Schema* Context::createReference(const char *dstprim, const char *assetpath, const char *srcprim)
+Schema* Context::createSchemaRecursive(Schema *parent, UsdPrim prim)
+{
+    if (!prim.IsValid()) { return nullptr; }
+
+    auto *ret = createSchema(parent, prim);
+    if (prim.IsInstance()) {
+        if (!findSchemaByPath(prim.GetMaster().GetPath().GetText())) {
+            createSchemaRecursive(nullptr, prim.GetMaster());
+        }
+        auto children = prim.GetMaster().GetChildren();
+        for (auto c : children) {
+            createReferenceSchemaRecursive(ret, c);
+        }
+    }
+    else {
+        auto children = prim.GetChildren();
+        for (auto c : children) {
+            createSchemaRecursive(ret, c);
+        }
+    }
+    return ret;
+}
+
+Schema* Context::createReferenceSchemaRecursive(Schema *parent, UsdPrim prim)
+{
+    Schema *master = findSchemaByPath(prim.GetPath().GetText());
+
+    std::string path = parent ? parent->getPath() : "/";
+    if (path.back() != '/') {
+        path += '/';
+    }
+    path += prim.GetName();
+
+
+    auto *ret = new Schema(this, parent, master, path, prim);
+    addSchema(ret);
+
+    auto children = prim.GetChildren();
+    for (auto c : children) {
+        createReferenceSchemaRecursive(ret, c);
+    }
+    return ret;
+}
+
+Schema* Context::createReference(const char *dstprim, const char *assetpath, const char *srcprim)
 {
     if (!m_stage ) {
         usdiLogError("Context::createReference(): m_stage is null\n");
@@ -340,7 +369,7 @@ usdi::Schema* Context::createReference(const char *dstprim, const char *assetpat
             // created successfully
             auto *ret = findSchemaByPath(dstprim);
             if (!ret) {
-                ret = new Schema(this, prim);
+                ret = new Schema(this, nullptr, prim);
                 addSchema(ret);
             }
             return ret;
