@@ -149,24 +149,71 @@ Attribute* Schema::createAttribute(const char *name, AttributeType type)
     return nullptr;
 }
 
-int         Schema::getNumVariantSets() const               { return (int)m_variant_sets.size(); }
-const char* Schema::getVariantSetName(int iset) const       { return m_variant_sets[iset].name.c_str(); }
-int         Schema::getNumVariants(int iset) const          { return (int)m_variant_sets[iset].variants.size(); }
-const char* Schema::getVariantName(int iset, int ival) const{ return m_variant_sets[iset].variants[ival].c_str(); }
+
+int Schema::getNumVariantSets() const
+{
+    return (int)m_variant_sets.size();
+}
+
+const char* Schema::getVariantSetName(int iset) const
+{
+    if (iset < 0 || iset >= m_variant_sets.size()) {
+        usdiLogError("Schema::getVariantSetName(): iset < 0 || iset >= m_variant_sets.size()\n");
+        return "";
+    }
+    return m_variant_sets[iset].name.c_str();
+}
+
+int Schema::getNumVariants(int iset) const
+{
+    if (iset < 0 || iset >= m_variant_sets.size()) {
+        usdiLogError("Schema::getNumVariants(): iset < 0 || iset >= m_variant_sets.size()\n");
+        return 0;
+    }
+    return (int)m_variant_sets[iset].variants.size();
+}
+
+const char* Schema::getVariantName(int iset, int ival) const
+{
+    if (iset < 0 || iset >= m_variant_sets.size()) {
+        usdiLogError("Schema::getVariantName(): iset < 0 || iset >= m_variant_sets.size()\n");
+        return "";
+    }
+    if (ival < 0 || ival >= m_variant_sets[iset].variants.size()) {
+        usdiLogError("Schema::getVariantName(): ival < 0 || ival >= m_variant_sets[iset].variants.size()\n");
+        return "";
+    }
+    return m_variant_sets[iset].variants[ival].c_str();
+}
+
+int Schema::getVariantSelection(int iset) const
+{
+    if (iset < 0) { return -1; }
+    if (iset >= m_variant_sets.size()) {
+        usdiLogError("Schema::getVariantSelection(): iset >= m_variant_sets.size()\n");
+        return 0;
+    }
+
+    std::string valname = m_prim.GetVariantSets().GetVariantSelection(m_variant_sets[iset].name);
+    if (valname.empty()) { return -1; }
+    return findVariant(iset, valname.c_str());
+}
 
 bool Schema::setVariantSelection(int iset, int ival)
 {
-    if (iset < 0 || ival < 0) { return false; }
+    if (iset < 0) { return false; }
     if (iset >= m_variant_sets.size()) {
         usdiLogError("Schema::setVariantSelection(): iset >= m_variant_sets.size()\n");
         return false;
     }
     auto& vset = m_variant_sets[iset];
-    if (ival >= vset.variants.size()) {
-        usdiLogError("Schema::setVariantSelection(): ival >= vset.variants.size()\n");
-        return false;
+    auto& dst = m_prim.GetVariantSet(vset.name);
+    if (ival < 0 || ival >= vset.variants.size()) {
+        return dst.ClearVariantSelection();
     }
-    return m_prim.GetVariantSets().SetSelection(vset.name, vset.variants[ival]);
+    else {
+        return dst.SetVariantSelection(vset.variants[ival]);
+    }
 }
 
 int Schema::findVariantSet(const char *name) const
@@ -213,6 +260,7 @@ int Schema::createVariant(int iset, const char *name)
     syncVariantSets();
     return findVariant(iset, name);
 }
+
 
 const char* Schema::getPath() const         { return m_path.c_str(); }
 const char* Schema::getName() const         { return m_prim.GetName().GetText(); }

@@ -306,6 +306,8 @@ usdiAPI usdi::Attribute* usdiPrimCreateAttribute(usdi::Schema *schema, const cha
 usdiAPI int              usdiPrimGetNumVariantSets(usdi::Schema *schema);
 usdiAPI int              usdiPrimGetNumVariants(usdi::Schema *schema, int iset);
 usdiAPI const char*      usdiPrimGetVariantName(usdi::Schema *schema, int iset, int ival);
+usdiAPI int              usdiPrimGetVariantSelection(usdi::Schema *schema, int iset);
+// clear selection if ival is invalid value
 usdiAPI bool             usdiPrimSetVariantSelection(usdi::Schema *schema, int iset, int ival);
 // return -1 if not found
 usdiAPI int              usdiPrimFindVariantSet(usdi::Schema *schema, const char *name);

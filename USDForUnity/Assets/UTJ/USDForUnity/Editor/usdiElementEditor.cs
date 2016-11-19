@@ -18,11 +18,18 @@ namespace UTJ
             {
                 EditorGUILayout.LabelField("Variant Sets", EditorStyles.boldLabel);
 
-                var iset = EditorGUILayout.Popup("Set", t.usdiVariantSetIndex, vsets.setNames);
-                var ivar = EditorGUILayout.Popup("Variant", t.usdiVariantIndex, vsets.variantNames[t.usdiVariantSetIndex]);
-                if(t.usdiSetVariantSelection(iset, ivar))
+                var selections = t.usdiVariantSelections;
+                for (int i = 0; i < vsets.Count; ++i)
                 {
-                    EditorUtility.SetDirty(target);
+                    var names = vsets.variantNames[i];
+                    var selection = selections[i];
+                    if(selection == -1) { selection = names.Length - 1; }
+
+                    var ivar = EditorGUILayout.Popup(vsets.setNames[i], selection, names);
+                    if (t.usdiSetVariantSelection(i, ivar))
+                    {
+                        EditorUtility.SetDirty(target);
+                    }
                 }
             }
         }

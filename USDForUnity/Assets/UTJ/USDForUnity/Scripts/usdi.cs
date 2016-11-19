@@ -412,6 +412,7 @@ namespace UTJ
         [DllImport ("usdi")] public static extern IntPtr        usdiPrimGetVariantSetName(Schema schema, int iset);
         [DllImport ("usdi")] public static extern int           usdiPrimGetNumVariants(Schema schema, int iset);
         [DllImport ("usdi")] public static extern IntPtr        usdiPrimGetVariantName(Schema schema, int iset, int ival);
+        [DllImport ("usdi")] public static extern int           usdiPrimGetVariantSelection(Schema schema, int iset);
         [DllImport ("usdi")] public static extern Bool          usdiPrimSetVariantSelection(Schema schema, int iset, int ival);
 
         [DllImport ("usdi")] public static extern Bool          usdiPrimNeedsUpdate(Schema schema);
@@ -424,11 +425,12 @@ namespace UTJ
             {
                 var name = S(usdiPrimGetVariantSetName(schema, iset));
                 int nval = usdiPrimGetNumVariants(schema, iset);
-                var vals = new string[nval];
+                var vals = new string[nval + 1];
                 for (int ival = 0; ival < nval; ++ival)
                 {
                     vals[ival] = S(usdiPrimGetVariantName(schema, iset, ival));
                 }
+                vals[nval] = " ";
                 vsets.setNames[iset] = name;
                 vsets.variantNames[iset] = vals;
             }

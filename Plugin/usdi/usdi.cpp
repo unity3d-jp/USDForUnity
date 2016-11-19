@@ -317,6 +317,12 @@ usdiAPI const char* usdiPrimGetVariantName(usdi::Schema *schema, int iset, int i
     if (!schema) { return ""; }
     return schema->getVariantName(iset, ival);
 }
+usdiAPI int usdiPrimGetVariantSelection(usdi::Schema *schema, int iset)
+{
+    usdiTraceFunc();
+    if (!schema) { return false; }
+    return schema->getVariantSelection(iset);
+}
 usdiAPI bool usdiPrimSetVariantSelection(usdi::Schema *schema, int iset, int ival)
 {
     usdiTraceFunc();

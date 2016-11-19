@@ -29,6 +29,8 @@ public:
     const char*     getVariantSetName(int iset) const;
     int             getNumVariants(int iset) const;
     const char*     getVariantName(int iset, int ival) const;
+    int             getVariantSelection(int iset) const;
+    // clear selection if ival is invalid value
     bool            setVariantSelection(int iset, int ival);
     // return -1 if not found
     int             findVariantSet(const char *name) const;
