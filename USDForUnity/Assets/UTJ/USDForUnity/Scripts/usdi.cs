@@ -113,8 +113,15 @@ namespace UTJ
         [Serializable]
         public class VariantSet
         {
-            public string name;
-            public string[] variants;
+            public string[] setNames;
+            public string[][] variantNames;
+
+            public VariantSet(int nsets)
+            {
+                setNames = new string[nsets];
+                variantNames = new string[nsets][];
+            }
+            public int Count { get { return setNames.Length; } }
         }
 
         public struct ImportConfig
@@ -409,10 +416,10 @@ namespace UTJ
 
         [DllImport ("usdi")] public static extern Bool          usdiPrimNeedsUpdate(Schema schema);
 
-        public static VariantSet[] usdiPrimGetVariantSets(Schema schema)
+        public static VariantSet usdiPrimGetVariantSets(Schema schema)
         {
             int nset = usdiPrimGetNumVariantSets(schema);
-            var vsets = new VariantSet[nset];
+            var vsets = new VariantSet(nset);
             for (int iset = 0; iset < nset; ++iset)
             {
                 var name = S(usdiPrimGetVariantSetName(schema, iset));
@@ -422,10 +429,8 @@ namespace UTJ
                 {
                     vals[ival] = S(usdiPrimGetVariantName(schema, iset, ival));
                 }
-                vsets[iset] = new VariantSet {
-                    name = name,
-                    variants = vals,
-                };
+                vsets.setNames[iset] = name;
+                vsets.variantNames[iset] = vals;
             }
             return vsets;
         }

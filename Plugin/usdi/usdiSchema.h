@@ -30,9 +30,9 @@ public:
     int             getNumVariants(int iset) const;
     const char*     getVariantName(int iset, int ival) const;
     bool            setVariantSelection(int iset, int ival);
-    // return -1 if fail
+    // return -1 if not found
     int             findVariantSet(const char *name) const;
-    // return -1 if fail
+    // return -1 if not found
     int             findVariant(int iset, const char *name) const;
     // return index of added set. -1 if fail
     int             createVariantSet(const char *name);

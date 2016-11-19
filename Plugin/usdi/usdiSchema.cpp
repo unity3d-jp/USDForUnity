@@ -156,6 +156,7 @@ const char* Schema::getVariantName(int iset, int ival) const{ return m_variant_s
 
 bool Schema::setVariantSelection(int iset, int ival)
 {
+    if (iset < 0 || ival < 0) { return false; }
     if (iset >= m_variant_sets.size()) {
         usdiLogError("Schema::setVariantSelection(): iset >= m_variant_sets.size()\n");
         return false;
@@ -180,6 +181,7 @@ int Schema::findVariantSet(const char *name) const
 
 int Schema::findVariant(int iset, const char *name) const
 {
+    if (iset < 0) { return -1; }
     if (iset >= m_variant_sets.size()) {
         usdiLogError("Schema::findVariant(): iset >= m_variant_sets.size()\n");
         return -1;
@@ -202,6 +204,7 @@ int Schema::createVariantSet(const char *name)
 
 int Schema::createVariant(int iset, const char *name)
 {
+    if (iset < 0) { return -1; }
     if (iset >= m_variant_sets.size()) {
         usdiLogError("Schema::findOrCreateVariant(): iset >= m_variant_sets.size()\n");
         return -1;
