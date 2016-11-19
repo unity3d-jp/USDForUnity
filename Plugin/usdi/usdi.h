@@ -307,6 +307,14 @@ usdiAPI int              usdiPrimGetNumVariantSets(usdi::Schema *schema);
 usdiAPI int              usdiPrimGetNumVariants(usdi::Schema *schema, int iset);
 usdiAPI const char*      usdiPrimGetVariantName(usdi::Schema *schema, int iset, int ival);
 usdiAPI bool             usdiPrimSetVariantSelection(usdi::Schema *schema, int iset, int ival);
+// return -1 if fail
+usdiAPI int              usdiPrimFindVariantSet(usdi::Schema *schema, const char *name);
+// return -1 if fail
+usdiAPI int              usdiPrimFindVariant(usdi::Schema *schema, int iset, const char *name);
+// return index of added set. -1 if fail
+usdiAPI int              usdiPrimCreateVariantSet(usdi::Schema *schema, const char *name);
+// return index of added variant. -1 if fail
+usdiAPI int              usdiPrimCreateVariant(usdi::Schema *schema, int iset, const char *name);
 
 usdiAPI bool             usdiPrimNeedsUpdate(usdi::Schema *schema);
 

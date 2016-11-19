@@ -323,6 +323,30 @@ usdiAPI bool usdiPrimSetVariantSelection(usdi::Schema *schema, int iset, int iva
     if (!schema) { return false; }
     return schema->setVariantSelection(iset, ival);
 }
+usdiAPI int usdiPrimFindVariantSet(usdi::Schema *schema, const char *name)
+{
+    usdiTraceFunc();
+    if (!schema) { return -1; }
+    return schema->findVariantSet(name);
+}
+usdiAPI int usdiPrimFindVariant(usdi::Schema *schema, int iset, const char *name)
+{
+    usdiTraceFunc();
+    if (!schema) { return -1; }
+    return schema->findVariant(iset, name);
+}
+usdiAPI int usdiPrimCreateVariantSet(usdi::Schema *schema, const char *name)
+{
+    usdiTraceFunc();
+    if (!schema) { return -1; }
+    return schema->createVariantSet(name);
+}
+usdiAPI int usdiPrimCreateVariant(usdi::Schema *schema, int iset, const char *name)
+{
+    usdiTraceFunc();
+    if (!schema) { return -1; }
+    return schema->createVariant(iset, name);
+}
 
 usdiAPI bool usdiPrimNeedsUpdate(usdi::Schema *schema)
 {

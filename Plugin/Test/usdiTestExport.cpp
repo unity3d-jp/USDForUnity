@@ -169,6 +169,18 @@ void TestExport(const char *filename)
     }
     {
         auto *mesh2 = usdiCreateMesh(ctx, root, "TestRootMesh");
+
+        int vset[] = {
+            usdiPrimCreateVariantSet(mesh2, "VSet1"),
+            usdiPrimCreateVariantSet(mesh2, "VSet2"),
+        };
+        usdiPrimCreateVariant(mesh2, vset[0], "Variant1");
+        usdiPrimCreateVariant(mesh2, vset[0], "Variant2");
+        usdiPrimCreateVariant(mesh2, vset[1], "Variant3");
+        usdiPrimCreateVariant(mesh2, vset[1], "Variant4");
+        usdiPrimCreateVariant(mesh2, vset[1], "Variant5");
+        usdiPrimSetVariantSelection(mesh2, 0, 0);
+
         float3 vertices[] = {
             { -0.5f, -0.5f, 0.0f },
             { 0.5f, -0.5f, 0.0f },

@@ -168,6 +168,49 @@ bool Schema::setVariantSelection(int iset, int ival)
     return m_prim.GetVariantSets().SetSelection(vset.name, vset.variants[ival]);
 }
 
+int Schema::findVariantSet(const char *name) const
+{
+    for (int i = 0; i < m_variant_sets.size(); ++i) {
+        if (m_variant_sets[i].name == name) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+int Schema::findVariant(int iset, const char *name) const
+{
+    if (iset >= m_variant_sets.size()) {
+        usdiLogError("Schema::findVariant(): iset >= m_variant_sets.size()\n");
+        return -1;
+    }
+    auto& variants = m_variant_sets[iset].variants;
+    for (int i = 0; i < variants.size(); ++i) {
+        if (variants[i] == name) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+int Schema::createVariantSet(const char *name)
+{
+    m_prim.GetVariantSets().FindOrCreate(name);
+    syncVariantSets();
+    return findVariantSet(name);
+}
+
+int Schema::createVariant(int iset, const char *name)
+{
+    if (iset >= m_variant_sets.size()) {
+        usdiLogError("Schema::findOrCreateVariant(): iset >= m_variant_sets.size()\n");
+        return -1;
+    }
+    m_prim.GetVariantSet(m_variant_sets[iset].name).FindOrCreateVariant(name);
+    syncVariantSets();
+    return findVariant(iset, name);
+}
+
 const char* Schema::getPath() const         { return m_path.c_str(); }
 const char* Schema::getName() const         { return m_prim.GetName().GetText(); }
 const char* Schema::getTypeName() const     { return m_prim.GetTypeName().GetText(); }
@@ -178,7 +221,7 @@ void Schema::getTimeRange(Time& start, Time& end) const
     end = m_time_end;
 }
 
-UsdPrim         Schema::getUSDPrim() const      { return m_prim; }
+UsdPrim Schema::getUSDPrim() const      { return m_prim; }
 
 bool Schema::needsUpdate() const
 {

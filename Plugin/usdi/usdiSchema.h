@@ -30,6 +30,14 @@ public:
     int             getNumVariants(int iset) const;
     const char*     getVariantName(int iset, int ival) const;
     bool            setVariantSelection(int iset, int ival);
+    // return -1 if fail
+    int             findVariantSet(const char *name) const;
+    // return -1 if fail
+    int             findVariant(int iset, const char *name) const;
+    // return index of added set. -1 if fail
+    int             createVariantSet(const char *name);
+    // return index of added variant. -1 if fail
+    int             createVariant(int iset, const char *name);
 
     Schema*         getMaster() const;
     bool            isInstance() const;
