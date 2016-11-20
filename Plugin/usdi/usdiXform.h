@@ -16,6 +16,7 @@ public:
     static const char *UsdTypeName;
 
     void                updateSample(Time t) override;
+    void                invalidateSample() override;
 
     const XformSummary& getSummary() const;
     bool                readSample(XformData& dst, Time t);
@@ -28,7 +29,8 @@ private:
     UsdGeomXformOps     m_read_ops;
     UsdGeomXformOps     m_write_ops;
 
-    XformData           m_sample;
+    XformData            m_sample;
+    mutable bool         m_summary_needs_update = true;
     mutable XformSummary m_summary;
 };
 

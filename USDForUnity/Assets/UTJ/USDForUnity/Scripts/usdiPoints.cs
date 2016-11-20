@@ -47,11 +47,8 @@ namespace UTJ
         {
             base.usdiOnUnload();
 
-            if (m_asyncRead != null)
-            {
-                m_asyncRead.Wait();
-                m_asyncRead = null;
-            }
+            usdiSync();
+            m_asyncRead = null;
 
             m_points = default(usdi.Points);
             m_summary = default(usdi.PointsSummary);
@@ -138,7 +135,12 @@ namespace UTJ
             if (!m_needsUpdate) { return; }
             base.usdiUpdate(time);
 
-            if(m_asyncRead != null)
+            usdiSync();
+        }
+
+        public override void usdiSync()
+        {
+            if (m_asyncRead != null)
             {
                 m_asyncRead.Wait();
             }

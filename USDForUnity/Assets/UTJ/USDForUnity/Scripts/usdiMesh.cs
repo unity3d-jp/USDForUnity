@@ -74,12 +74,8 @@ namespace UTJ
         {
             base.usdiOnUnload();
 
-            if(m_asyncRead != null)
-            {
-                m_asyncRead.Wait();
-                m_asyncRead = null;
-            }
-
+            usdiSync();
+            m_asyncRead = null;
             m_mesh = default(usdi.Mesh);
         }
 
@@ -202,10 +198,7 @@ namespace UTJ
             if (!m_needsUpdate) { return; }
             base.usdiUpdate(time);
 
-            if (m_asyncRead != null)
-            {
-                m_asyncRead.Wait();
-            }
+            usdiSync();
 
             int num_submeshes = m_meshData.num_submeshes == 0 ? 1 : m_meshData.num_submeshes;
 
@@ -275,6 +268,15 @@ namespace UTJ
 
             ++m_frame;
         }
+
+        public override void usdiSync()
+        {
+            if (m_asyncRead != null)
+            {
+                m_asyncRead.Wait();
+            }
+        }
+
         #endregion
 
 

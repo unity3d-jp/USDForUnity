@@ -3,7 +3,7 @@
 namespace usdi {
 
 
-struct SplitedMeshSample
+struct SubmeshSample
 {
     VtArray<GfVec3f> points;
     VtArray<GfVec3f> normals;
@@ -11,6 +11,8 @@ struct SplitedMeshSample
     VtArray<int>     indices;
     float3           bounds_min = {}, bounds_max = {};
     float3           center = {}, extents = {};
+
+    void clear();
 };
 
 struct MeshSample
@@ -24,6 +26,8 @@ struct MeshSample
     VtArray<int>     indices_triangulated;
     float3           bounds_min = {}, bounds_max = {};
     float3           center = {}, extents = {};
+
+    void clear();
 };
 
 
@@ -41,20 +45,18 @@ public:
     static const char *UsdTypeName;
 
     void                updateSample(Time t) override;
+    void                invalidateSample() override;
 
     const MeshSummary&  getSummary() const;
     bool                readSample(MeshData& dst, Time t, bool copy);
     bool                writeSample(const MeshData& src, Time t);
 
 private:
-    void updateSummary() const;
-
-private:
-    typedef std::vector<SplitedMeshSample> SplitedMeshSamples;
+    typedef std::vector<SubmeshSample> SubmeshSamples;
 
     UsdGeomMesh         m_mesh;
     MeshSample          m_sample[2], *m_front_sample = nullptr;
-    SplitedMeshSamples  m_splits[2], *m_front_splits = nullptr;
+    SubmeshSamples      m_submeshes[2], *m_front_submesh = nullptr;
     Attribute           *m_attr_uv = nullptr;
 
     mutable bool        m_summary_needs_update = true;

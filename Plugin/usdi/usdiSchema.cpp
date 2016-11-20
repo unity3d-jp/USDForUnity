@@ -214,6 +214,7 @@ bool Schema::setVariantSelection(int iset, int ival)
     else {
         return dst.SetVariantSelection(vset.variants[ival]);
     }
+    invalidateSample();
 }
 
 int Schema::findVariantSet(const char *name) const

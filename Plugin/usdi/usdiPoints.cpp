@@ -38,17 +38,13 @@ Points::~Points()
     usdiLogTrace("Points::~Points(): %s\n", getPath());
 }
 
-void Points::updateSummary() const
-{
-    m_summary_needs_update = false;
-    m_summary.has_velocities = m_points.GetVelocitiesAttr().HasValue();
-}
-
-
 const PointsSummary& Points::getSummary() const
 {
     if (m_summary_needs_update) {
-        updateSummary();
+        getTimeRange(m_summary.start, m_summary.end);
+        m_summary.has_velocities = m_points.GetVelocitiesAttr().HasValue();
+
+        m_summary_needs_update = false;
     }
     return m_summary;
 }
@@ -86,6 +82,13 @@ void Points::updateSample(Time t_)
         Scale((float3*)sample.points.data(), conf.scale, sample.points.size());
         Scale((float3*)sample.velocities.data(), conf.scale, sample.velocities.size());
     }
+}
+
+void Points::invalidateSample()
+{
+    super::invalidateSample();
+    m_summary_needs_update = true;
+    for (auto& sample : m_sample) { sample.clear(); }
 }
 
 bool Points::readSample(PointsData& dst, Time t, bool copy)

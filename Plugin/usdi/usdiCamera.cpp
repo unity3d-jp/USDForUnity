@@ -14,8 +14,6 @@ Camera::Camera(Context *ctx, Schema *parent, const UsdPrim& prim)
 {
     usdiLogTrace("Camera::Camera(): %s\n", getPath());
     if (!m_cam) { usdiLogError("Camera::Camera(): m_cam is invalid\n"); }
-
-    getTimeRange(m_summary.start, m_summary.end);
 }
 
 Camera::Camera(Context *ctx, Schema *parent, const char *name, const char *type)
@@ -33,6 +31,11 @@ Camera::~Camera()
 
 const usdi::CameraSummary& Camera::getSummary() const
 {
+    if (m_summary_needs_update) {
+        getTimeRange(m_summary.start, m_summary.end);
+
+        m_summary_needs_update = false;
+    }
     return m_summary;
 }
 
@@ -68,6 +71,13 @@ void Camera::updateSample(Time t_)
         sample.focal_length = focal_length;
         sample.aperture = vertical_aperture;
     }
+}
+
+void Camera::invalidateSample()
+{
+    super::invalidateSample();
+    m_summary_needs_update = true;
+    m_sample = CameraData();
 }
 
 bool Camera::readSample(CameraData& dst, Time t)

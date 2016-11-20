@@ -320,7 +320,6 @@ namespace UTJ
         public struct PointsSummary
         {
             public double start, end;
-            public int peak_num_points;
             public Bool has_velocities;
         };
 

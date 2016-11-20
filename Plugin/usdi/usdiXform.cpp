@@ -93,7 +93,6 @@ Xform::Xform(Context *ctx, Schema *parent, const UsdPrim& prim)
 {
     usdiLogTrace("Xform::Xform(): %s\n", getPath());
     if (!m_xf) { usdiLogError("Xform::Xform(): m_xf is invalid\n"); }
-    getTimeRange(m_summary.start, m_summary.end);
 }
 
 Xform::Xform(Context *ctx, Schema *parent, const char *name, const char *type)
@@ -111,6 +110,11 @@ Xform::~Xform()
 
 const XformSummary& Xform::getSummary() const
 {
+    if (m_summary_needs_update) {
+        getTimeRange(m_summary.start, m_summary.end);
+
+        m_summary_needs_update = false;
+    }
     return m_summary;
 }
 
@@ -234,6 +238,13 @@ void Xform::updateSample(Time t_)
         update_flags |= (int)XformData::Flags::UpdatedScale;
     }
     sample.flags = (sample.flags & ~(int)XformData::Flags::UpdatedMask) | update_flags;
+}
+
+void Xform::invalidateSample()
+{
+    super::invalidateSample();
+    m_summary_needs_update = true;
+    m_sample = XformData();
 }
 
 bool Xform::readSample(XformData& dst, Time t)

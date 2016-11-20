@@ -60,6 +60,29 @@ static inline void TriangulateIndices(int *triangulated, const CountArray &count
 }
 
 
+void SubmeshSample::clear()
+{
+    points.clear();
+    normals.clear();
+    uvs.clear();
+    indices.clear();
+    bounds_min = {}, bounds_max = {};
+    center = {}, extents = {};
+}
+
+void MeshSample::clear()
+{
+    points.clear();
+    velocities.clear();
+    normals.clear();
+    uvs.clear();
+    counts.clear();
+    indices.clear();
+    indices_triangulated;
+    bounds_min = {}, bounds_max = {};
+    center = {}, extents = {};
+}
+
 
 #define usdiUVAttrName "primvars:uv"
 #define usdiUVAttrName2 "uv"
@@ -97,26 +120,22 @@ Mesh::~Mesh()
     usdiLogTrace("Mesh::~Mesh(): %s\n", getPath());
 }
 
-void Mesh::updateSummary() const
-{
-    getTimeRange(m_summary.start, m_summary.end);
-    m_summary.has_uvs = m_attr_uv && m_attr_uv->hasValue();
-    m_summary.has_normals = m_mesh.GetNormalsAttr().HasValue();
-    m_summary.has_velocities = m_mesh.GetVelocitiesAttr().HasValue();
-
-    if (m_mesh.GetPointsAttr().ValueMightBeTimeVarying()) {
-        m_summary.topology_variance = TopologyVariance::Homogenous;
-    }
-    if (m_mesh.GetFaceVertexCountsAttr().ValueMightBeTimeVarying() ||
-        m_mesh.GetFaceVertexIndicesAttr().ValueMightBeTimeVarying()) {
-        m_summary.topology_variance = TopologyVariance::Heterogenous;
-    }
-}
-
 const MeshSummary& Mesh::getSummary() const
 {
     if (m_summary_needs_update) {
-        updateSummary();
+        getTimeRange(m_summary.start, m_summary.end);
+        m_summary.has_uvs = m_attr_uv && m_attr_uv->hasValue();
+        m_summary.has_normals = m_mesh.GetNormalsAttr().HasValue();
+        m_summary.has_velocities = m_mesh.GetVelocitiesAttr().HasValue();
+
+        if (m_mesh.GetPointsAttr().ValueMightBeTimeVarying()) {
+            m_summary.topology_variance = TopologyVariance::Homogenous;
+        }
+        if (m_mesh.GetFaceVertexCountsAttr().ValueMightBeTimeVarying() ||
+            m_mesh.GetFaceVertexIndicesAttr().ValueMightBeTimeVarying()) {
+            m_summary.topology_variance = TopologyVariance::Heterogenous;
+        }
+
         m_summary_needs_update = false;
     }
     return m_summary;
@@ -135,20 +154,20 @@ void Mesh::updateSample(Time t_)
     // swap front sample
     if (!m_front_sample) {
         m_front_sample = &m_sample[0];
-        m_front_splits = &m_splits[0];
+        m_front_submesh = &m_submeshes[0];
     }
     else if(conf.double_buffering) {
         if (m_front_sample == &m_sample[0]) {
             m_front_sample = &m_sample[1];
-            m_front_splits = &m_splits[1];
+            m_front_submesh = &m_submeshes[1];
         }
         else {
             m_front_sample = &m_sample[0];
-            m_front_splits = &m_splits[0];
+            m_front_submesh = &m_submeshes[0];
         }
     }
     auto& sample = *m_front_sample;
-    auto& splits = *m_front_splits;
+    auto& splits = *m_front_submesh;
 
     m_mesh.GetPointsAttr().Get(&sample.points, t);
     m_mesh.GetVelocitiesAttr().Get(&sample.velocities, t);
@@ -249,6 +268,19 @@ void Mesh::updateSample(Time t_)
     }
 }
 
+void Mesh::invalidateSample()
+{
+    super::invalidateSample();
+    m_summary_needs_update = true;
+    m_num_indices_triangulated = m_num_indices = 0;
+    for (auto& sample : m_sample) { sample.clear(); }
+    for (auto& submeshes : m_submeshes) {
+        for (auto& submesh : submeshes) {
+            submesh.clear();
+        }
+    }
+}
+
 bool Mesh::readSample(MeshData& dst, Time t, bool copy)
 {
     if (t != m_time_prev) { updateSample(t); }
@@ -256,7 +288,7 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
     if (!m_front_sample) { return false; }
 
     const auto& sample = *m_front_sample;
-    const auto& splits = *m_front_splits;
+    const auto& splits = *m_front_submesh;
 
     dst.num_points = (uint)sample.points.size();
     dst.num_counts = (uint)sample.counts.size();

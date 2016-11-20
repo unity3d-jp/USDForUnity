@@ -215,7 +215,6 @@ struct MeshData
 struct PointsSummary
 {
     Time    start = 0.0, end = 0.0;
-    uint    peak_num_points = 0;
     bool    has_velocities = false;
 };
 

@@ -26,11 +26,12 @@ namespace UTJ
 
 
         #region impl
-        public bool usdiSetVariantSelection(int iset, int ival)
+        public virtual bool usdiSetVariantSelection(int iset, int ival)
         {
             if (iset < 0 || iset >= m_variantSets.Count) { return false; }
             if (m_variantSelections[iset] == ival) { return false; }
 
+            usdiSync();
             if (usdi.usdiPrimSetVariantSelection(m_schema, iset, ival))
             {
                 m_variantSelections[iset] = ival;
@@ -68,6 +69,7 @@ namespace UTJ
         public abstract void usdiOnUnload();
         public abstract void usdiAsyncUpdate(double time);
         public abstract void usdiUpdate(double time);
+        public virtual void usdiSync() {}
 
 
         protected T GetOrAddComponent<T>() where T : Component

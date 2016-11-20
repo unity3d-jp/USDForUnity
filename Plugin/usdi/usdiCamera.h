@@ -16,6 +16,7 @@ public:
     static const char *UsdTypeName;
 
     void                updateSample(Time t) override;
+    void                invalidateSample() override;
 
     const CameraSummary& getSummary() const;
     bool                readSample(CameraData& dst, Time t);
@@ -24,6 +25,8 @@ public:
 private:
     UsdGeomCamera       m_cam;
     CameraData          m_sample;
+
+    mutable bool          m_summary_needs_update = true;
     mutable CameraSummary m_summary;
 };
 
