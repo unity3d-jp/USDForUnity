@@ -8,8 +8,26 @@
 
 #define usdihImpl
 #include "usdiHelper.h"
+#include "Platform.h"
 
 extern "C" {
+
+usdihAPI Platform GetPlatform()
+{
+#if defined(__Windows_x86_64__)
+    return Platform::Windows_x86_64;
+#elif defined(__Linux_x86_64__)
+    return Platform::Linux_x86_64;
+#elif defined(__Mac_x86_64__)
+    return Platform::Mac_x86_64;
+#elif defined(__Android_ARM64__)
+    return Platform::Android_ARM64;
+#elif defined(__iOS_ARM64__)
+    return Platform::iOS_ARM64;
+#elif defined(__PS4__)
+    return Platform::PS4;
+#endif
+}
 
 usdihAPI const char* GetModulePath()
 {

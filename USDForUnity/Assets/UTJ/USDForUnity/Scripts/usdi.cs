@@ -366,6 +366,19 @@ namespace UTJ
         };
 
 
+        public enum Platform
+        {
+            Unknown,
+            // any 32bit architectures are treated as "Unknown" :)
+            Windows_x86_64,
+            Linux_x86_64,
+            Mac_x86_64,
+            Android_ARM64,
+            iOS_ARM64,
+            PS4,
+        };
+
+        [DllImport ("usdiHelper")] public static extern Platform GetPlatform();
         [DllImport ("usdiHelper")] public static extern IntPtr GetModulePath();
         [DllImport ("usdiHelper")] public static extern void AddDLLSearchPath(IntPtr path);
         [DllImport ("usdiHelper")] public static extern void AddDLLSearchPath(string path);
@@ -628,7 +641,17 @@ namespace UTJ
         {
             usdi.AddDLLSearchPath(GetModulePath());
 
-            var usdPluginDir = Application.streamingAssetsPath + "/UTJ/USDForUnity/plugins";
+            string platform_suffix = "";
+            switch(usdi.GetPlatform())
+            {
+                case Platform.Windows_x86_64: platform_suffix = "_win64"; break;
+                case Platform.Linux_x86_64:   platform_suffix = "_linux"; break;
+                case Platform.Mac_x86_64:     platform_suffix = "_mac"; break;
+                case Platform.Android_ARM64:  platform_suffix = "_android"; break;
+                case Platform.PS4:            platform_suffix = "_ps4"; break;
+            }
+
+            var usdPluginDir = Application.streamingAssetsPath + "/UTJ/USDForUnity/plugins" + platform_suffix;
             usdi.AddDLLSearchPath(usdPluginDir + "/lib");
             usdi.usdiSetPluginPath(usdPluginDir);
         }

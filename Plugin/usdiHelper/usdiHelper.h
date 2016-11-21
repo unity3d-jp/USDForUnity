@@ -14,10 +14,23 @@
     #define usdihAPI
 #endif
 
+enum class Platform
+{
+    Unknown,
+    // any 32bit architectures are treated as "Unknown" :)
+    Windows_x86_64,
+    Linux_x86_64,
+    Mac_x86_64,
+    Android_ARM64,
+    iOS_ARM64,
+    PS4,
+};
+
 using module_t = void*;
 
 extern "C" {
 
+usdihAPI Platform    GetPlatform();
 usdihAPI const char* GetModulePath();
 usdihAPI void        AddDLLSearchPath(const char *v);
 usdihAPI void        SetEnv(const char *name, const char *value);

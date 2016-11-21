@@ -44,14 +44,14 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir);$(SolutionDir)External\tbb44_20160526oss\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)External\tbb44_20160526oss\lib\intel64\vc14;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)External\tbb\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)External\tbb\lib;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)_out\$(ProjectName)_$(Platform)_$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)_tmp\$(ProjectName)_$(Platform)_$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Master|x64'">
-    <IncludePath>$(SolutionDir);$(SolutionDir)External\tbb44_20160526oss\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)External\tbb44_20160526oss\lib\intel64\vc14;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)External\tbb\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)External\tbb\lib;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)_out\$(ProjectName)_$(Platform)_$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)_tmp\$(ProjectName)_$(Platform)_$(Configuration)\</IntDir>
   </PropertyGroup>
