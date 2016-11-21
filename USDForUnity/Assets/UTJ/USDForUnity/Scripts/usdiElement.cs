@@ -31,11 +31,10 @@ namespace UTJ
             if (iset < 0 || iset >= m_variantSets.Count) { return false; }
             if (m_variantSelections[iset] == ival) { return false; }
 
-            usdiSync();
             if (usdi.usdiPrimSetVariantSelection(m_schema, iset, ival))
             {
                 m_variantSelections[iset] = ival;
-                // todo: refresh
+                m_stream.usdiNotifyUpdateNeeded();
                 return true;
             }
             return false;
@@ -66,10 +65,22 @@ namespace UTJ
                 }
             }
         }
-        public abstract void usdiOnUnload();
-        public abstract void usdiAsyncUpdate(double time);
-        public abstract void usdiUpdate(double time);
-        public virtual void usdiSync() {}
+
+        public virtual void usdiOnUnload()
+        {
+        }
+
+        public virtual void usdiAsyncUpdate(double time)
+        {
+        }
+
+        public virtual void usdiUpdate(double time)
+        {
+        }
+
+        public virtual void usdiSync()
+        {
+        }
 
 
         protected T GetOrAddComponent<T>() where T : Component

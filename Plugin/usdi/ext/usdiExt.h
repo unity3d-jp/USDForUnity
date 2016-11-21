@@ -28,4 +28,6 @@ usdiAPI usdi::Task*     usdiTaskCreatePointsReadSample(usdi::Points *points, usd
 usdiAPI usdi::Task*     usdiTaskCreateAttrReadSample(usdi::Attribute *attr, usdi::AttributeData *dst, const usdi::Time *t);
 usdiAPI usdi::Task*     usdiTaskCreateComposite(usdi::Task **tasks, int num);
 
+usdiAPI int             usdiMemcmp(const void *a, const void *b, int size);
+
 } // extern "C"

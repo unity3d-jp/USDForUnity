@@ -16,7 +16,6 @@ public:
     static const char *UsdTypeName;
 
     void                updateSample(Time t) override;
-    void                invalidateSample() override;
 
     const XformSummary& getSummary() const;
     bool                readSample(XformData& dst, Time t);

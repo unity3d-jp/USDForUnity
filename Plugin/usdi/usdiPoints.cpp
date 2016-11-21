@@ -52,7 +52,8 @@ const PointsSummary& Points::getSummary() const
 void Points::updateSample(Time t_)
 {
     super::updateSample(t_);
-    if (!needsUpdate()) { return; }
+    if (m_update_flag.bits == 0) { return; }
+    if (m_update_flag.variant_set_changed) { m_summary_needs_update = true; }
 
     auto t = UsdTimeCode(t_);
     const auto& conf = getImportConfig();
@@ -82,13 +83,6 @@ void Points::updateSample(Time t_)
         Scale((float3*)sample.points.data(), conf.scale, sample.points.size());
         Scale((float3*)sample.velocities.data(), conf.scale, sample.velocities.size());
     }
-}
-
-void Points::invalidateSample()
-{
-    super::invalidateSample();
-    m_summary_needs_update = true;
-    for (auto& sample : m_sample) { sample.clear(); }
 }
 
 bool Points::readSample(PointsData& dst, Time t, bool copy)

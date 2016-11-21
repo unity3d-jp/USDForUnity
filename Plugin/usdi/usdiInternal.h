@@ -77,4 +77,9 @@ private:
 extern const float Rad2Deg;
 extern const float Deg2Rad;
 
+inline bool operator==(const ImportConfig& a, const ImportConfig& b) { return memcmp(&a, &b, sizeof(a)) == 0; }
+inline bool operator!=(const ImportConfig& a, const ImportConfig& b) { return !(a == b); }
+inline bool operator==(const ExportConfig& a, const ExportConfig& b) { return memcmp(&a, &b, sizeof(a)) == 0; }
+inline bool operator!=(const ExportConfig& a, const ExportConfig& b) { return !(a == b); }
+
 } // namespace usdi

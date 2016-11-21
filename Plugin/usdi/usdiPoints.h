@@ -26,7 +26,6 @@ public:
     static const char *UsdTypeName;
 
     void                    updateSample(Time t) override;
-    void                    invalidateSample() override;
 
     const PointsSummary&    getSummary() const;
     bool                    readSample(PointsData& dst, Time t, bool copy);

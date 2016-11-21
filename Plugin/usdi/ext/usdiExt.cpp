@@ -131,5 +131,11 @@ usdiAPI usdi::Task* usdiTaskCreateComposite(usdi::Task **tasks, int num)
     });
 }
 
+usdiAPI int usdiMemcmp(const void *a, const void *b, int size)
+{
+    usdiTraceFunc();
+    return memcmp(a, b, size);
+}
+
 } // extern "C"
 #endif // usdiEnableUnityExtension

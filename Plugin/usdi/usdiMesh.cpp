@@ -145,7 +145,8 @@ const MeshSummary& Mesh::getSummary() const
 void Mesh::updateSample(Time t_)
 {
     super::updateSample(t_);
-    if (!needsUpdate()) { return; }
+    if (m_update_flag.bits == 0) { return; }
+    if (m_update_flag.variant_set_changed) { m_summary_needs_update = true; }
 
 
     auto t = UsdTimeCode(t_);
@@ -209,14 +210,21 @@ void Mesh::updateSample(Time t_)
     }
 
     // indices
-    if (m_num_indices_triangulated == 0 || getSummary().topology_variance == TopologyVariance::Heterogenous) {
+    bool needs_calculate_indices =
+        m_num_indices_triangulated == 0 ||
+        getSummary().topology_variance == TopologyVariance::Heterogenous ||
+        m_update_flag.variant_set_changed;
+    bool needs_copy_indices =
+        sample.indices_triangulated.size() != m_sample[0].indices_triangulated.size() ||
+        m_update_flag_prev.variant_set_changed;
+    if (needs_calculate_indices) {
         CountIndices(sample.counts, m_num_indices, m_num_indices_triangulated);
         if (conf.triangulate || needs_calculate_normals) {
             sample.indices_triangulated.resize(m_num_indices_triangulated);
             TriangulateIndices(sample.indices_triangulated.data(), sample.counts, &sample.indices, conf.swap_faces);
         }
     }
-    else if (sample.indices_triangulated.size() != m_sample[0].indices_triangulated.size()) {
+    else if (needs_copy_indices) {
         sample.indices_triangulated = m_sample[0].indices_triangulated;
     }
 
@@ -265,19 +273,6 @@ void Mesh::updateSample(Time t_)
         ComputeBounds((float3*)sms.points.cdata(), sms.points.size(), sms.bounds_min, sms.bounds_max);
         sms.center = (sms.bounds_min + sms.bounds_max) * 0.5f;
         sms.extents = sms.bounds_max - sms.bounds_min;
-    }
-}
-
-void Mesh::invalidateSample()
-{
-    super::invalidateSample();
-    m_summary_needs_update = true;
-    m_num_indices_triangulated = m_num_indices = 0;
-    for (auto& sample : m_sample) { sample.clear(); }
-    for (auto& submeshes : m_submeshes) {
-        for (auto& submesh : submeshes) {
-            submesh.clear();
-        }
     }
 }
 

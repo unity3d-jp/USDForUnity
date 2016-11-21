@@ -91,6 +91,15 @@ enum class TopologyVariance
     Heterogenous, // both vertices and topologies are not constant
 };
 
+union UpdateFlags {
+    struct {
+        uint sample_updated : 1;
+        uint import_config_updated : 1;
+        uint variant_set_changed : 1;
+    };
+    uint bits;
+};
+
 typedef double Time;
 
 struct ImportConfig
@@ -279,7 +288,6 @@ usdiAPI usdi::Schema*    usdiGetRoot(usdi::Context *ctx);
 usdiAPI usdi::Schema*    usdiFindSchema(usdi::Context *ctx, const char *path);
 
 usdiAPI void             usdiUpdateAllSamples(usdi::Context *ctx, usdi::Time t);
-usdiAPI void             usdiInvalidateAllSamples(usdi::Context *ctx);
 
 // Prim interface
 usdiAPI int              usdiPrimGetID(usdi::Schema *schema);
@@ -312,12 +320,16 @@ usdiAPI bool             usdiPrimSetVariantSelection(usdi::Schema *schema, int i
 usdiAPI int              usdiPrimFindVariantSet(usdi::Schema *schema, const char *name);
 // return -1 if not found
 usdiAPI int              usdiPrimFindVariant(usdi::Schema *schema, int iset, const char *name);
-// return index of added set. -1 if fail
+// return index of created variant set. if variant set with name already exists, return its index.
 usdiAPI int              usdiPrimCreateVariantSet(usdi::Schema *schema, const char *name);
-// return index of added variant. -1 if fail
+// return index of created variant. if variant with name already exists, return its index.
 usdiAPI int              usdiPrimCreateVariant(usdi::Schema *schema, int iset, const char *name);
 
-usdiAPI bool             usdiPrimNeedsUpdate(usdi::Schema *schema);
+usdiAPI usdi::UpdateFlags usdiPrimGetUpdateFlags(usdi::Schema *schema);
+usdiAPI usdi::UpdateFlags usdiPrimGetUpdateFlagsPrev(usdi::Schema *schema);
+usdiAPI void             usdiPrimUpdateSample(usdi::Schema *schema, usdi::Time t);
+usdiAPI void*            usdiPrimGetUserData(usdi::Schema *schema);
+usdiAPI void             usdiPrimSetUserData(usdi::Schema *schema, void *data);
 
 // Xform interface
 usdiAPI usdi::Xform*     usdiAsXform(usdi::Schema *schema); // dynamic cast to Xform

@@ -119,7 +119,7 @@ namespace UTJ
         public override void usdiAsyncUpdate(double time)
         {
             base.usdiAsyncUpdate(time);
-            if (!m_needsUpdate) {
+            if (m_updateFlags.bits == 0) {
                 m_needsAllocateMeshData = false;
                 m_needsUploadMeshData = false;
                 return;
@@ -129,7 +129,8 @@ namespace UTJ
 
             m_needsAllocateMeshData =
                 m_prevVertexCount == 0 ||
-                m_meshSummary.topology_variance == usdi.TopologyVariance.Heterogenous;
+                m_meshSummary.topology_variance == usdi.TopologyVariance.Heterogenous ||
+                m_updateFlags.variantSetChanged;
 
             m_needsUploadMeshData =
                 m_needsAllocateMeshData ||
@@ -195,7 +196,7 @@ namespace UTJ
         // sync
         public override void usdiUpdate(double time)
         {
-            if (!m_needsUpdate) { return; }
+            if (m_updateFlags.bits == 0) { return; }
             base.usdiUpdate(time);
 
             usdiSync();

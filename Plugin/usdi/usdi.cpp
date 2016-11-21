@@ -181,14 +181,6 @@ usdiAPI void usdiUpdateAllSamples(usdi::Context *ctx, usdi::Time t)
     ctx->updateAllSamples(t);
 }
 
-usdiAPI void usdiInvalidateAllSamples(usdi::Context *ctx)
-{
-    usdiTraceFunc();
-    if (!ctx) return;
-
-    ctx->invalidateAllSamples();
-}
-
 
 // Schema interface
 
@@ -354,11 +346,36 @@ usdiAPI int usdiPrimCreateVariant(usdi::Schema *schema, int iset, const char *na
     return schema->createVariant(iset, name);
 }
 
-usdiAPI bool usdiPrimNeedsUpdate(usdi::Schema *schema)
+usdiAPI usdi::UpdateFlags usdiPrimGetUpdateFlags(usdi::Schema *schema)
 {
     usdiTraceFunc();
-    if (!schema) { return false; }
-    return schema->needsUpdate();
+    if (!schema) { return{ 0 }; }
+    return schema->getUpdateFlags();
+}
+usdiAPI usdi::UpdateFlags usdiPrimGetUpdateFlagsPrev(usdi::Schema *schema)
+{
+    usdiTraceFunc();
+    if (!schema) { return{ 0 }; }
+    return schema->getUpdateFlagsPrev();
+}
+
+usdiAPI void usdiPrimUpdateSample(usdi::Schema *schema, usdi::Time t)
+{
+    usdiTraceFunc();
+    if (!schema) { return; }
+    return schema->updateSample(t);
+}
+usdiAPI void* usdiPrimGetUserData(usdi::Schema *schema)
+{
+    usdiTraceFunc();
+    if (!schema) { return nullptr; }
+    return schema->getUserData();
+}
+usdiAPI void usdiPrimSetUserData(usdi::Schema *schema, void *data)
+{
+    usdiTraceFunc();
+    if (!schema) { return; }
+    return schema->setUserData(data);
 }
 
 

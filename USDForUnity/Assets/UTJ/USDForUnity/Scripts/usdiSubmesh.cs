@@ -215,7 +215,7 @@ namespace UTJ
 
         public void usdiUploadMeshData(bool topology, bool close)
         {
-            bool directVBUpdate = m_parent.directVBUpdate && m_VB != null;
+            bool directVBUpdate = m_parent.directVBUpdate && m_VB != IntPtr.Zero;
             if (directVBUpdate)
             {
                 // nothing to do here

@@ -45,7 +45,6 @@ public:
     static const char *UsdTypeName;
 
     void                updateSample(Time t) override;
-    void                invalidateSample() override;
 
     const MeshSummary&  getSummary() const;
     bool                readSample(MeshData& dst, Time t, bool copy);

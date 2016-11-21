@@ -42,7 +42,8 @@ const usdi::CameraSummary& Camera::getSummary() const
 void Camera::updateSample(Time t_)
 {
     super::updateSample(t_);
-    if (!needsUpdate()) { return; }
+    if (m_update_flag.bits == 0) { return; }
+    if (m_update_flag.variant_set_changed) { m_summary_needs_update = true; }
 
     auto t = UsdTimeCode(t_);
     const auto& conf = getImportConfig();
@@ -71,13 +72,6 @@ void Camera::updateSample(Time t_)
         sample.focal_length = focal_length;
         sample.aperture = vertical_aperture;
     }
-}
-
-void Camera::invalidateSample()
-{
-    super::invalidateSample();
-    m_summary_needs_update = true;
-    m_sample = CameraData();
 }
 
 bool Camera::readSample(CameraData& dst, Time t)

@@ -64,7 +64,7 @@ namespace UTJ
         public override void usdiAsyncUpdate(double time)
         {
             base.usdiAsyncUpdate(time);
-            if (!m_needsUpdate) { return; }
+            if (m_updateFlags.bits == 0) { return; }
 
             usdi.PointsData tmp = usdi.PointsData.default_value;
             usdi.usdiPointsReadSample(m_points, ref tmp, time, true);
@@ -132,7 +132,7 @@ namespace UTJ
 
         public override void usdiUpdate(double time)
         {
-            if (!m_needsUpdate) { return; }
+            if (m_updateFlags.bits == 0) { return; }
             base.usdiUpdate(time);
 
             usdiSync();

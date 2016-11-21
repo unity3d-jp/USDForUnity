@@ -106,6 +106,15 @@ namespace UTJ
             Heterogenous, // both vertices and topologies are not constant
         };
 
+        public struct UpdateFlags
+        {
+            public uint bits;
+
+            public bool sampleUpdated       { get { return (bits & 0x1) != 0; } }
+            public bool importConfigChanged { get { return (bits & 0x2) != 0; } }
+            public bool variantSetChanged   { get { return (bits & 0x4) != 0; } }
+        }
+
         public static double default_time {
             get { return Double.NaN; }
         }
@@ -126,6 +135,8 @@ namespace UTJ
 
         public struct ImportConfig
         {
+            public const int Size = 0x14;
+
             public InterpolationType interpolation;
             public NormalCalculationType normal_calculation;
             public float scale;
@@ -153,6 +164,8 @@ namespace UTJ
                 }
             }
         };
+        public static bool Equals(ref ImportConfig a, ref ImportConfig b) { return usdiMemcmp(ref a, ref b, ImportConfig.Size) == 0; }
+        [DllImport("usdi")] public static extern int usdiMemcmp(ref usdi.ImportConfig a, ref usdi.ImportConfig b, int size);
 
         public struct ExportConfig
         {
@@ -387,7 +400,6 @@ namespace UTJ
         [DllImport ("usdi")] public static extern Schema        usdiFindSchema(Context ctx, string path);
 
         [DllImport ("usdi")] public static extern void          usdiUpdateAllSamples(Context ctx, double t);
-        [DllImport ("usdi")] public static extern void          usdiInvalidateAllSamples(Context ctx);
 
         // Prim interface
         [DllImport ("usdi")] public static extern int           usdiPrimGetID(Schema schema);
@@ -414,7 +426,11 @@ namespace UTJ
         [DllImport ("usdi")] public static extern int           usdiPrimGetVariantSelection(Schema schema, int iset);
         [DllImport ("usdi")] public static extern Bool          usdiPrimSetVariantSelection(Schema schema, int iset, int ival);
 
-        [DllImport ("usdi")] public static extern Bool          usdiPrimNeedsUpdate(Schema schema);
+        [DllImport ("usdi")] public static extern UpdateFlags   usdiPrimGetUpdateFlags(Schema schema);
+        [DllImport ("usdi")] public static extern UpdateFlags   usdiPrimGetUpdateFlagsPrev(Schema schema);
+        [DllImport ("usdi")] public static extern void          usdiPrimUpdateSample(Schema schema, double t);
+        [DllImport ("usdi")] public static extern IntPtr        usdiPrimGetUserData(Schema schema);
+        [DllImport ("usdi")] public static extern void          usdiPrimSetUserData(Schema schema, IntPtr data);
 
         public static VariantSet usdiPrimGetVariantSets(Schema schema)
         {
@@ -491,7 +507,6 @@ namespace UTJ
         [DllImport("usdi")] public static extern IntPtr usdiTaskCreatePointsReadSample(Points points, ref PointsData dst, ref double t);
         [DllImport("usdi")] public static extern IntPtr usdiTaskCreateAttrReadSample(Attribute points, ref AttributeData dst, ref double t);
         [DllImport("usdi")] public static extern IntPtr usdiTaskCreateComposite(IntPtr tasks, int num);
-
 
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern void usdiUniTransformAssign(UnityEngine.Transform trans, ref XformData data);

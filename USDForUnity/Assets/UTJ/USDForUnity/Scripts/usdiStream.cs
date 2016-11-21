@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
+using System.Runtime.InteropServices;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -39,6 +39,8 @@ namespace UTJ
 
         usdi.Context m_ctx;
         List<usdiElement> m_elements = new List<usdiElement>();
+        usdi.ImportConfig m_prevConfig;
+        bool m_updateNeeded;
         double m_prevUpdateTime = Double.NaN;
         usdi.Task m_asyncUpdate;
         #endregion
@@ -73,6 +75,11 @@ namespace UTJ
 
 
         #region impl
+
+        public void usdiNotifyUpdateNeeded()
+        {
+            m_updateNeeded = true;
+        }
 
         void usdiLog(string message)
         {
@@ -127,6 +134,7 @@ namespace UTJ
             }
             if (go == null)
             {
+                // Xform must be last because some schemas are subclass of Xform
                 var xf = usdi.usdiAsXform(schema);
                 if (xf)
                 {
@@ -165,6 +173,8 @@ namespace UTJ
             }
         }
 
+
+
         void usdiApplyImportConfig()
         {
             usdi.ImportConfig conf;
@@ -176,7 +186,13 @@ namespace UTJ
             conf.swap_faces = m_importOptions.swapFaces;
             conf.split_mesh = true;
             conf.double_buffering = m_deferredUpdate;
-            usdi.usdiSetImportConfig(m_ctx, ref conf);
+
+            if(!usdi.Equals(ref m_prevConfig, ref conf))
+            {
+                m_prevConfig = conf;
+                usdi.usdiSetImportConfig(m_ctx, ref conf);
+                usdiNotifyUpdateNeeded();
+            }
         }
 
         public bool usdiLoad(string path)
@@ -237,10 +253,10 @@ namespace UTJ
         // possibly called from non-main thread
         void usdiAsyncUpdate(double t)
         {
-            // skip if update is not needed
-            if (t == m_prevUpdateTime) { return; }
-
             usdiApplyImportConfig();
+
+            // skip if update is not needed
+            if (!m_updateNeeded && t == m_prevUpdateTime) { return; }
 
             usdi.usdiUpdateAllSamples(m_ctx, t);
             int c = m_elements.Count;
@@ -252,7 +268,8 @@ namespace UTJ
 
         void usdiUpdate(double t)
         {
-            if (t == m_prevUpdateTime) { return; }
+            if (!m_updateNeeded && t == m_prevUpdateTime) { return; }
+            m_updateNeeded = false;
 
             // update all elements
             int c = m_elements.Count;

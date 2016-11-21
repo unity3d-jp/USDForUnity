@@ -28,7 +28,6 @@ public:
     int                 generateID();
 
     void                updateAllSamples(Time t);
-    void                invalidateAllSamples();
 
     // T: Xform, Camera, Mesh, ...
     template<class T> T* createSchema(Schema *parent, const char *name);

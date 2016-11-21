@@ -36,9 +36,9 @@ public:
     int             findVariantSet(const char *name) const;
     // return -1 if not found
     int             findVariant(int iset, const char *name) const;
-    // return index of added set. -1 if fail
+    // return index of created variant set. if variant set with name already exists, return its index.
     int             createVariantSet(const char *name);
-    // return index of added variant. -1 if fail
+    // return index of created variant. if variant with name already exists, return its index.
     int             createVariant(int iset, const char *name);
 
     Schema*         getMaster() const;
@@ -53,9 +53,9 @@ public:
     void            getTimeRange(Time& start, Time& end) const;
     UsdPrim         getUSDPrim() const;
 
-    bool            needsUpdate() const;
+    UpdateFlags     getUpdateFlags() const;
+    UpdateFlags     getUpdateFlagsPrev() const;
     virtual void    updateSample(Time t);
-    virtual void    invalidateSample();
 
     void            setUserData(void *v);
     void*           getUserData() const;
@@ -79,6 +79,7 @@ public:
 
 
 protected:
+    void notifyImportConfigChanged();
     void addChild(Schema *child);
     std::string makePath(const char *name);
 
@@ -97,6 +98,7 @@ protected:
     };
 
     void syncAttributes();
+    void syncTimeRange();
     void syncVariantSets();
 
     Context         *m_ctx = nullptr;
@@ -113,7 +115,7 @@ protected:
 
     Time            m_time_start = usdiInvalidTime, m_time_end = usdiInvalidTime;
     Time            m_time_prev = usdiInvalidTime;
-    bool            m_needs_update = true;
+    UpdateFlags     m_update_flag, m_update_flag_prev, m_update_flag_next;
     void            *m_userdata = nullptr;
 };
 

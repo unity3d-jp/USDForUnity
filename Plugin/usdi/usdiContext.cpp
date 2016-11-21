@@ -178,8 +178,11 @@ const ImportConfig& Context::getImportConfig() const
 
 void Context::setImportConfig(const ImportConfig& v)
 {
-    m_import_config = v;
-    applyImportConfig();
+    if (v != m_import_config) {
+        m_import_config = v;
+        applyImportConfig();
+        for (auto& s : m_schemas) { s->notifyImportConfigChanged(); }
+    }
 }
 
 const ExportConfig& Context::getExportConfig() const
@@ -230,13 +233,6 @@ void Context::updateAllSamples(Time t)
         }
     });
 #endif
-}
-
-void Context::invalidateAllSamples()
-{
-    for (auto& s : m_schemas) {
-        s->invalidateSample();
-    }
 }
 
 void Context::addSchema(Schema *schema)

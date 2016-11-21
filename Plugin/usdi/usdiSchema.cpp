@@ -41,32 +41,9 @@ void Schema::init()
 {
     if (m_prim && !m_master) {
         m_path = m_prim.GetPath().GetString();
-
-        // gather attributes
         syncAttributes();
-
-        // gather variant sets
+        syncTimeRange();
         syncVariantSets();
-
-        // get start & end time
-        double lower = 0.0, upper = 0.0;
-        bool first = true;
-        for (auto& a : m_attributes) {
-            double l, u;
-            if (a->getTimeRange(l, u)) {
-                if (first) {
-                    lower = l;
-                    upper = u;
-                    first = false;
-                }
-                else {
-                    lower = std::min(lower, l);
-                    upper = std::max(upper, u);
-                }
-            }
-        }
-        m_time_start = lower;
-        m_time_end = upper;
     }
 }
 
@@ -81,6 +58,28 @@ void Schema::syncAttributes()
     }
 }
 
+void Schema::syncTimeRange()
+{
+    double lower = 0.0, upper = 0.0;
+    bool first = true;
+    for (auto& a : m_attributes) {
+        double l, u;
+        if (a->getTimeRange(l, u)) {
+            if (first) {
+                lower = l;
+                upper = u;
+                first = false;
+            }
+            else {
+                lower = std::min(lower, l);
+                upper = std::max(upper, u);
+            }
+        }
+    }
+    m_time_start = lower;
+    m_time_end = upper;
+}
+
 void Schema::syncVariantSets()
 {
     std::vector<std::string> names;
@@ -93,7 +92,6 @@ void Schema::syncVariantSets()
         m_variant_sets[i].variants = vset.GetVariantNames();
     }
 }
-
 
 void Schema::setup()
 {
@@ -214,7 +212,8 @@ bool Schema::setVariantSelection(int iset, int ival)
     else {
         return dst.SetVariantSelection(vset.variants[ival]);
     }
-    invalidateSample();
+
+    m_update_flag_next.variant_set_changed = 1;
 }
 
 int Schema::findVariantSet(const char *name) const
@@ -275,31 +274,40 @@ void Schema::getTimeRange(Time& start, Time& end) const
 
 UsdPrim Schema::getUSDPrim() const      { return m_prim; }
 
-bool Schema::needsUpdate() const
+void Schema::notifyImportConfigChanged()
 {
-    return m_needs_update;
+    m_update_flag_next.import_config_updated = 1;
 }
+
+UpdateFlags Schema::getUpdateFlags() const { return m_update_flag; }
+UpdateFlags Schema::getUpdateFlagsPrev() const  { return m_update_flag_prev; }
 
 void Schema::updateSample(Time t)
 {
-    m_needs_update = true;
-    if (m_time_prev != usdiInvalidTime) {
-        if (t == m_time_prev) { m_needs_update = false; }
-        else if ((t <= m_time_start && m_time_prev <= m_time_start) || (t >= m_time_end && m_time_prev >= m_time_end)) {
-            m_needs_update = false;
+    m_update_flag_prev = m_update_flag;
+    m_update_flag = m_update_flag_next;
+    m_update_flag_next.bits = 0;
+
+    {
+        m_update_flag.sample_updated = 1;
+        if (m_time_prev != usdiInvalidTime) {
+            if (t == m_time_prev) { m_update_flag.sample_updated = 0; }
+            else if ((t <= m_time_start && m_time_prev <= m_time_start) || (t >= m_time_end && m_time_prev >= m_time_end)) {
+                m_update_flag.sample_updated = 0;
+            }
         }
     }
+
+    //if (m_update_flag.variant_set_changed) {
+    //    syncAttributes();
+    //    syncTimeRange();
+    //}
+
     m_time_prev = t;
 
     //for (auto& a : m_attributes) {
     //    a->updateSample(t);
     //}
-}
-
-void Schema::invalidateSample()
-{
-    m_needs_update = true;
-    m_time_prev = usdiInvalidTime;
 }
 
 void Schema::setUserData(void *v) { m_userdata = v; }
