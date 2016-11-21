@@ -97,14 +97,14 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir);$(SolutionDir)usdi;$(SolutionDir)External\boost\include;$(SolutionDir)External\double-conversion\include;$(SolutionDir)External\python27\include;$(SolutionDir)External\OpenEXR\include\OpenEXR;$(SolutionDir)External\tbb44_20160526oss\include;$(SolutionDir)External\USD\include;$(SolutionDir)External\Unity\include;$(VTUNE_AMPLIFIER_XE_2016_DIR)include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)External\glew\lib;$(SolutionDir)External\Vulkan\lib;$(SolutionDir)External\boost\lib;$(SolutionDir)External\double-conversion\lib;$(SolutionDir)External\OpenEXR\lib;$(SolutionDir)External\python27\lib;$(SolutionDir)External\tbb44_20160526oss\lib\intel64\vc14;$(SolutionDir)External\USD\lib;$(VTUNE_AMPLIFIER_XE_2016_DIR)lib64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)usdi;$(SolutionDir)External\boost\include;$(SolutionDir)External\double-conversion\include;$(SolutionDir)External\python27\include;$(SolutionDir)External\OpenEXR\include\OpenEXR;$(SolutionDir)External\tbb\include;$(SolutionDir)External\USD\include;$(SolutionDir)External\Unity\include;$(VTUNE_AMPLIFIER_XE_2016_DIR)include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)External\glew\lib;$(SolutionDir)External\Vulkan\lib;$(SolutionDir)External\boost\lib;$(SolutionDir)External\double-conversion\lib;$(SolutionDir)External\OpenEXR\lib;$(SolutionDir)External\python27\lib;$(SolutionDir)External\tbb\lib;$(SolutionDir)External\USD\lib;$(VTUNE_AMPLIFIER_XE_2016_DIR)lib64;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)_out\$(ProjectName)_$(Platform)_$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)_tmp\$(ProjectName)_$(Platform)_$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Master|x64'">
-    <IncludePath>$(SolutionDir);$(SolutionDir)usdi;$(SolutionDir)External\boost\include;$(SolutionDir)External\double-conversion\include;$(SolutionDir)External\python27\include;$(SolutionDir)External\OpenEXR\include\OpenEXR;$(SolutionDir)External\tbb44_20160526oss\include;$(SolutionDir)External\USD\include;$(SolutionDir)External\Unity\include;$(VTUNE_AMPLIFIER_XE_2016_DIR)include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)External\glew\lib;$(SolutionDir)External\Vulkan\lib;$(SolutionDir)External\boost\lib;$(SolutionDir)External\double-conversion\lib;$(SolutionDir)External\OpenEXR\lib;$(SolutionDir)External\python27\lib;$(SolutionDir)External\tbb44_20160526oss\lib\intel64\vc14;$(SolutionDir)External\USD\lib;$(VTUNE_AMPLIFIER_XE_2016_DIR)lib64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)usdi;$(SolutionDir)External\boost\include;$(SolutionDir)External\double-conversion\include;$(SolutionDir)External\python27\include;$(SolutionDir)External\OpenEXR\include\OpenEXR;$(SolutionDir)External\tbb\include;$(SolutionDir)External\USD\include;$(SolutionDir)External\Unity\include;$(VTUNE_AMPLIFIER_XE_2016_DIR)include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)External\glew\lib;$(SolutionDir)External\Vulkan\lib;$(SolutionDir)External\boost\lib;$(SolutionDir)External\double-conversion\lib;$(SolutionDir)External\OpenEXR\lib;$(SolutionDir)External\python27\lib;$(SolutionDir)External\tbb\lib;$(SolutionDir)External\USD\lib;$(VTUNE_AMPLIFIER_XE_2016_DIR)lib64;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)_out\$(ProjectName)_$(Platform)_$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)_tmp\$(ProjectName)_$(Platform)_$(Configuration)\</IntDir>
   </PropertyGroup>
