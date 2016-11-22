@@ -226,11 +226,11 @@ usdiAPI const char* usdiPrimGetName(usdi::Schema *schema)
     if (!schema) { return ""; }
     return schema->getName();
 }
-usdiAPI const char* usdiPrimGetTypeName(usdi::Schema *schema)
+usdiAPI const char* usdiPrimGetUsdTypeName(usdi::Schema *schema)
 {
     usdiTraceFunc();
     if (!schema) { return ""; }
-    return schema->getTypeName();
+    return schema->getUsdTypeName();
 }
 
 usdiAPI usdi::Schema* usdiPrimGetMaster(usdi::Schema *schema)

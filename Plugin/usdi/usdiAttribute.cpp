@@ -360,14 +360,14 @@ Attribute* WrapExistingAttribute(Schema *parent, UsdAttribute usd)
 
 Attribute* WrapExistingAttribute(Schema *parent, const char *name)
 {
-    UsdAttribute usd = parent->getUSDPrim().GetAttribute(TfToken(name));
+    UsdAttribute usd = parent->getUsdPrim().GetAttribute(TfToken(name));
     return WrapExistingAttribute(parent, usd);
 }
 
 template<class T>
 static Attribute* CreateNewAttribute(Schema *parent, const char *name)
 {
-    UsdAttribute usd = parent->getUSDPrim().CreateAttribute(TfToken(name), AttrTypeTraits<T>::sdf_typename());
+    UsdAttribute usd = parent->getUsdPrim().CreateAttribute(TfToken(name), AttrTypeTraits<T>::sdf_typename());
     if (!usd) { return nullptr; }
     return new TAttribute<T>(parent, usd);
 }

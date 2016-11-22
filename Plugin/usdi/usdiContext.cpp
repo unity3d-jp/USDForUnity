@@ -265,52 +265,9 @@ Schema* Context::createOverride(const char *prim_path)
     return nullptr;
 }
 
-template<class T>
-T* Context::createSchema(Schema *parent, const char *name)
+Schema* Context::createSchema(Schema *parent, const UsdPrim& prim)
 {
-    T *ret = new T(this, parent, name);
-    addSchema(ret);
-    if (parent) { parent->addChild(ret); }
-    return ret;
-}
-template<class T>
-T* Context::createSchema(Schema *parent, const UsdPrim& t)
-{
-    T *ret = new T(this, parent, t);
-    addSchema(ret);
-    if (parent) { parent->addChild(ret); }
-    return ret;
-}
-#define Instanciate(T)\
-    template T* Context::createSchema<T>(Schema *parent, const char *name);\
-    template T* Context::createSchema<T>(Schema *parent, const UsdPrim& t);
-Instanciate(Xform);
-Instanciate(Camera);
-Instanciate(Mesh);
-Instanciate(Points);
-#undef Instanciate
-
-Schema* Context::createSchema(Schema *parent, UsdPrim prim)
-{
-    Schema *ret = nullptr;
-
-    const auto& tn = prim.GetTypeName();
-    if (tn == Xform::UsdTypeName) {
-        ret = new Xform(this, parent, prim);
-    }
-    else if (tn == Points::UsdTypeName) {
-        ret = new Points(this, parent, prim);
-    }
-    else if (tn == Mesh::UsdTypeName) {
-        ret = new Mesh(this, parent, prim);
-    }
-    else if (tn == Camera::UsdTypeName) {
-        ret = new Camera(this, parent, prim);
-    }
-    else {
-        ret = new Schema(this, parent, prim);
-    }
-
+    Schema *ret = CreateSchema(this, parent, prim);
     if (ret) {
         addSchema(ret);
         if (parent) { parent->addChild(ret); }
@@ -318,7 +275,7 @@ Schema* Context::createSchema(Schema *parent, UsdPrim prim)
     return ret;
 }
 
-Schema* Context::createSchema(Schema *parent, Schema *master, const std::string& path, UsdPrim prim)
+Schema* Context::createInstanceSchema(Schema *parent, Schema *master, const std::string& path, UsdPrim prim)
 {
     auto *ret = new Schema(this, parent, master, path, prim);
     addSchema(ret);
@@ -344,7 +301,7 @@ Schema* Context::createSchemaRecursive(Schema *parent, UsdPrim prim)
         }
         auto children = prim.GetMaster().GetChildren();
         for (auto c : children) {
-            createReferenceSchemaRecursive(ret, c);
+            createInstanceSchemaRecursive(ret, c);
         }
     }
     else {
@@ -356,7 +313,7 @@ Schema* Context::createSchemaRecursive(Schema *parent, UsdPrim prim)
     return ret;
 }
 
-Schema* Context::createReferenceSchemaRecursive(Schema *parent, UsdPrim prim)
+Schema* Context::createInstanceSchemaRecursive(Schema *parent, UsdPrim prim)
 {
     Schema *master = findSchema(prim.GetPath().GetText());
 
@@ -366,10 +323,10 @@ Schema* Context::createReferenceSchemaRecursive(Schema *parent, UsdPrim prim)
     }
     path += prim.GetName();
 
-    auto *ret = createSchema(parent, master, path, prim);
+    auto *ret = createInstanceSchema(parent, master, path, prim);
     auto children = prim.GetChildren();
     for (auto c : children) {
-        createReferenceSchemaRecursive(ret, c);
+        createInstanceSchemaRecursive(ret, c);
     }
     return ret;
 }

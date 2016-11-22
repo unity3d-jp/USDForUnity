@@ -2,16 +2,27 @@
 
 namespace usdi {
 
+#define DefSchemaTraits2(Type, Typename)\
+    using UsdType = Type;\
+    static const char* _getUsdTypeName() { return Typename; };
+
+#define DefSchemaTraits(Type, Typename)\
+    DefSchemaTraits2(Type, Typename)\
+    static int _getInheritDepth() { return super::_getInheritDepth() + 1; }\
+
+
 class Schema
 {
 friend class Context;
-protected:
+public:
+    DefSchemaTraits2(UsdSchemaBase, "");
+    static int _getInheritDepth() { return 0; }
+
     Schema(Context *ctx, Schema *parent, Schema *master, const std::string& path, const UsdPrim& p);
     Schema(Context *ctx, Schema *parent, const UsdPrim& p);
-    Schema(Context *ctx, Schema *parent, const char *name, const char *type); // for export
+    Schema(Context *ctx, Schema *parent, const char *name, const char *type = _getUsdTypeName()); // for export
     void init();
     virtual void setup();
-public:
     virtual ~Schema();
 
     Context*        getContext() const;
@@ -56,9 +67,9 @@ public:
 
     const char*     getPath() const;
     const char*     getName() const;
-    const char*     getTypeName() const;
+    const char*     getUsdTypeName() const;
+    UsdPrim         getUsdPrim() const;
     void            getTimeRange(Time& start, Time& end) const;
-    UsdPrim         getUSDPrim() const;
 
     UpdateFlags     getUpdateFlags() const;
     UpdateFlags     getUpdateFlagsPrev() const;
@@ -125,5 +136,34 @@ protected:
     UpdateFlags     m_update_flag, m_update_flag_prev, m_update_flag_next;
     void            *m_userdata = nullptr;
 };
+
+
+class ISchemaHandler
+{
+public:
+    virtual             ~ISchemaHandler();
+    virtual int         getInheritDepth() = 0;
+    virtual const char* getUsdTypeName() = 0;
+    virtual bool        isCompatible(const UsdPrim& p) = 0;
+    virtual Schema*     create(Context *ctx, Schema *parent, const UsdPrim& p) = 0;
+};
+
+template<class SchemaType>
+class SchemaHandler : public ISchemaHandler
+{
+public:
+    static SchemaHandler& instance() { static SchemaHandler s_inst; return s_inst; }
+    int         getInheritDepth() override { return SchemaType::_getInheritDepth(); }
+    const char* getUsdTypeName() override { return SchemaType::_getUsdTypeName(); }
+    bool        isCompatible(const UsdPrim& p) override { typename SchemaType::UsdType t(p); return t; }
+    Schema*     create(Context *ctx, Schema *parent, const UsdPrim& p) override { return new SchemaType(ctx, parent, p); }
+};
+
+Schema* CreateSchema(Context *ctx, Schema *parent, const UsdPrim& p);
+
+void RegisterSchemaHandlerImpl(ISchemaHandler& handler);
+#define RegisterSchemaHandler(SchemaType)\
+    struct Register##SchemaType { Register##SchemaType() { RegisterSchemaHandlerImpl(SchemaHandler<SchemaType>::instance()); } } g_Register##SchemaType;\
+    template SchemaType* Context::createSchema<SchemaType>(Schema *parent, const char *name);
 
 } // namespace usdi

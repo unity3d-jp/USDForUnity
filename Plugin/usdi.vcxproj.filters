@@ -156,4 +156,7 @@
       <UniqueIdentifier>{5f320d52-1147-481f-b80b-db53ab052345}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="usdi\usdiContext.i" />
+  </ItemGroup>
 </Project>

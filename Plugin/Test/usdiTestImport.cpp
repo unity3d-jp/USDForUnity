@@ -103,7 +103,7 @@ static void InspectRecursive(usdi::Schema *schema)
 {
     if (!schema) { return; }
 
-    printf("  %s [%p] (%s", usdiPrimGetPath(schema), schema, usdiPrimGetTypeName(schema));
+    printf("  %s [%p] (%s", usdiPrimGetPath(schema), schema, usdiPrimGetUsdTypeName(schema));
     if (usdiPrimIsInstanceable(schema)) {
         printf(", instanceable");
     }
@@ -112,6 +112,9 @@ static void InspectRecursive(usdi::Schema *schema)
     }
     if (usdiPrimIsMaster(schema)) {
         printf(", master");
+    }
+    if (usdiPrimHasPayload(schema)) {
+        printf(", payload");
     }
     printf(")\n");
 

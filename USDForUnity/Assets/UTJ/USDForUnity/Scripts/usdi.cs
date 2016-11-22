@@ -422,7 +422,7 @@ namespace UTJ
         [DllImport ("usdi")] public static extern int           usdiPrimGetID(Schema schema);
         [DllImport ("usdi")] public static extern IntPtr        usdiPrimGetPath(Schema schema);
         [DllImport ("usdi")] public static extern IntPtr        usdiPrimGetName(Schema schema);
-        [DllImport ("usdi")] public static extern IntPtr        usdiPrimGetTypeName(Schema schema);
+        [DllImport ("usdi")] public static extern IntPtr        usdiPrimGetUsdTypeName(Schema schema);
 
         [DllImport ("usdi")] public static extern Schema        usdiPrimGetMaster(Schema schema);
         [DllImport ("usdi")] public static extern void          usdiPrimSetInstanceable(Schema schema, Bool v);
@@ -471,7 +471,7 @@ namespace UTJ
 
         public static string usdiPrimGetPathS(Schema schema) { return S(usdiPrimGetPath(schema)); }
         public static string usdiPrimGetNameS(Schema schema) { return S(usdiPrimGetName(schema)); }
-        public static string usdiPrimGetTypeNameS(Schema schema) { return S(usdiPrimGetTypeName(schema)); }
+        public static string usdiPrimGetUsdTypeNameS(Schema schema) { return S(usdiPrimGetUsdTypeName(schema)); }
 
         // Xform interface
         [DllImport ("usdi")] public static extern Xform         usdiAsXform(Schema schema);

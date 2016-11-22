@@ -5,6 +5,8 @@
 #include "usdiXform.h"
 #include "usdiMesh.h"
 #include "usdiUtils.h"
+#include "usdiContext.h"
+#include "usdiContext.i"
 
 namespace usdi {
 
@@ -87,7 +89,7 @@ void MeshSample::clear()
 #define usdiUVAttrName "primvars:uv"
 #define usdiUVAttrName2 "uv"
 
-const char *Mesh::UsdTypeName = "Mesh";
+RegisterSchemaHandler(Mesh)
 
 Mesh::Mesh(Context *ctx, Schema *parent, const UsdPrim& prim)
     : super(ctx, parent, prim)

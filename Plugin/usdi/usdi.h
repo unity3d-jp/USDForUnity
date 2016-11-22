@@ -295,7 +295,7 @@ usdiAPI void             usdiUpdateAllSamples(usdi::Context *ctx, usdi::Time t);
 usdiAPI int              usdiPrimGetID(usdi::Schema *schema);
 usdiAPI const char*      usdiPrimGetPath(usdi::Schema *schema);
 usdiAPI const char*      usdiPrimGetName(usdi::Schema *schema);
-usdiAPI const char*      usdiPrimGetTypeName(usdi::Schema *schema);
+usdiAPI const char*      usdiPrimGetUsdTypeName(usdi::Schema *schema);
 
 usdiAPI usdi::Schema*    usdiPrimGetMaster(usdi::Schema *schema);
 usdiAPI bool             usdiPrimIsInstance(usdi::Schema *schema);

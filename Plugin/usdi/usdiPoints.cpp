@@ -4,6 +4,8 @@
 #include "usdiXform.h"
 #include "usdiPoints.h"
 #include "usdiUtils.h"
+#include "usdiContext.h"
+#include "usdiContext.i"
 
 namespace usdi {
 
@@ -14,7 +16,7 @@ void PointsSample::clear()
     velocities.clear();
 }
 
-const char *Points::UsdTypeName = "Points";
+RegisterSchemaHandler(Points)
 
 Points::Points(Context *ctx, Schema *parent, const UsdPrim& prim)
     : super(ctx, parent, prim)

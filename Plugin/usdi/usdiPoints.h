@@ -15,15 +15,12 @@ struct PointsSample
 class Points : public Xform
 {
 typedef Xform super;
-friend class Context;
-protected:
-    Points(Context *ctx, Schema *parent, const UsdPrim& prim);
-    Points(Context *ctx, Schema *parent, const char *name, const char *type = UsdTypeName);
-    ~Points() override;
-
 public:
-    using UsdType = UsdGeomPoints;
-    static const char *UsdTypeName;
+    DefSchemaTraits(UsdGeomPoints, "Points");
+
+    Points(Context *ctx, Schema *parent, const UsdPrim& prim);
+    Points(Context *ctx, Schema *parent, const char *name, const char *type = _getUsdTypeName());
+    ~Points() override;
 
     void                    updateSample(Time t) override;
 

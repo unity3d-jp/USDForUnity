@@ -1,10 +1,13 @@
 #include "pch.h"
 #include "usdiInternal.h"
-#include "usdiContext.h"
 #include "usdiAttribute.h"
 #include "usdiSchema.h"
+#include "usdiContext.h"
+#include "usdiContext.i"
 
 namespace usdi {
+
+RegisterSchemaHandler(Schema)
 
 Schema::Schema(Context *ctx, Schema *parent, Schema *master, const std::string& path, const UsdPrim& p)
     : m_ctx(ctx)
@@ -141,7 +144,7 @@ bool Schema::setPayload(const char *asset_path, const char *prim_path)
         SdfPayload(std::string(asset_path), SdfPath(prim_path)));
 }
 
-Schema*     Schema::getParent() const       { return m_parent; }
+Schema* Schema::getParent() const { return m_parent; }
 
 int Schema::getNumChildren() const
 {
@@ -294,7 +297,7 @@ int Schema::createVariant(int iset, const char *name)
 
 const char* Schema::getPath() const         { return m_path.c_str(); }
 const char* Schema::getName() const         { return m_prim.GetName().GetText(); }
-const char* Schema::getTypeName() const     { return m_prim.GetTypeName().GetText(); }
+const char* Schema::getUsdTypeName() const     { return m_prim.GetTypeName().GetText(); }
 
 void Schema::getTimeRange(Time& start, Time& end) const
 {
@@ -302,7 +305,7 @@ void Schema::getTimeRange(Time& start, Time& end) const
     end = m_time_end;
 }
 
-UsdPrim Schema::getUSDPrim() const      { return m_prim; }
+UsdPrim Schema::getUsdPrim() const      { return m_prim; }
 
 void Schema::notifyImportConfigChanged()
 {
@@ -372,5 +375,35 @@ std::string Schema::makePath(const char *name_)
     usdiLogTrace("Schema::makePath(): %s\n", path.c_str());
     return path;
 }
+
+
+
+static std::vector<ISchemaHandler*>& GetSchemaHandlers()
+{
+    static std::vector<ISchemaHandler*> s_handlers;
+    return s_handlers;
+}
+
+void RegisterSchemaHandlerImpl(ISchemaHandler& handler)
+{
+    auto& handlers = GetSchemaHandlers();
+    handlers.push_back(&handler);
+    std::sort(handlers.begin(), handlers.end(),
+        [](ISchemaHandler* a, ISchemaHandler* b) -> bool { return a->getInheritDepth() > b->getInheritDepth(); });
+}
+
+Schema* CreateSchema(Context *ctx, Schema *parent, const UsdPrim& p)
+{
+    auto& handlers = GetSchemaHandlers();
+    for (auto *handler : handlers) {
+        if (handler->isCompatible(p)) {
+            return handler->create(ctx, parent, p);
+        }
+    }
+    return nullptr;
+}
+
+ISchemaHandler::~ISchemaHandler() {}
+
 
 } // namespace usdi

@@ -3,10 +3,12 @@
 #include "usdiSchema.h"
 #include "usdiXform.h"
 #include "usdiCamera.h"
+#include "usdiContext.h"
+#include "usdiContext.i"
 
 namespace usdi {
 
-const char *Camera::UsdTypeName = "Camera";
+RegisterSchemaHandler(Camera)
 
 Camera::Camera(Context *ctx, Schema *parent, const UsdPrim& prim)
     : super(ctx, parent, prim)

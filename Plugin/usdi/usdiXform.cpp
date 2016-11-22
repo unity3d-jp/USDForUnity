@@ -3,6 +3,7 @@
 #include "usdiSchema.h"
 #include "usdiXform.h"
 #include "usdiContext.h"
+#include "usdiContext.i"
 
 //#define usdiSerializeRotationAsEuler
 
@@ -84,8 +85,7 @@ static void SwapHandedness(quatf& q)
     q = {q.x, -q.y, -q.z, q.w};
 }
 
-
-const char *Xform::UsdTypeName = "Xform";
+RegisterSchemaHandler(Xform)
 
 Xform::Xform(Context *ctx, Schema *parent, const UsdPrim& prim)
     : super(ctx, parent, prim)

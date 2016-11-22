@@ -5,15 +5,12 @@ namespace usdi {
 class Camera : public Xform
 {
 typedef Xform super;
-friend class Context;
-protected:
-    Camera(Context *ctx, Schema *parent, const UsdPrim& prim);
-    Camera(Context *ctx, Schema *parent, const char *name, const char *type = UsdTypeName);
-    ~Camera() override;
-
 public:
-    using UsdType = UsdGeomCamera;
-    static const char *UsdTypeName;
+    DefSchemaTraits(UsdGeomCamera, "Camera");
+
+    Camera(Context *ctx, Schema *parent, const UsdPrim& prim);
+    Camera(Context *ctx, Schema *parent, const char *name, const char *type = _getUsdTypeName());
+    ~Camera() override;
 
     void                updateSample(Time t) override;
 

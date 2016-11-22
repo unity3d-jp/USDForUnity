@@ -34,15 +34,12 @@ struct MeshSample
 class Mesh : public Xform
 {
 typedef Xform super;
-friend class Context;
-protected:
-    Mesh(Context *ctx, Schema *parent, const UsdPrim& prim);
-    Mesh(Context *ctx, Schema *parent, const char *name, const char *type = UsdTypeName);
-    ~Mesh() override;
-
 public:
-    using UsdType = UsdGeomMesh;
-    static const char *UsdTypeName;
+    DefSchemaTraits(UsdGeomMesh, "Mesh");
+
+    Mesh(Context *ctx, Schema *parent, const UsdPrim& prim);
+    Mesh(Context *ctx, Schema *parent, const char *name, const char *type = _getUsdTypeName());
+    ~Mesh() override;
 
     void                updateSample(Time t) override;
 
