@@ -111,6 +111,36 @@ bool        Schema::isInstanceable() const  { return m_prim.IsInstanceable(); }
 bool        Schema::isMaster() const        { return m_prim.IsMaster(); }
 void        Schema::setInstanceable(bool v) { m_prim.SetInstanceable(v); }
 
+bool Schema::addReference(const char *asset_path, const char *prim_path)
+{
+    if (!asset_path) { asset_path = ""; }
+    return m_prim.GetReferences().Add(SdfReference(asset_path, SdfPath(prim_path)));
+}
+
+bool Schema::hasPayload() const
+{
+    return m_prim.HasPayload();
+}
+void Schema::loadPayload()
+{
+    if (hasPayload()) {
+        m_prim.Load();
+        m_update_flag_next.payload_loaded = 1;
+    }
+}
+void Schema::unloadPayload()
+{
+    if (hasPayload()) {
+        m_prim.Unload();
+        m_update_flag_next.payload_unloaded = 1;
+    }
+}
+bool Schema::setPayload(const char *asset_path, const char *prim_path)
+{
+    return m_prim.SetPayload(
+        SdfPayload(std::string(asset_path), SdfPath(prim_path)));
+}
+
 Schema*     Schema::getParent() const       { return m_parent; }
 
 int Schema::getNumChildren() const

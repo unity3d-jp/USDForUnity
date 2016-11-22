@@ -246,6 +246,25 @@ void Context::addSchema(Schema *schema)
     m_schemas.emplace_back(schema);
 }
 
+Schema* Context::createOverride(const char *prim_path)
+{
+    if (!prim_path) {
+        usdiLogError("Context::createOverride(): invalid parameter\n");
+        return nullptr;
+    }
+
+    if (auto *p = findSchema(prim_path)) {
+        return p;
+    }
+
+    if (auto prim = m_stage->OverridePrim(SdfPath(prim_path))) {
+        auto *ret = new Schema(this, nullptr, prim);
+        addSchema(ret);
+        return ret;
+    }
+    return nullptr;
+}
+
 template<class T>
 T* Context::createSchema(Schema *parent, const char *name)
 {
@@ -312,6 +331,13 @@ Schema* Context::createSchemaRecursive(Schema *parent, UsdPrim prim)
     if (!prim.IsValid()) { return nullptr; }
 
     auto *ret = createSchema(parent, prim);
+
+    // handling payload
+    if (m_import_config.load_all_payloads && prim.HasPayload()) {
+        prim.Load();
+    }
+
+    // handling instance
     if (prim.IsInstance()) {
         if (!findSchema(prim.GetMaster().GetPath().GetText())) {
             createSchemaRecursive(nullptr, prim.GetMaster());
@@ -348,33 +374,6 @@ Schema* Context::createReferenceSchemaRecursive(Schema *parent, UsdPrim prim)
     return ret;
 }
 
-Schema* Context::createReference(const char *dstprim, const char *assetpath, const char *srcprim)
-{
-    if (!m_stage ) {
-        usdiLogError("Context::createReference(): m_stage is null\n");
-        return nullptr;
-    }
-    if (!dstprim || !srcprim) {
-        usdiLogError("Context::createReference(): invalid parameter\n");
-        return nullptr;
-    }
-
-    if (!assetpath) { assetpath = ""; }
-    if (auto prim = m_stage->OverridePrim(SdfPath(dstprim))) {
-        if (prim.GetReferences().Add(SdfReference(assetpath, SdfPath(srcprim)))) {
-            // created successfully
-            auto *ret = findSchema(dstprim);
-            if (!ret) {
-                ret = new Schema(this, nullptr, prim);
-                addSchema(ret);
-            }
-            return ret;
-        }
-    }
-    return nullptr;
-}
-
-
 void Context::flatten()
 {
     if (!m_stage) {
@@ -384,5 +383,7 @@ void Context::flatten()
 
     m_stage->Flatten();
 }
+
+#undef BaseErrorHandling
 
 } // namespace usdi

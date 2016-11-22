@@ -96,6 +96,8 @@ union UpdateFlags {
         uint sample_updated : 1;
         uint import_config_updated : 1;
         uint variant_set_changed : 1;
+        uint payload_loaded : 1;
+        uint payload_unloaded : 1;
     };
     uint bits;
 };
@@ -107,6 +109,7 @@ struct ImportConfig
     InterpolationType interpolation = InterpolationType::Linear;
     NormalCalculationType normal_calculation = NormalCalculationType::WhenMissing;
     float scale = 1.0f;
+    bool load_all_payloads = true;
     bool triangulate = true;
     bool swap_handedness = true;
     bool swap_faces = true;
@@ -278,12 +281,11 @@ usdiAPI void             usdiGetImportConfig(usdi::Context *ctx, usdi::ImportCon
 usdiAPI void             usdiSetExportConfig(usdi::Context *ctx, const usdi::ExportConfig *conf);
 usdiAPI void             usdiGetExportConfig(usdi::Context *ctx, usdi::ExportConfig *conf);
 
+usdiAPI usdi::Schema*    usdiCreateOverride(usdi::Context *ctx, const char *prim_path);
 usdiAPI usdi::Xform*     usdiCreateXform(usdi::Context *ctx, usdi::Schema *parent, const char *name);
 usdiAPI usdi::Camera*    usdiCreateCamera(usdi::Context *ctx, usdi::Schema *parent, const char *name);
 usdiAPI usdi::Mesh*      usdiCreateMesh(usdi::Context *ctx, usdi::Schema *parent, const char *name);
 usdiAPI usdi::Points*    usdiCreatePoints(usdi::Context *ctx, usdi::Schema *parent, const char *name);
-// create external reference if assetpath is valid, otherwise create internal reference
-usdiAPI usdi::Schema*    usdiCreateReference(usdi::Context *ctx, const char *dstprim, const char *assetpath, const char *srcprim);
 usdiAPI usdi::Schema*    usdiGetRoot(usdi::Context *ctx);
 usdiAPI usdi::Schema*    usdiFindSchema(usdi::Context *ctx, const char *path);
 
@@ -300,6 +302,13 @@ usdiAPI bool             usdiPrimIsInstance(usdi::Schema *schema);
 usdiAPI bool             usdiPrimIsInstanceable(usdi::Schema *schema);
 usdiAPI bool             usdiPrimIsMaster(usdi::Schema *schema);
 usdiAPI void             usdiPrimSetInstanceable(usdi::Schema *schema, bool v);
+// create external reference if asset_path is valid, otherwise create internal reference
+usdiAPI bool             usdiPrimAddReference(usdi::Schema *schema, const char *asset_path, const char *prim_path);
+
+usdiAPI bool             usdiPrimHasPayload(usdi::Schema *schema);
+usdiAPI void             usdiPrimLoadPayload(usdi::Schema *schema);
+usdiAPI void             usdiPrimUnloadPayload(usdi::Schema *schema);
+usdiAPI bool             usdiPrimSetPayload(usdi::Schema *schema, const char *asset_path, const char *prim_path);
 
 usdiAPI usdi::Schema*    usdiPrimGetParent(usdi::Schema *schema);
 usdiAPI int              usdiPrimGetNumChildren(usdi::Schema *schema);

@@ -142,6 +142,37 @@ usdiAPI void usdiGetExportConfig(usdi::Context *ctx, usdi::ExportConfig *conf)
     *conf = ctx->getExportConfig();
 }
 
+usdiAPI usdi::Schema* usdiCreateOverride(usdi::Context *ctx, const char *prim_path)
+{
+    usdiTraceFunc();
+    if (!ctx) { usdiLogError("usdiCreateOverride(): ctx is null\n"); return nullptr; }
+    return ctx->createOverride(prim_path);
+}
+usdiAPI usdi::Xform* usdiCreateXform(usdi::Context *ctx, usdi::Schema *parent, const char *name)
+{
+    usdiTraceFunc();
+    if (!ctx) { usdiLogError("usdiCreateXform(): ctx is null\n"); return nullptr; }
+    return ctx->createSchema<usdi::Xform>(parent, name);
+}
+usdiAPI usdi::Camera* usdiCreateCamera(usdi::Context *ctx, usdi::Schema *parent, const char *name)
+{
+    usdiTraceFunc();
+    if (!ctx) { usdiLogError("usdiCreateCamera(): ctx is null\n"); return nullptr; }
+    return ctx->createSchema<usdi::Camera>(parent, name);
+}
+usdiAPI usdi::Mesh* usdiCreateMesh(usdi::Context *ctx, usdi::Schema *parent, const char *name)
+{
+    usdiTraceFunc();
+    if (!ctx) { usdiLogError("usdiCreateMesh(): ctx is null\n"); return nullptr; }
+    return ctx->createSchema<usdi::Mesh>(parent, name);
+}
+usdiAPI usdi::Points* usdiCreatePoints(usdi::Context *ctx, usdi::Schema *parent, const char *name)
+{
+    usdiTraceFunc();
+    if (!ctx) { usdiLogError("usdiCreatePoints(): ctx is null\n"); return nullptr; }
+    return ctx->createSchema<usdi::Points>(parent, name);
+}
+
 usdiAPI usdi::Schema* usdiGetRoot(usdi::Context *ctx)
 {
     usdiTraceFunc();
@@ -156,13 +187,6 @@ usdiAPI usdi::Schema* usdiFindSchema(usdi::Context *ctx, const char *path)
     if (!ctx) return nullptr;
 
     return ctx->findSchema(path);
-}
-
-usdiAPI usdi::Schema* usdiCreateReference(usdi::Context *ctx, const char *dstprim, const char *assetpath, const char *srcprim)
-{
-    usdiTraceFunc();
-    if (!ctx) return false;
-    return ctx->createReference(dstprim, assetpath, srcprim);
 }
 
 usdiAPI void usdiFlatten(usdi::Context *ctx)
@@ -237,9 +261,39 @@ usdiAPI void usdiPrimSetInstanceable(usdi::Schema *schema, bool v)
 {
     usdiTraceFunc();
     if (!schema) { return; }
-    return schema->setInstanceable(v);
+    schema->setInstanceable(v);
+}
+usdiAPI bool usdiPrimAddReference(usdi::Schema *schema, const char *asset_path, const char *prim_path)
+{
+    usdiTraceFunc();
+    if (!schema) { return false; }
+    return schema->addReference(asset_path, prim_path);
 }
 
+usdiAPI bool usdiPrimHasPayload(usdi::Schema *schema)
+{
+    usdiTraceFunc();
+    if (!schema) { return false; }
+    return schema->hasPayload();
+}
+usdiAPI void usdiPrimLoadPayload(usdi::Schema *schema)
+{
+    usdiTraceFunc();
+    if (!schema) { return; }
+    schema->loadPayload();
+}
+usdiAPI void usdiPrimUnloadPayload(usdi::Schema *schema)
+{
+    usdiTraceFunc();
+    if (!schema) { return; }
+    schema->unloadPayload();
+}
+usdiAPI bool usdiPrimSetPayload(usdi::Schema *schema, const char *asset_path, const char *prim_path)
+{
+    usdiTraceFunc();
+    if (!schema) { return false; }
+    return schema->setPayload(asset_path, prim_path);
+}
 
 usdiAPI usdi::Schema* usdiPrimGetParent(usdi::Schema *schema)
 {
@@ -388,22 +442,12 @@ usdiAPI usdi::Xform* usdiAsXform(usdi::Schema *schema)
     return schema->as<usdi::Xform*>();
 }
 
-usdiAPI usdi::Xform* usdiCreateXform(usdi::Context *ctx, usdi::Schema *parent, const char *name)
-{
-    usdiTraceFunc();
-    if (!ctx) { usdiLogWarning("usdiCreateXform(): ctx must not be null\n"); return nullptr; }
-    if (!ctx->getUSDStage()) { usdiLogWarning("usdiCreateXform(): stage must not be null\n"); return nullptr; }
-    if (!name) { usdiLogWarning("usdiCreateXform(): name must not be null\n"); return nullptr; }
-    return ctx->createSchema<usdi::Xform>(parent, name);
-}
-
 usdiAPI void usdiXformGetSummary(usdi::Xform *xf, usdi::XformSummary *dst)
 {
     usdiTraceFunc();
     if (!xf || !dst) return;
     *dst = xf->getSummary();
 }
-
 usdiAPI bool usdiXformReadSample(usdi::Xform *xf, usdi::XformData *dst, usdi::Time t)
 {
     usdiTraceFunc();
@@ -411,7 +455,6 @@ usdiAPI bool usdiXformReadSample(usdi::Xform *xf, usdi::XformData *dst, usdi::Ti
     usdiVTuneScope("usdiXformReadSample");
     return xf->readSample(*dst, t);
 }
-
 usdiAPI bool usdiXformWriteSample(usdi::Xform *xf, const usdi::XformData *src, usdi::Time t)
 {
     usdiTraceFunc();
@@ -429,23 +472,12 @@ usdiAPI usdi::Camera* usdiAsCamera(usdi::Schema *schema)
     if (!schema) return nullptr;
     return schema->as<usdi::Camera*>();
 }
-
-usdiAPI usdi::Camera* usdiCreateCamera(usdi::Context *ctx, usdi::Schema *parent, const char *name)
-{
-    usdiTraceFunc();
-    if (!ctx) { usdiLogWarning("usdiCreateCamera(): ctx must not be null\n"); return nullptr; }
-    if (!ctx->getUSDStage()) { usdiLogWarning("usdiCreateCamera(): stage must not be null\n"); return nullptr; }
-    if (!name) { usdiLogWarning("usdiCreateCamera(): name must not be null\n"); return nullptr; }
-    return ctx->createSchema<usdi::Camera>(parent, name);
-}
-
 usdiAPI void usdiCameraGetSummary(usdi::Camera *cam, usdi::CameraSummary *dst)
 {
     usdiTraceFunc();
     if (!cam || !dst) return;
     *dst = cam->getSummary();
 }
-
 usdiAPI bool usdiCameraReadSample(usdi::Camera *cam, usdi::CameraData *dst, usdi::Time t)
 {
     usdiTraceFunc();
@@ -453,7 +485,6 @@ usdiAPI bool usdiCameraReadSample(usdi::Camera *cam, usdi::CameraData *dst, usdi
     usdiVTuneScope("usdiCameraReadSample");
     return cam->readSample(*dst, t);
 }
-
 usdiAPI bool usdiCameraWriteSample(usdi::Camera *cam, const usdi::CameraData *src, usdi::Time t)
 {
     usdiTraceFunc();
@@ -472,14 +503,6 @@ usdiAPI usdi::Mesh* usdiAsMesh(usdi::Schema *schema)
     return schema->as<usdi::Mesh*>();
 }
 
-usdiAPI usdi::Mesh* usdiCreateMesh(usdi::Context *ctx, usdi::Schema *parent, const char *name)
-{
-    usdiTraceFunc();
-    if (!ctx) { usdiLogWarning("usdiCreateMesh(): ctx must not be null\n"); return nullptr; }
-    if (!ctx->getUSDStage()) { usdiLogWarning("usdiCreateMesh(): stage must not be null\n"); return nullptr; }
-    if (!name) { usdiLogWarning("usdiCreateMesh(): name must not be null\n"); return nullptr; }
-    return ctx->createSchema<usdi::Mesh>(parent, name);
-}
 
 usdiAPI void usdiMeshGetSummary(usdi::Mesh *mesh, usdi::MeshSummary *dst)
 {
@@ -512,15 +535,6 @@ usdiAPI usdi::Points* usdiAsPoints(usdi::Schema *schema)
     usdiTraceFunc();
     if (!schema) return nullptr;
     return schema->as<usdi::Points*>();
-}
-
-usdiAPI usdi::Points* usdiCreatePoints(usdi::Context *ctx, usdi::Schema *parent, const char *name)
-{
-    usdiTraceFunc();
-    if (!ctx) { usdiLogWarning("usdiCreatePoints(): ctx must not be null\n"); return nullptr; }
-    if (!ctx->getUSDStage()) { usdiLogWarning("usdiCreatePoints(): stage must not be null\n"); return nullptr; }
-    if (!name) { usdiLogWarning("usdiCreatePoints(): name must not be null\n"); return nullptr; }
-    return ctx->createSchema<usdi::Points>(parent, name);
 }
 
 usdiAPI void usdiPointsGetSummary(usdi::Points *points, usdi::PointsSummary *dst)

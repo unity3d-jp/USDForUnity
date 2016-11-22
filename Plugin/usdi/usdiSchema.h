@@ -46,6 +46,13 @@ public:
     bool            isInstanceable() const;
     bool            isMaster() const;
     void            setInstanceable(bool v);
+    // asset_path can be null. in this case, local reference is created.
+    bool            addReference(const char *asset_path, const char *prim_path);
+
+    bool            hasPayload() const;
+    void            loadPayload();
+    void            unloadPayload();
+    bool            setPayload(const char *asset_path, const char *prim_path);
 
     const char*     getPath() const;
     const char*     getName() const;

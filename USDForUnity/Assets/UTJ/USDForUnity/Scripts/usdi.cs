@@ -113,6 +113,8 @@ namespace UTJ
             public bool sampleUpdated       { get { return (bits & 0x1) != 0; } }
             public bool importConfigChanged { get { return (bits & 0x2) != 0; } }
             public bool variantSetChanged   { get { return (bits & 0x4) != 0; } }
+            public bool payloadLoaded { get { return (bits & 0x8) != 0; } }
+            public bool payloadUnloaded { get { return (bits & 0x10) != 0; } }
         }
 
         public static double default_time {
@@ -140,6 +142,7 @@ namespace UTJ
             public InterpolationType interpolation;
             public NormalCalculationType normal_calculation;
             public float scale;
+            public Bool load_all_payloads;
             public Bool triangulate;
             public Bool swap_handedness;
             public Bool swap_faces;
@@ -155,6 +158,7 @@ namespace UTJ
                         interpolation = InterpolationType.Linear,
                         normal_calculation = NormalCalculationType.WhenMissing,
                         scale = 1.0f,
+                        load_all_payloads = true,
                         triangulate = true,
                         swap_handedness = true,
                         swap_faces = true,
@@ -404,11 +408,11 @@ namespace UTJ
         [DllImport ("usdi")] public static extern void          usdiSetExportConfig(Context ctx, ref ExportConfig conf);
         [DllImport ("usdi")] public static extern void          usdiGetExportConfig(Context ctx, ref ExportConfig conf);
 
+        [DllImport ("usdi")] public static extern Schema        usdiCreateOverride(Context ctx, string prim_path);
         [DllImport ("usdi")] public static extern Xform         usdiCreateXform(Context ctx, Schema parent, string name);
         [DllImport ("usdi")] public static extern Camera        usdiCreateCamera(Context ctx, Schema parent, string name);
         [DllImport ("usdi")] public static extern Mesh          usdiCreateMesh(Context ctx, Schema parent, string name);
         [DllImport ("usdi")] public static extern Points        usdiCreatePoints(Context ctx, Schema parent, string name);
-        [DllImport ("usdi")] public static extern Schema        usdiCreateReference(Context ctx, string dstprim, string assetpath, string srcprim);
         [DllImport ("usdi")] public static extern Schema        usdiGetRoot(Context ctx);
         [DllImport ("usdi")] public static extern Schema        usdiFindSchema(Context ctx, string path);
 

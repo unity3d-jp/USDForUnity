@@ -29,6 +29,7 @@ public:
 
     void                updateAllSamples(Time t);
 
+    Schema*              createOverride(const char *prim_path);
     // T: Xform, Camera, Mesh, ...
     template<class T> T* createSchema(Schema *parent, const char *name);
     template<class T> T* createSchema(Schema *parent, const UsdPrim& t);
@@ -36,7 +37,6 @@ public:
     Schema*              createSchema(Schema *parent, Schema *master, const std::string& path, UsdPrim prim);
     Schema*              createSchemaRecursive(Schema *parent, UsdPrim prim);
     Schema*              createReferenceSchemaRecursive(Schema *parent, UsdPrim prim);
-    Schema*              createReference(const char *dstprim, const char *assetpath, const char *srcprim);
     void                flatten();
 
 private:

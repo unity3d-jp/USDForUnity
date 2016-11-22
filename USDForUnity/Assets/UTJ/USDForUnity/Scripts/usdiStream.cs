@@ -181,6 +181,7 @@ namespace UTJ
             conf.interpolation = m_importOptions.interpolation;
             conf.normal_calculation = m_importOptions.normalCalculation;
             conf.scale = m_importOptions.scale;
+            conf.load_all_payloads = true;
             conf.triangulate = true;
             conf.swap_handedness = m_importOptions.swapHandedness;
             conf.swap_faces = m_importOptions.swapFaces;

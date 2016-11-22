@@ -171,14 +171,14 @@ void TestExport(const char *filename)
         auto *mesh2 = usdiCreateMesh(ctx, root, "TestRootMesh");
 
         int vset[] = {
-            usdiPrimCreateVariantSet(mesh2, "VSet1"),
-            usdiPrimCreateVariantSet(mesh2, "VSet2"),
+            usdiPrimCreateVariantSet(mesh2, "VariantSet1"),
+            usdiPrimCreateVariantSet(mesh2, "VariantSet2"),
         };
-        usdiPrimCreateVariant(mesh2, vset[0], "Variant1");
-        usdiPrimCreateVariant(mesh2, vset[0], "Variant2");
-        usdiPrimCreateVariant(mesh2, vset[1], "Variant3");
-        usdiPrimCreateVariant(mesh2, vset[1], "Variant4");
-        usdiPrimCreateVariant(mesh2, vset[1], "Variant5");
+        usdiPrimCreateVariant(mesh2, vset[0], "Variant1-1");
+        usdiPrimCreateVariant(mesh2, vset[0], "Variant1-2");
+        usdiPrimCreateVariant(mesh2, vset[1], "Variant2-1");
+        usdiPrimCreateVariant(mesh2, vset[1], "Variant2-2");
+        usdiPrimCreateVariant(mesh2, vset[1], "Variant2-3");
         usdiPrimSetVariantSelection(mesh2, 0, 0);
 
         float3 vertices[] = {
@@ -205,13 +205,20 @@ void TestExport(const char *filename)
         }
     }
 
+    // create internal reference
+    auto *ref = usdiCreateOverride(ctx, "/Ref");
+    usdiPrimAddReference(ref, nullptr, "/Child");
 
-    usdiCreateReference(ctx, "/Ref", "", "/Child");
-    usdiCreateReference(ctx, "/Ref2", "", "/TestRootMesh");
-    usdiFlatten(ctx);
+    // create payload
+    auto *pl = usdiCreateOverride(ctx, "/TestPayload");
+    usdiPrimSetPayload(pl, "HelloWorld.usda", "/hello");
+
 
     usdiSave(ctx);
+
+    usdiFlatten(ctx);
     usdiSaveAs(ctx, "Hoge.usda");
+
     usdiDestroyContext(ctx);
 }
 
@@ -219,7 +226,11 @@ void TestExportReference(const char *filename, const char *flatten)
 {
     auto *ctx = usdiCreateContext();
     usdiCreateStage(ctx, filename);
-    usdiCreateReference(ctx, "/Test", "TestExport.usda", "/Child");
+
+    // create external reference
+    auto *ref = usdiCreateOverride(ctx, "/Test");
+    usdiPrimAddReference(ref, "TestExport.usda", "/Child");
+
     usdiSave(ctx);
 
     usdiFlatten(ctx);
