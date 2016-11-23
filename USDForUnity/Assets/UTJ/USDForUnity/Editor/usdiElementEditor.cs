@@ -25,10 +25,14 @@ namespace UTJ
                     var selection = selections[i];
                     if(selection == -1) { selection = names.Length - 1; }
 
+                    EditorGUI.BeginChangeCheck();
                     var ivar = EditorGUILayout.Popup(vsets.setNames[i], selection, names);
-                    if (t.usdiSetVariantSelection(i, ivar))
+                    if (EditorGUI.EndChangeCheck())
                     {
-                        EditorUtility.SetDirty(target);
+                        Undo.RecordObject(t, "Changed Variant Set");
+                        t.usdiSetVariantSelection(i, ivar);
+                        EditorUtility.SetDirty(t);
+                        EditorUtility.SetDirty(t.stream);
                     }
                 }
             }

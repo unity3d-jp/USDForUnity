@@ -38,7 +38,7 @@ namespace UTJ
             if (usdi.usdiPrimSetVariantSelection(m_schema, iset, ival))
             {
                 m_variantSelections[iset] = ival;
-                m_stream.usdiNotifyUpdateNeeded();
+                m_stream.usdiSetVariantSelection(m_primPath, m_variantSelections);
                 return true;
             }
             return false;
@@ -47,23 +47,10 @@ namespace UTJ
         protected void usdiSyncVarinatSets()
         {
             m_variantSets = usdi.usdiPrimGetVariantSets(m_schema);
-            if (m_variantSelections != null && m_variantSelections.Length == m_variantSets.Count)
+            m_variantSelections = new int[m_variantSets.Count];
+            for (int i = 0; i < m_variantSets.Count; ++i)
             {
-                for (int i = 0; i < m_variantSets.Count; ++i)
-                {
-                    if (!usdi.usdiPrimSetVariantSelection(m_schema, i, m_variantSelections[i]))
-                    {
-                        m_variantSelections[i] = usdi.usdiPrimGetVariantSelection(m_schema, i);
-                    }
-                }
-            }
-            else
-            {
-                m_variantSelections = new int[m_variantSets.Count];
-                for (int i = 0; i < m_variantSets.Count; ++i)
-                {
-                    m_variantSelections[i] = usdi.usdiPrimGetVariantSelection(m_schema, i);
-                }
+                m_variantSelections[i] = usdi.usdiPrimGetVariantSelection(m_schema, i);
             }
         }
 
