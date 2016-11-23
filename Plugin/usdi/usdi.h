@@ -19,7 +19,7 @@ namespace usdi {
 typedef unsigned char byte;
 typedef unsigned int uint;
 #ifndef usdiImpl
-    // force make convertible
+    // force make compatible
     class Context {};
     class Attribute {};
     class Schema {};
@@ -281,15 +281,19 @@ usdiAPI void             usdiGetImportConfig(usdi::Context *ctx, usdi::ImportCon
 usdiAPI void             usdiSetExportConfig(usdi::Context *ctx, const usdi::ExportConfig *conf);
 usdiAPI void             usdiGetExportConfig(usdi::Context *ctx, usdi::ExportConfig *conf);
 
+usdiAPI usdi::Schema*    usdiGetRoot(usdi::Context *ctx);
+usdiAPI int              usdiGetNumMasters(usdi::Context *ctx);
+usdiAPI usdi::Schema*    usdiGetMaster(usdi::Context *ctx, int i);
+usdiAPI usdi::Schema*    usdiFindSchema(usdi::Context *ctx, const char *prim_path);
+
 usdiAPI usdi::Schema*    usdiCreateOverride(usdi::Context *ctx, const char *prim_path);
 usdiAPI usdi::Xform*     usdiCreateXform(usdi::Context *ctx, usdi::Schema *parent, const char *name);
 usdiAPI usdi::Camera*    usdiCreateCamera(usdi::Context *ctx, usdi::Schema *parent, const char *name);
 usdiAPI usdi::Mesh*      usdiCreateMesh(usdi::Context *ctx, usdi::Schema *parent, const char *name);
 usdiAPI usdi::Points*    usdiCreatePoints(usdi::Context *ctx, usdi::Schema *parent, const char *name);
-usdiAPI usdi::Schema*    usdiGetRoot(usdi::Context *ctx);
-usdiAPI usdi::Schema*    usdiFindSchema(usdi::Context *ctx, const char *path);
 
 usdiAPI void             usdiUpdateAllSamples(usdi::Context *ctx, usdi::Time t);
+usdiAPI void             usdiRebuildSchemaTree(usdi::Context *ctx);
 
 // Prim interface
 usdiAPI int              usdiPrimGetID(usdi::Schema *schema);
@@ -298,6 +302,8 @@ usdiAPI const char*      usdiPrimGetName(usdi::Schema *schema);
 usdiAPI const char*      usdiPrimGetUsdTypeName(usdi::Schema *schema);
 
 usdiAPI usdi::Schema*    usdiPrimGetMaster(usdi::Schema *schema);
+usdiAPI int              usdiPrimGetNumInstances(usdi::Schema *schema);
+usdiAPI usdi::Schema*    usdiPrimGetInstance(usdi::Schema *schema, int i);
 usdiAPI bool             usdiPrimIsInstance(usdi::Schema *schema);
 usdiAPI bool             usdiPrimIsInstanceable(usdi::Schema *schema);
 usdiAPI bool             usdiPrimIsMaster(usdi::Schema *schema);

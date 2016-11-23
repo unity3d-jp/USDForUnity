@@ -145,6 +145,9 @@ bool TestImport(const char *path)
         printf("failed to load %s\n", path);
     }
     else {
+        for (int i = 0; i < usdiGetNumMasters(ctx); ++i) {
+            InspectRecursive(usdiGetMaster(ctx, i));
+        }
         InspectRecursive(usdiGetRoot(ctx));
     }
 

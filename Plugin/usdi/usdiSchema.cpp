@@ -33,7 +33,7 @@ Schema::Schema(Context *ctx, Schema *parent, const char *name, const char *type)
     , m_parent(parent)
     , m_id(ctx->generateID())
 {
-    m_prim = ctx->getUSDStage()->DefinePrim(SdfPath(makePath(name)), TfToken(type));
+    m_prim = ctx->getUsdStage()->DefinePrim(SdfPath(makePath(name)), TfToken(type));
     if (ctx->getExportConfig().instanceable_by_default) {
         m_prim.SetInstanceable(true);
     }
@@ -42,12 +42,18 @@ Schema::Schema(Context *ctx, Schema *parent, const char *name, const char *type)
 
 void Schema::init()
 {
+    if (m_parent) { m_parent->addChild(this); }
+    if (m_master) { m_master->addInstance(this); }
     if (m_prim && !m_master) {
         m_path = m_prim.GetPath().GetString();
         syncAttributes();
         syncTimeRange();
         syncVariantSets();
     }
+}
+
+void Schema::setup()
+{
 }
 
 void Schema::syncAttributes()
@@ -96,10 +102,6 @@ void Schema::syncVariantSets()
     }
 }
 
-void Schema::setup()
-{
-}
-
 Schema::~Schema()
 {
     m_attributes.clear();
@@ -107,18 +109,81 @@ Schema::~Schema()
 
 Context*    Schema::getContext() const      { return m_ctx; }
 int         Schema::getID() const           { return m_id; }
+const char* Schema::getPath() const { return m_path.c_str(); }
+const char* Schema::getName() const { return m_prim.GetName().GetText(); }
+const char* Schema::getUsdTypeName() const { return m_prim.GetTypeName().GetText(); }
+UsdPrim Schema::getUsdPrim() const { return m_prim; }
 
-Schema*     Schema::getMaster() const       { return m_master; }
-bool        Schema::isInstance() const      { return m_master != nullptr || m_prim.IsInstance(); }
-bool        Schema::isInstanceable() const  { return m_prim.IsInstanceable(); }
-bool        Schema::isMaster() const        { return m_prim.IsMaster(); }
-void        Schema::setInstanceable(bool v) { m_prim.SetInstanceable(v); }
+void Schema::getTimeRange(Time& start, Time& end) const
+{
+    start = m_time_start;
+    end = m_time_end;
+}
+
+// attribute interface
+
+int Schema::getNumAttributes() const
+{
+    return (int)m_attributes.size();
+}
+
+Attribute* Schema::getAttribute(int i) const
+{
+    if (i < 0 || i >= m_attributes.size()) {
+        usdiLogError("Schema::getAttribute() i < 0 || i >= m_attributes.size()\n");
+        return nullptr;
+    }
+    return m_attributes[i].get();
+}
+
+Attribute* Schema::findAttribute(const char *name) const
+{
+    for (const auto& a : m_attributes) {
+        if (strcmp(a->getName(), name) == 0) {
+            return a.get();
+        }
+    }
+    return nullptr;
+}
+
+Attribute* Schema::createAttribute(const char *name, AttributeType type)
+{
+    if (auto *f = findAttribute(name)) { return f; }
+
+    if (auto *c = CreateNewAttribute(this, name, type)) {
+        m_attributes.emplace_back(c);
+        return c;
+    }
+    return nullptr;
+}
+
+
+// parent & child interface
+
+Schema* Schema::getParent() const       { return m_parent; }
+int     Schema::getNumChildren() const  { return (int)m_children.size(); }
+Schema* Schema::getChild(int i) const   { return m_children[i]; }
+
+
+// reference & instance interface
+
+Schema* Schema::getMaster() const       { return m_master; }
+int     Schema::getNumInstances() const { return (int)m_instances.size(); }
+Schema* Schema::getInstance(int i) const{ return m_instances[i]; }
+
+bool    Schema::isInstance() const      { return m_master != nullptr || m_prim.IsInstance(); }
+bool    Schema::isInstanceable() const  { return m_prim.IsInstanceable(); }
+bool    Schema::isMaster() const        { return m_prim.IsMaster(); }
+void    Schema::setInstanceable(bool v) { m_prim.SetInstanceable(v); }
 
 bool Schema::addReference(const char *asset_path, const char *prim_path)
 {
     if (!asset_path) { asset_path = ""; }
     return m_prim.GetReferences().Add(SdfReference(asset_path, SdfPath(prim_path)));
 }
+
+
+// payload interface
 
 bool Schema::hasPayload() const
 {
@@ -144,42 +209,8 @@ bool Schema::setPayload(const char *asset_path, const char *prim_path)
         SdfPayload(std::string(asset_path), SdfPath(prim_path)));
 }
 
-Schema* Schema::getParent() const { return m_parent; }
 
-int Schema::getNumChildren() const
-{
-    return (int)m_children.size();
-}
-Schema* Schema::getChild(int i) const
-{
-    return (size_t)i >= m_children.size() ? nullptr : m_children[i];
-}
-
-
-int         Schema::getNumAttributes() const { return (int)m_attributes.size(); }
-Attribute*  Schema::getAttribute(int i) const { return (size_t)i >= m_attributes.size() ? nullptr : m_attributes[i].get(); }
-
-Attribute* Schema::findAttribute(const char *name) const
-{
-    for (const auto& a : m_attributes) {
-        if (strcmp(a->getName(), name) == 0) {
-            return a.get();
-        }
-    }
-    return nullptr;
-}
-
-Attribute* Schema::createAttribute(const char *name, AttributeType type)
-{
-    if (auto *f = findAttribute(name)) { return f; }
-
-    if (auto *c = CreateNewAttribute(this, name, type)) {
-        m_attributes.emplace_back(c);
-        return c;
-    }
-    return nullptr;
-}
-
+// variant interface
 
 int Schema::getNumVariantSets() const
 {
@@ -295,18 +326,6 @@ int Schema::createVariant(int iset, const char *name)
 }
 
 
-const char* Schema::getPath() const         { return m_path.c_str(); }
-const char* Schema::getName() const         { return m_prim.GetName().GetText(); }
-const char* Schema::getUsdTypeName() const     { return m_prim.GetTypeName().GetText(); }
-
-void Schema::getTimeRange(Time& start, Time& end) const
-{
-    start = m_time_start;
-    end = m_time_end;
-}
-
-UsdPrim Schema::getUsdPrim() const      { return m_prim; }
-
 void Schema::notifyImportConfigChanged()
 {
     m_update_flag_next.import_config_updated = 1;
@@ -353,6 +372,11 @@ const ExportConfig& Schema::getExportConfig() const { return m_ctx->getExportCon
 void Schema::addChild(Schema *child)
 {
     m_children.push_back(child);
+}
+
+void Schema::addInstance(Schema *instance)
+{
+    m_instances.push_back(instance);
 }
 
 std::string Schema::makePath(const char *name_)

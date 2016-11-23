@@ -12,43 +12,48 @@ public:
     void                initialize();
     bool                createStage(const char *identifier);
     bool                open(const char *path);
-    bool                save();
+    bool                save() const;
     // path must *not* be same as identifier (parameter of createStage() or open())
-    bool                saveAs(const char *path);
+    bool                saveAs(const char *path) const;
 
     const ImportConfig& getImportConfig() const;
     void                setImportConfig(const ImportConfig& v);
     const ExportConfig& getExportConfig() const;
     void                setExportConfig(const ExportConfig& v);
 
-    Schema*             getRootSchema();
-    Schema*             findSchema(const char *path);
+    UsdStageRefPtr      getUsdStage() const;
+    Schema*             getRoot() const;
+    int                 getNumMasters() const;
+    Schema*             getMaster(int i) const;
+    Schema*             findSchema(const char *path) const;
 
-    UsdStageRefPtr      getUSDStage() const;
-    int                 generateID();
-
-    void                updateAllSamples(Time t);
-
-    Schema*              createOverride(const char *prim_path);
-    // T: Xform, Camera, Mesh, ...
-    template<class T> T* createSchema(Schema *parent, const char *name);
-    Schema*              createSchema(Schema *parent, const UsdPrim& prim);
-    Schema*              createInstanceSchema(Schema *parent, Schema *master, const std::string& path, UsdPrim prim);
-    Schema*              createSchemaRecursive(Schema *parent, UsdPrim prim);
-    Schema*              createInstanceSchemaRecursive(Schema *parent, UsdPrim prim);
+    // SchemaType: Xform, Camera, Mesh, etc
+    template<class SchemaType>
+    SchemaType*         createSchema(Schema *parent, const char *name);
+    Schema*             createSchema(Schema *parent, const UsdPrim& prim);
+    Schema*             createSchemaRecursive(Schema *parent, UsdPrim prim);
+    Schema*             createInstanceSchema(Schema *parent, Schema *master, const std::string& path, UsdPrim prim);
+    Schema*             createInstanceSchemaRecursive(Schema *parent, UsdPrim prim);
+    Schema*             createOverride(const char *prim_path);
     void                flatten();
+
+    void                rebuildSchemaTree();
+    int                 generateID();
+    void                updateAllSamples(Time t);
 
 private:
     void    addSchema(Schema *schema);
     void    applyImportConfig();
 
 private:
-    typedef std::unique_ptr<Schema> SchemaPtr;
-    typedef std::vector<SchemaPtr> Schemas;
+    using SchemaPtr = std::unique_ptr<Schema>;
+    using Schemas = std::vector<SchemaPtr>;
+    using Masters = std::vector<Schema*>;
 
     UsdStageRefPtr  m_stage;
     Schemas         m_schemas;
-    std::string     m_prim_root;
+    Schema*         m_root = nullptr;
+    Masters         m_masters;
 
     ImportConfig    m_import_config;
     ExportConfig    m_export_config;

@@ -27,14 +27,45 @@ public:
 
     Context*        getContext() const;
     int             getID() const;
-    Schema*         getParent() const;
-    int             getNumChildren() const;
-    Schema*         getChild(int i) const;
+    const char*     getPath() const;
+    const char*     getName() const;
+    const char*     getUsdTypeName() const;
+    UsdPrim         getUsdPrim() const;
+    void            getTimeRange(Time& start, Time& end) const;
+
+    // attribute interface
 
     int             getNumAttributes() const;
     Attribute*      getAttribute(int i) const;
     Attribute*      findAttribute(const char *name) const;
     Attribute*      createAttribute(const char *name, AttributeType type);
+
+    // parent & child interface
+
+    Schema*         getParent() const;
+    int             getNumChildren() const;
+    Schema*         getChild(int i) const;
+
+    // reference & instance interface
+
+    Schema*         getMaster() const;
+    int             getNumInstances() const;
+    Schema*         getInstance(int i) const;
+    bool            isInstance() const;
+    bool            isInstanceable() const;
+    bool            isMaster() const;
+    void            setInstanceable(bool v);
+    // asset_path can be null. in this case, local reference is created.
+    bool            addReference(const char *asset_path, const char *prim_path);
+
+    // payload interface
+
+    bool            hasPayload() const;
+    void            loadPayload();
+    void            unloadPayload();
+    bool            setPayload(const char *asset_path, const char *prim_path);
+
+    // variant interface
 
     int             getNumVariantSets() const;
     const char*     getVariantSetName(int iset) const;
@@ -52,24 +83,6 @@ public:
     // return index of created variant. if variant with name already exists, return its index.
     int             createVariant(int iset, const char *name);
 
-    Schema*         getMaster() const;
-    bool            isInstance() const;
-    bool            isInstanceable() const;
-    bool            isMaster() const;
-    void            setInstanceable(bool v);
-    // asset_path can be null. in this case, local reference is created.
-    bool            addReference(const char *asset_path, const char *prim_path);
-
-    bool            hasPayload() const;
-    void            loadPayload();
-    void            unloadPayload();
-    bool            setPayload(const char *asset_path, const char *prim_path);
-
-    const char*     getPath() const;
-    const char*     getName() const;
-    const char*     getUsdTypeName() const;
-    UsdPrim         getUsdPrim() const;
-    void            getTimeRange(Time& start, Time& end) const;
 
     UpdateFlags     getUpdateFlags() const;
     UpdateFlags     getUpdateFlagsPrev() const;
@@ -78,10 +91,28 @@ public:
     void            setUserData(void *v);
     void*           getUserData() const;
 
+
+    // Body: [](Schema *child) -> void
     template<class Body>
-    void each(const Body& body)
+    void eachChild(const Body& body)
     {
         for (auto& c : m_children) { body(c); }
+    }
+
+    // recursive eachChild
+    // Body: [](Schema *child) -> void
+    template<class Body>
+    void eachChildR(const Body& body)
+    {
+        eachChild(body);
+        eachChild([&](Schema *c) { c->eachChildR(body); });
+    }
+
+    // Body: [](Schema *inst) -> void
+    template<class Body>
+    void eachInstance(const Body& body)
+    {
+        for (auto& c : m_instances) { body(c); }
     }
 
     template<class T>
@@ -99,15 +130,17 @@ public:
 protected:
     void notifyImportConfigChanged();
     void addChild(Schema *child);
+    void addInstance(Schema *instance);
     std::string makePath(const char *name);
 
     const ImportConfig& getImportConfig() const;
     const ExportConfig& getExportConfig() const;
 
 protected:
-    typedef std::vector<Schema*> Children;
-    typedef std::unique_ptr<Attribute> AttributePtr;
-    typedef std::vector<AttributePtr> Attributes;
+    using Children = std::vector<Schema*>;
+    using Instances = std::vector<Schema*>;
+    using AttributePtr = std::unique_ptr<Attribute>;
+    using Attributes = std::vector<AttributePtr>;
 
     struct VariantSet
     {
@@ -127,6 +160,7 @@ protected:
     std::string     m_path;
     UsdPrim         m_prim;
     Children        m_children;
+    Instances       m_instances;
     Attributes      m_attributes;
 
     std::vector<VariantSet> m_variant_sets;
@@ -160,10 +194,10 @@ public:
 };
 
 Schema* CreateSchema(Context *ctx, Schema *parent, const UsdPrim& p);
-
 void RegisterSchemaHandlerImpl(ISchemaHandler& handler);
+
 #define RegisterSchemaHandler(SchemaType)\
-    struct Register##SchemaType { Register##SchemaType() { RegisterSchemaHandlerImpl(SchemaHandler<SchemaType>::instance()); } } g_Register##SchemaType;\
+    static struct Register##SchemaType { Register##SchemaType() { RegisterSchemaHandlerImpl(SchemaHandler<SchemaType>::instance()); } } g_Register##SchemaType;\
     template SchemaType* Context::createSchema<SchemaType>(Schema *parent, const char *name);
 
 } // namespace usdi

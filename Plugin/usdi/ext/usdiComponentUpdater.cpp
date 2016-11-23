@@ -188,7 +188,7 @@ void StreamUpdater::constructUnityScene()
 
     auto go = m_component->getGameObject();
     auto trans = go->getComponent<mMTransform>();
-    createNode(m_ctx->getRootSchema(), trans);
+    createNode(m_ctx->getRoot(), trans);
 }
 
 IUpdater* StreamUpdater::add(Schema *schema, mMGameObject& go)

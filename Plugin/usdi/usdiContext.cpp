@@ -129,19 +129,11 @@ bool Context::open(const char *path)
     applyImportConfig();
     m_start_time = m_stage->GetStartTimeCode();
     m_end_time = m_stage->GetEndTimeCode();
-
-    auto root_prim = m_stage->GetPseudoRoot();
-    if (!root_prim.IsValid()) {
-        usdiLogWarning("Context::open(): root prim is not valid\n");
-        initialize();
-        return false;
-    }
-
-    createSchemaRecursive(nullptr, root_prim);
+    rebuildSchemaTree();
     return true;
 }
 
-bool Context::save()
+bool Context::save() const
 {
     if (!m_stage) {
         usdiLogError("Context::save(): m_stage is null\n");
@@ -152,7 +144,7 @@ bool Context::save()
     return m_stage->GetRootLayer()->Save();
 }
 
-bool Context::saveAs(const char *path)
+bool Context::saveAs(const char *path) const
 {
     if (!m_stage) {
         usdiLogError("Context::saveAs(): m_stage is null\n");
@@ -196,12 +188,28 @@ void Context::setExportConfig(const ExportConfig& v)
 }
 
 
-Schema* Context::getRootSchema()
+
+UsdStageRefPtr Context::getUsdStage() const
 {
-    return m_schemas.empty() ? nullptr : m_schemas.front().get();
+    return m_stage;
 }
 
-Schema* Context::findSchema(const char *path)
+Schema* Context::getRoot() const
+{
+    return m_root;
+}
+
+int Context::getNumMasters() const
+{
+    return (int)m_masters.size();
+}
+
+Schema* Context::getMaster(int i) const
+{
+    return m_masters[i];
+}
+
+Schema* Context::findSchema(const char *path) const
 {
     // obviously this is very slow. I need to improve this if this method is called very often.
     for (auto& n : m_schemas) {
@@ -212,28 +220,6 @@ Schema* Context::findSchema(const char *path)
     return nullptr;
 }
 
-UsdStageRefPtr Context::getUSDStage() const { return m_stage; }
-
-int Context::generateID()
-{
-    return ++m_id_seed;
-}
-
-void Context::updateAllSamples(Time t)
-{
-#ifdef usdiDbgForceSingleThread
-    for (auto& s : m_schemas) {
-        s->updateSample(t);
-    }
-#else
-    size_t grain = std::max<size_t>(m_schemas.size() / 32, 1);
-    tbb::parallel_for(tbb::blocked_range<size_t>(0, m_schemas.size(), grain), [t, this](const auto& r) {
-        for (size_t i = r.begin(); i != r.end(); ++i) {
-            m_schemas[i]->updateSample(t);
-        }
-    });
-#endif
-}
 
 void Context::addSchema(Schema *schema)
 {
@@ -241,28 +227,9 @@ void Context::addSchema(Schema *schema)
         usdiLogError("Context::addSchema(): invalid parameter\n");
         return;
     }
-    schema->setup();
     usdiLogTrace("Context::addSchema(): %s\n", schema->getName());
+    schema->setup();
     m_schemas.emplace_back(schema);
-}
-
-Schema* Context::createOverride(const char *prim_path)
-{
-    if (!prim_path) {
-        usdiLogError("Context::createOverride(): invalid parameter\n");
-        return nullptr;
-    }
-
-    if (auto *p = findSchema(prim_path)) {
-        return p;
-    }
-
-    if (auto prim = m_stage->OverridePrim(SdfPath(prim_path))) {
-        auto *ret = new Schema(this, nullptr, prim);
-        addSchema(ret);
-        return ret;
-    }
-    return nullptr;
 }
 
 Schema* Context::createSchema(Schema *parent, const UsdPrim& prim)
@@ -270,16 +237,7 @@ Schema* Context::createSchema(Schema *parent, const UsdPrim& prim)
     Schema *ret = CreateSchema(this, parent, prim);
     if (ret) {
         addSchema(ret);
-        if (parent) { parent->addChild(ret); }
     }
-    return ret;
-}
-
-Schema* Context::createInstanceSchema(Schema *parent, Schema *master, const std::string& path, UsdPrim prim)
-{
-    auto *ret = new Schema(this, parent, master, path, prim);
-    addSchema(ret);
-    if (parent) { parent->addChild(ret); }
     return ret;
 }
 
@@ -296,9 +254,6 @@ Schema* Context::createSchemaRecursive(Schema *parent, UsdPrim prim)
 
     // handling instance
     if (prim.IsInstance()) {
-        if (!findSchema(prim.GetMaster().GetPath().GetText())) {
-            createSchemaRecursive(nullptr, prim.GetMaster());
-        }
         auto children = prim.GetMaster().GetChildren();
         for (auto c : children) {
             createInstanceSchemaRecursive(ret, c);
@@ -310,6 +265,13 @@ Schema* Context::createSchemaRecursive(Schema *parent, UsdPrim prim)
             createSchemaRecursive(ret, c);
         }
     }
+    return ret;
+}
+
+Schema* Context::createInstanceSchema(Schema *parent, Schema *master, const std::string& path, UsdPrim prim)
+{
+    auto *ret = new Schema(this, parent, master, path, prim);
+    addSchema(ret);
     return ret;
 }
 
@@ -331,6 +293,25 @@ Schema* Context::createInstanceSchemaRecursive(Schema *parent, UsdPrim prim)
     return ret;
 }
 
+Schema* Context::createOverride(const char *prim_path)
+{
+    if (!prim_path) {
+        usdiLogError("Context::createOverride(): invalid parameter\n");
+        return nullptr;
+    }
+
+    if (auto *p = findSchema(prim_path)) {
+        return p;
+    }
+
+    if (auto prim = m_stage->OverridePrim(SdfPath(prim_path))) {
+        auto *ret = new Schema(this, nullptr, prim);
+        addSchema(ret);
+        return ret;
+    }
+    return nullptr;
+}
+
 void Context::flatten()
 {
     if (!m_stage) {
@@ -341,6 +322,46 @@ void Context::flatten()
     m_stage->Flatten();
 }
 
-#undef BaseErrorHandling
+void Context::rebuildSchemaTree()
+{
+    m_masters.clear();
+    m_schemas.clear();
+    m_root = nullptr;
+    m_id_seed = 0;
+
+    {
+        auto masters = m_stage->GetMasters();
+        for (auto& m : masters) {
+            m_masters.push_back(createSchemaRecursive(nullptr, m));
+        }
+    }
+    {
+        auto root_prim = m_stage->GetPseudoRoot();
+        if (root_prim.IsValid()) {
+            m_root = createSchemaRecursive(nullptr, root_prim);
+        }
+    }
+}
+
+int Context::generateID()
+{
+    return ++m_id_seed;
+}
+
+void Context::updateAllSamples(Time t)
+{
+#ifdef usdiDbgForceSingleThread
+    for (auto& s : m_schemas) {
+        s->updateSample(t);
+    }
+#else
+    size_t grain = std::max<size_t>(m_schemas.size() / 32, 1);
+    tbb::parallel_for(tbb::blocked_range<size_t>(0, m_schemas.size(), grain), [t, this](const auto& r) {
+        for (size_t i = r.begin(); i != r.end(); ++i) {
+            m_schemas[i]->updateSample(t);
+        }
+    });
+#endif
+}
 
 } // namespace usdi

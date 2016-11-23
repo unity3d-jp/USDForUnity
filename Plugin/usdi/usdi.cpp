@@ -142,6 +142,31 @@ usdiAPI void usdiGetExportConfig(usdi::Context *ctx, usdi::ExportConfig *conf)
     *conf = ctx->getExportConfig();
 }
 
+usdiAPI usdi::Schema* usdiGetRoot(usdi::Context *ctx)
+{
+    usdiTraceFunc();
+    if (!ctx) return nullptr;
+    return ctx->getRoot();
+}
+usdiAPI int usdiGetNumMasters(usdi::Context *ctx)
+{
+    usdiTraceFunc();
+    if (!ctx) return 0;
+    return ctx->getNumMasters();
+}
+usdiAPI usdi::Schema* usdiGetMaster(usdi::Context *ctx, int i)
+{
+    usdiTraceFunc();
+    if (!ctx) return nullptr;
+    return ctx->getMaster(i);
+}
+usdiAPI usdi::Schema* usdiFindSchema(usdi::Context *ctx, const char *prim_path)
+{
+    usdiTraceFunc();
+    if (!ctx) return nullptr;
+    return ctx->findSchema(prim_path);
+}
+
 usdiAPI usdi::Schema* usdiCreateOverride(usdi::Context *ctx, const char *prim_path)
 {
     usdiTraceFunc();
@@ -173,22 +198,6 @@ usdiAPI usdi::Points* usdiCreatePoints(usdi::Context *ctx, usdi::Schema *parent,
     return ctx->createSchema<usdi::Points>(parent, name);
 }
 
-usdiAPI usdi::Schema* usdiGetRoot(usdi::Context *ctx)
-{
-    usdiTraceFunc();
-    if (!ctx) return nullptr;
-
-    return ctx->getRootSchema();
-}
-
-usdiAPI usdi::Schema* usdiFindSchema(usdi::Context *ctx, const char *path)
-{
-    usdiTraceFunc();
-    if (!ctx) return nullptr;
-
-    return ctx->findSchema(path);
-}
-
 usdiAPI void usdiFlatten(usdi::Context *ctx)
 {
     usdiTraceFunc();
@@ -203,6 +212,12 @@ usdiAPI void usdiUpdateAllSamples(usdi::Context *ctx, usdi::Time t)
 
     usdiVTuneScope("usdiUpdateAllSamples");
     ctx->updateAllSamples(t);
+}
+usdiAPI void usdiRebuildSchemaTree(usdi::Context *ctx)
+{
+    usdiTraceFunc();
+    if (!ctx) return;
+    ctx->rebuildSchemaTree();
 }
 
 
@@ -239,6 +254,19 @@ usdiAPI usdi::Schema* usdiPrimGetMaster(usdi::Schema *schema)
     if (!schema) { return nullptr; }
     return schema->getMaster();
 }
+usdiAPI int usdiPrimGetNumInstances(usdi::Schema *schema)
+{
+    usdiTraceFunc();
+    if (!schema) { return 0; }
+    return schema->getNumInstances();
+}
+usdiAPI usdi::Schema* usdiPrimGetInstance(usdi::Schema *schema, int i)
+{
+    usdiTraceFunc();
+    if (!schema) { return nullptr; }
+    return schema->getInstance(i);
+}
+
 usdiAPI bool usdiPrimIsInstance(usdi::Schema *schema)
 {
     usdiTraceFunc();
