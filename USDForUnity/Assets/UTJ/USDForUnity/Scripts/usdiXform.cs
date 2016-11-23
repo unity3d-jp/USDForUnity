@@ -22,8 +22,17 @@ namespace UTJ
             m_trans = GetComponent<Transform>();
         }
 
+        public override bool usdiOnReload()
+        {
+            if(!base.usdiOnReload()) { return false; }
+            m_xf = usdi.usdiAsXform(m_schema);
+            m_trans = GetComponent<Transform>();
+            return true;
+        }
+
         public override void usdiOnUnload()
         {
+            base.usdiOnUnload();
             m_xf = default(usdi.Xform);
         }
 

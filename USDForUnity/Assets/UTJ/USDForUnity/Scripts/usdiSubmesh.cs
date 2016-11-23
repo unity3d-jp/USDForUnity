@@ -32,7 +32,7 @@ namespace UTJ
 
 
         #region impl
-        public void usdiSetupMeshComponents()
+        public void usdiSetupComponents()
         {
             if (!m_setupRequierd) { return; }
             m_setupRequierd = false;
@@ -167,7 +167,7 @@ namespace UTJ
             {
                 if (m_vuCmd == null)
                 {
-                    m_vuCmd = new usdi.VertexUpdateCommand(usdi.usdiPrimGetNameS(m_parent.usdiObject));
+                    m_vuCmd = new usdi.VertexUpdateCommand(usdi.usdiPrimGetNameS(m_parent.usdiSchema));
                 }
                 m_vuCmd.Update(ref data, m_VB, IntPtr.Zero);
             }
@@ -179,7 +179,7 @@ namespace UTJ
             {
                 if (m_vuCmd == null)
                 {
-                    m_vuCmd = new usdi.VertexUpdateCommand(usdi.usdiPrimGetNameS(m_parent.usdiObject));
+                    m_vuCmd = new usdi.VertexUpdateCommand(usdi.usdiPrimGetNameS(m_parent.usdiSchema));
                 }
                 m_vuCmd.Update(ref data, m_VB, IntPtr.Zero);
             }
@@ -210,6 +210,7 @@ namespace UTJ
 
         public void usdiOnUnload()
         {
+            usdiFreeMeshData();
         }
 
 

@@ -60,23 +60,46 @@ namespace UTJ
             base.usdiOnLoad(schema);
 
             m_mesh = usdi.usdiAsMesh(schema);
-            if (!m_mesh)
-            {
-                Debug.LogWarning("schema is not Mesh!");
-                return;
-            }
-
             usdi.usdiMeshGetSummary(m_mesh, ref m_meshSummary);
-            usdiAddSubmesh();
+            if(m_submeshes.Count == 0)
+            {
+                usdiAddSubmesh();
+            }
+        }
+
+        public override bool usdiOnReload()
+        {
+            if (!base.usdiOnReload()) { return false; }
+
+            m_mesh = usdi.usdiAsMesh(m_schema);
+            usdi.usdiMeshGetSummary(m_mesh, ref m_meshSummary);
+            if (m_submeshes.Count == 0)
+            {
+                usdiAddSubmesh();
+            }
+            return true;
         }
 
         public override void usdiOnUnload()
         {
             base.usdiOnUnload();
 
-            usdiSync();
+            int c = m_submeshes.Count;
+            for (int i = 0; i < c; ++i) { m_submeshes[i].usdiOnUnload(); }
+
+            m_meshData = usdi.MeshData.default_value;
+            m_submeshData = null;
+            m_meshSummary = usdi.MeshSummary.default_value;
+
+            m_needsAllocateMeshData = false;
+            m_needsUploadMeshData = false;
+
+            m_prevVertexCount = 0;
+            m_prevIndexCount = 0;
+            m_frame = 0;
+            m_timeRead = 0.0;
+
             m_asyncRead = null;
-            m_mesh = default(usdi.Mesh);
         }
 
 
@@ -205,7 +228,7 @@ namespace UTJ
 
             for (int i = 0; i < num_submeshes; ++i)
             {
-                m_submeshes[i].usdiSetupMeshComponents();
+                m_submeshes[i].usdiSetupComponents();
             }
 
             if(num_submeshes > 1 && m_meshSummary.topology_variance == usdi.TopologyVariance.Heterogenous)

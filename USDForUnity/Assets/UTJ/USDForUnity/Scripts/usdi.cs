@@ -282,6 +282,8 @@ namespace UTJ
             public Bool has_normals;
             public Bool has_uvs;
             public Bool has_velocities;
+
+            public static MeshSummary default_value { get { return default(MeshSummary); } }
         };
 
         public struct SubmeshData
@@ -295,13 +297,7 @@ namespace UTJ
             public Vector3  center;
             public Vector3  extents;
 
-            public static SubmeshData default_value
-            {
-                get
-                {
-                    return default(SubmeshData);
-                }
-            }
+            public static SubmeshData default_value { get { return default(SubmeshData); } }
         };
 
         public struct MeshData
@@ -417,6 +413,7 @@ namespace UTJ
         [DllImport ("usdi")] public static extern Schema        usdiFindSchema(Context ctx, string path);
 
         [DllImport ("usdi")] public static extern void          usdiUpdateAllSamples(Context ctx, double t);
+        [DllImport ("usdi")] public static extern void          usdiRebuildSchemaTree(Context ctx);
 
         // Prim interface
         [DllImport ("usdi")] public static extern int           usdiPrimGetID(Schema schema);
@@ -425,7 +422,10 @@ namespace UTJ
         [DllImport ("usdi")] public static extern IntPtr        usdiPrimGetUsdTypeName(Schema schema);
 
         [DllImport ("usdi")] public static extern Schema        usdiPrimGetMaster(Schema schema);
+        [DllImport ("usdi")] public static extern int           usdiPrimGetNumInstances(Schema schema);
+        [DllImport ("usdi")] public static extern Schema        usdiPrimGetInstance(Schema schema, int i);
         [DllImport ("usdi")] public static extern void          usdiPrimSetInstanceable(Schema schema, Bool v);
+        [DllImport ("usdi")] public static extern Bool          usdiPrimAddReference(Schema schema, string asset_path, string prim_path);
 
         [DllImport ("usdi")] public static extern Schema        usdiPrimGetParent(Schema schema);
         [DllImport ("usdi")] public static extern int           usdiPrimGetNumChildren(Schema schema);

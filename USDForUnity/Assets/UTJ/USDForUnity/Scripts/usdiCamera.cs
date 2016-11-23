@@ -25,14 +25,16 @@ namespace UTJ
         public override void usdiOnLoad(usdi.Schema schema)
         {
             base.usdiOnLoad(schema);
-
             m_camera = usdi.usdiAsCamera(schema);
-            if(!m_camera)
-            {
-                Debug.LogWarning("schema is not Xform!");
-            }
-
             m_ucam = GetOrAddComponent<Camera>();
+        }
+
+        public override bool usdiOnReload()
+        {
+            if (!base.usdiOnReload()) { return false; }
+            m_camera = usdi.usdiAsCamera(m_schema);
+            m_ucam = GetOrAddComponent<Camera>();
+            return true;
         }
 
         public override void usdiOnUnload()

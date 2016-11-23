@@ -34,20 +34,24 @@ namespace UTJ
             base.usdiOnLoad(schema);
 
             m_points = usdi.usdiAsPoints(schema);
-            if(!m_points)
-            {
-                Debug.LogWarning("schema is not Points!");
-                return;
-            }
             usdi.usdiPointsGetSummary(m_points, ref m_summary);
             m_attrRot = usdi.usdiPrimFindAttribute(m_points, "rotations");
+        }
+
+        public override bool usdiOnReload()
+        {
+            if (!base.usdiOnReload()) { return false; }
+
+            m_points = usdi.usdiAsPoints(m_schema);
+            usdi.usdiPointsGetSummary(m_points, ref m_summary);
+            m_attrRot = usdi.usdiPrimFindAttribute(m_points, "rotations");
+            return true;
         }
 
         public override void usdiOnUnload()
         {
             base.usdiOnUnload();
 
-            usdiSync();
             m_asyncRead = null;
 
             m_points = default(usdi.Points);

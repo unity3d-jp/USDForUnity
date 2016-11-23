@@ -10,15 +10,19 @@ namespace UTJ
         public enum Root
         {
             Absolute,
-            CurrentDirectory,
-            PersistentDataPath,
-            StreamingAssetsPath,
-            TemporaryCachePath,
+            Current,
+            PersistentData,
+            StreamingAssets,
+            TemporaryCache,
             DataPath,
         }
 
         [SerializeField] Root m_root;
         [SerializeField] string m_leaf;
+#if UNITY_EDITOR
+        // just for inspector
+        [SerializeField] bool m_readOnly = false;
+#endif
 
         public Root root {
             get { return m_root; }
@@ -27,6 +31,16 @@ namespace UTJ
         public string leaf {
             get { return m_leaf; }
             set { m_leaf = value; }
+        }
+        public bool readOnly
+        {
+#if UNITY_EDITOR
+            get { return m_readOnly; }
+            set { m_readOnly = value; }
+#else
+            get { return false; }
+            set { }
+#endif
         }
 
         public DataPath() { }
@@ -40,7 +54,7 @@ namespace UTJ
         {
             if (path.Contains(Application.streamingAssetsPath))
             {
-                m_root = Root.StreamingAssetsPath;
+                m_root = Root.StreamingAssets;
                 m_leaf = path.Replace(Application.streamingAssetsPath, "");
             }
             else if (path.Contains(Application.dataPath))
@@ -50,12 +64,12 @@ namespace UTJ
             }
             else if (path.Contains(Application.persistentDataPath))
             {
-                m_root = Root.PersistentDataPath;
+                m_root = Root.PersistentData;
                 m_leaf = path.Replace(Application.persistentDataPath, "");
             }
             else if (path.Contains(Application.temporaryCachePath))
             {
-                m_root = Root.TemporaryCachePath;
+                m_root = Root.TemporaryCache;
                 m_leaf = path.Replace(Application.temporaryCachePath, "");
             }
             else
@@ -68,7 +82,7 @@ namespace UTJ
         public string GetFullPath()
         {
             if (m_root == Root.Absolute ||
-                m_root == Root.CurrentDirectory)
+                m_root == Root.Current)
             {
                 return m_leaf;
             }
@@ -76,13 +90,13 @@ namespace UTJ
             string ret = "";
             switch (m_root)
             {
-                case Root.PersistentDataPath:
+                case Root.PersistentData:
                     ret = Application.persistentDataPath;
                     break;
-                case Root.StreamingAssetsPath:
+                case Root.StreamingAssets:
                     ret = Application.streamingAssetsPath;
                     break;
-                case Root.TemporaryCachePath:
+                case Root.TemporaryCache:
                     ret = Application.temporaryCachePath;
                     break;
                 case Root.DataPath:

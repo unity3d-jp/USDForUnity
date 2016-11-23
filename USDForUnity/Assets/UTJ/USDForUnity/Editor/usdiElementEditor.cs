@@ -13,12 +13,12 @@ namespace UTJ
             //DrawDefaultInspector();
 
             var t = target as usdiElement;
-            var vsets = t.usdiVariantSets;
+            var vsets = t.variantSets;
             if (vsets.Count > 0)
             {
                 EditorGUILayout.LabelField("Variant Sets", EditorStyles.boldLabel);
 
-                var selections = t.usdiVariantSelections;
+                var selections = t.variantSelections;
                 for (int i = 0; i < vsets.Count; ++i)
                 {
                     var names = vsets.variantNames[i];

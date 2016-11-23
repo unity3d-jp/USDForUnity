@@ -10,6 +10,8 @@ namespace UTJ
         protected usdi.Schema m_schema;
         protected usdi.VariantSet m_variantSets;
         [SerializeField] protected int[] m_variantSelections;
+        [SerializeField] protected string m_primPath;
+        [SerializeField] protected string m_primTypeName;
         #endregion
 
 
@@ -19,9 +21,11 @@ namespace UTJ
             get { return m_stream; }
             set { m_stream = value; }
         }
-        public usdi.Schema usdiObject { get { return m_schema; } }
-        public usdi.VariantSet usdiVariantSets { get { return m_variantSets; } }
-        public int[] usdiVariantSelections { get { return m_variantSelections; } }
+        public usdi.Schema usdiSchema { get { return m_schema; } }
+        public usdi.VariantSet variantSets { get { return m_variantSets; } }
+        public int[] variantSelections { get { return m_variantSelections; } }
+        public string primPath { get { return m_primPath; } }
+        public string primTypeName { get { return m_primTypeName; } }
         #endregion
 
 
@@ -40,13 +44,10 @@ namespace UTJ
             return false;
         }
 
-        public virtual void usdiOnLoad(usdi.Schema schema)
+        protected void usdiSyncVarinatSets()
         {
-            m_schema = schema;
-
-            // sync variant info
             m_variantSets = usdi.usdiPrimGetVariantSets(m_schema);
-            if(m_variantSelections != null && m_variantSelections.Length == m_variantSets.Count)
+            if (m_variantSelections != null && m_variantSelections.Length == m_variantSets.Count)
             {
                 for (int i = 0; i < m_variantSets.Count; ++i)
                 {
@@ -66,8 +67,30 @@ namespace UTJ
             }
         }
 
+        public virtual void usdiOnLoad(usdi.Schema schema)
+        {
+            m_schema = schema;
+            m_primPath = usdi.usdiPrimGetPathS(schema);
+            m_primTypeName = usdi.usdiPrimGetUsdTypeNameS(schema);
+            usdiSyncVarinatSets();
+        }
+
+        public virtual bool usdiOnReload()
+        {
+            m_schema = usdi.usdiFindSchema(m_stream.usdiContext, m_primPath);
+            if (!m_schema) { return false; }
+            if (m_primTypeName != usdi.usdiPrimGetUsdTypeNameS(m_schema))
+            {
+                return false;
+            }
+            usdiSyncVarinatSets();
+            return true;
+        }
+
         public virtual void usdiOnUnload()
         {
+            usdiSync();
+            m_schema = default(usdi.Xform);
         }
 
         public virtual void usdiAsyncUpdate(double time)

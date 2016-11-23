@@ -48,6 +48,7 @@ namespace UTJ
 
         #region properties
         public DataPath usdPath { get { return m_path; } }
+        public usdi.Context usdiContext { get { return m_ctx; } }
         public usdiImportOptions importOptions
         {
             get { return m_importOptions; }
@@ -206,6 +207,7 @@ namespace UTJ
             usdiUnload();
 
             m_path = path;
+            m_path.readOnly = true;
             m_ctx = usdi.usdiCreateContext();
             usdiApplyImportConfig();
 
@@ -231,6 +233,20 @@ namespace UTJ
             return true;
         }
 
+        public void usdiReload()
+        {
+            int c = m_elements.Count;
+            for (int i = 0; i < c; ++i) { m_elements[i].usdiOnUnload(); }
+            usdi.usdiRebuildSchemaTree(m_ctx);
+            for (int i = 0; i < c; ++i) { m_elements[i].usdiOnReload(); }
+
+            usdiAsyncUpdate(m_time);
+            usdiUpdate(m_time);
+
+            var fullpath = m_path.GetFullPath();
+            usdiLog("usdiStream: reloaded " + fullpath);
+        }
+
         public void usdiUnload()
         {
             if(m_ctx)
@@ -239,10 +255,7 @@ namespace UTJ
                 m_asyncUpdate = null;
 
                 int c = m_elements.Count;
-                for (int i = 0; i < c; ++i)
-                {
-                    m_elements[i].usdiOnUnload();
-                }
+                for (int i = 0; i < c; ++i) { m_elements[i].usdiOnUnload(); }
 
                 usdi.usdiDestroyContext(m_ctx);
                 m_ctx = default(usdi.Context);
@@ -374,6 +387,7 @@ namespace UTJ
             }
 #endif
 
+            if(!m_ctx) { return; }
             if (!m_deferredUpdate
 #if UNITY_EDITOR
                 || !EditorApplication.isPlaying
@@ -386,6 +400,8 @@ namespace UTJ
 
         void LateUpdate()
         {
+            if (!m_ctx) { return; }
+
             usdiWaitAsyncUpdateTask();
             usdiUpdate(m_time);
 
