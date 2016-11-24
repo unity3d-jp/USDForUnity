@@ -427,6 +427,18 @@ usdiAPI int usdiPrimCreateVariant(usdi::Schema *schema, int iset, const char *na
     if (!schema) { return -1; }
     return schema->createVariant(iset, name);
 }
+usdiAPI bool usdiPrimBeginEditVariant(usdi::Schema *schema, int iset, int ival)
+{
+    usdiTraceFunc();
+    if (!schema) { return false; }
+    return schema->beginEditVariant(iset, ival);
+}
+usdiAPI void usdiPrimEndEditVariant(usdi::Schema *schema)
+{
+    usdiTraceFunc();
+    if (!schema) { return; }
+    return schema->endEditVariant();
+}
 
 usdiAPI usdi::UpdateFlags usdiPrimGetUpdateFlags(usdi::Schema *schema)
 {

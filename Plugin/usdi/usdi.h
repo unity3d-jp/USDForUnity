@@ -119,7 +119,7 @@ struct ImportConfig
 
 struct ExportConfig
 {
-    bool instanceable_by_default = true;
+    bool instanceable_by_default = false;
     float scale = 1.0f;
     bool swap_handedness = true;
     bool swap_faces = true;
@@ -339,6 +339,8 @@ usdiAPI int              usdiPrimFindVariant(usdi::Schema *schema, int iset, con
 usdiAPI int              usdiPrimCreateVariantSet(usdi::Schema *schema, const char *name);
 // return index of created variant. if variant with name already exists, return its index.
 usdiAPI int              usdiPrimCreateVariant(usdi::Schema *schema, int iset, const char *name);
+usdiAPI bool             usdiPrimBeginEditVariant(usdi::Schema *schema, int iset, int ival);
+usdiAPI void             usdiPrimEndEditVariant(usdi::Schema *schema);
 
 usdiAPI usdi::UpdateFlags usdiPrimGetUpdateFlags(usdi::Schema *schema);
 usdiAPI usdi::UpdateFlags usdiPrimGetUpdateFlagsPrev(usdi::Schema *schema);

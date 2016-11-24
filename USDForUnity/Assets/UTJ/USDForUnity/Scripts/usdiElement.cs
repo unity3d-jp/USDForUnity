@@ -54,6 +54,11 @@ namespace UTJ
             }
         }
 
+        public void usdiDestroy()
+        {
+            DestroyImmediate(gameObject);
+        }
+
         public virtual void usdiOnLoad(usdi.Schema schema)
         {
             m_schema = schema;

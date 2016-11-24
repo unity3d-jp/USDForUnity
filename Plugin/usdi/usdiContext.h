@@ -37,6 +37,9 @@ public:
     Schema*             createOverride(const char *prim_path);
     void                flatten();
 
+    void                beginEdit(const UsdEditTarget& t);
+    void                endEdit();
+
     void                rebuildSchemaTree();
     int                 generateID();
     void                updateAllSamples(Time t);
@@ -61,6 +64,7 @@ private:
     int             m_id_seed = 0;
     double          m_start_time = 0.0;
     double          m_end_time = 0.0;
+    UsdEditTarget   m_edit_target;
 };
 
 } // namespace usdi

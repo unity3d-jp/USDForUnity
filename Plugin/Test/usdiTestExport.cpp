@@ -1,6 +1,8 @@
 #include <type_traits>
 #include <cstdio>
 #include <cmath>
+#include <vector>
+#include <string>
 #include "../usdi/usdi.h"
 
 using usdi::float2;
@@ -120,8 +122,9 @@ static void TestAttributes(usdi::Schema *schema)
         const char *v[] = { "test_string0", "test_string1", "test_string2" };
         AddAttribute(schema, "string_array", usdi::AttributeType::StringArray, v);
     }
-
 }
+
+
 
 void TestExport(const char *filename)
 {
@@ -131,11 +134,10 @@ void TestExport(const char *filename)
 
     {
         auto *xf = usdiCreateXform(ctx, root, "Child");
-        usdi::XformData data;
-        usdi::Time t = 0.0;
         for (int i = 0; i < 5; ++i) {
-            data.position.x += 0.2f;
-            t += 1.0 / 30.0;
+            usdi::Time t = (1.0 / 30.0) * i;
+            usdi::XformData data;
+            data.position.x = 0.2f * i;
             usdiXformWriteSample(xf, &data, t);
         }
         TestAttributes(xf);
@@ -160,31 +162,18 @@ void TestExport(const char *filename)
             data.num_counts = std::extent<decltype(counts)>::value;
             data.num_indices = std::extent<decltype(indices)>::value;
 
-            usdi::Time t = 0.0;
             for (int i = 0; i < 5; ++i) {
-                t += 1.0 / 30.0;
+                usdi::Time t = (1.0 / 30.0) * i;
                 usdiMeshWriteSample(mesh, &data, t);
             }
         }
     }
     {
         auto *mesh2 = usdiCreateMesh(ctx, root, "TestRootMesh");
-
-        int vset[] = {
-            usdiPrimCreateVariantSet(mesh2, "VariantSet1"),
-            usdiPrimCreateVariantSet(mesh2, "VariantSet2"),
-        };
-        usdiPrimCreateVariant(mesh2, vset[0], "Variant1-1");
-        usdiPrimCreateVariant(mesh2, vset[0], "Variant1-2");
-        usdiPrimCreateVariant(mesh2, vset[1], "Variant2-1");
-        usdiPrimCreateVariant(mesh2, vset[1], "Variant2-2");
-        usdiPrimCreateVariant(mesh2, vset[1], "Variant2-3");
-        usdiPrimSetVariantSelection(mesh2, 0, 0);
-
         float3 vertices[] = {
             { -0.5f, -0.5f, 0.0f },
-            { 0.5f, -0.5f, 0.0f },
-            { 0.5f,  0.5f, 0.0f },
+            {  0.5f, -0.5f, 0.0f },
+            {  0.5f,  0.5f, 0.0f },
             { -0.5f,  0.5f, 0.0f },
         };
         int counts[] = { 3, 3 };
@@ -198,11 +187,52 @@ void TestExport(const char *filename)
         data.num_counts = std::extent<decltype(counts)>::value;
         data.num_indices = std::extent<decltype(indices)>::value;
 
-        usdi::Time t = 0.0;
         for (int i = 0; i < 5; ++i) {
-            t += 1.0 / 30.0;
+            usdi::Time t = (1.0 / 30.0) * i;
             usdiMeshWriteSample(mesh2, &data, t);
         }
+    }
+    {
+        auto CreateTestXformTree = [](usdi::Context *ctx, usdi::Schema *parent, std::vector<std::string> names)
+        {
+            for (auto& name : names) {
+                parent = usdiCreateXform(ctx, parent, name.c_str());
+            }
+        };
+
+        auto *xf = usdiCreateXform(ctx, root, "TestVariants");
+
+        int vset[] = {
+            usdiPrimCreateVariantSet(xf, "VariantSet0"),
+            usdiPrimCreateVariantSet(xf, "VariantSet1"),
+        };
+        usdiPrimCreateVariant(xf, vset[0], "Variant0-0");
+        usdiPrimCreateVariant(xf, vset[0], "Variant0-1");
+        usdiPrimCreateVariant(xf, vset[1], "Variant1-0");
+        usdiPrimCreateVariant(xf, vset[1], "Variant1-1");
+        usdiPrimCreateVariant(xf, vset[1], "Variant1-2");
+
+        usdiPrimBeginEditVariant(xf, 0, 0);
+        xf = usdiAsXform(usdiFindSchema(ctx, "/TestVariants"));
+        for (int i = 0; i < 5; ++i) {
+            usdi::Time t = (1.0 / 30.0) * i;
+            usdi::XformData data;
+            data.position.x = 0.2f * i;
+            usdiXformWriteSample(xf, &data, t);
+        }
+        CreateTestXformTree(ctx, xf, { "Variant0-0", "Hoge" });
+        usdiPrimEndEditVariant(xf);
+
+        usdiPrimBeginEditVariant(xf, 1, 1);
+        xf = usdiAsXform(usdiFindSchema(ctx, "/TestVariants"));
+        for (int i = 0; i < 5; ++i) {
+            usdi::Time t = (1.0 / 30.0) * i;
+            usdi::XformData data;
+            data.position.y = 0.4f * i;
+            usdiXformWriteSample(xf, &data, t);
+        }
+        CreateTestXformTree(ctx, xf, { "Variant1-1", "Hage", "Hige" });
+        usdiPrimEndEditVariant(xf);
     }
 
     // create internal reference

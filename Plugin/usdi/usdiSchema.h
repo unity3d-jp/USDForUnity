@@ -82,6 +82,8 @@ public:
     int             createVariantSet(const char *name);
     // return index of created variant. if variant with name already exists, return its index.
     int             createVariant(int iset, const char *name);
+    bool            beginEditVariant(int iset, int ival);
+    void            endEditVariant();
 
 
     UpdateFlags     getUpdateFlags() const;

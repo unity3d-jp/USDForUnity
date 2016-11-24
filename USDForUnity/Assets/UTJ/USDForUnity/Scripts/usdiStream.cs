@@ -135,13 +135,18 @@ namespace UTJ
 #endif
         }
 
-        static usdiElement usdiFindOrCreateNode(Transform parent, usdi.Schema schema)
+        static usdiElement usdiFindOrCreateNode(Transform parent, usdi.Schema schema, ref bool created)
         {
             var name = usdi.usdiPrimGetNameS(schema);
             var child = parent.FindChild(name);
             if (child != null)
             {
-                return child.GetComponent<usdiElement>();
+                var c = child.GetComponent<usdiElement>();
+                if(c != null)
+                {
+                    created = false;
+                    return c;
+                }
             }
 
             GameObject go = null;
@@ -189,20 +194,23 @@ namespace UTJ
             {
                 go.GetComponent<Transform>().SetParent(parent);
                 go.name = name;
+                created = true;
             }
 
             return elem;
         }
 
-        void usdiConstructNodeRecursive(Transform parent, usdi.Schema schema, Action<usdiElement, usdi.Schema> node_handler)
+        void usdiConstructNodeRecursive(Transform parent, usdi.Schema schema,
+            Action<usdiElement, usdi.Schema, bool> node_handler)
         {
             if(!schema) { return; }
 
-            var elem = usdiFindOrCreateNode(parent, schema);
+            bool created = false;
+            var elem = usdiFindOrCreateNode(parent, schema, ref created);
             if (elem != null)
             {
                 elem.stream = this;
-                node_handler(elem, schema);
+                node_handler(elem, schema, created);
             }
 
             var trans = elem == null ? parent : elem.GetComponent<Transform>();
@@ -284,7 +292,7 @@ namespace UTJ
                 usdi.usdiRebuildSchemaTree(m_ctx);
             }
             usdiConstructNodeRecursive(GetComponent<Transform>(), usdi.usdiGetRoot(m_ctx),
-                (e, schema) =>
+                (e, schema, created) =>
                 {
                     e.usdiOnLoad(schema);
                     m_elements.Add(e);
@@ -297,20 +305,55 @@ namespace UTJ
             return true;
         }
 
-        public void usdiReload()
+        void usdiReload()
         {
-            m_reloadRequired = false;
             if (!m_ctx) { return; }
 
             usdiWaitAsyncUpdateTask();
 
-            int c = m_elements.Count;
-            for (int i = 0; i < c; ++i) { m_elements[i].usdiOnUnload(); }
+            {
+                int c = m_elements.Count;
+                for (int i = 0; i < c; ++i)
+                {
+                    m_elements[i].usdiOnUnload();
+                }
+            }
 
             usdiApplyImportConfig();
             usdiApplyVarianceSelections();
             usdi.usdiRebuildSchemaTree(m_ctx);
-            for (int i = 0; i < c; ++i) { m_elements[i].usdiOnReload(); }
+
+            // reconstruct schema tree
+            usdiConstructNodeRecursive(GetComponent<Transform>(), usdi.usdiGetRoot(m_ctx),
+                (e, schema, created) =>
+                {
+                    if(created)
+                    {
+                        e.usdiOnLoad(schema);
+                        m_elements.Add(e);
+                    }
+                    else
+                    {
+                        e.usdiOnReload();
+                    }
+                });
+            {
+                // delete elements that doesn't exist in USD tree
+                int c = m_elements.Count;
+                for (int i = 0; i < c; ++i)
+                {
+                    if (!m_elements[i])
+                    {
+                        m_elements[i] = null;
+                    }
+                    else if (!m_elements[i].schema)
+                    {
+                        m_elements[i].usdiDestroy();
+                        m_elements[i] = null;
+                    }
+                }
+                m_elements.RemoveAll(e => e == null);
+            }
 
             usdiAsyncUpdate(m_time);
             usdiUpdate(m_time);
@@ -459,7 +502,13 @@ namespace UTJ
 #endif
 
             if(!m_ctx) { return; }
-            if(m_reloadRequired) { usdiReload(); }
+
+            if (m_reloadRequired)
+            {
+                usdiReload();
+                m_reloadRequired = false;
+            }
+
             if (!m_deferredUpdate
 #if UNITY_EDITOR
                 || !EditorApplication.isPlaying

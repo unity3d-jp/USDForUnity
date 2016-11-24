@@ -270,14 +270,16 @@ bool Schema::setVariantSelection(int iset, int ival)
     }
     auto& vset = m_variant_sets[iset];
     auto& dst = m_prim.GetVariantSet(vset.name);
+    bool ret;
     if (ival < 0 || ival >= vset.variants.size()) {
-        return dst.ClearVariantSelection();
+        ret = dst.ClearVariantSelection();
     }
     else {
-        return dst.SetVariantSelection(vset.variants[ival]);
+        ret = dst.SetVariantSelection(vset.variants[ival]);
     }
 
     m_update_flag_next.variant_set_changed = 1;
+    return ret;
 }
 
 int Schema::findVariantSet(const char *name) const
@@ -324,6 +326,30 @@ int Schema::createVariant(int iset, const char *name)
     syncVariantSets();
     return findVariant(iset, name);
 }
+
+bool Schema::beginEditVariant(int iset, int ival)
+{
+    if (iset < 0 || iset >= m_variant_sets.size()) {
+        usdiLogError("Schema::beginEditVariant(): iset < 0 || iset >= m_variant_sets.size()\n");
+        return false;
+    }
+    auto& vset = m_variant_sets[iset];
+    if (ival < 0 || ival >= vset.variants.size()) {
+        usdiLogError("Schema::beginEditVariant(): ival < 0 || ival >= vset.variants.size()\n");
+        return false;
+    }
+
+    auto& dst = m_prim.GetVariantSet(vset.name);
+    dst.SetVariantSelection(vset.variants[ival]);
+    m_ctx->beginEdit(dst.GetVariantEditTarget());
+    return true;
+}
+
+void Schema::endEditVariant()
+{
+    m_ctx->endEdit();
+}
+
 
 
 void Schema::notifyImportConfigChanged()

@@ -322,6 +322,17 @@ void Context::flatten()
     m_stage->Flatten();
 }
 
+
+void Context::beginEdit(const UsdEditTarget& t)
+{
+    m_edit_target = m_stage->GetEditTarget();
+    m_stage->SetEditTarget(t);
+}
+void Context::endEdit()
+{
+    m_stage->SetEditTarget(m_edit_target);
+}
+
 void Context::rebuildSchemaTree()
 {
     m_masters.clear();

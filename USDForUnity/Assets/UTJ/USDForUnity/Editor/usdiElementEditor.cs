@@ -14,7 +14,7 @@ namespace UTJ
 
             var t = target as usdiElement;
             var vsets = t.variantSets;
-            if (vsets.Count > 0)
+            if (vsets != null && vsets.Count > 0)
             {
                 EditorGUILayout.LabelField("Variant Sets", EditorStyles.boldLabel);
 
