@@ -101,55 +101,47 @@ namespace UTJ
 #endif
 
 
-        public void usdiAllocateMeshData()
+        public void usdiAllocateMeshData(ref usdi.MeshSummary summary,  ref usdi.MeshData meshData)
         {
-            var summary = m_parent.meshSummary;
-
-            var meshData = m_parent.meshData;
-            if (meshData.num_submeshes == 0)
             {
-                var data = meshData;
-                {
-                    m_points = new Vector3[data.num_points];
-                    data.points = usdi.GetArrayPtr(m_points);
-                }
-                {
-                    m_normals = new Vector3[data.num_points];
-                    data.normals = usdi.GetArrayPtr(m_normals);
-                }
-                if (summary.has_uvs)
-                {
-                    m_uvs = new Vector2[data.num_points];
-                    data.uvs = usdi.GetArrayPtr(m_uvs);
-                }
-                {
-                    m_indices = new int[data.num_indices_triangulated];
-                    data.indices_triangulated = usdi.GetArrayPtr(m_indices);
-                }
-                m_parent.meshData = data;
+                m_points = new Vector3[meshData.num_points];
+                meshData.points = usdi.GetArrayPtr(m_points);
             }
-            else
             {
-                var data = m_parent.submeshData[m_nth];
-                {
-                    m_points = new Vector3[data.num_points];
-                    data.points = usdi.GetArrayPtr(m_points);
-                }
-                {
-                    m_normals = new Vector3[data.num_points];
-                    data.normals = usdi.GetArrayPtr(m_normals);
-                }
-                if (summary.has_uvs)
-                {
-                    m_uvs = new Vector2[data.num_points];
-                    data.uvs = usdi.GetArrayPtr(m_uvs);
-                }
-                {
-                    m_indices = new int[data.num_points];
-                    data.indices = usdi.GetArrayPtr(m_indices);
-                }
-                m_parent.submeshData[m_nth] = data;
+                m_normals = new Vector3[meshData.num_points];
+                meshData.normals = usdi.GetArrayPtr(m_normals);
             }
+            if (summary.has_uvs)
+            {
+                m_uvs = new Vector2[meshData.num_points];
+                meshData.uvs = usdi.GetArrayPtr(m_uvs);
+            }
+            {
+                m_indices = new int[meshData.num_indices_triangulated];
+                meshData.indices_triangulated = usdi.GetArrayPtr(m_indices);
+            }
+        }
+        public void usdiAllocateMeshData(ref usdi.MeshSummary summary, ref usdi.SubmeshData[] submeshData)
+        {
+            var data = submeshData[m_nth];
+            {
+                m_points = new Vector3[data.num_points];
+                data.points = usdi.GetArrayPtr(m_points);
+            }
+            {
+                m_normals = new Vector3[data.num_points];
+                data.normals = usdi.GetArrayPtr(m_normals);
+            }
+            if (summary.has_uvs)
+            {
+                m_uvs = new Vector2[data.num_points];
+                data.uvs = usdi.GetArrayPtr(m_uvs);
+            }
+            {
+                m_indices = new int[data.num_points];
+                data.indices = usdi.GetArrayPtr(m_indices);
+            }
+            submeshData[m_nth] = data;
         }
 
         public void usdiFreeMeshData()
@@ -167,7 +159,7 @@ namespace UTJ
             {
                 if (m_vuCmd == null)
                 {
-                    m_vuCmd = new usdi.VertexUpdateCommand(usdi.usdiPrimGetNameS(m_parent.usdiSchema));
+                    m_vuCmd = new usdi.VertexUpdateCommand(usdi.usdiPrimGetNameS(m_parent.schema));
                 }
                 m_vuCmd.Update(ref data, m_VB, IntPtr.Zero);
             }
@@ -179,7 +171,7 @@ namespace UTJ
             {
                 if (m_vuCmd == null)
                 {
-                    m_vuCmd = new usdi.VertexUpdateCommand(usdi.usdiPrimGetNameS(m_parent.usdiSchema));
+                    m_vuCmd = new usdi.VertexUpdateCommand(usdi.usdiPrimGetNameS(m_parent.schema));
                 }
                 m_vuCmd.Update(ref data, m_VB, IntPtr.Zero);
             }

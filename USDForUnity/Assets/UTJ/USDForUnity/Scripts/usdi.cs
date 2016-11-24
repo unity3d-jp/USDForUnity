@@ -122,12 +122,12 @@ namespace UTJ
         }
 
         [Serializable]
-        public class VariantSet
+        public class VariantSets
         {
             public string[] setNames;
             public string[][] variantNames;
 
-            public VariantSet(int nsets)
+            public VariantSets(int nsets)
             {
                 setNames = new string[nsets];
                 variantNames = new string[nsets][];
@@ -449,10 +449,10 @@ namespace UTJ
         [DllImport ("usdi")] public static extern IntPtr        usdiPrimGetUserData(Schema schema);
         [DllImport ("usdi")] public static extern void          usdiPrimSetUserData(Schema schema, IntPtr data);
 
-        public static VariantSet usdiPrimGetVariantSets(Schema schema)
+        public static VariantSets usdiPrimGetVariantSets(Schema schema)
         {
             int nset = usdiPrimGetNumVariantSets(schema);
-            var vsets = new VariantSet(nset);
+            var vsets = new VariantSets(nset);
             for (int iset = 0; iset < nset; ++iset)
             {
                 var name = S(usdiPrimGetVariantSetName(schema, iset));

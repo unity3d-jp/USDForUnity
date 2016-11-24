@@ -3,12 +3,12 @@ using UnityEngine;
 namespace UTJ
 {
 
-    public abstract class usdiElement : MonoBehaviour
+    public class usdiElement : MonoBehaviour
     {
         #region fields
         protected usdiStream m_stream;
         protected usdi.Schema m_schema;
-        protected usdi.VariantSet m_variantSets;
+        protected usdi.VariantSets m_variantSets;
         [SerializeField] protected int[] m_variantSelections;
         [SerializeField] protected string m_primPath;
         [SerializeField] protected string m_primTypeName;
@@ -21,8 +21,8 @@ namespace UTJ
             get { return m_stream; }
             set { m_stream = value; }
         }
-        public usdi.Schema usdiSchema { get { return m_schema; } }
-        public usdi.VariantSet variantSets { get { return m_variantSets; } }
+        public usdi.Schema schema { get { return m_schema; } }
+        public usdi.VariantSets variantSets { get { return m_variantSets; } }
         public int[] variantSelections { get { return m_variantSelections; } }
         public string primPath { get { return m_primPath; } }
         public string primTypeName { get { return m_primTypeName; } }
@@ -88,6 +88,7 @@ namespace UTJ
         {
         }
 
+        // make sure all async operations are completed
         public virtual void usdiSync()
         {
         }

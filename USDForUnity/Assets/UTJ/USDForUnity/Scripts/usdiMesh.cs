@@ -18,19 +18,13 @@ namespace UTJ
         usdi.SubmeshData[] m_submeshData;
         usdi.MeshSummary m_meshSummary;
 
-        bool m_needsAllocateMeshData;
-        bool m_needsUploadMeshData;
-
-        int m_prevVertexCount;
-        int m_prevIndexCount;
-        int m_frame;
-        double m_timeRead;
+        bool m_allocateMeshDataRequired;
+        bool m_updateMeshDataRequired;
+        bool m_directVBUpdate; // for Unity 5.5 or later
+        double m_timeRead; // accessed from worker thread
 
         List<usdiSubmesh> m_submeshes = new List<usdiSubmesh>();
         usdi.Task m_asyncRead;
-
-        // for Unity 5.5 or later
-        bool m_directVBUpdate;
         #endregion
 
 
@@ -65,6 +59,8 @@ namespace UTJ
             {
                 usdiAddSubmesh();
             }
+            m_allocateMeshDataRequired = true;
+            m_updateMeshDataRequired = true;
         }
 
         public override bool usdiOnReload()
@@ -77,6 +73,8 @@ namespace UTJ
             {
                 usdiAddSubmesh();
             }
+            m_allocateMeshDataRequired = true;
+            m_updateMeshDataRequired = true;
             return true;
         }
 
@@ -91,12 +89,8 @@ namespace UTJ
             m_submeshData = null;
             m_meshSummary = usdi.MeshSummary.default_value;
 
-            m_needsAllocateMeshData = false;
-            m_needsUploadMeshData = false;
-
-            m_prevVertexCount = 0;
-            m_prevIndexCount = 0;
-            m_frame = 0;
+            m_allocateMeshDataRequired = false;
+            m_updateMeshDataRequired = false;
             m_timeRead = 0.0;
 
             m_asyncRead = null;
@@ -109,17 +103,10 @@ namespace UTJ
             usdi.MeshData md = default(usdi.MeshData);
             usdi.usdiMeshReadSample(m_mesh, ref md, t, true);
 
-            // skip if already allocated
-            if (m_prevVertexCount == md.num_points &&
-                m_prevIndexCount == md.num_indices_triangulated)
-            {
-                return;
-            }
-
             m_meshData = md;
             if (m_meshData.num_submeshes == 0)
             {
-                m_submeshes[0].usdiAllocateMeshData();
+                m_submeshes[0].usdiAllocateMeshData(ref m_meshSummary, ref m_meshData);
             }
             else
             {
@@ -133,7 +120,7 @@ namespace UTJ
                 }
                 for (int i = 0; i < m_meshData.num_submeshes; ++i)
                 {
-                    m_submeshes[i].usdiAllocateMeshData();
+                    m_submeshes[i].usdiAllocateMeshData(ref m_meshSummary, ref m_submeshData);
                 }
             }
         }
@@ -142,39 +129,39 @@ namespace UTJ
         public override void usdiAsyncUpdate(double time)
         {
             base.usdiAsyncUpdate(time);
-            if (m_updateFlags.bits == 0) {
-                m_needsAllocateMeshData = false;
-                m_needsUploadMeshData = false;
+            if (m_updateFlags.bits == 0 && !m_allocateMeshDataRequired && !m_updateMeshDataRequired) {
                 return;
             }
 
             m_timeRead = time;
-
-            m_needsAllocateMeshData =
-                m_prevVertexCount == 0 ||
-                m_meshSummary.topology_variance == usdi.TopologyVariance.Heterogenous ||
-                m_updateFlags.variantSetChanged;
-
-            m_needsUploadMeshData =
-                m_needsAllocateMeshData ||
-                m_meshSummary.topology_variance != usdi.TopologyVariance.Constant;
+            if(!m_allocateMeshDataRequired)
+            {
+                m_allocateMeshDataRequired =
+                    m_meshSummary.topology_variance == usdi.TopologyVariance.Heterogenous ||
+                    m_updateFlags.variantSetChanged;
+            }
+            if(!m_updateMeshDataRequired)
+            {
+                m_updateMeshDataRequired =
+                    m_allocateMeshDataRequired ||
+                    m_meshSummary.topology_variance != usdi.TopologyVariance.Constant;
+            }
 
             // todo: update heterogenous mesh when possible
             m_directVBUpdate =
 #if UNITY_5_5_OR_NEWER
-                m_prevVertexCount != 0 &&
-                m_stream.directVBUpdate && !m_needsAllocateMeshData &&
+                m_stream.directVBUpdate && !m_allocateMeshDataRequired &&
                 m_meshSummary.topology_variance == usdi.TopologyVariance.Homogenous;
 #else
                 false;
 #endif
 
-            if (m_needsAllocateMeshData)
+            if (m_allocateMeshDataRequired)
             {
                 usdiAllocateMeshData(m_timeRead);
             }
 
-            if (m_needsUploadMeshData)
+            if (m_updateMeshDataRequired)
             {
                 if (m_directVBUpdate)
                 {
@@ -204,22 +191,20 @@ namespace UTJ
         // sync
         void usdiUploadMeshData(double t, bool topology, bool close)
         {
-            if (m_directVBUpdate) { return; }
-
             int num_submeshes = m_meshData.num_submeshes == 0 ? 1 : m_meshData.num_submeshes;
             for (int i = 0; i < num_submeshes; ++i)
             {
                 m_submeshes[i].usdiUploadMeshData(topology, close);
             }
-
-            m_prevVertexCount = m_meshData.num_points;
-            m_prevIndexCount = m_meshData.num_indices_triangulated;
         }
 
         // sync
         public override void usdiUpdate(double time)
         {
-            if (m_updateFlags.bits == 0) { return; }
+            if (m_updateFlags.bits == 0 && !m_allocateMeshDataRequired && !m_updateMeshDataRequired)
+            {
+                return;
+            }
             base.usdiUpdate(time);
 
             usdiSync();
@@ -231,7 +216,8 @@ namespace UTJ
                 m_submeshes[i].usdiSetupComponents();
             }
 
-            if(num_submeshes > 1 && m_meshSummary.topology_variance == usdi.TopologyVariance.Heterogenous)
+            if( num_submeshes > 1 &&
+                m_meshSummary.topology_variance == usdi.TopologyVariance.Heterogenous)
             {
                 // number of active submeshes may change over time if topology is dynamic.
                 for (int i = 0; i < num_submeshes; ++i)
@@ -244,7 +230,7 @@ namespace UTJ
                 }
             }
 
-            if (m_needsUploadMeshData)
+            if (m_updateMeshDataRequired)
             {
                 if(m_meshData.num_submeshes == 0)
                 {
@@ -259,12 +245,12 @@ namespace UTJ
                 }
             }
 
-            if (m_needsAllocateMeshData && m_frame == 0)
+            if (m_allocateMeshDataRequired)
             {
                 bool close = m_meshSummary.topology_variance == usdi.TopologyVariance.Constant;
                 usdiUploadMeshData(time, true, close);
             }
-            else
+            else if(m_updateMeshDataRequired)
             {
                 if (m_directVBUpdate)
                 {
@@ -282,15 +268,13 @@ namespace UTJ
                 }
                 else
                 {
-                    if (m_needsUploadMeshData && m_frame > 1 && !m_directVBUpdate)
-                    {
-                        bool updateIndices = m_meshSummary.topology_variance == usdi.TopologyVariance.Heterogenous;
-                        usdiUploadMeshData(m_timeRead, updateIndices, false);
-                    }
+                    bool updateIndices = m_meshSummary.topology_variance == usdi.TopologyVariance.Heterogenous;
+                    usdiUploadMeshData(m_timeRead, updateIndices, false);
                 }
             }
 
-            ++m_frame;
+            m_allocateMeshDataRequired = false;
+            m_updateMeshDataRequired = false;
         }
 
         public override void usdiSync()
