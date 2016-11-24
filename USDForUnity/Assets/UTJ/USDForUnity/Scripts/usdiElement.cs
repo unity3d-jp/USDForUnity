@@ -1,4 +1,7 @@
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace UTJ
 {
@@ -56,7 +59,16 @@ namespace UTJ
 
         public void usdiDestroy()
         {
-            DestroyImmediate(gameObject);
+#if UNITY_EDITOR
+            if(m_stream.recordUndo)
+            {
+                Undo.DestroyObjectImmediate(gameObject);
+            }
+            else
+#endif
+            {
+                DestroyImmediate(gameObject);
+            }
         }
 
         public virtual void usdiOnLoad(usdi.Schema schema)
@@ -109,6 +121,12 @@ namespace UTJ
             return c;
         }
         #endregion
+
+        void OnDestroy()
+        {
+            usdiSync();
+            m_stream.usdiNotifyUpdateElementsList();
+        }
     }
 
 }

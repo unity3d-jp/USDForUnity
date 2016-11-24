@@ -29,10 +29,15 @@ namespace UTJ
                     var ivar = EditorGUILayout.Popup(vsets.setNames[i], selection, names);
                     if (EditorGUI.EndChangeCheck())
                     {
-                        Undo.RecordObject(t, "Changed Variant Set");
+                        t.stream.recordUndo = true;
+                        var objects_to_recotd = new UnityEngine.Object[] { t, t.stream };
+                        Undo.RecordObjects(objects_to_recotd, "Changed Variant Set");
                         t.usdiSetVariantSelection(i, ivar);
-                        EditorUtility.SetDirty(t);
-                        EditorUtility.SetDirty(t.stream);
+                        foreach(var o in objects_to_recotd)
+                        {
+                            EditorUtility.SetDirty(o);
+                        }
+                        t.stream.recordUndo = false;
                     }
                 }
             }

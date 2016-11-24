@@ -11,7 +11,8 @@ namespace UTJ
     public class usdiSubmesh
     {
         #region fields
-        usdiMesh m_parent;
+        usdiStream m_stream;
+        usdi.Schema m_schema;
         int m_nth;
         bool m_setupRequierd = true;
 
@@ -31,8 +32,25 @@ namespace UTJ
         #endregion
 
 
+        #region properties
+        public Mesh mesh { get { return m_umesh; } }
+        #endregion
+
+
         #region impl
-        public void usdiSetupComponents()
+        public void usdiSetupMesh()
+        {
+            if (!m_setupRequierd) { return; }
+            m_setupRequierd = false;
+
+            if (m_umesh == null)
+            {
+                m_umesh = new Mesh();
+                m_umesh.MarkDynamic();
+            }
+        }
+
+        public void usdiSetupComponents(usdiMesh parent_mesh)
         {
             if (!m_setupRequierd) { return; }
             m_setupRequierd = false;
@@ -40,12 +58,12 @@ namespace UTJ
             GameObject go;
             if(m_nth == 0)
             {
-                go = m_parent.gameObject;
+                go = parent_mesh.gameObject;
             }
             else
             {
                 string name = "Submesh[" + m_nth + "]";
-                var parent = m_parent.GetComponent<Transform>();
+                var parent = parent_mesh.GetComponent<Transform>();
                 var child = parent.FindChild(name);
                 if (child != null)
                 {
@@ -54,7 +72,7 @@ namespace UTJ
                 else
                 {
                     go = new GameObject(name);
-                    go.GetComponent<Transform>().SetParent(m_parent.GetComponent<Transform>(), false);
+                    go.GetComponent<Transform>().SetParent(parent_mesh.GetComponent<Transform>(), false);
                 }
             }
 
@@ -159,7 +177,7 @@ namespace UTJ
             {
                 if (m_vuCmd == null)
                 {
-                    m_vuCmd = new usdi.VertexUpdateCommand(usdi.usdiPrimGetNameS(m_parent.schema));
+                    m_vuCmd = new usdi.VertexUpdateCommand(usdi.usdiPrimGetNameS(m_schema));
                 }
                 m_vuCmd.Update(ref data, m_VB, IntPtr.Zero);
             }
@@ -171,7 +189,7 @@ namespace UTJ
             {
                 if (m_vuCmd == null)
                 {
-                    m_vuCmd = new usdi.VertexUpdateCommand(usdi.usdiPrimGetNameS(m_parent.schema));
+                    m_vuCmd = new usdi.VertexUpdateCommand(usdi.usdiPrimGetNameS(m_schema));
                 }
                 m_vuCmd.Update(ref data, m_VB, IntPtr.Zero);
             }
@@ -196,7 +214,8 @@ namespace UTJ
 
         public void usdiOnLoad(usdiMesh parent, int nth)
         {
-            m_parent = parent;
+            m_stream = parent.stream;
+            m_schema = parent.schema;
             m_nth = nth;
         }
 
@@ -206,10 +225,9 @@ namespace UTJ
         }
 
 
-        public void usdiUploadMeshData(bool topology, bool close)
+        public void usdiUploadMeshData(bool directVBUpdate, bool topology, bool close)
         {
-            bool directVBUpdate = m_parent.directVBUpdate && m_VB != IntPtr.Zero;
-            if (directVBUpdate)
+            if (directVBUpdate && m_VB != IntPtr.Zero)
             {
                 // nothing to do here
             }
@@ -228,7 +246,7 @@ namespace UTJ
                 //m_umesh.UploadMeshData(close);
                 m_umesh.UploadMeshData(false);
 #if UNITY_5_5_OR_NEWER
-                if (m_parent.stream.directVBUpdate)
+                if (m_stream.directVBUpdate)
                 {
                     m_VB = m_umesh.GetNativeVertexBufferPtr(0);
                     m_IB = m_umesh.GetNativeIndexBufferPtr();

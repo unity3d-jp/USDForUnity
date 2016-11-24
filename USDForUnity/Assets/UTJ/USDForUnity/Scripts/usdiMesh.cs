@@ -194,7 +194,7 @@ namespace UTJ
             int num_submeshes = m_meshData.num_submeshes == 0 ? 1 : m_meshData.num_submeshes;
             for (int i = 0; i < num_submeshes; ++i)
             {
-                m_submeshes[i].usdiUploadMeshData(topology, close);
+                m_submeshes[i].usdiUploadMeshData(m_directVBUpdate, topology, close);
             }
         }
 
@@ -213,7 +213,7 @@ namespace UTJ
 
             for (int i = 0; i < num_submeshes; ++i)
             {
-                m_submeshes[i].usdiSetupComponents();
+                m_submeshes[i].usdiSetupComponents(this);
             }
 
             if( num_submeshes > 1 &&
