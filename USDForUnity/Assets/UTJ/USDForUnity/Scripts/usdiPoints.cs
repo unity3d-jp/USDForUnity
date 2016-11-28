@@ -4,6 +4,7 @@ using UnityEngine;
 namespace UTJ
 {
 
+    [Serializable]
     public class usdiPoints : usdiXform
     {
         #region fields
@@ -29,23 +30,13 @@ namespace UTJ
 
 
         #region impl
-        public override void usdiOnLoad(usdi.Schema schema)
+        public override void usdiOnLoad()
         {
-            base.usdiOnLoad(schema);
-
-            m_points = usdi.usdiAsPoints(schema);
-            usdi.usdiPointsGetSummary(m_points, ref m_summary);
-            m_attrRot = usdi.usdiPrimFindAttribute(m_points, "rotations");
-        }
-
-        public override bool usdiOnReload()
-        {
-            if (!base.usdiOnReload()) { return false; }
+            base.usdiOnLoad();
 
             m_points = usdi.usdiAsPoints(m_schema);
             usdi.usdiPointsGetSummary(m_points, ref m_summary);
             m_attrRot = usdi.usdiPrimFindAttribute(m_points, "rotations");
-            return true;
         }
 
         public override void usdiOnUnload()

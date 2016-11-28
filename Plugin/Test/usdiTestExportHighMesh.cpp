@@ -58,6 +58,11 @@ static void GenerateWaveMesh(std::vector<float3> &vertices, usdi::Time t)
 void TestExportHighMesh(const char *filename)
 {
     auto *ctx = usdiCreateContext();
+
+    usdi::ExportConfig conf;
+    conf.instanceable_by_default = true;
+    usdiSetExportConfig(ctx, &conf);
+
     usdiCreateStage(ctx, filename);
     auto *root = usdiGetRoot(ctx);
 

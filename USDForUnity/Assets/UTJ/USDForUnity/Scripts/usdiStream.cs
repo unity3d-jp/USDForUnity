@@ -9,6 +9,32 @@ using UnityEditor;
 namespace UTJ
 {
     [Serializable]
+    public class SerializableDictionary<K, V> : Dictionary<K, V>, ISerializationCallbackReceiver
+    {
+        [SerializeField] K[] m_keys;
+        [SerializeField] V[] m_values;
+
+        public void OnBeforeSerialize()
+        {
+            m_keys = Keys.ToArray();
+            m_values = Values.ToArray();
+        }
+        public void OnAfterDeserialize()
+        {
+            if (m_keys != null && m_values != null && m_keys.Length == m_values.Length)
+            {
+                int n = m_keys.Length;
+                for (int i = 0; i < n; ++i)
+                {
+                    this[m_keys[i]] = m_values[i];
+                }
+            }
+            m_keys = null;
+            m_values = null;
+        }
+    }
+
+    [Serializable]
     public class usdiImportOptions
     {
         public usdi.InterpolationType interpolation = usdi.InterpolationType.Linear;
@@ -20,7 +46,7 @@ namespace UTJ
 
 
     [ExecuteInEditMode]
-    public class usdiStream : MonoBehaviour, ISerializationCallbackReceiver
+    public class usdiStream : MonoBehaviour
     {
         #region types
         // just for serialize int[][] (Unity doesn't serialize array of arrays)
@@ -47,13 +73,11 @@ namespace UTJ
         [SerializeField] bool m_directVBUpdate = true;
         [SerializeField] bool m_deferredUpdate = true;
 
-        Dictionary<string, VariantSelection> m_variantSelections = new Dictionary<string, VariantSelection>();
-        [SerializeField] string[] m_variantSelectionsKeys; // just for serialization
-        [SerializeField] VariantSelection[] m_variantSelectionsValues; // just for serialization
-
+        [SerializeField] SerializableDictionary<string, VariantSelection> m_variantSelections = new SerializableDictionary<string, VariantSelection>();
+        [SerializeField] List<usdiElement> m_elements = new List<usdiElement>();
+        Dictionary<string, usdiElement> m_schemaLUT = new Dictionary<string, usdiElement>();
 
         usdi.Context m_ctx;
-        List<usdiElement> m_elements = new List<usdiElement>();
         usdi.ImportConfig m_prevConfig;
         bool m_updateRequired;
         bool m_updateElementsListRequired;
@@ -95,33 +119,11 @@ namespace UTJ
 
 
         #region impl
-        public void OnBeforeSerialize()
-        {
-            // serialize m_variantSelections
-            m_variantSelectionsKeys = m_variantSelections.Keys.ToArray();
-            m_variantSelectionsValues = m_variantSelections.Values.ToArray();
-        }
-        public void OnAfterDeserialize()
-        {
-            // deserialize m_variantSelections
-            if (m_variantSelectionsKeys != null && m_variantSelectionsValues != null)
-            {
-                int n = m_variantSelectionsKeys.Length;
-                for (int i = 0; i < n; ++i)
-                {
-                    m_variantSelections[m_variantSelectionsKeys[i]] = m_variantSelectionsValues[i];
-                }
-            }
-            m_variantSelectionsKeys = null;
-            m_variantSelectionsValues = null;
-        }
-
         public void usdiSetVariantSelection(string primPath, int[] selection)
         {
             m_variantSelections[primPath] = new VariantSelection { selections = selection };
             usdiReload();
         }
-
 
         public void usdiNotifyUpdateNeeded()
         {
@@ -133,6 +135,20 @@ namespace UTJ
             m_updateElementsListRequired = true;
         }
 
+        public usdiElement usdiFindSchema(string primPath)
+        {
+            if(m_schemaLUT.ContainsKey(primPath))
+            {
+                return m_schemaLUT[primPath];
+            }
+            return null;
+        }
+        public usdiElement usdiFindSchema(usdi.Schema s)
+        {
+            return usdiFindSchema(usdi.usdiPrimGetPathS(s));
+        }
+
+
         void usdiLog(string message)
         {
 #if UNITY_EDITOR
@@ -143,53 +159,75 @@ namespace UTJ
 #endif
         }
 
-        static usdiElement usdiFindOrCreateNode(Transform parent, usdi.Schema schema, ref bool created)
+        usdiElement usdiCreateNode(usdi.Schema schema)
+        {
+            usdiElement ret = null;
+            if (ret == null)
+            {
+                var s = usdi.usdiAsPoints(schema);
+                if (s) ret = new usdiPoints();
+            }
+            if (ret == null)
+            {
+                var s = usdi.usdiAsMesh(schema);
+                if (s) ret = new usdiMesh();
+            }
+            if (ret == null)
+            {
+                var s = usdi.usdiAsCamera(schema);
+                if (s) ret = new usdiCamera();
+            }
+            if (ret == null)
+            {
+                // Xform must be latter because some schemas are subclass of Xform
+                var s = usdi.usdiAsXform(schema);
+                if (s) ret = new usdiXform();
+            }
+            if (ret == null)
+            {
+                ret = new usdiElement();
+            }
+            ret.nativeSchemaPtr = schema;
+            ret.stream = this;
+            return ret;
+        }
+
+        usdiElement usdiFindOrCreateNode(Transform parent, usdi.Schema schema, ref bool created)
         {
             GameObject go = null;
 
+            // find existing GameObject or create new one
             var name = usdi.usdiPrimGetNameS(schema);
             var child = parent.FindChild(name);
             if (child != null)
             {
                 go = child.gameObject;
-                var s = child.GetComponent<usdiElement>();
-                if(s != null)
-                {
-                    created = false;
-                    return s;
-                }
+                created = false;
             }
-
-            if(go == null)
+            else if(go == null)
             {
                 go = new GameObject();
                 go.name = name;
                 go.GetComponent<Transform>().SetParent(parent);
+                created = true;
             }
-            created = true;
 
+            // create USD node
+            usdiElement ret = usdiCreateNode(schema);
+            ret.gameObject = go;
+
+            // add component
+            var component = go.GetComponent<usdiComponent>();
+            if(component == null)
             {
-                var s = usdi.usdiAsPoints(schema);
-                if(s) return go.AddComponent<usdiPoints>();
+                component = go.AddComponent<usdiComponent>();
             }
-            {
-                var s = usdi.usdiAsMesh(schema);
-                if (s) return go.AddComponent<usdiMesh>();
-            }
-            {
-                var s = usdi.usdiAsCamera(schema);
-                if (s) return go.AddComponent<usdiCamera>();
-            }
-            {
-                // Xform must be latter because some schemas are subclass of Xform
-                var s = usdi.usdiAsXform(schema);
-                if (s) return go.AddComponent<usdiXform>();
-            }
-            return go.AddComponent<usdiElement>();
+            component.schema = ret;
+
+            return ret;
         }
 
-        void usdiConstructNodeRecursive(Transform parent, usdi.Schema schema,
-            Action<usdiElement, usdi.Schema, bool> node_handler)
+        void usdiConstructTree(Transform parent, usdi.Schema schema, Action<usdiElement> node_handler)
         {
             if(!schema) { return; }
 
@@ -197,8 +235,7 @@ namespace UTJ
             var elem = usdiFindOrCreateNode(parent, schema, ref created);
             if (elem != null)
             {
-                elem.stream = this;
-                node_handler(elem, schema, created);
+                node_handler(elem);
             }
 
             var trans = elem == null ? parent : elem.GetComponent<Transform>();
@@ -206,7 +243,87 @@ namespace UTJ
             for(int ci = 0; ci < num_children; ++ci)
             {
                 var child = usdi.usdiPrimGetChild(schema, ci);
-                usdiConstructNodeRecursive(trans, child, node_handler);
+                usdiConstructTree(trans, child, node_handler);
+            }
+        }
+
+        void usdiConstructMasterTree(usdi.Schema schema, Action<usdiElement> node_handler)
+        {
+            if (!schema) { return; }
+
+            var elem = usdiCreateNode(schema);
+            node_handler(elem);
+
+            int num_children = usdi.usdiPrimGetNumChildren(schema);
+            for (int ci = 0; ci < num_children; ++ci)
+            {
+                var child = usdi.usdiPrimGetChild(schema, ci);
+                usdiConstructMasterTree(child, node_handler);
+            }
+        }
+
+        void usdiConstructTrees()
+        {
+            List<GameObject> data = new List<GameObject>();
+            foreach (var kvp in m_schemaLUT)
+            {
+                var e = kvp.Value;
+                if (e.gameObject != null)
+                {
+                    var c = e.gameObject.GetComponent<usdiComponent>();
+                    if(c != null)
+                    {
+                        c.schema = null;
+                        data.Add(e.gameObject);
+                    }
+                }
+            }
+
+            m_elements = new List<usdiElement>();
+            m_schemaLUT = new Dictionary<string, usdiElement>();
+
+            // construct master tree
+            {
+                var nmasters = usdi.usdiGetNumMasters(m_ctx);
+                for (int i = 0; i < nmasters; ++i)
+                {
+                    usdiConstructMasterTree(usdi.usdiGetMaster(m_ctx, i),
+                        (e) =>
+                        {
+                            e.usdiOnLoad();
+                            m_elements.Add(e);
+                            m_schemaLUT[e.primPath] = e;
+                        });
+                }
+            }
+
+            // construct non-master tree along with corresponding GameObject
+            {
+                var root = usdi.usdiGetRoot(m_ctx);
+                var nchildren = usdi.usdiPrimGetNumChildren(root);
+                for (int i = 0; i < nchildren; ++i)
+                {
+                    usdiConstructTree(GetComponent<Transform>(), usdi.usdiPrimGetChild(root, i),
+                        (e) =>
+                        {
+                            e.usdiOnLoad();
+                            m_elements.Add(e);
+                            m_schemaLUT[e.primPath] = e;
+                        });
+                }
+            }
+
+            // delete GameObjects that lost corresponding USD schema (e.g. variant set has changed)
+            foreach (var go in data)
+            {
+                if(go != null)
+                {
+                    var c = go.GetComponent<usdiComponent>();
+                    if (c != null && c.schema == null)
+                    {
+                        DestroyImmediate(go);
+                    }
+                }
             }
         }
 
@@ -216,19 +333,15 @@ namespace UTJ
             int c = m_elements.Count;
             for (int i = 0; i < c; ++i)
             {
-                if (!m_elements[i])
+                if (!m_elements[i].nativeSchemaPtr)
                 {
-                    m_elements[i] = null;
-                }
-                else if (!m_elements[i].schema)
-                {
+                    m_schemaLUT.Remove(m_elements[i].primPath);
                     m_elements[i].usdiDestroy();
                     m_elements[i] = null;
                 }
             }
             m_elements.RemoveAll(e => e == null);
         }
-
 
 
         void usdiApplyImportConfig()
@@ -294,23 +407,15 @@ namespace UTJ
                 return false;
             }
 
+            // apply variant selections
             if(usdiApplyVarianceSelections())
             {
                 usdi.usdiRebuildSchemaTree(m_ctx);
             }
 
-            var root = usdi.usdiGetRoot(m_ctx);
-            var nchildren = usdi.usdiPrimGetNumChildren(root);
-            for (int i = 0; i < nchildren; ++i)
-            {
-                usdiConstructNodeRecursive(GetComponent<Transform>(), usdi.usdiPrimGetChild(root, i),
-                    (e, schema, created) =>
-                    {
-                        e.usdiOnLoad(schema);
-                        m_elements.Add(e);
-                    });
-            }
+            usdiConstructTrees();
 
+            // fill sample data with initial time
             usdiAsyncUpdate(m_time);
             usdiUpdate(m_time);
 
@@ -324,39 +429,13 @@ namespace UTJ
 
             usdiWaitAsyncUpdateTask();
 
-            {
-                int c = m_elements.Count;
-                for (int i = 0; i < c; ++i)
-                {
-                    m_elements[i].usdiOnUnload();
-                }
-            }
-
             usdiApplyImportConfig();
             usdiApplyVarianceSelections();
             usdi.usdiRebuildSchemaTree(m_ctx);
 
-            // reconstruct schema tree
-            var root = usdi.usdiGetRoot(m_ctx);
-            var nchildren = usdi.usdiPrimGetNumChildren(root);
-            for (int i = 0; i < nchildren; ++i)
-            {
-                usdiConstructNodeRecursive(GetComponent<Transform>(), usdi.usdiPrimGetChild(root, i),
-                    (e, schema, created) =>
-                    {
-                        if (created)
-                        {
-                            e.usdiOnLoad(schema);
-                            m_elements.Add(e);
-                        }
-                        else
-                        {
-                            e.usdiOnReload();
-                        }
-                    });
-            }
-            usdiUpdateElementsList();
+            usdiConstructTrees();
 
+            // fill sample data with initial time
             usdiAsyncUpdate(m_time);
             usdiUpdate(m_time);
 
@@ -374,6 +453,9 @@ namespace UTJ
             int c = m_elements.Count;
             for (int i = 0; i < c; ++i) { m_elements[i].usdiOnUnload(); }
 
+            m_elements.Clear();
+            m_schemaLUT.Clear();
+
             usdi.usdiDestroyContext(m_ctx);
             m_ctx = default(usdi.Context);
 
@@ -386,20 +468,12 @@ namespace UTJ
 #if UNITY_EDITOR
             if(recordUndo)
             {
-                for (int i = 0; i < c; ++i)
-                {
-                    Undo.DestroyObjectImmediate(m_elements[i]);
-                }
                 recordUndo = false;
                 Undo.DestroyObjectImmediate(this);
             }
             else
 #endif
             {
-                for (int i = 0; i < c; ++i)
-                {
-                    DestroyImmediate(m_elements[i]);
-                }
                 DestroyImmediate(this);
             }
         }

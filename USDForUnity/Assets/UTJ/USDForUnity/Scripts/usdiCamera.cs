@@ -4,6 +4,7 @@ using UnityEngine;
 namespace UTJ
 {
 
+    [Serializable]
     public class usdiCamera : usdiXform
     {
         public enum AcpectRatioMode
@@ -14,27 +15,19 @@ namespace UTJ
 
         #region fields
         public AcpectRatioMode m_acpectRatioMode;
+        [SerializeField] Camera m_ucam;
 
         usdi.Camera m_camera;
         usdi.CameraData m_cameraData = usdi.CameraData.default_value;
-        Camera m_ucam;
         #endregion
 
 
         #region impl
-        public override void usdiOnLoad(usdi.Schema schema)
+        public override void usdiOnLoad()
         {
-            base.usdiOnLoad(schema);
-            m_camera = usdi.usdiAsCamera(schema);
-            m_ucam = GetOrAddComponent<Camera>();
-        }
-
-        public override bool usdiOnReload()
-        {
-            if (!base.usdiOnReload()) { return false; }
+            base.usdiOnLoad();
             m_camera = usdi.usdiAsCamera(m_schema);
             m_ucam = GetOrAddComponent<Camera>();
-            return true;
         }
 
         public override void usdiOnUnload()
@@ -55,17 +48,20 @@ namespace UTJ
             if (m_updateFlags.bits == 0) { return; }
             base.usdiUpdate(time);
 
-            m_ucam.nearClipPlane = m_cameraData.near_clipping_plane;
-            m_ucam.farClipPlane = m_cameraData.far_clipping_plane;
-            m_ucam.fieldOfView = m_cameraData.field_of_view;
+            if (m_goAssigned)
+            {
+                m_ucam.nearClipPlane = m_cameraData.near_clipping_plane;
+                m_ucam.farClipPlane = m_cameraData.far_clipping_plane;
+                m_ucam.fieldOfView = m_cameraData.field_of_view;
 
-            if (m_acpectRatioMode == AcpectRatioMode.USD)
-            {
-                m_ucam.aspect = m_cameraData.aspect_ratio;
-            }
-            else
-            {
-                m_ucam.ResetAspect();
+                if (m_acpectRatioMode == AcpectRatioMode.USD)
+                {
+                    m_ucam.aspect = m_cameraData.aspect_ratio;
+                }
+                else
+                {
+                    m_ucam.ResetAspect();
+                }
             }
         }
         #endregion

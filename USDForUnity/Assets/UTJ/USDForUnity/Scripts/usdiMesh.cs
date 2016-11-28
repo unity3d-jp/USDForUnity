@@ -9,10 +9,12 @@ using UnityEditor;
 namespace UTJ
 {
 
-    [ExecuteInEditMode]
+    [Serializable]
     public class usdiMesh : usdiXform
     {
         #region fields
+        [SerializeField] List<usdiSubmesh> m_submeshes = new List<usdiSubmesh>();
+
         usdi.Mesh m_mesh;
         usdi.MeshData m_meshData;
         usdi.SubmeshData[] m_submeshData;
@@ -22,8 +24,6 @@ namespace UTJ
         bool m_updateMeshDataRequired;
         bool m_directVBUpdate; // for Unity 5.5 or later
         double m_timeRead; // accessed from worker thread
-
-        List<usdiSubmesh> m_submeshes = new List<usdiSubmesh>();
         usdi.Task m_asyncRead;
         #endregion
 
@@ -49,33 +49,26 @@ namespace UTJ
             return sm;
         }
 
-        public override void usdiOnLoad(usdi.Schema schema)
+        public override void usdiOnLoad()
         {
-            base.usdiOnLoad(schema);
+            base.usdiOnLoad();
 
-            m_mesh = usdi.usdiAsMesh(schema);
+            m_mesh = usdi.usdiAsMesh(m_schema);
             usdi.usdiMeshGetSummary(m_mesh, ref m_meshSummary);
             if(m_submeshes.Count == 0)
             {
                 usdiAddSubmesh();
             }
-            m_allocateMeshDataRequired = true;
-            m_updateMeshDataRequired = true;
-        }
 
-        public override bool usdiOnReload()
-        {
-            if (!base.usdiOnReload()) { return false; }
-
-            m_mesh = usdi.usdiAsMesh(m_schema);
-            usdi.usdiMeshGetSummary(m_mesh, ref m_meshSummary);
-            if (m_submeshes.Count == 0)
+            if(isInstance)
             {
-                usdiAddSubmesh();
+
             }
-            m_allocateMeshDataRequired = true;
-            m_updateMeshDataRequired = true;
-            return true;
+            else
+            {
+                m_allocateMeshDataRequired = true;
+                m_updateMeshDataRequired = true;
+            }
         }
 
         public override void usdiOnUnload()
@@ -134,17 +127,25 @@ namespace UTJ
             }
 
             m_timeRead = time;
-            if(!m_allocateMeshDataRequired)
+            if(isInstance)
             {
-                m_allocateMeshDataRequired =
-                    m_meshSummary.topology_variance == usdi.TopologyVariance.Heterogenous ||
-                    m_updateFlags.variantSetChanged;
+                m_allocateMeshDataRequired = false;
+                m_updateMeshDataRequired = false;
             }
-            if(!m_updateMeshDataRequired)
+            else
             {
-                m_updateMeshDataRequired =
-                    m_allocateMeshDataRequired ||
-                    m_meshSummary.topology_variance != usdi.TopologyVariance.Constant;
+                if (!m_allocateMeshDataRequired)
+                {
+                    m_allocateMeshDataRequired =
+                        m_meshSummary.topology_variance == usdi.TopologyVariance.Heterogenous ||
+                        m_updateFlags.variantSetChanged;
+                }
+                if (!m_updateMeshDataRequired)
+                {
+                    m_updateMeshDataRequired =
+                        m_allocateMeshDataRequired ||
+                        m_meshSummary.topology_variance != usdi.TopologyVariance.Constant;
+                }
             }
 
             // todo: update heterogenous mesh when possible
@@ -211,12 +212,22 @@ namespace UTJ
 
             int num_submeshes = m_meshData.num_submeshes == 0 ? 1 : m_meshData.num_submeshes;
 
-            for (int i = 0; i < num_submeshes; ++i)
+            if(m_goAssigned)
             {
-                m_submeshes[i].usdiSetupComponents(this);
+                for (int i = 0; i < num_submeshes; ++i)
+                {
+                    m_submeshes[i].usdiSetupComponents(this);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < num_submeshes; ++i)
+                {
+                    m_submeshes[i].usdiSetupMesh();
+                }
             }
 
-            if( num_submeshes > 1 &&
+            if ( num_submeshes > 1 &&
                 m_meshSummary.topology_variance == usdi.TopologyVariance.Heterogenous)
             {
                 // number of active submeshes may change over time if topology is dynamic.

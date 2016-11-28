@@ -409,7 +409,10 @@ namespace UTJ
         [DllImport ("usdi")] public static extern Camera        usdiCreateCamera(Context ctx, Schema parent, string name);
         [DllImport ("usdi")] public static extern Mesh          usdiCreateMesh(Context ctx, Schema parent, string name);
         [DllImport ("usdi")] public static extern Points        usdiCreatePoints(Context ctx, Schema parent, string name);
+
         [DllImport ("usdi")] public static extern Schema        usdiGetRoot(Context ctx);
+        [DllImport ("usdi")] public static extern int           usdiGetNumMasters(Context ctx);
+        [DllImport ("usdi")] public static extern Schema        usdiGetMaster(Context ctx, int i);
         [DllImport ("usdi")] public static extern Schema        usdiFindSchema(Context ctx, string path);
 
         [DllImport ("usdi")] public static extern void          usdiUpdateAllSamples(Context ctx, double t);

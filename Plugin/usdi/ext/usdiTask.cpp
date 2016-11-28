@@ -22,7 +22,7 @@ MonoThreadScope::~MonoThreadScope()
 
 
 VertexUpdateCommand::VertexUpdateCommand(const char *dbg_name)
-    : m_dbg_name(dbg_name)
+    : m_dbg_name(!dbg_name ? "" : dbg_name)
 {
     m_ctx_vb.mode = gi::MapMode::Write;
     m_ctx_vb.type = gi::BufferType::Vertex;

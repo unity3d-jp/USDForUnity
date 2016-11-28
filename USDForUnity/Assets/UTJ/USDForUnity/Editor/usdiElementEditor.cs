@@ -5,14 +5,15 @@ using UnityEngine;
 
 namespace UTJ
 {
-    [CustomEditor(typeof(usdiElement))]
+    [CustomEditor(typeof(usdiComponent))]
     public class usdiElementEditor : Editor
     {
         public override void OnInspectorGUI()
         {
             //DrawDefaultInspector();
 
-            var t = target as usdiElement;
+            var c = target as usdiComponent;
+            var t = c.schema;
             var vsets = t.variantSets;
             if (vsets != null && vsets.Count > 0)
             {
@@ -30,7 +31,7 @@ namespace UTJ
                     if (EditorGUI.EndChangeCheck())
                     {
                         t.stream.recordUndo = true;
-                        var objects_to_recotd = new UnityEngine.Object[] { t, t.stream };
+                        var objects_to_recotd = new UnityEngine.Object[] { c, t.stream };
                         Undo.RecordObjects(objects_to_recotd, "Changed Variant Set");
                         t.usdiSetVariantSelection(i, ivar);
                         foreach(var o in objects_to_recotd)

@@ -8,19 +8,20 @@ using UnityEditor;
 namespace UTJ
 {
 
+    [Serializable]
     public class usdiSubmesh
     {
         #region fields
-        usdiStream m_stream;
+        [SerializeField] usdiStream m_stream;
+        [SerializeField] int m_nth;
+        [SerializeField] Mesh m_umesh;
+
+        [SerializeField] Transform m_trans; // null in master nodes
+        [SerializeField] MeshFilter m_meshFilter; // null in master nodes
+        [SerializeField] MeshRenderer m_renderer; // null in master nodes
+
         usdi.Schema m_schema;
-        int m_nth;
         bool m_setupRequierd = true;
-
-        Transform m_trans;
-        MeshFilter m_meshFilter;
-        MeshRenderer m_renderer;
-        Mesh m_umesh;
-
         Vector3[] m_points;
         Vector3[] m_normals;
         Vector2[] m_uvs;
@@ -215,7 +216,7 @@ namespace UTJ
         public void usdiOnLoad(usdiMesh parent, int nth)
         {
             m_stream = parent.stream;
-            m_schema = parent.schema;
+            m_schema = parent.nativeSchemaPtr;
             m_nth = nth;
         }
 

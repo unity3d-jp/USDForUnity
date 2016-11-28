@@ -4,30 +4,24 @@ using UnityEngine;
 namespace UTJ
 {
 
+    [Serializable]
     public class usdiXform : usdiElement
     {
         #region fields
-        usdi.Xform      m_xf;
+        [SerializeField] protected Transform m_trans;
+
+        usdi.Xform m_xf;
         usdi.XformData m_xfData = usdi.XformData.default_value;
-        Transform m_trans;
         protected usdi.UpdateFlags m_updateFlags;
         #endregion
 
 
         #region impl
-        public override void usdiOnLoad(usdi.Schema schema)
+        public override void usdiOnLoad()
         {
-            base.usdiOnLoad(schema);
-            m_xf = usdi.usdiAsXform(schema);
-            m_trans = GetComponent<Transform>();
-        }
-
-        public override bool usdiOnReload()
-        {
-            if(!base.usdiOnReload()) { return false; }
+            base.usdiOnLoad();
             m_xf = usdi.usdiAsXform(m_schema);
             m_trans = GetComponent<Transform>();
-            return true;
         }
 
         public override void usdiOnUnload()
@@ -45,7 +39,10 @@ namespace UTJ
         public override void usdiUpdate(double time)
         {
             base.usdiUpdate(time);
-            usdi.usdiUniTransformAssign(m_trans, ref m_xfData);
+            if(m_goAssigned)
+            {
+                usdi.usdiUniTransformAssign(m_trans, ref m_xfData);
+            }
 
             //// fall back
             //if ((m_xfData.flags & (int)usdi.XformData.Flags.UpdatedPosition) != 0)
