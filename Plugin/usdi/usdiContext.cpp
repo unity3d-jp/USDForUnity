@@ -359,6 +359,13 @@ int Context::generateID()
     return ++m_id_seed;
 }
 
+void Context::notifyForceUpdate()
+{
+    for (auto& s : m_schemas) {
+        s->notifyForceUpdate();
+    }
+}
+
 void Context::updateAllSamples(Time t)
 {
 #ifdef usdiDbgForceSingleThread

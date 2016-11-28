@@ -29,14 +29,27 @@ namespace UTJ
 
 
         #region properties
-        public usdi.MeshSummary meshSummary { get { return m_meshSummary; } }
-        public usdi.MeshData meshData {
+        public usdi.MeshSummary meshSummary
+        {
+            get { return m_meshSummary; }
+        }
+        public usdi.MeshData meshData
+        {
             get { return m_meshData; }
             set { m_meshData = value; }
         }
-        public usdi.SubmeshData[] submeshData { get { return m_submeshData; } }
-        public List<usdiSubmesh> submeshes { get { return m_submeshes; } }
-        public bool directVBUpdate { get { return m_directVBUpdate; } }
+        public usdi.SubmeshData[] submeshData
+        {
+            get { return m_submeshData; }
+        }
+        public List<usdiSubmesh> submeshes
+        {
+            get { return m_submeshes; }
+        }
+        public bool directVBUpdate
+        {
+            get { return m_directVBUpdate; }
+        }
         #endregion
 
 
@@ -47,6 +60,11 @@ namespace UTJ
             sm.usdiOnLoad(this, m_submeshes.Count);
             m_submeshes.Add(sm);
             return sm;
+        }
+
+        protected override usdiIElement usdiSetupSchemaComponent()
+        {
+            return GetOrAddComponent<usdiMeshElement>();
         }
 
         public override void usdiOnLoad()
@@ -144,7 +162,8 @@ namespace UTJ
                 {
                     m_updateMeshDataRequired =
                         m_allocateMeshDataRequired ||
-                        m_meshSummary.topology_variance != usdi.TopologyVariance.Constant;
+                        m_meshSummary.topology_variance != usdi.TopologyVariance.Constant ||
+                        m_updateFlags.importConfigChanged;
                 }
             }
 
@@ -263,23 +282,25 @@ namespace UTJ
             }
             else if(m_updateMeshDataRequired)
             {
+                bool updateIndices =
+                    m_meshSummary.topology_variance == usdi.TopologyVariance.Heterogenous ||
+                    m_updateFlags.importConfigChanged;
                 if (m_directVBUpdate)
                 {
                     if (m_meshData.num_submeshes == 0)
                     {
-                        m_submeshes[0].usdiKickVBUpdateTask(ref m_meshData);
+                        m_submeshes[0].usdiKickVBUpdateTask(ref m_meshData, updateIndices);
                     }
                     else
                     {
                         for (int i = 0; i < num_submeshes; ++i)
                         {
-                            m_submeshes[i].usdiKickVBUpdateTask(ref m_submeshData[i]);
+                            m_submeshes[i].usdiKickVBUpdateTask(ref m_submeshData[i], updateIndices);
                         }
                     }
                 }
                 else
                 {
-                    bool updateIndices = m_meshSummary.topology_variance == usdi.TopologyVariance.Heterogenous;
                     usdiUploadMeshData(m_timeRead, updateIndices, false);
                 }
             }

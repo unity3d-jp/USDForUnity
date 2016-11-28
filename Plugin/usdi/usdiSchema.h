@@ -130,6 +130,7 @@ public:
 
 
 protected:
+    void notifyForceUpdate();
     void notifyImportConfigChanged();
     void addChild(Schema *child);
     void addInstance(Schema *instance);

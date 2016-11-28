@@ -30,6 +30,11 @@ namespace UTJ
 
 
         #region impl
+        protected override usdiIElement usdiSetupSchemaComponent()
+        {
+            return GetOrAddComponent<usdiPointsElement>();
+        }
+
         public override void usdiOnLoad()
         {
             base.usdiOnLoad();

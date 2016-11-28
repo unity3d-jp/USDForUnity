@@ -292,6 +292,7 @@ usdiAPI usdi::Camera*    usdiCreateCamera(usdi::Context *ctx, usdi::Schema *pare
 usdiAPI usdi::Mesh*      usdiCreateMesh(usdi::Context *ctx, usdi::Schema *parent, const char *name);
 usdiAPI usdi::Points*    usdiCreatePoints(usdi::Context *ctx, usdi::Schema *parent, const char *name);
 
+usdiAPI void             usdiNotifyForceUpdate(usdi::Context *ctx);
 usdiAPI void             usdiUpdateAllSamples(usdi::Context *ctx, usdi::Time t);
 usdiAPI void             usdiRebuildSchemaTree(usdi::Context *ctx);
 

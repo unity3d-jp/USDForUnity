@@ -215,7 +215,7 @@ void Mesh::updateSample(Time t_)
     bool needs_calculate_indices =
         m_num_indices_triangulated == 0 ||
         getSummary().topology_variance == TopologyVariance::Heterogenous ||
-        m_update_flag.variant_set_changed;
+        m_update_flag.import_config_updated || m_update_flag.variant_set_changed;
     bool needs_copy_indices =
         sample.indices_triangulated.size() != m_sample[0].indices_triangulated.size() ||
         m_update_flag_prev.variant_set_changed;

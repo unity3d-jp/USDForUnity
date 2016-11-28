@@ -7,14 +7,14 @@ namespace UTJ
     [Serializable]
     public class usdiCamera : usdiXform
     {
-        public enum AcpectRatioMode
+        public enum AspectRatioMode
         {
             Screen,
             USD,
         }
 
         #region fields
-        public AcpectRatioMode m_acpectRatioMode;
+        [SerializeField] AspectRatioMode m_aspectRatioMode;
         [SerializeField] Camera m_ucam;
 
         usdi.Camera m_camera;
@@ -22,7 +22,21 @@ namespace UTJ
         #endregion
 
 
+        #region properties
+        public AspectRatioMode aspectRatioMode
+        {
+            get { return m_aspectRatioMode; }
+            set { m_aspectRatioMode = value; }
+        }
+        #endregion
+
+
         #region impl
+        protected override usdiIElement usdiSetupSchemaComponent()
+        {
+            return GetOrAddComponent<usdiCameraElement>();
+        }
+
         public override void usdiOnLoad()
         {
             base.usdiOnLoad();
@@ -54,7 +68,7 @@ namespace UTJ
                 m_ucam.farClipPlane = m_cameraData.far_clipping_plane;
                 m_ucam.fieldOfView = m_cameraData.field_of_view;
 
-                if (m_acpectRatioMode == AcpectRatioMode.USD)
+                if (m_aspectRatioMode == AspectRatioMode.USD)
                 {
                     m_ucam.aspect = m_cameraData.aspect_ratio;
                 }

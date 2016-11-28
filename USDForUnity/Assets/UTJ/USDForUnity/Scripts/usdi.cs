@@ -415,6 +415,7 @@ namespace UTJ
         [DllImport ("usdi")] public static extern Schema        usdiGetMaster(Context ctx, int i);
         [DllImport ("usdi")] public static extern Schema        usdiFindSchema(Context ctx, string path);
 
+        [DllImport ("usdi")] public static extern void          usdiNotifyForceUpdate(Context ctx);
         [DllImport ("usdi")] public static extern void          usdiUpdateAllSamples(Context ctx, double t);
         [DllImport ("usdi")] public static extern void          usdiRebuildSchemaTree(Context ctx);
 

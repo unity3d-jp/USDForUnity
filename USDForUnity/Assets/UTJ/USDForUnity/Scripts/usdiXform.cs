@@ -5,7 +5,7 @@ namespace UTJ
 {
 
     [Serializable]
-    public class usdiXform : usdiElement
+    public class usdiXform : usdiSchema
     {
         #region fields
         [SerializeField] protected Transform m_trans;
@@ -17,6 +17,11 @@ namespace UTJ
 
 
         #region impl
+        protected override usdiIElement usdiSetupSchemaComponent()
+        {
+            return GetOrAddComponent<usdiXformElement>();
+        }
+
         public override void usdiOnLoad()
         {
             base.usdiOnLoad();

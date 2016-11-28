@@ -42,6 +42,7 @@ public:
 
     void                rebuildSchemaTree();
     int                 generateID();
+    void                notifyForceUpdate();
     void                updateAllSamples(Time t);
 
 private:

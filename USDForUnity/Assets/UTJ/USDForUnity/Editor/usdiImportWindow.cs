@@ -27,7 +27,7 @@ namespace UTJ
 
             var usd = go.AddComponent<usdiStream>();
             modifier.Invoke(usd);
-            usd.usdiLoad(path);
+            usd.Load(path);
             return usd;
         }
 

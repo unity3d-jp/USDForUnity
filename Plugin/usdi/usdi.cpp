@@ -205,6 +205,13 @@ usdiAPI void usdiFlatten(usdi::Context *ctx)
     ctx->flatten();
 }
 
+usdiAPI void usdiNotifyForceUpdate(usdi::Context *ctx)
+{
+    usdiTraceFunc();
+    if (!ctx) return;
+    ctx->notifyForceUpdate();
+}
+
 usdiAPI void usdiUpdateAllSamples(usdi::Context *ctx, usdi::Time t)
 {
     usdiTraceFunc();

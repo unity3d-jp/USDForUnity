@@ -351,6 +351,10 @@ void Schema::endEditVariant()
 }
 
 
+void Schema::notifyForceUpdate()
+{
+    m_update_flag_next.sample_updated = 1;
+}
 
 void Schema::notifyImportConfigChanged()
 {
@@ -366,7 +370,7 @@ void Schema::updateSample(Time t)
     m_update_flag = m_update_flag_next;
     m_update_flag_next.bits = 0;
 
-    {
+    if(m_update_flag.sample_updated == 0) {
         m_update_flag.sample_updated = 1;
         if (m_time_prev != usdiInvalidTime) {
             if (t == m_time_prev) { m_update_flag.sample_updated = 0; }

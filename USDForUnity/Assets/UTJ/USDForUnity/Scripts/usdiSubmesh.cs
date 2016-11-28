@@ -171,7 +171,7 @@ namespace UTJ
             m_indices = null;
         }
 
-        public void usdiKickVBUpdateTask(ref usdi.MeshData data)
+        public void usdiKickVBUpdateTask(ref usdi.MeshData data, bool updateIndices)
         {
             bool active = m_renderer.isVisible;
             if(active)
@@ -180,10 +180,10 @@ namespace UTJ
                 {
                     m_vuCmd = new usdi.VertexUpdateCommand(usdi.usdiPrimGetNameS(m_schema));
                 }
-                m_vuCmd.Update(ref data, m_VB, IntPtr.Zero);
+                m_vuCmd.Update(ref data, m_VB, updateIndices ? m_IB : IntPtr.Zero);
             }
         }
-        public void usdiKickVBUpdateTask(ref usdi.SubmeshData data)
+        public void usdiKickVBUpdateTask(ref usdi.SubmeshData data, bool updateIndices)
         {
             bool active = m_renderer.isVisible;
             if (active)
@@ -192,7 +192,7 @@ namespace UTJ
                 {
                     m_vuCmd = new usdi.VertexUpdateCommand(usdi.usdiPrimGetNameS(m_schema));
                 }
-                m_vuCmd.Update(ref data, m_VB, IntPtr.Zero);
+                m_vuCmd.Update(ref data, m_VB, updateIndices ? m_IB : IntPtr.Zero);
             }
         }
 

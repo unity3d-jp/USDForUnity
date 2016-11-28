@@ -23,6 +23,10 @@ namespace UTJ
                 t.recordUndo = true;
                 t.usdiDetach();
             }
+            if (GUILayout.Button("Make Prefab"))
+            {
+                t.usdiMakePrefab();
+            }
         }
 
     }
