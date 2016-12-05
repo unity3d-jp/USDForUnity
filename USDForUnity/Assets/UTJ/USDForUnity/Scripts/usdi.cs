@@ -106,6 +106,12 @@ namespace UTJ
             Heterogenous, // both vertices and topologies are not constant
         };
 
+        public static double defaultTime
+        {
+            get { return Double.NaN; }
+        }
+
+        [Serializable]
         public struct UpdateFlags
         {
             public uint bits;
@@ -115,10 +121,6 @@ namespace UTJ
             public bool variantSetChanged   { get { return (bits & 0x4) != 0; } }
             public bool payloadLoaded { get { return (bits & 0x8) != 0; } }
             public bool payloadUnloaded { get { return (bits & 0x10) != 0; } }
-        }
-
-        public static double default_time {
-            get { return Double.NaN; }
         }
 
         [Serializable]
@@ -135,25 +137,26 @@ namespace UTJ
             public int Count { get { return setNames.Length; } }
         }
 
-        public struct ImportConfig
+        [Serializable]
+        public struct ImportSettings
         {
             public const int Size = 0x14;
 
             public InterpolationType interpolation;
             public NormalCalculationType normal_calculation;
             public float scale;
-            public Bool load_all_payloads;
-            public Bool triangulate;
+            [HideInInspector] public Bool load_all_payloads;
+            [HideInInspector] public Bool triangulate;
             public Bool swap_handedness;
             public Bool swap_faces;
-            public Bool split_mesh;
-            public Bool double_buffering;
+            [HideInInspector] public Bool split_mesh;
+            [HideInInspector] public Bool double_buffering;
 
-            public static ImportConfig default_value
+            public static ImportSettings default_value
             {
                 get
                 {
-                    return new ImportConfig
+                    return new ImportSettings
                     {
                         interpolation = InterpolationType.Linear,
                         normal_calculation = NormalCalculationType.WhenMissing,
@@ -163,31 +166,30 @@ namespace UTJ
                         swap_handedness = true,
                         swap_faces = true,
                         split_mesh = true,
-                        double_buffering = false,
+                        double_buffering = true,
                     };
                 }
             }
         };
-        public static bool Equals(ref ImportConfig a, ref ImportConfig b) { return usdiMemcmp(ref a, ref b, ImportConfig.Size) == 0; }
-        [DllImport("usdi")] public static extern int usdiMemcmp(ref usdi.ImportConfig a, ref usdi.ImportConfig b, int size);
 
-        public struct ExportConfig
+        [Serializable]
+        public struct ExportSettings
         {
-            public Bool instanceable_by_default;
             public float scale;
             public Bool swap_handedness;
             public Bool swap_faces;
+            public Bool instanceable_by_default;
 
-            public static ExportConfig default_value
+            public static ExportSettings default_value
             {
                 get
                 {
-                    return new ExportConfig
+                    return new ExportSettings
                     {
-                        instanceable_by_default = true,
                         scale = 1.0f,
                         swap_handedness = true,
                         swap_faces = true,
+                        instanceable_by_default = false,
                     };
                 }
             }
@@ -399,10 +401,10 @@ namespace UTJ
         [DllImport ("usdi")] public static extern Bool          usdiSave(Context ctx);
         [DllImport ("usdi")] public static extern Bool          usdiSaveAs(Context ctx, string path);
 
-        [DllImport ("usdi")] public static extern void          usdiSetImportConfig(Context ctx, ref ImportConfig conf);
-        [DllImport ("usdi")] public static extern void          usdiGetImportConfig(Context ctx, ref ImportConfig conf);
-        [DllImport ("usdi")] public static extern void          usdiSetExportConfig(Context ctx, ref ExportConfig conf);
-        [DllImport ("usdi")] public static extern void          usdiGetExportConfig(Context ctx, ref ExportConfig conf);
+        [DllImport ("usdi")] public static extern void          usdiSetImportSettings(Context ctx, ref ImportSettings v);
+        [DllImport ("usdi")] public static extern void          usdiGetImportSettings(Context ctx, ref ImportSettings v);
+        [DllImport ("usdi")] public static extern void          usdiSetExportSettings(Context ctx, ref ExportSettings v);
+        [DllImport ("usdi")] public static extern void          usdiGetExportSettings(Context ctx, ref ExportSettings v);
 
         [DllImport ("usdi")] public static extern Schema        usdiCreateOverride(Context ctx, string prim_path);
         [DllImport ("usdi")] public static extern Xform         usdiCreateXform(Context ctx, Schema parent, string name);

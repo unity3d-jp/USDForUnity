@@ -8,7 +8,7 @@ namespace UTJ
     public class usdiImportWindow : EditorWindow
     {
         public string m_path;
-        usdiImportOptions m_importOptions = new usdiImportOptions();
+        usdi.ImportSettings m_importOptions = usdi.ImportSettings.default_value;
         double m_initialTime = 0.0;
         bool m_forceSingleThread = false;
 
@@ -35,8 +35,8 @@ namespace UTJ
         {
             m_importOptions.interpolation = (usdi.InterpolationType)EditorGUILayout.EnumPopup("Interpolation", (Enum)m_importOptions.interpolation);
             m_importOptions.scale = EditorGUILayout.FloatField("Scale", m_importOptions.scale);
-            m_importOptions.swapHandedness = EditorGUILayout.Toggle("Swap Handedness", m_importOptions.swapHandedness);
-            m_importOptions.swapFaces = EditorGUILayout.Toggle("Swap Faces", m_importOptions.swapFaces);
+            m_importOptions.swap_handedness = EditorGUILayout.Toggle("Swap Handedness", m_importOptions.swap_handedness);
+            m_importOptions.swap_faces = EditorGUILayout.Toggle("Swap Faces", m_importOptions.swap_faces);
             EditorGUILayout.Space();
             m_initialTime = EditorGUILayout.FloatField("Initial Time", (float)m_initialTime);
             m_forceSingleThread = EditorGUILayout.Toggle("Force Single Thread", m_forceSingleThread);
@@ -46,7 +46,7 @@ namespace UTJ
             if (GUILayout.Button("Import"))
             {
                 var usd = InstanciateUSD(m_path, (stream) => {
-                    stream.importOptions = m_importOptions;
+                    stream.importSettings = m_importOptions;
                     stream.playTime = m_initialTime;
                     stream.forceSingleThread = m_forceSingleThread;
                 });

@@ -117,29 +117,29 @@ usdiAPI bool usdiSaveAs(usdi::Context *ctx, const char *path)
     return ctx->saveAs(path);
 }
 
-usdiAPI void usdiSetImportConfig(usdi::Context *ctx, const usdi::ImportConfig *conf)
+usdiAPI void usdiSetImportSettings(usdi::Context *ctx, const usdi::ImportSettings *v)
 {
     usdiTraceFunc();
-    if (!ctx || !conf) return;
-    ctx->setImportConfig(*conf);
+    if (!ctx || !v) return;
+    ctx->setImportSettings(*v);
 }
-usdiAPI void usdiGetImportConfig(usdi::Context *ctx, usdi::ImportConfig *conf)
+usdiAPI void usdiGetImportSettings(usdi::Context *ctx, usdi::ImportSettings *v)
 {
     usdiTraceFunc();
-    if (!ctx || !conf) return;
-    *conf = ctx->getImportConfig();
+    if (!ctx || !v) return;
+    *v = ctx->getImportSettings();
 }
-usdiAPI void usdiSetExportConfig(usdi::Context *ctx, const usdi::ExportConfig *conf)
+usdiAPI void usdiSetExportSettings(usdi::Context *ctx, const usdi::ExportSettings *v)
 {
     usdiTraceFunc();
-    if (!ctx || !conf) return;
-    ctx->setExportConfig(*conf);
+    if (!ctx || !v) return;
+    ctx->setExportSettings(*v);
 }
-usdiAPI void usdiGetExportConfig(usdi::Context *ctx, usdi::ExportConfig *conf)
+usdiAPI void usdiGetExportSettings(usdi::Context *ctx, usdi::ExportSettings *v)
 {
     usdiTraceFunc();
-    if (!ctx || !conf) return;
-    *conf = ctx->getExportConfig();
+    if (!ctx || !v) return;
+    *v = ctx->getExportSettings();
 }
 
 usdiAPI usdi::Schema* usdiGetRoot(usdi::Context *ctx)

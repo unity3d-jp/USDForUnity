@@ -15,7 +15,7 @@ public class USDTestMenu
         if (path == null || path == "") { return; }
 
         var root = new GameObject("root").GetComponent<Transform>();
-        var opt = new usdiImportOptions();
+        var opt = new usdi.ImportSettings();
 
         int N1 = 14;
         int N2 = 22;
@@ -27,7 +27,7 @@ public class USDTestMenu
         Selection.activeGameObject = root.gameObject;
     }
 
-    static void InstanciateUSDCircular(string path, usdiImportOptions opt, Transform root, float radius, int N, double timeStart=0.0, double timeDelay=0.05)
+    static void InstanciateUSDCircular(string path, usdi.ImportSettings opt, Transform root, float radius, int N, double timeStart=0.0, double timeDelay=0.05)
     {
         float ang = 360.0f / N * Mathf.Deg2Rad;
 
@@ -42,10 +42,10 @@ public class USDTestMenu
 
     }
 
-    static usdiStream InstanciateUSD(string path, usdiImportOptions opt, Vector3 pos, Vector3 forward, double time)
+    static usdiStream InstanciateUSD(string path, usdi.ImportSettings opt, Vector3 pos, Vector3 forward, double time)
     {
         var usd = UTJ.usdiImportWindow.InstanciateUSD(path, (stream) => {
-            stream.importOptions = opt;
+            stream.importSettings = opt;
             stream.playTime = time;
         } );
         var trans = usd.GetComponent<Transform>();

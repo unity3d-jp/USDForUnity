@@ -104,7 +104,7 @@ void Context::applyImportConfig()
 {
     if (!m_stage) { return; }
 
-    switch (m_import_config.interpolation) {
+    switch (m_import_settings.interpolation) {
     case InterpolationType::None: m_stage->SetInterpolationType(UsdInterpolationTypeHeld); break;
     case InterpolationType::Linear: m_stage->SetInterpolationType(UsdInterpolationTypeLinear); break;
     }
@@ -115,10 +115,6 @@ bool Context::open(const char *path)
     initialize();
 
     usdiLogInfo( "Context::open(): %s\n", path);
-    usdiLogTrace("  scale: %f\n", m_import_config.scale);
-    usdiLogTrace("  triangulate: %d\n", (int)m_import_config.triangulate);
-    usdiLogTrace("  swap_handedness: %d\n", (int)m_import_config.swap_handedness);
-    usdiLogTrace("  swap_faces: %d\n", (int)m_import_config.swap_faces);
 
     m_stage = UsdStage::Open(path);
     if (!m_stage) {
@@ -163,28 +159,28 @@ bool Context::saveAs(const char *path) const
     return m_stage->Export(path);
 }
 
-const ImportConfig& Context::getImportConfig() const
+const ImportSettings& Context::getImportSettings() const
 {
-    return m_import_config;
+    return m_import_settings;
 }
 
-void Context::setImportConfig(const ImportConfig& v)
+void Context::setImportSettings(const ImportSettings& v)
 {
-    if (v != m_import_config) {
-        m_import_config = v;
+    if (v != m_import_settings) {
+        m_import_settings = v;
         applyImportConfig();
         for (auto& s : m_schemas) { s->notifyImportConfigChanged(); }
     }
 }
 
-const ExportConfig& Context::getExportConfig() const
+const ExportSettings& Context::getExportSettings() const
 {
-    return m_export_config;
+    return m_export_settings;
 }
 
-void Context::setExportConfig(const ExportConfig& v)
+void Context::setExportSettings(const ExportSettings& v)
 {
-    m_export_config = v;
+    m_export_settings = v;
 }
 
 
@@ -248,7 +244,7 @@ Schema* Context::createSchemaRecursive(Schema *parent, UsdPrim prim)
     auto *ret = createSchema(parent, prim);
 
     // handling payload
-    if (m_import_config.load_all_payloads && prim.HasPayload()) {
+    if (m_import_settings.load_all_payloads && prim.HasPayload()) {
         prim.Load();
     }
 

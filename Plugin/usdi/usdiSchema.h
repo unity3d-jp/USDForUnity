@@ -90,8 +90,15 @@ public:
     UpdateFlags     getUpdateFlagsPrev() const;
     virtual void    updateSample(Time t);
 
-    void            setUserData(void *v);
+    const ImportSettings&   getImportSettings() const;
+    bool                    isImportSettingsOverridden() const;
+    void                    setImportSettings(const ImportSettings& conf, bool over);
+    const ExportSettings&   getExportSettings() const;
+    bool                    isExportSettingsOverridden() const;
+    void                    setExportSettings(const ExportSettings& conf, bool over);
+
     void*           getUserData() const;
+    void            setUserData(void *v);
 
 
     // Body: [](Schema *child) -> void
@@ -136,20 +143,18 @@ protected:
     void addInstance(Schema *instance);
     std::string makePath(const char *name);
 
-    const ImportConfig& getImportConfig() const;
-    const ExportConfig& getExportConfig() const;
-
 protected:
-    using Children = std::vector<Schema*>;
-    using Instances = std::vector<Schema*>;
-    using AttributePtr = std::unique_ptr<Attribute>;
-    using Attributes = std::vector<AttributePtr>;
-
     struct VariantSet
     {
         std::string name;
         std::vector<std::string> variants;
     };
+
+    using Children = std::vector<Schema*>;
+    using Instances = std::vector<Schema*>;
+    using AttributePtr = std::unique_ptr<Attribute>;
+    using Attributes = std::vector<AttributePtr>;
+    using VariantSets = std::vector<VariantSet>;
 
     void syncAttributes();
     void syncTimeRange();
@@ -166,11 +171,21 @@ protected:
     Instances       m_instances;
     Attributes      m_attributes;
 
-    std::vector<VariantSet> m_variant_sets;
+    VariantSets     m_variant_sets;
 
-    Time            m_time_start = usdiInvalidTime, m_time_end = usdiInvalidTime;
+    Time            m_time_start = usdiInvalidTime;
+    Time            m_time_end = usdiInvalidTime;
     Time            m_time_prev = usdiInvalidTime;
-    UpdateFlags     m_update_flag, m_update_flag_prev, m_update_flag_next;
+    UpdateFlags     m_update_flag;
+    UpdateFlags     m_update_flag_prev;
+    UpdateFlags     m_update_flag_next;
+
+    ImportSettings  m_isettings;
+    bool            m_isettings_overridden = false;
+
+    ExportSettings  m_esettings;
+    bool            m_esettings_overridden = false;
+
     void            *m_userdata = nullptr;
 };
 

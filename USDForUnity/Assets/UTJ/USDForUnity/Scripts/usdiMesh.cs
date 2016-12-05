@@ -21,7 +21,8 @@ namespace UTJ
         usdi.MeshSummary m_meshSummary;
 
         bool m_allocateMeshDataRequired;
-        bool m_updateMeshDataRequired;
+        bool m_updateIndicesRequired;
+        bool m_updateVerticesRequired;
         bool m_directVBUpdate; // for Unity 5.5 or later
         double m_timeRead; // accessed from worker thread
         usdi.Task m_asyncRead;
@@ -85,7 +86,6 @@ namespace UTJ
             else
             {
                 m_allocateMeshDataRequired = true;
-                m_updateMeshDataRequired = true;
             }
         }
 
@@ -101,7 +101,8 @@ namespace UTJ
             m_meshSummary = usdi.MeshSummary.default_value;
 
             m_allocateMeshDataRequired = false;
-            m_updateMeshDataRequired = false;
+            m_updateIndicesRequired = false;
+            m_updateVerticesRequired = false;
             m_timeRead = 0.0;
 
             m_asyncRead = null;
@@ -140,7 +141,7 @@ namespace UTJ
         public override void usdiAsyncUpdate(double time)
         {
             base.usdiAsyncUpdate(time);
-            if (m_updateFlags.bits == 0 && !m_allocateMeshDataRequired && !m_updateMeshDataRequired) {
+            if (m_updateFlags.bits == 0 && !m_allocateMeshDataRequired && !m_updateIndicesRequired && !m_updateVerticesRequired) {
                 return;
             }
 
@@ -148,7 +149,8 @@ namespace UTJ
             if(isInstance)
             {
                 m_allocateMeshDataRequired = false;
-                m_updateMeshDataRequired = false;
+                m_updateIndicesRequired = false;
+                m_updateVerticesRequired = false;
             }
             else
             {
@@ -158,12 +160,19 @@ namespace UTJ
                         m_meshSummary.topology_variance == usdi.TopologyVariance.Heterogenous ||
                         m_updateFlags.variantSetChanged;
                 }
-                if (!m_updateMeshDataRequired)
+                if(!m_updateIndicesRequired)
                 {
-                    m_updateMeshDataRequired =
+                    m_updateIndicesRequired =
                         m_allocateMeshDataRequired ||
-                        m_meshSummary.topology_variance != usdi.TopologyVariance.Constant ||
+                        m_meshSummary.topology_variance == usdi.TopologyVariance.Heterogenous ||
                         m_updateFlags.importConfigChanged;
+
+                }
+                if (!m_updateVerticesRequired)
+                {
+                    m_updateVerticesRequired =
+                        m_updateIndicesRequired ||
+                        m_meshSummary.topology_variance != usdi.TopologyVariance.Constant;
                 }
             }
 
@@ -181,11 +190,12 @@ namespace UTJ
                 usdiAllocateMeshData(m_timeRead);
             }
 
-            if (m_updateMeshDataRequired)
+            if (m_updateVerticesRequired)
             {
                 if (m_directVBUpdate)
                 {
                     usdi.usdiMeshReadSample(m_mesh, ref m_meshData, m_timeRead, false);
+                    // kick VB update task in usdiUpdate()
                 }
                 else
                 {
@@ -221,7 +231,7 @@ namespace UTJ
         // sync
         public override void usdiUpdate(double time)
         {
-            if (m_updateFlags.bits == 0 && !m_allocateMeshDataRequired && !m_updateMeshDataRequired)
+            if (m_updateFlags.bits == 0 && !m_allocateMeshDataRequired && !m_updateVerticesRequired)
             {
                 return;
             }
@@ -260,7 +270,7 @@ namespace UTJ
                 }
             }
 
-            if (m_updateMeshDataRequired)
+            if (m_updateVerticesRequired)
             {
                 if(m_meshData.num_submeshes == 0)
                 {
@@ -280,33 +290,31 @@ namespace UTJ
                 bool close = m_meshSummary.topology_variance == usdi.TopologyVariance.Constant;
                 usdiUploadMeshData(time, true, close);
             }
-            else if(m_updateMeshDataRequired)
+            else if(m_updateVerticesRequired)
             {
-                bool updateIndices =
-                    m_meshSummary.topology_variance == usdi.TopologyVariance.Heterogenous ||
-                    m_updateFlags.importConfigChanged;
                 if (m_directVBUpdate)
                 {
                     if (m_meshData.num_submeshes == 0)
                     {
-                        m_submeshes[0].usdiKickVBUpdateTask(ref m_meshData, updateIndices);
+                        m_submeshes[0].usdiKickVBUpdateTask(ref m_meshData, m_updateIndicesRequired);
                     }
                     else
                     {
                         for (int i = 0; i < num_submeshes; ++i)
                         {
-                            m_submeshes[i].usdiKickVBUpdateTask(ref m_submeshData[i], updateIndices);
+                            m_submeshes[i].usdiKickVBUpdateTask(ref m_submeshData[i], m_updateIndicesRequired);
                         }
                     }
                 }
                 else
                 {
-                    usdiUploadMeshData(m_timeRead, updateIndices, false);
+                    usdiUploadMeshData(m_timeRead, m_updateIndicesRequired, false);
                 }
             }
 
             m_allocateMeshDataRequired = false;
-            m_updateMeshDataRequired = false;
+            m_updateIndicesRequired = false;
+            m_updateVerticesRequired = false;
         }
 
         public override void usdiSync()

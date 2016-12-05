@@ -104,7 +104,7 @@ union UpdateFlags {
 
 typedef double Time;
 
-struct ImportConfig
+struct ImportSettings
 {
     InterpolationType interpolation = InterpolationType::Linear;
     NormalCalculationType normal_calculation = NormalCalculationType::WhenMissing;
@@ -117,12 +117,12 @@ struct ImportConfig
     bool double_buffering = false;
 };
 
-struct ExportConfig
+struct ExportSettings
 {
-    bool instanceable_by_default = false;
     float scale = 1.0f;
     bool swap_handedness = true;
     bool swap_faces = true;
+    bool instanceable_by_default = false;
 };
 
 
@@ -276,10 +276,10 @@ usdiAPI void             usdiFlatten(usdi::Context *ctx);
 usdiAPI bool             usdiSave(usdi::Context *ctx);
 // path must *not* be same as identifier (parameter of usdiOpen() or usdiCreateStage())
 usdiAPI bool             usdiSaveAs(usdi::Context *ctx, const char *path);
-usdiAPI void             usdiSetImportConfig(usdi::Context *ctx, const usdi::ImportConfig *conf);
-usdiAPI void             usdiGetImportConfig(usdi::Context *ctx, usdi::ImportConfig *conf);
-usdiAPI void             usdiSetExportConfig(usdi::Context *ctx, const usdi::ExportConfig *conf);
-usdiAPI void             usdiGetExportConfig(usdi::Context *ctx, usdi::ExportConfig *conf);
+usdiAPI void             usdiSetImportSettings(usdi::Context *ctx, const usdi::ImportSettings *v);
+usdiAPI void             usdiGetImportSettings(usdi::Context *ctx, usdi::ImportSettings *v);
+usdiAPI void             usdiSetExportSettings(usdi::Context *ctx, const usdi::ExportSettings *v);
+usdiAPI void             usdiGetExportSettings(usdi::Context *ctx, usdi::ExportSettings *v);
 
 usdiAPI usdi::Schema*    usdiGetRoot(usdi::Context *ctx);
 usdiAPI int              usdiGetNumMasters(usdi::Context *ctx);

@@ -130,9 +130,9 @@ void TestExport(const char *filename)
 {
     auto *ctx = usdiCreateContext();
 
-    usdi::ExportConfig conf;
-    conf.instanceable_by_default = true;
-    usdiSetExportConfig(ctx, &conf);
+    usdi::ExportSettings settings;
+    settings.instanceable_by_default = true;
+    usdiSetExportSettings(ctx, &settings);
 
     usdiCreateStage(ctx, filename);
     auto *root = usdiGetRoot(ctx);

@@ -128,7 +128,7 @@ void Xform::updateSample(Time t_)
     if (m_update_flag.variant_set_changed) { m_summary_needs_update = true; }
 
     auto t = UsdTimeCode(t_);
-    const auto& conf = getImportConfig();
+    const auto& conf = getImportSettings();
 
     auto& sample = m_sample;
     auto prev = sample;
@@ -253,7 +253,7 @@ bool Xform::readSample(XformData& dst, Time t)
 bool Xform::writeSample(const XformData& src_, Time t_)
 {
     auto t = UsdTimeCode(t_);
-    const auto& conf = getExportConfig();
+    const auto& conf = getExportSettings();
     XformData src = src_;
 
     if (m_write_ops.empty()) {

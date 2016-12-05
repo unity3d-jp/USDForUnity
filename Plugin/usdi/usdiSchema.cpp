@@ -34,7 +34,7 @@ Schema::Schema(Context *ctx, Schema *parent, const char *name, const char *type)
     , m_id(ctx->generateID())
 {
     m_prim = ctx->getUsdStage()->DefinePrim(SdfPath(makePath(name)), TfToken(type));
-    if (ctx->getExportConfig().instanceable_by_default) {
+    if (ctx->getExportSettings().instanceable_by_default) {
         m_prim.SetInstanceable(true);
     }
     init();
@@ -256,7 +256,7 @@ int Schema::getVariantSelection(int iset) const
         return 0;
     }
 
-    std::string valname = m_prim.GetVariantSets().GetVariantSelection(m_variant_sets[iset].name);
+    auto valname = m_prim.GetVariantSets().GetVariantSelection(m_variant_sets[iset].name);
     if (valname.empty()) { return -1; }
     return findVariant(iset, valname.c_str());
 }
@@ -268,17 +268,26 @@ bool Schema::setVariantSelection(int iset, int ival)
         usdiLogError("Schema::setVariantSelection(): iset >= m_variant_sets.size()\n");
         return false;
     }
+
     auto& vset = m_variant_sets[iset];
     auto& dst = m_prim.GetVariantSet(vset.name);
-    bool ret;
+    auto sel = dst.GetVariantSelection();
+
+    bool ret = false;
     if (ival < 0 || ival >= vset.variants.size()) {
-        ret = dst.ClearVariantSelection();
+        if (!sel.empty()) {
+            ret = dst.ClearVariantSelection();
+        }
     }
     else {
-        ret = dst.SetVariantSelection(vset.variants[ival]);
+        if (sel != vset.variants[ival]) {
+            ret = dst.SetVariantSelection(vset.variants[ival]);
+        }
     }
 
-    m_update_flag_next.variant_set_changed = 1;
+    if (ret) {
+        m_update_flag_next.variant_set_changed = 1;
+    }
     return ret;
 }
 
@@ -392,12 +401,47 @@ void Schema::updateSample(Time t)
     //}
 }
 
-void Schema::setUserData(void *v) { m_userdata = v; }
+const ImportSettings& Schema::getImportSettings() const
+{
+    return m_isettings_overridden ? m_isettings : m_ctx->getImportSettings();
+}
+bool Schema::isImportSettingsOverridden() const
+{
+    return m_isettings_overridden;
+}
+void Schema::setImportSettings(const ImportSettings& settings, bool over)
+{
+    if (m_isettings_overridden != over) {
+        m_isettings_overridden = over;
+        m_update_flag_next.import_config_updated = 1;
+    }
+    if (m_isettings_overridden) {
+        if (m_isettings != settings) {
+            m_isettings = settings;
+            m_update_flag_next.import_config_updated = 1;
+        }
+    }
+}
+
+const ExportSettings& Schema::getExportSettings() const
+{
+    return m_esettings_overridden ? m_esettings : m_ctx->getExportSettings();
+}
+bool Schema::isExportSettingsOverridden() const
+{
+    return m_esettings_overridden;
+}
+void Schema::setExportSettings(const ExportSettings& settings, bool over)
+{
+    m_esettings = settings;
+    m_esettings_overridden = over;
+}
+
+
 void* Schema::getUserData() const { return m_userdata; }
+void Schema::setUserData(void *v) { m_userdata = v; }
 
 
-const ImportConfig& Schema::getImportConfig() const { return m_ctx->getImportConfig(); }
-const ExportConfig& Schema::getExportConfig() const { return m_ctx->getExportConfig(); }
 
 void Schema::addChild(Schema *child)
 {

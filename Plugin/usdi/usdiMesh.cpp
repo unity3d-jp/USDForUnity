@@ -152,7 +152,7 @@ void Mesh::updateSample(Time t_)
 
 
     auto t = UsdTimeCode(t_);
-    const auto& conf = getImportConfig();
+    const auto& conf = getImportSettings();
 
     // swap front sample
     if (!m_front_sample) {
@@ -377,7 +377,7 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
 bool Mesh::writeSample(const MeshData& src, Time t_)
 {
     auto t = UsdTimeCode(t_);
-    const auto& conf = getExportConfig();
+    const auto& conf = getExportSettings();
 
     MeshSample& sample = m_sample[0];
 

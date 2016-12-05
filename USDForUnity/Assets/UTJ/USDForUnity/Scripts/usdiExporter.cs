@@ -744,11 +744,11 @@ namespace UTJ
 
         void ApplyExportConfig()
         {
-            usdi.ExportConfig conf = usdi.ExportConfig.default_value;
+            usdi.ExportSettings conf = usdi.ExportSettings.default_value;
             conf.scale = m_scale;
             conf.swap_handedness = m_swapHandedness;
             conf.swap_faces = m_swapFaces;
-            usdi.usdiSetExportConfig(m_ctx, ref conf);
+            usdi.usdiSetExportSettings(m_ctx, ref conf);
         }
 
 

@@ -58,7 +58,7 @@ void Points::updateSample(Time t_)
     if (m_update_flag.variant_set_changed) { m_summary_needs_update = true; }
 
     auto t = UsdTimeCode(t_);
-    const auto& conf = getImportConfig();
+    const auto& conf = getImportSettings();
 
     // swap front sample
     if (!m_front_sample) {
@@ -119,7 +119,7 @@ bool Points::readSample(PointsData& dst, Time t, bool copy)
 bool Points::writeSample(const PointsData& src, Time t_)
 {
     auto t = UsdTimeCode(t_);
-    const auto& conf = getExportConfig();
+    const auto& conf = getExportSettings();
 
     PointsSample sample;
 

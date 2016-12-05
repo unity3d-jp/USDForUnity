@@ -19,6 +19,7 @@ namespace UTJ
         protected usdi.Schema m_schema;
         protected usdi.VariantSets m_variantSets;
         [SerializeField] protected int[] m_variantSelections;
+        [SerializeField] usdi.ImportSettings m_isettings = usdi.ImportSettings.default_value;
         #endregion
 
 

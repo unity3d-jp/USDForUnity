@@ -16,10 +16,10 @@ public:
     // path must *not* be same as identifier (parameter of createStage() or open())
     bool                saveAs(const char *path) const;
 
-    const ImportConfig& getImportConfig() const;
-    void                setImportConfig(const ImportConfig& v);
-    const ExportConfig& getExportConfig() const;
-    void                setExportConfig(const ExportConfig& v);
+    const ImportSettings&   getImportSettings() const;
+    void                    setImportSettings(const ImportSettings& v);
+    const ExportSettings&   getExportSettings() const;
+    void                    setExportSettings(const ExportSettings& v);
 
     UsdStageRefPtr      getUsdStage() const;
     Schema*             getRoot() const;
@@ -59,8 +59,8 @@ private:
     Schema*         m_root = nullptr;
     Masters         m_masters;
 
-    ImportConfig    m_import_config;
-    ExportConfig    m_export_config;
+    ImportSettings  m_import_settings;
+    ExportSettings  m_export_settings;
 
     int             m_id_seed = 0;
     double          m_start_time = 0.0;

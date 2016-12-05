@@ -11,10 +11,20 @@ namespace UTJ
         {
             //DrawDefaultInspector();
 
-            var so = serializedObject;
             var component = target as usdiIElement;
             var schema = component.schema;
             if(schema == null) { return; }
+
+            EditorGUILayout.LabelField("USD Information", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Prim Path", schema.primPath);
+            EditorGUILayout.LabelField("Type Name", schema.primTypeName);
+
+            var master = schema.master;
+            if(master != null)
+            {
+                EditorGUILayout.LabelField("Instance of", master.primPath);
+            }
+
 
             // variant set selection
             var vsets = schema.variantSets;
@@ -44,14 +54,6 @@ namespace UTJ
                         schema.stream.recordUndo = false;
                     }
                 }
-            }
-
-            // mesh settings
-            var mesh = schema as usdiMesh;
-            if(mesh != null)
-            {
-                EditorGUILayout.LabelField("Mesh Settings", EditorStyles.boldLabel);
-                // todo
             }
         }
     }

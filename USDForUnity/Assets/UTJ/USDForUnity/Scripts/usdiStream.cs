@@ -34,16 +34,6 @@ namespace UTJ
         }
     }
 
-    [Serializable]
-    public class usdiImportOptions
-    {
-        public usdi.InterpolationType interpolation = usdi.InterpolationType.Linear;
-        public usdi.NormalCalculationType normalCalculation = usdi.NormalCalculationType.WhenMissing;
-        public float scale = 1.0f;
-        public bool swapHandedness = true;
-        public bool swapFaces = true;
-    }
-
 
     [ExecuteInEditMode]
     public class usdiStream : MonoBehaviour
@@ -60,7 +50,7 @@ namespace UTJ
 
         #region fields
         [SerializeField] DataPath m_path;
-        [SerializeField] usdiImportOptions m_importOptions = new usdiImportOptions();
+        [SerializeField] usdi.ImportSettings m_importSettings = new usdi.ImportSettings();
         [SerializeField] double m_time;
         [SerializeField] double m_timeScale = 1.0;
 
@@ -84,6 +74,7 @@ namespace UTJ
         double m_prevUpdateTime = Double.NaN;
         usdi.Task m_asyncUpdate;
         bool m_recordUndo;
+        public Bool testBool;
         #endregion
 
 
@@ -96,10 +87,10 @@ namespace UTJ
         {
             get { return m_ctx; }
         }
-        public usdiImportOptions importOptions
+        public usdi.ImportSettings importSettings
         {
-            get { return m_importOptions; }
-            set { m_importOptions = value; }
+            get { return m_importSettings; }
+            set { m_importSettings = value; }
         }
         public double playTime
         {
@@ -354,17 +345,7 @@ namespace UTJ
 
         void usdiApplyImportConfig()
         {
-            usdi.ImportConfig conf;
-            conf.interpolation = m_importOptions.interpolation;
-            conf.normal_calculation = m_importOptions.normalCalculation;
-            conf.scale = m_importOptions.scale;
-            conf.load_all_payloads = true;
-            conf.triangulate = true;
-            conf.swap_handedness = m_importOptions.swapHandedness;
-            conf.swap_faces = m_importOptions.swapFaces;
-            conf.split_mesh = true;
-            conf.double_buffering = m_deferredUpdate;
-            usdi.usdiSetImportConfig(m_ctx, ref conf);
+            usdi.usdiSetImportSettings(m_ctx, ref m_importSettings);
         }
 
         bool usdiApplyVarianceSelections()
