@@ -185,15 +185,26 @@ struct MeshSummary
     bool                has_normals = false;
     bool                has_uvs = false;
     bool                has_velocities = false;
+    bool                has_bones = false;
 };
+
+template<int N>
+struct Weights
+{
+    float   weight[N] = {};
+    int     bone_indices[N] = {};
+};
+using Weights4 = Weights<4>;
+using Weights8 = Weights<8>;
 
 struct SubmeshData
 {
-    float3  *points = nullptr;
-    float3  *normals = nullptr;
-    float2  *uvs = nullptr;
-    int     *indices = nullptr;
-    uint    num_points = 0;
+    float3      *points = nullptr;
+    float3      *normals = nullptr;
+    float2      *uvs = nullptr;
+    int         *indices = nullptr;
+    Weights4    *weights4 = nullptr;
+    uint        num_points = 0;
 
     float3  center = { 0.0f, 0.0f, 0.0f };
     float3  extents = { 0.0f, 0.0f, 0.0f };
@@ -203,18 +214,21 @@ struct MeshData
 {
     // these pointers can be null (in this case, just be ignored).
     // otherwise, if you pass to usdiMeshSampleReadData(), pointers must point valid memory block to store data.
-    float3  *points = nullptr;
-    float3  *velocities = nullptr;
-    float3  *normals = nullptr;
-    float2  *uvs = nullptr;
-    int     *counts = nullptr;
-    int     *indices = nullptr;
-    int     *indices_triangulated = nullptr;
+    float3      *points = nullptr;
+    float3      *velocities = nullptr;
+    float3      *normals = nullptr;
+    float2      *uvs = nullptr;
+    int         *counts = nullptr;
+    int         *indices = nullptr;
+    int         *indices_triangulated = nullptr;
+    Weights4    *weights4 = nullptr;
+    char        **bone_names = nullptr;
 
     uint    num_points = 0;
     uint    num_counts = 0;
     uint    num_indices = 0;
     uint    num_indices_triangulated = 0;
+    uint    num_bones = 0;
 
     float3  center = { 0.0f, 0.0f, 0.0f };
     float3  extents = { 0.0f, 0.0f, 0.0f };
@@ -366,6 +380,7 @@ usdiAPI usdi::Mesh*      usdiAsMesh(usdi::Schema *schema); // dynamic cast to Me
 usdiAPI void             usdiMeshGetSummary(usdi::Mesh *mesh, usdi::MeshSummary *dst);
 usdiAPI bool             usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t, bool copy);
 usdiAPI bool             usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t);
+usdiAPI const char*      usdiMeshGetBoneName(usdi::Mesh *mesh, const usdi::MeshData *src, int i);
 
 // Points interface
 usdiAPI usdi::Points*    usdiAsPoints(usdi::Schema *schema); // dynamic cast to Points

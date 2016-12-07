@@ -284,6 +284,7 @@ namespace UTJ
             public Bool has_normals;
             public Bool has_uvs;
             public Bool has_velocities;
+            public Bool has_bones;
 
             public static MeshSummary default_value { get { return default(MeshSummary); } }
         };
@@ -294,6 +295,7 @@ namespace UTJ
             public IntPtr   normals;
             public IntPtr   uvs;
             public IntPtr   indices; // always triangulated
+            public IntPtr   weights;
             public int      num_points; // == num_indices
 
             public Vector3  center;
@@ -311,11 +313,14 @@ namespace UTJ
             public IntPtr   counts;
             public IntPtr   indices;
             public IntPtr   indices_triangulated;
+            public IntPtr   weights;
+            public IntPtr   bone_names;
 
             public int      num_points;
             public int      num_counts;
             public int      num_indices;
             public int      num_indices_triangulated;
+            public int      num_bones;
 
             public Vector3  center;
             public Vector3  extents;
@@ -494,6 +499,16 @@ namespace UTJ
         [DllImport ("usdi")] public static extern void          usdiMeshGetSummary(Mesh mesh, ref MeshSummary dst);
         [DllImport ("usdi")] public static extern Bool          usdiMeshReadSample(Mesh mesh, ref MeshData dst, double t, Bool copy);
         [DllImport ("usdi")] public static extern Bool          usdiMeshWriteSample(Mesh mesh, ref MeshData src, double t);
+        [DllImport ("usdi")] public static extern IntPtr        usdiMeshGetBoneName(Mesh mesh, ref MeshData src, int i);
+        public static string[] usdiMeshGetBoneNames(Mesh mesh, ref MeshData src)
+        {
+            string[] ret = new string[src.num_bones];
+            for(int i=0; i< src.num_bones; ++i)
+            {
+                ret[i] = S(usdiMeshGetBoneName(mesh, ref src, i));
+            }
+            return ret;
+        }
 
         // Points interface
         [DllImport ("usdi")] public static extern Points        usdiAsPoints(Schema schema);

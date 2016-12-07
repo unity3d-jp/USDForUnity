@@ -30,6 +30,10 @@ namespace UTJ
 
 
         #region properties
+        public usdi.Mesh nativeMeshPtr
+        {
+            get { return m_mesh; }
+        }
         public usdi.MeshSummary meshSummary
         {
             get { return m_meshSummary; }

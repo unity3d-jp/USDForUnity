@@ -23,6 +23,10 @@ namespace UTJ
 
 
         #region properties
+        public usdi.Camera nativeCameraPtr
+        {
+            get { return m_camera; }
+        }
         public AspectRatioMode aspectRatioMode
         {
             get { return m_aspectRatioMode; }

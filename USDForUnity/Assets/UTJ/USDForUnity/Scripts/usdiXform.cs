@@ -15,6 +15,12 @@ namespace UTJ
         protected usdi.UpdateFlags m_updateFlags;
         #endregion
 
+        #region properties
+        public usdi.Xform nativeXformPtr
+        {
+            get { return m_xf; }
+        }
+        #endregion
 
         #region impl
         protected override usdiIElement usdiSetupSchemaComponent()

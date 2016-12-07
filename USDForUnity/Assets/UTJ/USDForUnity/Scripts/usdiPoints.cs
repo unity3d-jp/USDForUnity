@@ -24,8 +24,18 @@ namespace UTJ
 
 
         #region properties
-        public Vector3[] positions { get { return m_positions; } }
-        public Vector3[] velocities { get { return m_velocities; } }
+        public usdi.Points nativePointsPtr
+        {
+            get { return m_points; }
+        }
+        public Vector3[] positions
+        {
+            get { return m_positions; }
+        }
+        public Vector3[] velocities
+        {
+            get { return m_velocities; }
+        }
         #endregion
 
 

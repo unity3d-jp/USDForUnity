@@ -17,8 +17,7 @@ namespace UTJ
         [SerializeField] Mesh m_umesh;
 
         [SerializeField] Transform m_trans; // null in master nodes
-        [SerializeField] MeshFilter m_meshFilter; // null in master nodes
-        [SerializeField] MeshRenderer m_renderer; // null in master nodes
+        [SerializeField] Renderer m_renderer; // null in master nodes
 
         usdi.Schema m_schema;
         bool m_setupRequierd = true;
@@ -78,32 +77,90 @@ namespace UTJ
             }
 
             m_trans = go.GetComponent<Transform>();
-            m_meshFilter = go.GetComponent<MeshFilter>();
-            if (m_meshFilter == null || m_meshFilter.sharedMesh == null)
+
+            var meshSummary = parent_mesh.meshSummary;
+            var meshData = parent_mesh.meshData;
+            bool assignDefaultMaterial = false;
+
+            if (meshSummary.has_bones)
             {
-                m_umesh = new Mesh();
-                if (m_meshFilter == null)
+                // setup SkinnedMeshRenderer
+
+                var renderer = go.GetComponent<SkinnedMeshRenderer>();
+                if (renderer == null)
                 {
-                    m_meshFilter = go.AddComponent<MeshFilter>();
+                    renderer = go.AddComponent<SkinnedMeshRenderer>();
+                    assignDefaultMaterial = true;
+
                 }
-                m_meshFilter.sharedMesh = m_umesh;
+                {
+                    var boneNames = usdi.usdiMeshGetBoneNames(parent_mesh.nativeMeshPtr, ref meshData);
+                    var bones = new Transform[boneNames.Length];
+                    for (int i = 0; i < boneNames.Length; ++i)
+                    {
+                        var schema = m_stream.usdiFindSchema(boneNames[i]);
+                        if (schema == null)
+                        {
+                            Debug.LogError("bone not found: " + boneNames[i]);
+                            continue;
+                        }
+                        if (schema.gameObject == null)
+                        {
+                            // todo: this will happen on instanced object. need to do something
+                            Debug.LogError("bone don't have GameObject: " + boneNames[i]);
+                            continue;
+                        }
+                        bones[i] = schema.gameObject.GetComponent<Transform>();
+                    }
+                    renderer.bones = bones;
+                    renderer.rootBone = bones[0]; // correct?
+                }
+                m_renderer = renderer;
+
+                m_umesh = renderer.sharedMesh;
+                if (m_umesh == null)
+                {
+                    m_umesh = new Mesh();
+                    renderer.sharedMesh = m_umesh;
+                }
+                m_umesh.MarkDynamic();
             }
             else
             {
-                m_umesh = m_meshFilter.sharedMesh;
-            }
-            m_umesh.MarkDynamic();
+                // setup MeshFilter and MeshRenderer
 
-            m_renderer = go.GetComponent<MeshRenderer>();
-            if (m_renderer == null)
-            {
-                m_renderer = go.AddComponent<MeshRenderer>();
+                var meshFilter = go.GetComponent<MeshFilter>();
+                if (meshFilter == null || meshFilter.sharedMesh == null)
+                {
+                    m_umesh = new Mesh();
+                    if (meshFilter == null)
+                    {
+                        meshFilter = go.AddComponent<MeshFilter>();
+                    }
+                    meshFilter.sharedMesh = m_umesh;
+                }
+                else
+                {
+                    m_umesh = meshFilter.sharedMesh;
+                }
+                m_umesh.MarkDynamic();
+
+                m_renderer = go.GetComponent<MeshRenderer>();
+                if (m_renderer == null)
+                {
+                    m_renderer = go.AddComponent<MeshRenderer>();
+                    assignDefaultMaterial = true;
+                }
+            }
+
 #if UNITY_EDITOR
+            if (assignDefaultMaterial)
+            {
                 Material material = UnityEngine.Object.Instantiate(GetDefaultMaterial());
                 material.name = "Material_0";
                 m_renderer.sharedMaterial = material;
-#endif
             }
+#endif
         }
 
 #if UNITY_EDITOR
