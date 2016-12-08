@@ -80,6 +80,7 @@ static void InspectAttribute(usdi::Attribute *attr)
         ImplScalar(Quaternion, quatf);
         ImplScalar(Token, const char*);
         ImplScalar(String, const char*);
+        ImplScalar(Asset, const char*);
 
         ImplVector(Byte, byte);
         ImplVector(Int, int);
@@ -91,6 +92,7 @@ static void InspectAttribute(usdi::Attribute *attr)
         ImplVector(Quaternion, quatf);
         ImplVector(Token, const char*);
         ImplVector(String, const char*);
+        ImplVector(Asset, const char*);
     }
 
 #undef ImplScalar

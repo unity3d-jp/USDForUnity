@@ -10,47 +10,44 @@ using usdi::float3;
 using usdi::float4;
 using usdi::quatf;
 
+template<class T> void* ToPtr(const T& v) { return (void*)&v; }
+template<class T> void* ToPtr(const T* v) { return (void*)v; }
+
 
 template<class T>
-static void AddAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type, const T& v)
+static void AddAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type, const T& v, int num_samples = 5)
 {
-    usdi::Time t = 0.0;
     auto *attr = usdiPrimCreateAttribute(schema, name, type);
 
     usdi::AttributeData data;
-    data.data = (void*)&v;
+    data.data = ToPtr(v);
     data.num_elements = 1;
-    for (int i = 0; i < 5; ++i) {
-        t += 1.0 / 30.0;
-        usdiAttrWriteSample(attr, &data, t);
+    if (num_samples == 1) {
+        usdiAttrWriteSample(attr, &data, usdiDefaultTime());
+    }
+    else {
+        for (int i = 0; i < num_samples; ++i) {
+            usdi::Time t = 1.0 / 30.0 * i;
+            usdiAttrWriteSample(attr, &data, t);
+        }
     }
 }
 template<class T, size_t N>
-static void AddAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type, const T (&v)[N])
+static void AddAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type, const T (&v)[N], int num_samples = 5)
 {
-    usdi::Time t = 0.0;
     auto *attr = usdiPrimCreateAttribute(schema, name, type);
 
     usdi::AttributeData data;
     data.data = (void*)v;
     data.num_elements = N;
-    for (int i = 0; i < 5; ++i) {
-        t += 1.0 / 30.0;
-        usdiAttrWriteSample(attr, &data, t);
+    if (num_samples == 1) {
+        usdiAttrWriteSample(attr, &data, usdiDefaultTime());
     }
-}
-
-static void AddAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type, const void *&v)
-{
-    usdi::Time t = 0.0;
-    auto *attr = usdiPrimCreateAttribute(schema, name, type);
-
-    usdi::AttributeData data;
-    data.data = (void*)v;
-    data.num_elements = 1;
-    for (int i = 0; i < 5; ++i) {
-        t += 1.0 / 30.0;
-        usdiAttrWriteSample(attr, &data, t);
+    else {
+        for (int i = 0; i < num_samples; ++i) {
+            usdi::Time t = 1.0 / 30.0 * i;
+            usdiAttrWriteSample(attr, &data, t);
+        }
     }
 }
 
@@ -196,6 +193,10 @@ void TestExport(const char *filename)
             usdi::Time t = (1.0 / 30.0) * i;
             usdiMeshWriteSample(mesh2, &data, t);
         }
+
+        AddAttribute(mesh2, "TestImageAsset", usdi::AttributeType::Asset, "USDAssets/test.exr", 1);
+        AddAttribute(mesh2, "TestFBXAsset", usdi::AttributeType::Asset, "USDAssets/test.fbx", 1);
+        AddAttribute(mesh2, "TestMDLAsset", usdi::AttributeType::Asset, "USDAssets/test.mdl", 1);
     }
     {
         auto CreateTestXformTree = [](usdi::Context *ctx, usdi::Schema *parent, std::vector<std::string> names)
