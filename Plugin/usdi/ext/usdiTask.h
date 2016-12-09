@@ -40,12 +40,13 @@ private:
 
     std::string m_dbg_name;
 
-    const float3 *m_src_points;
-    const float3 *m_src_normals;
-    const float2 *m_src_uvs;
-    const int    *m_src_indices;
-    int          m_num_points;
-    int          m_num_indices;
+    const float3 *m_src_points = nullptr;
+    const float3 *m_src_normals = nullptr;
+    const float2 *m_src_uvs = nullptr;
+    const float4 *m_src_tangents = nullptr;
+    const int    *m_src_indices = nullptr;
+    int          m_num_points = 0;
+    int          m_num_indices = 0;
 
     MapContext m_ctx_vb;
     MapContext m_ctx_ib;

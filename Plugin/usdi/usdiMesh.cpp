@@ -12,13 +12,15 @@ namespace usdi {
 
 const int usdiMaxVertices = 64998;
 
-static inline void CountIndices(const VtArray<int> &counts, int& num_indices, int& num_indices_triangulated)
+static inline void CountIndices(const VtArray<int> &counts, VtArray<int>& offsets, int& num_indices, int& num_indices_triangulated)
 {
     int reti = 0, rett = 0;
     size_t num_faces = counts.size();
+    offsets.resize(num_faces);
     for (size_t fi = 0; fi < num_faces; ++fi)
     {
         auto f = counts[fi];
+        offsets[fi] = reti;
         reti += f;
         rett += (f - 2) * 3;
     }
@@ -88,6 +90,7 @@ void MeshSample::clear()
 
 #define usdiUVAttrName "primvars:uv"
 #define usdiUVAttrName2 "uv"
+#define usdiTangentAttrName "tangents"
 
 RegisterSchemaHandler(Mesh)
 
@@ -102,9 +105,8 @@ Mesh::Mesh(Context *ctx, Schema *parent, const UsdPrim& prim)
     if (!m_attr_uv) {
         m_attr_uv = findAttribute(usdiUVAttrName2);
     }
-    if (!m_attr_uv) {
-        m_attr_uv = createAttribute(usdiUVAttrName, AttributeType::Float2Array);
-    }
+
+    m_attr_tangents = findAttribute(usdiTangentAttrName);
 }
 
 Mesh::Mesh(Context *ctx, Schema *parent, const char *name, const char *type)
@@ -211,6 +213,24 @@ void Mesh::updateSample(Time t_)
         }
     }
 
+    // tangents
+    bool needs_calculate_tangents = conf.tangent_calculation == NormalCalculationType::Always;
+    if (!needs_calculate_tangents) {
+        if (m_attr_tangents && m_attr_tangents->getImmediate(&sample.tangents, t_)) {
+            if (conf.swap_handedness) {
+                InvertX((float4*)sample.tangents.data(), sample.tangents.size());
+            }
+        }
+        else {
+            if (m_attr_uv && conf.tangent_calculation == TangentCalculationType::WhenMissing) {
+                needs_calculate_tangents = true;
+            }
+            else {
+                // nothing to do here
+            }
+        }
+    }
+
     // indices
     bool needs_calculate_indices =
         m_num_indices_triangulated == 0 ||
@@ -220,7 +240,7 @@ void Mesh::updateSample(Time t_)
         sample.indices_triangulated.size() != m_sample[0].indices_triangulated.size() ||
         m_update_flag_prev.variant_set_changed;
     if (needs_calculate_indices) {
-        CountIndices(sample.counts, m_num_indices, m_num_indices_triangulated);
+        CountIndices(sample.counts, sample.offsets, m_num_indices, m_num_indices_triangulated);
         if (conf.triangulate || needs_calculate_normals) {
             sample.indices_triangulated.resize(m_num_indices_triangulated);
             TriangulateIndices(sample.indices_triangulated.data(), sample.counts, &sample.indices, conf.swap_faces);
@@ -235,6 +255,15 @@ void Mesh::updateSample(Time t_)
         sample.normals.resize(sample.points.size());
         CalculateNormals((float3*)sample.normals.data(), (const float3*)sample.points.cdata(), sample.indices_triangulated.cdata(),
             sample.points.size(), sample.indices_triangulated.size());
+    }
+
+    // calculate tangents if needed
+    if (needs_calculate_tangents) {
+        sample.tangents.resize(sample.points.size());
+        CalculateTangents((float4*)sample.tangents.data(),
+            (const float3*)sample.points.cdata(), (const float3*)sample.normals.cdata(), (const float2*)sample.uvs.cdata(),
+            sample.counts.cdata(), sample.offsets.cdata(), sample.indices.cdata(),
+            sample.points.size(), sample.counts.size());
     }
 
     // bounds

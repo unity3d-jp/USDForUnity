@@ -53,6 +53,7 @@ enum class NormalCalculationType
     WhenMissing,
     Always,
 };
+using TangentCalculationType = NormalCalculationType;
 
 enum class AttributeType
 {
@@ -108,13 +109,14 @@ struct ImportSettings
 {
     InterpolationType interpolation = InterpolationType::Linear;
     NormalCalculationType normal_calculation = NormalCalculationType::WhenMissing;
+    TangentCalculationType tangent_calculation = TangentCalculationType::Never;
     float scale = 1.0f;
     bool load_all_payloads = true;
     bool triangulate = true;
     bool swap_handedness = true;
     bool swap_faces = true;
-    bool split_mesh = false;
-    bool double_buffering = false;
+    bool split_mesh = true;
+    bool double_buffering = true;
 };
 
 struct ExportSettings
@@ -201,10 +203,11 @@ struct SubmeshData
 {
     float3      *points = nullptr;
     float3      *normals = nullptr;
+    float4      *tangents = nullptr;
     float2      *uvs = nullptr;
     int         *indices = nullptr;
     Weights4    *weights4 = nullptr;
-    uint        num_points = 0;
+    uint        num_points = 0; // num_points == num_indices in submeshes
 
     float3  center = { 0.0f, 0.0f, 0.0f };
     float3  extents = { 0.0f, 0.0f, 0.0f };
@@ -217,6 +220,7 @@ struct MeshData
     float3      *points = nullptr;
     float3      *velocities = nullptr;
     float3      *normals = nullptr;
+    float4      *tangents = nullptr;
     float2      *uvs = nullptr;
     int         *counts = nullptr;
     int         *indices = nullptr;
@@ -380,7 +384,6 @@ usdiAPI usdi::Mesh*      usdiAsMesh(usdi::Schema *schema); // dynamic cast to Me
 usdiAPI void             usdiMeshGetSummary(usdi::Mesh *mesh, usdi::MeshSummary *dst);
 usdiAPI bool             usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t, bool copy);
 usdiAPI bool             usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t = usdiDefaultTime());
-usdiAPI const char*      usdiMeshGetBoneName(usdi::Mesh *mesh, const usdi::MeshData *src, int i);
 
 // Points interface
 usdiAPI usdi::Points*    usdiAsPoints(usdi::Schema *schema); // dynamic cast to Points
@@ -395,6 +398,9 @@ usdiAPI const char*      usdiAttrGetTypeName(usdi::Attribute *attr);
 usdiAPI void             usdiAttrGetSummary(usdi::Attribute *attr, usdi::AttributeSummary *dst);
 usdiAPI bool             usdiAttrReadSample(usdi::Attribute *attr, usdi::AttributeData *dst, usdi::Time t, bool copy);
 usdiAPI bool             usdiAttrWriteSample(usdi::Attribute *attr, const usdi::AttributeData *src, usdi::Time t = usdiDefaultTime());
+
+// just for C#
+usdiAPI const char*      usdiIndexCharPtrArray(const char **v, int i);
 
 } // extern "C"
 

@@ -19,12 +19,19 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="MeshUtils\mikktspace.h" />
     <ClInclude Include="MeshUtils\muAllocator.h" />
     <ClInclude Include="MeshUtils\muVector.h" />
     <ClInclude Include="MeshUtils\pch.h" />
     <ClInclude Include="MeshUtils\MeshUtils.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="MeshUtils\mikktspace.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Master|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="MeshUtils\muAllocator.cpp" />
     <ClCompile Include="MeshUtils\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

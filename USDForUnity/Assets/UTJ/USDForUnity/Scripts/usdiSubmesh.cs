@@ -23,6 +23,7 @@ namespace UTJ
         bool m_setupRequierd = true;
         Vector3[] m_points;
         Vector3[] m_normals;
+        Vector4[] m_tangents;
         Vector2[] m_uvs;
         int[] m_indices;
 

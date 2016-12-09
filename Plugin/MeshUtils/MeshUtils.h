@@ -7,15 +7,21 @@ namespace mu {
 
 
 void InvertX(float3 *dst, size_t num);
+void InvertX(float4 *dst, size_t num);
 void Scale(float3 *dst, float s, size_t num);
 void ComputeBounds(const float3 *p, size_t num, float3& o_min, float3& o_max);
 void Normalize(float3 *dst, size_t num);
 void CalculateNormals(float3 *dst, const float3 *p, const int *indices, size_t num_points, size_t num_indices);
+bool CalculateTangents(
+    float4 *dst, const float3 *p, const float3 *n, const float2 *t,
+    const int *counts, const int *offsets, const int *indices, size_t num_points, size_t num_faces);
 
 struct vertex_v3n3;
 struct vertex_v3n3_source;
 struct vertex_v3n3u2;
 struct vertex_v3n3u2_source;
+struct vertex_v3n3u2t4;
+struct vertex_v3n3u2t4_source;
 
 struct vertex_v3n3_source
 {
@@ -23,7 +29,6 @@ struct vertex_v3n3_source
     const float3 *points;
     const float3 *normals;
 };
-
 struct vertex_v3n3
 {
     typedef vertex_v3n3_source source_t;
@@ -38,13 +43,29 @@ struct vertex_v3n3u2_source
     const float3 *normals;
     const float2 *uvs;
 };
-
 struct vertex_v3n3u2
 {
     typedef vertex_v3n3u2_source source_t;
     float3 p;
     float3 n;
     float2 u;
+};
+
+struct vertex_v3n3u2t4_source
+{
+    typedef vertex_v3n3u2t4 vertex_t;
+    const float3 *points;
+    const float3 *normals;
+    const float2 *uvs;
+    const float4 *tangents;
+};
+struct vertex_v3n3u2t4
+{
+    typedef vertex_v3n3u2t4_source source_t;
+    float3 p;
+    float3 n;
+    float2 u;
+    float4 t;
 };
 
 template<class VertexT>
@@ -60,6 +81,8 @@ void CopyWithIndices(DataArray& dst, const DataArray& src, const IndexArray& ind
 // ------------------------------------------------------------
 void InvertX_Generic(float3 *dst, size_t num);
 void InvertX_ISPC(float3 *dst, size_t num);
+void InvertX_Generic(float4 *dst, size_t num);
+void InvertX_ISPC(float4 *dst, size_t num);
 
 void Scale_Generic(float3 *dst, float s, size_t num);
 void Scale_ISPC(float3 *dst, float s, size_t num);
@@ -74,7 +97,6 @@ void CalculateNormals_Generic(float3 *dst, const float3 *p, const int *indices, 
 void CalculateNormals_ISPC(float3 *dst, const float3 *p, const int *indices, size_t num_points, size_t num_indices);
 
 template<class VertexT> void Interleave_Generic(VertexT *dst, const typename VertexT::source_t& src, size_t num);
-template<class VertexT> void Interleave_ISPC(VertexT *dst, const typename VertexT::source_t& src, size_t num);
 
 // ------------------------------------------------------------
 // impl

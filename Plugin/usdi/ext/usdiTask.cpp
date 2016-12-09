@@ -45,6 +45,7 @@ void VertexUpdateCommand::update(const usdi::MeshData *data, void *vb, void *ib)
     m_src_points    = data->points;
     m_src_normals   = data->normals;
     m_src_uvs       = data->uvs;
+    m_src_tangents  = data->tangents;
     m_src_indices   = data->indices_triangulated;
     m_num_points    = data->num_points;
     m_num_indices   = data->num_indices_triangulated;
@@ -60,6 +61,7 @@ void VertexUpdateCommand::update(const usdi::SubmeshData *data, void *vb, void *
     m_src_points    = data->points;
     m_src_normals   = data->normals;
     m_src_uvs       = data->uvs;
+    m_src_tangents  = data->tangents;
     m_src_indices   = data->indices;
     m_num_points    = data->num_points;
     m_num_indices   = data->num_points; // num points == num indices on submesh
@@ -91,9 +93,16 @@ void VertexUpdateCommand::copy()
 
     if (m_ctx_vb.data_ptr) {
         if (m_src_uvs) {
-            using vertex_t = vertex_v3n3u2;
-            vertex_t::source_t src = { m_src_points, m_src_normals, m_src_uvs };
-            InterleaveBuffered(buf, src, (size_t)m_num_points);
+            if (m_src_tangents) {
+                using vertex_t = vertex_v3n3u2t4;
+                vertex_t::source_t src = { m_src_points, m_src_normals, m_src_uvs, m_src_tangents };
+                InterleaveBuffered(buf, src, (size_t)m_num_points);
+            }
+            else {
+                using vertex_t = vertex_v3n3u2;
+                vertex_t::source_t src = { m_src_points, m_src_normals, m_src_uvs };
+                InterleaveBuffered(buf, src, (size_t)m_num_points);
+            }
         }
         else {
             using vertex_t = vertex_v3n3;

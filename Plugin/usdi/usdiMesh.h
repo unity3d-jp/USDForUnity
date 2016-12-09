@@ -7,6 +7,7 @@ struct SubmeshSample
 {
     VtArray<GfVec3f> points;
     VtArray<GfVec3f> normals;
+    VtArray<GfVec4f> tangents;
     VtArray<GfVec2f> uvs;
     VtArray<int>     indices;
     float3           bounds_min = {}, bounds_max = {};
@@ -20,8 +21,10 @@ struct MeshSample
     VtArray<GfVec3f> points;
     VtArray<GfVec3f> velocities;
     VtArray<GfVec3f> normals;
+    VtArray<GfVec4f> tangents;
     VtArray<GfVec2f> uvs;
     VtArray<int>     counts;
+    VtArray<int>     offsets;
     VtArray<int>     indices;
     VtArray<int>     indices_triangulated;
     float3           bounds_min = {}, bounds_max = {};
@@ -54,6 +57,7 @@ private:
     MeshSample          m_sample[2], *m_front_sample = nullptr;
     SubmeshSamples      m_submeshes[2], *m_front_submesh = nullptr;
     Attribute           *m_attr_uv = nullptr;
+    Attribute           *m_attr_tangents = nullptr;
 
     mutable bool        m_summary_needs_update = true;
     mutable MeshSummary m_summary;

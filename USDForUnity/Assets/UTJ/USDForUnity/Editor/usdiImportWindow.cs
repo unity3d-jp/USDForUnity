@@ -35,8 +35,8 @@ namespace UTJ
         {
             m_importOptions.interpolation = (usdi.InterpolationType)EditorGUILayout.EnumPopup("Interpolation", (Enum)m_importOptions.interpolation);
             m_importOptions.scale = EditorGUILayout.FloatField("Scale", m_importOptions.scale);
-            m_importOptions.swap_handedness = EditorGUILayout.Toggle("Swap Handedness", m_importOptions.swap_handedness);
-            m_importOptions.swap_faces = EditorGUILayout.Toggle("Swap Faces", m_importOptions.swap_faces);
+            m_importOptions.swapHandedness = EditorGUILayout.Toggle("Swap Handedness", m_importOptions.swapHandedness);
+            m_importOptions.swapFaces = EditorGUILayout.Toggle("Swap Faces", m_importOptions.swapFaces);
             EditorGUILayout.Space();
             m_initialTime = EditorGUILayout.FloatField("Initial Time", (float)m_initialTime);
             m_forceSingleThread = EditorGUILayout.Toggle("Force Single Thread", m_forceSingleThread);

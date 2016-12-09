@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 using UnityEngine;
@@ -98,6 +99,12 @@ namespace UTJ
             WhenMissing,
             Always,
         };
+        public enum TangentCalculationType
+        {
+            Never,
+            WhenMissing,
+            Always,
+        };
 
         public enum TopologyVariance
         {
@@ -143,14 +150,15 @@ namespace UTJ
             public const int Size = 0x14;
 
             public InterpolationType interpolation;
-            public NormalCalculationType normal_calculation;
+            public NormalCalculationType normalCalculation;
+            public TangentCalculationType tangentCalculation;
             public float scale;
-            [HideInInspector] public Bool load_all_payloads;
+            [HideInInspector] public Bool loadAllPayloads;
             [HideInInspector] public Bool triangulate;
-            public Bool swap_handedness;
-            public Bool swap_faces;
-            [HideInInspector] public Bool split_mesh;
-            [HideInInspector] public Bool double_buffering;
+            public Bool swapHandedness;
+            public Bool swapFaces;
+            [HideInInspector] public Bool splitMesh;
+            [HideInInspector] public Bool doubleBuffering;
 
             public static ImportSettings default_value
             {
@@ -159,14 +167,15 @@ namespace UTJ
                     return new ImportSettings
                     {
                         interpolation = InterpolationType.Linear,
-                        normal_calculation = NormalCalculationType.WhenMissing,
+                        normalCalculation = NormalCalculationType.WhenMissing,
+                        tangentCalculation = TangentCalculationType.Never,
                         scale = 1.0f,
-                        load_all_payloads = true,
+                        loadAllPayloads = true,
                         triangulate = true,
-                        swap_handedness = true,
-                        swap_faces = true,
-                        split_mesh = true,
-                        double_buffering = true,
+                        swapHandedness = true,
+                        swapFaces = true,
+                        splitMesh = true,
+                        doubleBuffering = true,
                     };
                 }
             }
@@ -293,6 +302,7 @@ namespace UTJ
         {
             public IntPtr   points;
             public IntPtr   normals;
+            public IntPtr   tangents;
             public IntPtr   uvs;
             public IntPtr   indices; // always triangulated
             public IntPtr   weights;
@@ -309,6 +319,7 @@ namespace UTJ
             public IntPtr   points;
             public IntPtr   velocities;
             public IntPtr   normals;
+            public IntPtr   tangents;
             public IntPtr   uvs;
             public IntPtr   counts;
             public IntPtr   indices;
@@ -499,16 +510,6 @@ namespace UTJ
         [DllImport ("usdi")] public static extern void          usdiMeshGetSummary(Mesh mesh, ref MeshSummary dst);
         [DllImport ("usdi")] public static extern Bool          usdiMeshReadSample(Mesh mesh, ref MeshData dst, double t, Bool copy);
         [DllImport ("usdi")] public static extern Bool          usdiMeshWriteSample(Mesh mesh, ref MeshData src, double t);
-        [DllImport ("usdi")] public static extern IntPtr        usdiMeshGetBoneName(Mesh mesh, ref MeshData src, int i);
-        public static string[] usdiMeshGetBoneNames(Mesh mesh, ref MeshData src)
-        {
-            string[] ret = new string[src.num_bones];
-            for(int i=0; i< src.num_bones; ++i)
-            {
-                ret[i] = S(usdiMeshGetBoneName(mesh, ref src, i));
-            }
-            return ret;
-        }
 
         // Points interface
         [DllImport ("usdi")] public static extern Points        usdiAsPoints(Schema schema);
@@ -523,6 +524,69 @@ namespace UTJ
         [DllImport ("usdi")] public static extern bool          usdiAttrReadSample(Attribute attr, ref AttributeData dst, double t, Bool copy);
         [DllImport ("usdi")] public static extern bool          usdiAttrWriteSample(Attribute attr, ref AttributeData src, double t);
 
+        [DllImport ("usdi")] public static extern IntPtr        usdiIndexCharPtrArray(IntPtr v, int i);
+
+        public static string[] usdiMeshGetBoneNames(Mesh mesh, ref MeshData src)
+        {
+            string[] ret = new string[src.num_bones];
+            for (int i = 0; i < src.num_bones; ++i)
+            {
+                ret[i] = S(usdiIndexCharPtrArray(src.bone_names, i));
+            }
+            return ret;
+        }
+
+        public class AssetRef
+        {
+            public string name;
+            public string path;
+            public string[] paths;
+        }
+
+        public static AssetRef[] usdiGetReferencingAssets(Schema schema)
+        {
+            var ret = new List<AssetRef>();
+            var summary = new AttributeSummary();
+
+            var n = usdiPrimGetNumAttributes(schema);
+            for (int ai = 0; ai < n; ++ai)
+            {
+                var attr = usdiPrimGetAttribute(schema, ai);
+                usdiAttrGetSummary(attr, ref summary);
+
+                if(summary.type == AttributeType.Asset)
+                {
+                    var data = new AttributeData();
+                    usdiAttrReadSample(attr, ref data, defaultTime, true);
+                    ret.Add(new AssetRef
+                    {
+                        name = S(usdiAttrGetName(attr)),
+                        path = S(data.data)
+                    });
+                }
+                else if (summary.type == AttributeType.AssetArray)
+                {
+                    var data = new AttributeData();
+                    usdiAttrReadSample(attr, ref data, defaultTime, true);
+
+                    var tmp = new IntPtr[data.num_elements];
+                    data.data = GetArrayPtr(tmp);
+                    usdiAttrReadSample(attr, ref data, defaultTime, true);
+
+                    var e = new AssetRef();
+                    e.name = S(usdiAttrGetName(attr));
+                    e.paths = new string[data.num_elements];
+                    for(int ei = 0; ei < data.num_elements; ++ei)
+                    {
+                        e.paths[ei] = S(tmp[ei]);
+                    }
+
+                    ret.Add(e);
+                }
+            }
+
+            return ret.ToArray();
+        }
 
 
         // ext

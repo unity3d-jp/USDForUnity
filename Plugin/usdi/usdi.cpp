@@ -574,15 +574,6 @@ usdiAPI bool usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src, us
     return mesh->writeSample(*src, t);
 }
 
-usdiAPI const char* usdiMeshGetBoneName(usdi::Mesh *mesh, const usdi::MeshData *src, int i)
-{
-    if (!src || !src->bone_names || (usdi::uint)i >= src->num_bones) {
-        usdiLogError("usdiMeshGetBoneName: invalid parameter\n");
-        return "";
-    }
-    return src->bone_names[i];
-}
-
 
 // Points interface
 
@@ -659,6 +650,12 @@ usdiAPI bool usdiAttrWriteSample(usdi::Attribute *attr, const usdi::AttributeDat
     usdiTraceFunc();
     if (!attr || !src) { return false; }
     return attr->writeSample(*src, t);
+}
+
+usdiAPI const char* usdiIndexCharPtrArray(const char **v, int i)
+{
+    if (!v) { return ""; }
+    return v[i];
 }
 
 
