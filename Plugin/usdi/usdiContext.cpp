@@ -118,8 +118,13 @@ bool Context::open(const char *path)
 
     m_stage = UsdStage::Open(path);
     if (!m_stage) {
-        usdiLogWarning("Context::open(): failed to load %s\n", path);
-        return false;
+        // first try to open .abc often fails (likely Windows-only problem)
+        // try again for workaround.
+        m_stage = UsdStage::Open(path);
+        if (!m_stage) {
+            usdiLogWarning("Context::open(): failed to load %s\n", path);
+            return false;
+        }
     }
 
     applyImportConfig();
