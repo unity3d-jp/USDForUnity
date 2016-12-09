@@ -147,20 +147,40 @@ void TestExport(const char *filename)
 
         {
             auto *mesh = usdiCreateMesh(ctx, xf, "TestMesh");
-            float3 vertices[] = {
+            float3 points[] = {
                 { -0.5f, -0.5f, 0.0f },
                 {  0.5f, -0.5f, 0.0f },
                 {  0.5f,  0.5f, 0.0f },
                 { -0.5f,  0.5f, 0.0f },
             };
+            float3 normals[] = {
+                { 0.0f, 0.0f, 1.0f },
+                { 0.0f, 0.0f, 1.0f },
+                { 0.0f, 0.0f, 1.0f },
+                { 0.0f, 0.0f, 1.0f },
+            };
+            float4 tangents[] = {
+                { 0.0f, 1.0f, 0.0f },
+                { 0.0f, 1.0f, 0.0f },
+                { 0.0f, 1.0f, 0.0f },
+                { 0.0f, 1.0f, 0.0f },
+            };
+            float2 uvs[] = {
+                { 0.0f, 0.0f },
+                { 1.0f, 0.0f },
+                { 1.0f, 1.0f },
+                { 0.0f, 1.0f },
+            };
             int counts[] = { 4 };
             int indices[] = { 0, 1, 2, 3 };
 
             usdi::MeshData data;
-            data.points = vertices;
-            data.counts = counts;
+            data.points = points;
+            data.normals = normals;
+            data.tangents = tangents;
+            data.uvs = uvs;
             data.indices = indices;
-            data.num_points = std::extent<decltype(vertices)>::value;
+            data.num_points = std::extent<decltype(points)>::value;
             data.num_counts = std::extent<decltype(counts)>::value;
             data.num_indices = std::extent<decltype(indices)>::value;
 

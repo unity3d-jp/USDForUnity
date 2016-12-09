@@ -115,8 +115,6 @@ Mesh::Mesh(Context *ctx, Schema *parent, const char *name, const char *type)
 {
     usdiLogTrace("Mesh::Mesh(): %s\n", getPath());
     if (!m_mesh) { usdiLogError("Mesh::Mesh(): m_mesh is invalid\n"); }
-
-    m_attr_uv = createAttribute(usdiUVAttrName, AttributeType::Float2Array);
 }
 
 Mesh::~Mesh()
@@ -453,6 +451,13 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
         }
     }
 
+    if (src.tangents) {
+        sample.tangents.assign((GfVec4f*)src.tangents, (GfVec4f*)src.tangents + src.num_points);
+        if (conf.swap_handedness) {
+            InvertX((float4*)sample.tangents.data(), sample.tangents.size());
+        }
+    }
+
     if (src.uvs) {
         sample.uvs.assign((GfVec2f*)src.uvs, (GfVec2f*)src.uvs + src.num_points);
     }
@@ -499,8 +504,17 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
         m_mesh.GetFaceVertexCountsAttr().Set(sample.counts, t);
         m_mesh.GetFaceVertexIndicesAttr().Set(sample.indices, t);
     }
-    if (src.uvs && m_attr_uv) {
+    if (src.uvs) {
+        if (!m_attr_uv) {
+            m_attr_uv = createAttribute(usdiUVAttrName, AttributeType::Float2Array);
+        }
         m_attr_uv->setImmediate(&sample.uvs, t_);
+    }
+    if (src.tangents) {
+        if (!m_attr_tangents) {
+            m_attr_tangents = createAttribute(usdiTangentAttrName, AttributeType::Float4Array);
+        }
+        m_attr_tangents->setImmediate(&sample.tangents, t_);
     }
 
     m_summary_needs_update = true;

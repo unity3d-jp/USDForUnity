@@ -75,7 +75,7 @@ export void InvertXF4(uniform float4 dst[], uniform const int num)
 
     {
         uniform float _c[C];
-        _c[I] = select(C%4==0, -1.0f, 1.0f);
+        _c[I] = select(I%4==0, -1.0f, 1.0f);
 
         uniform float * uniform fv = (uniform float * uniform)dst;
         for(uniform int i=0; i < num_loops; ++i) {
