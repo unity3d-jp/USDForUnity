@@ -148,6 +148,10 @@ namespace UTJ
             if (m_updateFlags.bits == 0 && !m_allocateMeshDataRequired && !m_updateIndicesRequired && !m_updateVerticesRequired) {
                 return;
             }
+            if(m_updateFlags.importConfigChanged || m_updateFlags.variantSetChanged)
+            {
+                usdi.usdiMeshGetSummary(m_mesh, ref m_meshSummary);
+            }
 
             m_timeRead = time;
             if(isInstance)

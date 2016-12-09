@@ -185,6 +185,7 @@ struct MeshSummary
     Time                start = 0.0, end = 0.0;
     TopologyVariance    topology_variance = TopologyVariance::Constant;
     bool                has_normals = false;
+    bool                has_tangents = false;
     bool                has_uvs = false;
     bool                has_velocities = false;
     bool                has_bones = false;

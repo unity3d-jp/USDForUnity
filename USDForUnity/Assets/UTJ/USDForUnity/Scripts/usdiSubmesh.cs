@@ -23,8 +23,8 @@ namespace UTJ
         bool m_setupRequierd = true;
         Vector3[] m_points;
         Vector3[] m_normals;
-        Vector4[] m_tangents;
         Vector2[] m_uvs;
+        Vector4[] m_tangents;
         int[] m_indices;
 
         // for Unity 5.5 or later
@@ -192,6 +192,11 @@ namespace UTJ
             {
                 m_uvs = new Vector2[meshData.num_points];
                 meshData.uvs = usdi.GetArrayPtr(m_uvs);
+                if (summary.has_tangents)
+                {
+                    m_tangents = new Vector4[meshData.num_points];
+                    meshData.tangents = usdi.GetArrayPtr(m_tangents);
+                }
             }
             {
                 m_indices = new int[meshData.num_indices_triangulated];
@@ -213,6 +218,11 @@ namespace UTJ
             {
                 m_uvs = new Vector2[data.num_points];
                 data.uvs = usdi.GetArrayPtr(m_uvs);
+                if (summary.has_tangents)
+                {
+                    m_tangents = new Vector4[data.num_points];
+                    data.tangents = usdi.GetArrayPtr(m_tangents);
+                }
             }
             {
                 m_indices = new int[data.num_points];
@@ -295,6 +305,7 @@ namespace UTJ
                 m_umesh.vertices = m_points;
                 if (m_normals != null) { m_umesh.normals = m_normals; }
                 if (m_uvs != null) { m_umesh.uv = m_uvs; }
+                if (m_tangents != null) { m_umesh.tangents = m_tangents; }
 
                 if (topology)
                 {
@@ -304,6 +315,7 @@ namespace UTJ
 
                 //m_umesh.UploadMeshData(close);
                 m_umesh.UploadMeshData(false);
+
 #if UNITY_5_5_OR_NEWER
                 if (m_stream.directVBUpdate)
                 {

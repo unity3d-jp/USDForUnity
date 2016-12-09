@@ -291,6 +291,7 @@ namespace UTJ
             public double start, end;
             public TopologyVariance topology_variance;
             public Bool has_normals;
+            public Bool has_tangents;
             public Bool has_uvs;
             public Bool has_velocities;
             public Bool has_bones;

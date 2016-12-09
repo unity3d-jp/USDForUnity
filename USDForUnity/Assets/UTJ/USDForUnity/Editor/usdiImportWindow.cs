@@ -34,6 +34,8 @@ namespace UTJ
         void OnGUI()
         {
             m_importOptions.interpolation = (usdi.InterpolationType)EditorGUILayout.EnumPopup("Interpolation", (Enum)m_importOptions.interpolation);
+            m_importOptions.normalCalculation = (usdi.NormalCalculationType)EditorGUILayout.EnumPopup("Normal Calculation", (Enum)m_importOptions.normalCalculation);
+            m_importOptions.tangentCalculation = (usdi.TangentCalculationType)EditorGUILayout.EnumPopup("Tangent Calculation", (Enum)m_importOptions.tangentCalculation);
             m_importOptions.scale = EditorGUILayout.FloatField("Scale", m_importOptions.scale);
             m_importOptions.swapHandedness = EditorGUILayout.Toggle("Swap Handedness", m_importOptions.swapHandedness);
             m_importOptions.swapFaces = EditorGUILayout.Toggle("Swap Faces", m_importOptions.swapFaces);

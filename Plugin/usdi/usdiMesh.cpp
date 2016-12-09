@@ -127,9 +127,17 @@ Mesh::~Mesh()
 const MeshSummary& Mesh::getSummary() const
 {
     if (m_summary_needs_update) {
+        auto& settings = getImportSettings();
+
         getTimeRange(m_summary.start, m_summary.end);
+        m_summary.has_normals =
+            m_mesh.GetNormalsAttr().HasValue() ||
+            settings.normal_calculation != NormalCalculationType::Never;
         m_summary.has_uvs = m_attr_uv && m_attr_uv->hasValue();
-        m_summary.has_normals = m_mesh.GetNormalsAttr().HasValue();
+        m_summary.has_tangents =
+            m_summary.has_normals && m_summary.has_uvs && (
+                (m_attr_tangents && m_attr_tangents->hasValue()) ||
+                settings.tangent_calculation != TangentCalculationType::Never);
         m_summary.has_velocities = m_mesh.GetVelocitiesAttr().HasValue();
 
         if (m_mesh.GetPointsAttr().ValueMightBeTimeVarying()) {
@@ -248,6 +256,7 @@ void Mesh::updateSample(Time t_)
     }
     else if (needs_copy_indices) {
         sample.indices_triangulated = m_sample[0].indices_triangulated;
+        sample.offsets = m_sample[0].offsets;
     }
 
     // calculate normals if needed
@@ -300,6 +309,7 @@ void Mesh::updateSample(Time t_)
         CopyWithIndices(sms.points, sample.points, sample.indices_triangulated, ibegin, iend, !points_are_expanded);
         CopyWithIndices(sms.normals, sample.normals, sample.indices_triangulated, ibegin, iend, !normals_are_expanded);
         CopyWithIndices(sms.uvs, sample.uvs, sample.indices_triangulated, ibegin, iend, !uvs_are_expanded);
+        CopyWithIndices(sms.tangents, sample.tangents, sample.indices_triangulated, ibegin, iend, !uvs_are_expanded);
 
         ComputeBounds((float3*)sms.points.cdata(), sms.points.size(), sms.bounds_min, sms.bounds_max);
         sms.center = (sms.bounds_min + sms.bounds_max) * 0.5f;
@@ -334,6 +344,9 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
         if (dst.normals && !sample.normals.empty()) {
             memcpy(dst.normals, sample.normals.cdata(), sizeof(float3) * dst.num_points);
         }
+        if (dst.tangents && !sample.tangents.empty()) {
+            memcpy(dst.tangents, sample.tangents.cdata(), sizeof(float4) * dst.num_points);
+        }
         if (dst.uvs && !sample.uvs.empty()) {
             memcpy(dst.uvs, sample.uvs.cdata(), sizeof(float2) * dst.num_points);
         }
@@ -363,6 +376,9 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
                 }
                 if (sdst.normals && !ssrc.normals.empty()) {
                     memcpy(sdst.normals, ssrc.normals.cdata(), sizeof(float3) * sdst.num_points);
+                }
+                if (sdst.tangents && !ssrc.tangents.empty()) {
+                    memcpy(sdst.tangents, ssrc.tangents.cdata(), sizeof(float4) * sdst.num_points);
                 }
                 if (sdst.uvs && !ssrc.uvs.empty()) {
                     memcpy(sdst.uvs, ssrc.uvs.cdata(), sizeof(float2) * sdst.num_points);
