@@ -93,7 +93,7 @@ void MeshSample::clear()
     root_bone = TfToken();
     weights4.clear();
     weights8.clear();
-    max_bone_weight = 0;
+    max_bone_weights = 0;
 
     bounds_min = {}, bounds_max = {};
     center = {}, extents = {};
@@ -107,7 +107,7 @@ void MeshSample::clear()
 #define usdiBoneIndicesAttrName     "boneIndices"
 #define usdiBonesAttrName           "bones"
 #define usdiRootBoneAttrName        "rootBone"
-#define usdiMaxBoneWeightAttrName   "maxBoneWeight"
+#define usdiMaxBoneWeightAttrName   "maxBoneWeights"
 
 RegisterSchemaHandler(Mesh)
 
@@ -127,7 +127,7 @@ Mesh::Mesh(Context *ctx, Schema *parent, const UsdPrim& prim)
     m_attr_bone_indices = findAttribute(usdiBoneIndicesAttrName, AttributeType::IntArray);
     m_attr_bones = findAttribute(usdiBonesAttrName, AttributeType::TokenArray);
     m_attr_root_bone = findAttribute(usdiRootBoneAttrName, AttributeType::Token);
-    m_attr_max_bone_weight = findAttribute(usdiMaxBoneWeightAttrName, AttributeType::Int);
+    m_attr_max_bone_weights = findAttribute(usdiMaxBoneWeightAttrName, AttributeType::Int);
 }
 
 Mesh::Mesh(Context *ctx, Schema *parent, const char *name, const char *type)
@@ -158,6 +158,7 @@ const MeshSummary& Mesh::getSummary() const
                 (m_attr_tangents && m_attr_tangents->hasValue()) ||
                 settings.tangent_calculation != TangentCalculationType::Never);
         m_summary.has_velocities = m_mesh.GetVelocitiesAttr().HasValue();
+        m_summary.has_bones = m_attr_bones && m_attr_bones->hasValue();
 
         if (m_mesh.GetPointsAttr().ValueMightBeTimeVarying()) {
             m_summary.topology_variance = TopologyVariance::Homogenous;
@@ -294,6 +295,67 @@ void Mesh::updateSample(Time t_)
             sample.points.size(), sample.counts.size());
     }
 
+    // bone & weights
+    if (m_attr_bone_weights && m_attr_bone_indices && (sample.weights4.empty() || sample.weights8.empty())) {
+        if (m_attr_max_bone_weights) {
+            m_attr_max_bone_weights->getImmediate(&sample.max_bone_weights, t_);
+            if (sample.max_bone_weights == 0) {
+                goto END_WEIGHTS;
+            }
+        }
+        if (sample.max_bone_weights != 4 && sample.max_bone_weights != 8) {
+            usdiLogError("sample.max_bone_weights != 4 && sample.max_bone_weights != 8\n");
+            goto END_WEIGHTS;
+        }
+
+        m_attr_bone_weights->getImmediate(&sample.bone_weights, t_);
+        m_attr_bone_indices->getImmediate(&sample.bone_indices, t_);
+        if (sample.bone_weights.size() != sample.bone_indices.size()) {
+            usdiLogError("sample.bone_weights.size() != sample.bone_indices.size()\n");
+            goto END_WEIGHTS;
+        }
+
+        // weight array & index array -> weight4 array or weight8 array
+        if (sample.max_bone_weights == 4) {
+            const size_t nweights = 4;
+            const size_t npoints = sample.bone_weights.size() / nweights;
+            sample.weights4.resize(npoints);
+            for (size_t ip = 0; ip < npoints; ++ip) {
+                size_t ip4 = ip * nweights;
+                auto& w = sample.weights4[ip];
+                for (size_t iw = 0; iw < nweights; ++iw) {
+                    w.weight[iw] = sample.bone_weights[ip4 + iw];
+                    w.indices[iw] = sample.bone_indices[ip4 + iw];
+                }
+            }
+        }
+        else if (sample.max_bone_weights == 8) {
+            const size_t nweights = 8;
+            const size_t npoints = sample.bone_weights.size() / nweights;
+            sample.weights8.resize(npoints);
+            for (size_t ip = 0; ip < npoints; ++ip) {
+                size_t ip8 = ip * nweights;
+                auto& w = sample.weights8[ip];
+                for (size_t iw = 0; iw < nweights; ++iw) {
+                    w.weight[iw] = sample.bone_weights[ip8 + iw];
+                    w.indices[iw] = sample.bone_indices[ip8 + iw];
+                }
+            }
+        }
+
+    END_WEIGHTS:;
+    }
+    if (m_attr_bones && sample.bones.empty()) {
+        m_attr_bones->getImmediate(&sample.bones, t_);
+        sample.bones_.resize(sample.bones.size());
+        for (size_t i = 0; i < sample.bones.size(); ++i) {
+            sample.bones_[i] = sample.bones[i].GetText();
+        }
+    }
+    if (m_attr_root_bone && sample.root_bone.IsEmpty()) {
+        m_attr_root_bone->getImmediate(&sample.root_bone, t_);
+    }
+
     // bounds
     ComputeBounds((const float3*)sample.points.cdata(), sample.points.size(), sample.bounds_min, sample.bounds_max);
     sample.center = (sample.bounds_min + sample.bounds_max) * 0.5f;
@@ -304,7 +366,9 @@ void Mesh::updateSample(Time t_)
 
     bool points_are_expanded = sample.points.size() == m_num_indices;
     bool normals_are_expanded = sample.normals.size() == m_num_indices;
+    bool tangents_are_expanded = sample.tangents.size() == m_num_indices;
     bool uvs_are_expanded = sample.uvs.size() == m_num_indices;
+    bool weights_are_expanded = sample.weights4.size() == m_num_indices || sample.weights8.size() == m_num_indices;
 
     bool needs_split = false;
     if (conf.split_mesh) {
@@ -327,8 +391,14 @@ void Mesh::updateSample(Time t_)
         }
         CopyWithIndices(sms.points, sample.points, sample.indices_triangulated, ibegin, iend, !points_are_expanded);
         CopyWithIndices(sms.normals, sample.normals, sample.indices_triangulated, ibegin, iend, !normals_are_expanded);
+        CopyWithIndices(sms.tangents, sample.tangents, sample.indices_triangulated, ibegin, iend, !tangents_are_expanded);
         CopyWithIndices(sms.uvs, sample.uvs, sample.indices_triangulated, ibegin, iend, !uvs_are_expanded);
-        CopyWithIndices(sms.tangents, sample.tangents, sample.indices_triangulated, ibegin, iend, !uvs_are_expanded);
+        if (!sample.weights4.empty()) {
+            CopyWithIndices(sms.weights4, sample.weights4, sample.indices_triangulated, ibegin, iend, !points_are_expanded);
+        }
+        else if (!sample.weights8.empty()) {
+            CopyWithIndices(sms.weights8, sample.weights8, sample.indices_triangulated, ibegin, iend, !points_are_expanded);
+        }
 
         ComputeBounds((float3*)sms.points.cdata(), sms.points.size(), sms.bounds_min, sms.bounds_max);
         sms.center = (sms.bounds_min + sms.bounds_max) * 0.5f;
@@ -379,6 +449,17 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
             memcpy(dst.indices_triangulated, sample.indices_triangulated.cdata(), sizeof(int) * m_num_indices_triangulated);
         }
 
+        if (dst.weights4 && !sample.weights4.empty()) {
+            memcpy(dst.weights4, sample.weights4.cdata(), sizeof(Weights4) * dst.num_points);
+        }
+        if (dst.weights8 && !sample.weights8.empty()) {
+            memcpy(dst.weights8, sample.weights8.cdata(), sizeof(Weights8) * dst.num_points);
+        }
+        dst.max_bone_weights = sample.max_bone_weights;
+        dst.bones = (char**)&sample.bones_[0];
+        dst.root_bone = (char*)sample.root_bone.GetText();
+        dst.num_bones = (int)sample.bones_.size();
+
         if (dst.submeshes) {
             for (size_t i = 0; i < dst.num_submeshes; ++i) {
                 const auto& ssrc = splits[i];
@@ -402,6 +483,13 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
                 if (sdst.uvs && !ssrc.uvs.empty()) {
                     memcpy(sdst.uvs, ssrc.uvs.cdata(), sizeof(float2) * sdst.num_points);
                 }
+
+                if (sdst.weights4 && !ssrc.weights4.empty()) {
+                    memcpy(sdst.weights4, ssrc.weights4.cdata(), sizeof(Weights4) * dst.num_points);
+                }
+                if (sdst.weights8 && !ssrc.weights8.empty()) {
+                    memcpy(sdst.weights8, ssrc.weights8.cdata(), sizeof(Weights8) * dst.num_points);
+                }
             }
         }
     }
@@ -409,10 +497,22 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
         dst.points = (float3*)sample.points.cdata();
         dst.velocities = (float3*)sample.velocities.cdata();
         dst.normals = (float3*)sample.normals.cdata();
+        dst.tangents = (float4*)sample.tangents.cdata();
         dst.uvs = (float2*)sample.uvs.cdata();
         dst.counts = (int*)sample.counts.cdata();
         dst.indices = (int*)sample.indices.cdata();
         dst.indices_triangulated = (int*)sample.indices_triangulated.cdata();
+
+        if (!sample.weights4.empty()) {
+            dst.weights4 = (Weights4*)sample.weights4.cdata();
+        }
+        else if (!sample.weights8.empty()) {
+            dst.weights8 = (Weights8*)sample.weights8.cdata();
+        }
+        dst.max_bone_weights = sample.max_bone_weights;
+        dst.bones = (char**)&sample.bones_[0];
+        dst.root_bone = (char*)sample.root_bone.GetText();
+        dst.num_bones = (int)sample.bones_.size();
 
         if (dst.submeshes) {
             for (size_t i = 0; i < dst.num_submeshes; ++i) {
@@ -531,7 +631,7 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
     // bone & weight attributes
 
     if (src.weights4 && src.max_bone_weights == 4) {
-        sample.max_bone_weight = src.max_bone_weights;
+        sample.max_bone_weights = src.max_bone_weights;
         sample.bone_weights.resize(src.num_points * 4);
         sample.bone_indices.resize(src.num_points * 4);
         for (uint pi = 0; pi < src.num_points; ++pi) {
@@ -544,10 +644,10 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
 
         CreateAttributeIfNeeded(m_attr_bone_weights, usdiBoneWeightsAttrName, AttributeType::FloatArray);
         CreateAttributeIfNeeded(m_attr_bone_indices, usdiBoneIndicesAttrName, AttributeType::IntArray);
-        CreateAttributeIfNeeded(m_attr_max_bone_weight, usdiMaxBoneWeightAttrName, AttributeType::Int);
+        CreateAttributeIfNeeded(m_attr_max_bone_weights, usdiMaxBoneWeightAttrName, AttributeType::Int);
         m_attr_bone_weights->setImmediate(&sample.bone_weights, t_);
         m_attr_bone_indices->setImmediate(&sample.bone_indices, t_);
-        m_attr_max_bone_weight->setImmediate(&sample.max_bone_weight, t_);
+        m_attr_max_bone_weights->setImmediate(&sample.max_bone_weights, t_);
     }
     if (src.bones) {
         sample.bones.resize(src.num_bones);

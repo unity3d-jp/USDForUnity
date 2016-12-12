@@ -25,7 +25,9 @@ namespace UTJ
         Vector3[] m_normals;
         Vector2[] m_uvs;
         Vector4[] m_tangents;
+        BoneWeight[] m_weights;
         int[] m_indices;
+        int m_count;
 
         // for Unity 5.5 or later
         IntPtr m_VB, m_IB;
@@ -114,7 +116,16 @@ namespace UTJ
                         bones[i] = schema.gameObject.GetComponent<Transform>();
                     }
                     renderer.bones = bones;
-                    renderer.rootBone = bones[0]; // correct?
+
+                    if(meshData.root_bone != IntPtr.Zero)
+                    {
+                        var rootBone = m_stream.usdiFindSchema(usdi.S(meshData.root_bone));
+                        renderer.rootBone = rootBone.gameObject.GetComponent<Transform>();
+                    }
+                    else
+                    {
+                        renderer.rootBone = bones[0]; // maybe incorrect
+                    }
                 }
                 m_renderer = renderer;
 
@@ -188,6 +199,11 @@ namespace UTJ
                 m_normals = new Vector3[meshData.num_points];
                 meshData.normals = usdi.GetArrayPtr(m_normals);
             }
+            if (summary.has_tangents)
+            {
+                m_tangents = new Vector4[meshData.num_points];
+                meshData.tangents = usdi.GetArrayPtr(m_tangents);
+            }
             if (summary.has_uvs)
             {
                 m_uvs = new Vector2[meshData.num_points];
@@ -197,6 +213,11 @@ namespace UTJ
                     m_tangents = new Vector4[meshData.num_points];
                     meshData.tangents = usdi.GetArrayPtr(m_tangents);
                 }
+            }
+            if (summary.has_bones)
+            {
+                m_weights = new BoneWeight[meshData.num_points];
+                meshData.weights = usdi.GetArrayPtr(m_weights);
             }
             {
                 m_indices = new int[meshData.num_indices_triangulated];
@@ -214,6 +235,11 @@ namespace UTJ
                 m_normals = new Vector3[data.num_points];
                 data.normals = usdi.GetArrayPtr(m_normals);
             }
+            if (summary.has_tangents)
+            {
+                m_tangents = new Vector4[data.num_points];
+                data.tangents = usdi.GetArrayPtr(m_tangents);
+            }
             if (summary.has_uvs)
             {
                 m_uvs = new Vector2[data.num_points];
@@ -223,6 +249,11 @@ namespace UTJ
                     m_tangents = new Vector4[data.num_points];
                     data.tangents = usdi.GetArrayPtr(m_tangents);
                 }
+            }
+            if (summary.has_bones)
+            {
+                m_weights = new BoneWeight[data.num_points];
+                data.weights = usdi.GetArrayPtr(m_weights);
             }
             {
                 m_indices = new int[data.num_points];
@@ -313,6 +344,11 @@ namespace UTJ
                     if (m_normals == null) { m_umesh.RecalculateNormals(); }
                 }
 
+                if(m_count == 0 && m_weights != null)
+                {
+                    m_umesh.boneWeights = m_weights;
+                }
+
                 //m_umesh.UploadMeshData(close);
                 m_umesh.UploadMeshData(false);
 
@@ -324,6 +360,8 @@ namespace UTJ
                 }
 #endif
             }
+
+            ++m_count;
         }
     }
     #endregion

@@ -10,6 +10,8 @@ struct SubmeshSample
     VtArray<GfVec4f> tangents;
     VtArray<GfVec2f> uvs;
     VtArray<int>     indices;
+    VtArray<Weights4> weights4;
+    VtArray<Weights8> weights8;
     float3           bounds_min = {}, bounds_max = {};
     float3           center = {}, extents = {};
 
@@ -35,7 +37,7 @@ struct MeshSample
     TfToken          root_bone;
     VtArray<Weights4> weights4;
     VtArray<Weights8> weights8;
-    int              max_bone_weight = 4;
+    int              max_bone_weights = 4;
 
     float3           bounds_min = {}, bounds_max = {};
     float3           center = {}, extents = {};
@@ -60,7 +62,7 @@ public:
     bool                readSample(MeshData& dst, Time t, bool copy);
     bool                writeSample(const MeshData& src, Time t);
 
-    // ugly workaround for C#
+    // ugly workaround for C# (C# strings are need to be copied on C++ side)
     void                assignRootBone(MeshData& dst, const char *v);
     void                assignBones(MeshData& dst, const char **v, int n);
 
@@ -78,7 +80,7 @@ private:
     Attribute           *m_attr_bone_indices = nullptr;
     Attribute           *m_attr_bones = nullptr;
     Attribute           *m_attr_root_bone = nullptr;
-    Attribute           *m_attr_max_bone_weight = nullptr;
+    Attribute           *m_attr_max_bone_weights = nullptr;
 
     mutable bool        m_summary_needs_update = true;
     mutable MeshSummary m_summary;

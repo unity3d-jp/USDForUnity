@@ -246,6 +246,7 @@ namespace UTJ
             {
                 data.weights = usdi.GetArrayPtr(dst_buf.weights);
                 data.num_bones = dst_buf.bones.Length;
+                data.max_bone_weights = 4;
                 usdi.usdiMeshAssignBones(usd, ref data, dst_buf.bones, dst_buf.bones.Length);
                 usdi.usdiMeshAssignRootBone(usd, ref data, dst_buf.rootBone);
             }

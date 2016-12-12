@@ -347,9 +347,7 @@ namespace UTJ
             {
                 get
                 {
-                    var ret = default(MeshData);
-                    ret.max_bone_weights = 4;
-                    return ret;
+                    return default(MeshData);
                 }
             }
         }

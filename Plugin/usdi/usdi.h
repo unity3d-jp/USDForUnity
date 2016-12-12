@@ -207,7 +207,10 @@ struct SubmeshData
     float4      *tangents = nullptr;
     float2      *uvs = nullptr;
     int         *indices = nullptr;
-    Weights4    *weights4 = nullptr;
+    union {
+        Weights4 *weights4 = nullptr;
+        Weights8 *weights8;
+    };
     uint        num_points = 0; // num_points == num_indices in submeshes
 
     float3  center = { 0.0f, 0.0f, 0.0f };
@@ -239,7 +242,7 @@ struct MeshData
     uint    num_indices = 0;
     uint    num_indices_triangulated = 0;
     uint    num_bones = 0;
-    uint    max_bone_weights = 4;
+    uint    max_bone_weights = 0; // must be 0 or 4 or 8
 
     float3  center = { 0.0f, 0.0f, 0.0f };
     float3  extents = { 0.0f, 0.0f, 0.0f };
