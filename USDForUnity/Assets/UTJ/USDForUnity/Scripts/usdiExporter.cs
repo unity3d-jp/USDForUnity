@@ -184,17 +184,25 @@ namespace UTJ
             public Vector2[] uvs;
 
             public BoneWeight[] weights;
+            public Matrix4x4[] bindposes;
             public string rootBone;
             public string[] bones;
         }
 
         public static void CaptureMesh(
-            usdi.Mesh usd, Mesh mesh, Cloth cloth, MeshBuffer dst_buf, ref usdi.MeshData data,
+            usdi.Mesh usd, Mesh mesh, MeshBuffer dst_buf, ref usdi.MeshData data,
             bool capture_normals, bool capture_tangents, bool capture_uvs, bool capture_weights, bool capture_indices,
-            Mesh srcMesh = null, string rootBone = null, string[] bones = null)
+            SkinnedMeshRenderer smr = null, string rootBone = null, string[] bones = null)
         {
             dst_buf.indices = capture_indices ? mesh.triangles : null;
             dst_buf.uvs = capture_uvs ? mesh.uv : null;
+
+            Cloth cloth = null;
+            if(smr != null)
+            {
+                cloth = smr.GetComponent<Cloth>();
+            }
+
             if (cloth == null)
             {
                 dst_buf.vertices = mesh.vertices;
@@ -207,14 +215,18 @@ namespace UTJ
             }
             dst_buf.tangents = capture_tangents ? mesh.tangents : null;
 
-            dst_buf.weights = capture_weights ? srcMesh.boneWeights : null;
-            if (rootBone != null && bones != null)
+            if(capture_weights && smr != null)
             {
+                var srcMesh = smr.sharedMesh;
+                dst_buf.weights = srcMesh.boneWeights;
+                dst_buf.bindposes = srcMesh.bindposes;
                 dst_buf.rootBone = rootBone;
                 dst_buf.bones = bones;
             }
             else
             {
+                dst_buf.bindposes = null;
+                dst_buf.weights = null;
                 dst_buf.rootBone = null;
                 dst_buf.bones = null;
             }
@@ -245,6 +257,7 @@ namespace UTJ
             if (dst_buf.weights != null && dst_buf.bones != null)
             {
                 data.weights = usdi.GetArrayPtr(dst_buf.weights);
+                data.bindposes = usdi.GetArrayPtr(dst_buf.bindposes);
                 data.num_bones = dst_buf.bones.Length;
                 data.max_bone_weights = 4;
                 usdi.usdiMeshAssignBones(usd, ref data, dst_buf.bones, dst_buf.bones.Length);
@@ -298,7 +311,7 @@ namespace UTJ
                     bool captureUV = m_captureUVs && (m_count == 0 || m_captureEveryFrameUV);
                     bool captureIndices = m_count == 0 || m_captureEveryFrameIndices;
                     CaptureMesh(
-                        usdi.usdiAsMesh(m_usd), m_target.GetComponent<MeshFilter>().sharedMesh, null, m_mesh_buffer, ref m_data,
+                        usdi.usdiAsMesh(m_usd), m_target.GetComponent<MeshFilter>().sharedMesh, m_mesh_buffer, ref m_data,
                         m_captureNormals, m_captureTangents, captureUV, false, captureIndices);
                 }
             }
@@ -370,7 +383,6 @@ namespace UTJ
                 {
                     if (m_mesh == null) { m_mesh = new Mesh(); }
                     m_target.BakeMesh(m_mesh);
-                    var srcMesh = m_target.sharedMesh;
                     bool captureUV = m_captureUVs && (m_count == 0 || m_captureEveryFrameUV);
                     bool captureIndices = m_count == 0 || m_captureEveryFrameIndices;
                     bool captureBones = m_captureBones && m_count == 0;
@@ -397,9 +409,9 @@ namespace UTJ
                         }
                     }
                     CaptureMesh(
-                        usdi.usdiAsMesh(m_usd), m_mesh, m_target.GetComponent<Cloth>(), m_mesh_buffer, ref m_data,
+                        usdi.usdiAsMesh(m_usd), m_mesh, m_mesh_buffer, ref m_data,
                         m_captureNormals, m_captureTangents, captureUV, captureBones, captureIndices,
-                        srcMesh, rootBoneName, boneNames);
+                        m_target, rootBoneName, boneNames);
                 }
             }
 

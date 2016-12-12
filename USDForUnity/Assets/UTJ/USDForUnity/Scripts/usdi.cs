@@ -60,31 +60,16 @@ namespace UTJ
         public enum AttributeType
         {
             Unknown,
-            Bool,
-            Byte,
-            Int,
-            UInt,
-            Float,
-            Float2,
-            Float3,
-            Float4,
-            Quaternion,
-            Token,
-            String,
-            Asset,
+            Bool, Byte, Int, UInt,
+            Float, Float2, Float3, Float4, Quaternion,
+            Float2x2, Float3x3, Float4x4,
+            String, Token, Asset,
+
             UnknownArray = 0x100,
-            BoolArray,
-            ByteArray,
-            IntArray,
-            UIntArray,
-            FloatArray,
-            Float2Array,
-            Float3Array,
-            Float4Array,
-            QuaternionArray,
-            TokenArray,
-            StringArray,
-            AssetArray,
+            BoolArray, ByteArray, IntArray, UIntArray,
+            FloatArray, Float2Array, Float3Array, Float4Array, QuaternionArray,
+            Float2x2Array, Float3x3Array, Float4x4Array,
+            StringArray, TokenArray, AssetArray,
         };
 
         public enum InterpolationType
@@ -290,11 +275,12 @@ namespace UTJ
         {
             public double start, end;
             public TopologyVariance topology_variance;
+            public int num_bones;
+            public int max_bone_weights;
             public Bool has_normals;
             public Bool has_tangents;
             public Bool has_uvs;
             public Bool has_velocities;
-            public Bool has_bones;
 
             public static MeshSummary default_value { get { return default(MeshSummary); } }
         };
@@ -327,6 +313,7 @@ namespace UTJ
             public IntPtr   indices_triangulated;
 
             public IntPtr   weights;
+            public IntPtr   bindposes;
             public IntPtr   bones;
             public IntPtr   root_bone;
 

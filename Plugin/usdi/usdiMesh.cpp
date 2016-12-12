@@ -105,6 +105,7 @@ void MeshSample::clear()
 #define usdiTangentAttrName         "tangents"
 #define usdiBoneWeightsAttrName     "boneWeights"
 #define usdiBoneIndicesAttrName     "boneIndices"
+#define usdiBindPosesAttrName       "bindposes"
 #define usdiBonesAttrName           "bones"
 #define usdiRootBoneAttrName        "rootBone"
 #define usdiMaxBoneWeightAttrName   "maxBoneWeights"
@@ -125,6 +126,7 @@ Mesh::Mesh(Context *ctx, Schema *parent, const UsdPrim& prim)
     // bone & weight attributes
     m_attr_bone_weights = findAttribute(usdiBoneWeightsAttrName, AttributeType::FloatArray);
     m_attr_bone_indices = findAttribute(usdiBoneIndicesAttrName, AttributeType::IntArray);
+    m_attr_bindposes = findAttribute(usdiBindPosesAttrName, AttributeType::Float4x4Array);
     m_attr_bones = findAttribute(usdiBonesAttrName, AttributeType::TokenArray);
     m_attr_root_bone = findAttribute(usdiRootBoneAttrName, AttributeType::Token);
     m_attr_max_bone_weights = findAttribute(usdiMaxBoneWeightAttrName, AttributeType::Int);
@@ -158,7 +160,15 @@ const MeshSummary& Mesh::getSummary() const
                 (m_attr_tangents && m_attr_tangents->hasValue()) ||
                 settings.tangent_calculation != TangentCalculationType::Never);
         m_summary.has_velocities = m_mesh.GetVelocitiesAttr().HasValue();
-        m_summary.has_bones = m_attr_bones && m_attr_bones->hasValue();
+
+        if (m_attr_bones && m_attr_bones->hasValue()) {
+            VtArray<TfToken> bones;
+            m_attr_bones->getImmediate(&bones, usdiDefaultTime());
+            m_summary.num_bones = (uint)bones.size();
+        }
+        if (m_attr_max_bone_weights && m_attr_max_bone_weights->hasValue()) {
+            m_attr_max_bone_weights->getImmediate(&m_summary.max_bone_weights, usdiDefaultTime());
+        }
 
         if (m_mesh.GetPointsAttr().ValueMightBeTimeVarying()) {
             m_summary.topology_variance = TopologyVariance::Homogenous;
@@ -296,6 +306,7 @@ void Mesh::updateSample(Time t_)
     }
 
     // bone & weights
+    // assume these are constant (get values only once)
     if (m_attr_bone_weights && m_attr_bone_indices && (sample.weights4.empty() || sample.weights8.empty())) {
         if (m_attr_max_bone_weights) {
             m_attr_max_bone_weights->getImmediate(&sample.max_bone_weights, t_);
@@ -354,6 +365,9 @@ void Mesh::updateSample(Time t_)
     }
     if (m_attr_root_bone && sample.root_bone.IsEmpty()) {
         m_attr_root_bone->getImmediate(&sample.root_bone, t_);
+    }
+    if (m_attr_bindposes && sample.bindposes.empty()) {
+        m_attr_bindposes->getImmediate(&sample.bindposes, t_);
     }
 
     // bounds
@@ -423,6 +437,11 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
     dst.center = sample.center;
     dst.extents = sample.extents;
 
+    dst.max_bone_weights = sample.max_bone_weights;
+    dst.bones = (char**)&sample.bones_[0];
+    dst.root_bone = (char*)sample.root_bone.GetText();
+    dst.num_bones = (int)sample.bones_.size();
+
     if (copy) {
         if (dst.points && !sample.points.empty()) {
             memcpy(dst.points, sample.points.cdata(), sizeof(float3) * dst.num_points);
@@ -455,10 +474,9 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
         if (dst.weights8 && !sample.weights8.empty()) {
             memcpy(dst.weights8, sample.weights8.cdata(), sizeof(Weights8) * dst.num_points);
         }
-        dst.max_bone_weights = sample.max_bone_weights;
-        dst.bones = (char**)&sample.bones_[0];
-        dst.root_bone = (char*)sample.root_bone.GetText();
-        dst.num_bones = (int)sample.bones_.size();
+        if (dst.bindposes && !sample.bindposes.empty()) {
+            memcpy(dst.bindposes, sample.bindposes.cdata(), sizeof(float4x4) * dst.num_bones);
+        }
 
         if (dst.submeshes) {
             for (size_t i = 0; i < dst.num_submeshes; ++i) {
@@ -509,10 +527,7 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
         else if (!sample.weights8.empty()) {
             dst.weights8 = (Weights8*)sample.weights8.cdata();
         }
-        dst.max_bone_weights = sample.max_bone_weights;
-        dst.bones = (char**)&sample.bones_[0];
-        dst.root_bone = (char*)sample.root_bone.GetText();
-        dst.num_bones = (int)sample.bones_.size();
+        dst.bindposes = (float4x4*)sample.bindposes.cdata();
 
         if (dst.submeshes) {
             for (size_t i = 0; i < dst.num_submeshes; ++i) {
@@ -648,6 +663,11 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
         m_attr_bone_weights->setImmediate(&sample.bone_weights, t_);
         m_attr_bone_indices->setImmediate(&sample.bone_indices, t_);
         m_attr_max_bone_weights->setImmediate(&sample.max_bone_weights, t_);
+    }
+    if (src.bindposes) {
+        sample.bindposes.assign((GfMatrix4f*)src.bindposes, (GfMatrix4f*)src.bindposes + src.num_bones);
+        CreateAttributeIfNeeded(m_attr_bindposes, usdiBindPosesAttrName, AttributeType::Float4x4Array);
+        m_attr_bindposes->setImmediate(&sample.bindposes, t_);
     }
     if (src.bones) {
         sample.bones.resize(src.num_bones);

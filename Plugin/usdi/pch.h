@@ -51,6 +51,8 @@
 #include "pxr/usd/usdGeom/mesh.h"
 #include "pxr/usd/usdGeom/points.h"
 #include "pxr/base/gf/transform.h"
+#include "pxr/base/gf/matrix2f.h"
+#include "pxr/base/gf/matrix3f.h"
 #include "pxr/base/gf/matrix4f.h"
 #include "pxr/usd/ar/resolver.h"
 

@@ -58,31 +58,16 @@ using TangentCalculationType = NormalCalculationType;
 enum class AttributeType
 {
     Unknown,
-    Bool,
-    Byte,
-    Int,
-    UInt,
-    Float,
-    Float2,
-    Float3,
-    Float4,
-    Quaternion,
-    Token,
-    String,
-    Asset,
+    Bool, Byte, Int, UInt,
+    Float, Float2, Float3, Float4, Quaternion,
+    Float2x2, Float3x3, Float4x4,
+    String, Token, Asset,
+
     UnknownArray = 0x100,
-    BoolArray,
-    ByteArray,
-    IntArray,
-    UIntArray,
-    FloatArray,
-    Float2Array,
-    Float3Array,
-    Float4Array,
-    QuaternionArray,
-    TokenArray,
-    StringArray,
-    AssetArray,
+    BoolArray, ByteArray, IntArray, UIntArray,
+    FloatArray, Float2Array, Float3Array, Float4Array, QuaternionArray,
+    Float2x2Array, Float3x3Array, Float4x4Array,
+    StringArray, TokenArray, AssetArray,
 };
 
 enum class TopologyVariance
@@ -184,11 +169,12 @@ struct MeshSummary
 {
     Time                start = 0.0, end = 0.0;
     TopologyVariance    topology_variance = TopologyVariance::Constant;
+    uint                num_bones = 0;
+    uint                max_bone_weights = 0; // should be 0 or 4 or 8
     bool                has_normals = false;
     bool                has_tangents = false;
     bool                has_uvs = false;
     bool                has_velocities = false;
-    bool                has_bones = false;
 };
 
 template<int N>
@@ -234,6 +220,7 @@ struct MeshData
         Weights4 *weights4 = nullptr;
         Weights8 *weights8;
     };
+    float4x4 *bindposes = nullptr;
     char    **bones = nullptr;
     char    *root_bone = nullptr;
 

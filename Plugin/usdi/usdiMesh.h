@@ -30,9 +30,10 @@ struct MeshSample
     VtArray<int>     indices;
     VtArray<int>     indices_triangulated;
 
-    VtArray<float>   bone_weights;
-    VtArray<int>     bone_indices;
-    VtArray<TfToken> bones;
+    VtArray<float>      bone_weights;
+    VtArray<int>        bone_indices;
+    VtArray<GfMatrix4f> bindposes;
+    VtArray<TfToken>    bones;
     VtArray<const char*> bones_;
     TfToken          root_bone;
     VtArray<Weights4> weights4;
@@ -78,6 +79,7 @@ private:
     // bone & weights attributes
     Attribute           *m_attr_bone_weights = nullptr;
     Attribute           *m_attr_bone_indices = nullptr;
+    Attribute           *m_attr_bindposes = nullptr;
     Attribute           *m_attr_bones = nullptr;
     Attribute           *m_attr_root_bone = nullptr;
     Attribute           *m_attr_max_bone_weights = nullptr;

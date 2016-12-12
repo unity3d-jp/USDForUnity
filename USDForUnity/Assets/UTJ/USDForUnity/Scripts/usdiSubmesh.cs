@@ -26,6 +26,9 @@ namespace UTJ
         Vector2[] m_uvs;
         Vector4[] m_tangents;
         BoneWeight[] m_weights;
+        Matrix4x4[] m_bindposes;
+        Transform[] m_bones;
+        Transform m_rootBone;
         int[] m_indices;
         int m_count;
 
@@ -85,7 +88,7 @@ namespace UTJ
             var meshData = parent_mesh.meshData;
             bool assignDefaultMaterial = false;
 
-            if (meshSummary.has_bones)
+            if (meshSummary.num_bones > 0)
             {
                 // setup SkinnedMeshRenderer
 
@@ -98,7 +101,7 @@ namespace UTJ
                 }
                 {
                     var boneNames = usdi.usdiMeshGetBoneNames(parent_mesh.nativeMeshPtr, ref meshData);
-                    var bones = new Transform[boneNames.Length];
+                    m_bones = new Transform[boneNames.Length];
                     for (int i = 0; i < boneNames.Length; ++i)
                     {
                         var schema = m_stream.usdiFindSchema(boneNames[i]);
@@ -113,18 +116,17 @@ namespace UTJ
                             Debug.LogError("bone don't have GameObject: " + boneNames[i]);
                             continue;
                         }
-                        bones[i] = schema.gameObject.GetComponent<Transform>();
+                        m_bones[i] = schema.gameObject.GetComponent<Transform>();
                     }
-                    renderer.bones = bones;
 
                     if(meshData.root_bone != IntPtr.Zero)
                     {
                         var rootBone = m_stream.usdiFindSchema(usdi.S(meshData.root_bone));
-                        renderer.rootBone = rootBone.gameObject.GetComponent<Transform>();
+                        m_rootBone = rootBone.gameObject.GetComponent<Transform>();
                     }
                     else
                     {
-                        renderer.rootBone = bones[0]; // maybe incorrect
+                        m_rootBone = m_bones[0]; // maybe incorrect
                     }
                 }
                 m_renderer = renderer;
@@ -214,10 +216,12 @@ namespace UTJ
                     meshData.tangents = usdi.GetArrayPtr(m_tangents);
                 }
             }
-            if (summary.has_bones)
+            if (summary.num_bones > 0)
             {
                 m_weights = new BoneWeight[meshData.num_points];
+                m_bindposes = new Matrix4x4[summary.num_bones];
                 meshData.weights = usdi.GetArrayPtr(m_weights);
+                meshData.bindposes = usdi.GetArrayPtr(m_bindposes);
             }
             {
                 m_indices = new int[meshData.num_indices_triangulated];
@@ -250,7 +254,7 @@ namespace UTJ
                     data.tangents = usdi.GetArrayPtr(m_tangents);
                 }
             }
-            if (summary.has_bones)
+            if (summary.num_bones > 0)
             {
                 m_weights = new BoneWeight[data.num_points];
                 data.weights = usdi.GetArrayPtr(m_weights);
@@ -347,6 +351,13 @@ namespace UTJ
                 if(m_count == 0 && m_weights != null)
                 {
                     m_umesh.boneWeights = m_weights;
+                    m_umesh.bindposes = m_bindposes;
+                    var renderer = m_renderer as SkinnedMeshRenderer;
+                    if(renderer != null)
+                    {
+                        renderer.bones = m_bones;
+                        renderer.rootBone = m_rootBone;
+                    }
                 }
 
                 //m_umesh.UploadMeshData(close);
