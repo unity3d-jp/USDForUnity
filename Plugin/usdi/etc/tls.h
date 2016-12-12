@@ -5,7 +5,7 @@
 #if _WIN32
     #include <windows.h>
 #else
-    #include <phread.h>
+    #include <pthread.h>
 #endif
 
 

@@ -79,18 +79,35 @@ void MeshSample::clear()
     points.clear();
     velocities.clear();
     normals.clear();
+    tangents.clear();
     uvs.clear();
     counts.clear();
+    offsets.clear();
     indices.clear();
-    indices_triangulated;
+    indices_triangulated.clear();
+
+    bone_weights.clear();
+    bone_indices.clear();
+    bones.clear();
+    bones_.clear();
+    root_bone = TfToken();
+    weights4.clear();
+    weights8.clear();
+    max_bone_weight = 0;
+
     bounds_min = {}, bounds_max = {};
     center = {}, extents = {};
 }
 
 
-#define usdiUVAttrName "primvars:uv"
-#define usdiUVAttrName2 "uv"
-#define usdiTangentAttrName "tangents"
+#define usdiUVAttrName              "primvars:uv"
+#define usdiUVAttrName2             "uv"
+#define usdiTangentAttrName         "tangents"
+#define usdiBoneWeightsAttrName     "boneWeights"
+#define usdiBoneIndicesAttrName     "boneIndices"
+#define usdiBonesAttrName           "bones"
+#define usdiRootBoneAttrName        "rootBone"
+#define usdiMaxBoneWeightAttrName   "maxBoneWeight"
 
 RegisterSchemaHandler(Mesh)
 
@@ -101,12 +118,16 @@ Mesh::Mesh(Context *ctx, Schema *parent, const UsdPrim& prim)
     usdiLogTrace("Mesh::Mesh(): %s\n", getPath());
     if (!m_mesh) { usdiLogError("Mesh::Mesh(): m_mesh is invalid\n"); }
 
-    m_attr_uv = findAttribute(usdiUVAttrName);
-    if (!m_attr_uv) {
-        m_attr_uv = findAttribute(usdiUVAttrName2);
-    }
+    m_attr_uv = findAttribute(usdiUVAttrName, AttributeType::Float2Array);
+    if (!m_attr_uv) { m_attr_uv = findAttribute(usdiUVAttrName2, AttributeType::Float2Array); }
+    m_attr_tangents = findAttribute(usdiTangentAttrName, AttributeType::Float4Array);
 
-    m_attr_tangents = findAttribute(usdiTangentAttrName);
+    // bone & weight attributes
+    m_attr_bone_weights = findAttribute(usdiBoneWeightsAttrName, AttributeType::FloatArray);
+    m_attr_bone_indices = findAttribute(usdiBoneIndicesAttrName, AttributeType::IntArray);
+    m_attr_bones = findAttribute(usdiBonesAttrName, AttributeType::TokenArray);
+    m_attr_root_bone = findAttribute(usdiRootBoneAttrName, AttributeType::Token);
+    m_attr_max_bone_weight = findAttribute(usdiMaxBoneWeightAttrName, AttributeType::Int);
 }
 
 Mesh::Mesh(Context *ctx, Schema *parent, const char *name, const char *type)
@@ -424,6 +445,9 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
 
     MeshSample& sample = m_sample[0];
 
+#define CreateAttributeIfNeeded(VName, AName, Type) if(!VName) { VName=createAttribute(AName, Type); }
+
+    bool  ret;
     if (src.points) {
         sample.points.assign((GfVec3f*)src.points, (GfVec3f*)src.points + src.num_points);
         if (conf.swap_handedness) {
@@ -432,6 +456,7 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
         if (conf.scale != 1.0f) {
             Scale((float3*)sample.points.data(), conf.scale, sample.points.size());
         }
+        ret = m_mesh.GetPointsAttr().Set(sample.points, t);
     }
 
     if (src.velocities) {
@@ -442,6 +467,7 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
         if (conf.scale != 1.0f) {
             Scale((float3*)sample.velocities.data(), conf.scale, sample.velocities.size());
         }
+        m_mesh.GetVelocitiesAttr().Set(sample.velocities, t);
     }
 
     if (src.normals) {
@@ -449,29 +475,19 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
         if (conf.swap_handedness) {
             InvertX((float3*)sample.normals.data(), sample.normals.size());
         }
-    }
-
-    if (src.tangents) {
-        sample.tangents.assign((GfVec4f*)src.tangents, (GfVec4f*)src.tangents + src.num_points);
-        if (conf.swap_handedness) {
-            InvertX((float4*)sample.tangents.data(), sample.tangents.size());
-        }
-    }
-
-    if (src.uvs) {
-        sample.uvs.assign((GfVec2f*)src.uvs, (GfVec2f*)src.uvs + src.num_points);
-    }
-
-    if (src.counts) {
-        sample.counts.assign(src.counts, src.counts + src.num_counts);
-    }
-    else if (src.indices) {
-        // assume all faces are triangles
-        size_t ntriangles = src.num_indices / 3;
-        sample.counts.assign(ntriangles, 3);
+        m_mesh.GetNormalsAttr().Set(sample.normals, t);
     }
 
     if (src.indices) {
+        if (src.counts) {
+            sample.counts.assign(src.counts, src.counts + src.num_counts);
+        }
+        else {
+            // assume all faces are triangles
+            size_t ntriangles = src.num_indices / 3;
+            sample.counts.assign(ntriangles, 3);
+        }
+
         if (conf.swap_faces) {
             auto copy_with_swap = [](VtArray<int>& dst_indices, const int *src_indices, const VtArray<int>& counts) {
                 int i = 0;
@@ -490,35 +506,90 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
         else {
             sample.indices.assign(src.indices, src.indices + src.num_indices);
         }
-    }
-
-
-    bool  ret = m_mesh.GetPointsAttr().Set(sample.points, t);
-    if (src.velocities) {
-        m_mesh.GetVelocitiesAttr().Set(sample.velocities, t);
-    }
-    if (src.normals) {
-        m_mesh.GetNormalsAttr().Set(sample.normals, t);
-    }
-    if (src.indices) {
         m_mesh.GetFaceVertexCountsAttr().Set(sample.counts, t);
         m_mesh.GetFaceVertexIndicesAttr().Set(sample.indices, t);
     }
+
     if (src.uvs) {
-        if (!m_attr_uv) {
-            m_attr_uv = createAttribute(usdiUVAttrName, AttributeType::Float2Array);
-        }
+        sample.uvs.assign((GfVec2f*)src.uvs, (GfVec2f*)src.uvs + src.num_points);
+
+        CreateAttributeIfNeeded(m_attr_uv, usdiUVAttrName, AttributeType::Float2Array);
         m_attr_uv->setImmediate(&sample.uvs, t_);
     }
+
     if (src.tangents) {
-        if (!m_attr_tangents) {
-            m_attr_tangents = createAttribute(usdiTangentAttrName, AttributeType::Float4Array);
+        sample.tangents.assign((GfVec4f*)src.tangents, (GfVec4f*)src.tangents + src.num_points);
+        if (conf.swap_handedness) {
+            InvertX((float4*)sample.tangents.data(), sample.tangents.size());
         }
+
+        CreateAttributeIfNeeded(m_attr_tangents, usdiTangentAttrName, AttributeType::Float4Array);
         m_attr_tangents->setImmediate(&sample.tangents, t_);
     }
+
+
+    // bone & weight attributes
+
+    if (src.weights4 && src.max_bone_weights == 4) {
+        sample.max_bone_weight = src.max_bone_weights;
+        sample.bone_weights.resize(src.num_points * 4);
+        sample.bone_indices.resize(src.num_points * 4);
+        for (uint pi = 0; pi < src.num_points; ++pi) {
+            int pi4 = pi * 4;
+            for (int i = 0; i < 4; ++i) {
+                sample.bone_weights[pi4 + i] = src.weights4[pi].weight[i];
+                sample.bone_indices[pi4 + i] = src.weights4[pi].indices[i];
+            }
+        }
+
+        CreateAttributeIfNeeded(m_attr_bone_weights, usdiBoneWeightsAttrName, AttributeType::FloatArray);
+        CreateAttributeIfNeeded(m_attr_bone_indices, usdiBoneIndicesAttrName, AttributeType::IntArray);
+        CreateAttributeIfNeeded(m_attr_max_bone_weight, usdiMaxBoneWeightAttrName, AttributeType::Int);
+        m_attr_bone_weights->setImmediate(&sample.bone_weights, t_);
+        m_attr_bone_indices->setImmediate(&sample.bone_indices, t_);
+        m_attr_max_bone_weight->setImmediate(&sample.max_bone_weight, t_);
+    }
+    if (src.bones) {
+        sample.bones.resize(src.num_bones);
+        for (uint bi = 0; bi < src.num_bones; ++bi) {
+            sample.bones[bi] = TfToken(src.bones[bi]);
+        }
+
+        CreateAttributeIfNeeded(m_attr_bones, usdiBonesAttrName, AttributeType::TokenArray);
+        m_attr_bones->setImmediate(&sample.bones, t_);
+    }
+    if (src.root_bone) {
+        sample.root_bone = TfToken(src.root_bone);
+
+        CreateAttributeIfNeeded(m_attr_root_bone, usdiRootBoneAttrName, AttributeType::Token);
+        m_attr_root_bone->setImmediate(&sample.root_bone, t_);
+    }
+
+#undef CreateAttributeIfNeeded
 
     m_summary_needs_update = true;
     return ret;
 }
+
+void Mesh::assignRootBone(MeshData& dst, const char *v)
+{
+    MeshSample& sample = m_sample[0];
+    sample.root_bone = TfToken(v);
+    dst.root_bone = (char*)sample.root_bone.GetText();
+}
+
+void Mesh::assignBones(MeshData& dst, const char **v, int n)
+{
+    MeshSample& sample = m_sample[0];
+    sample.bones.resize(n);
+    sample.bones_.resize(n);
+    for (int i = 0; i < n; ++i) {
+        sample.bones[i] = TfToken(v[i]);
+        sample.bones_[i] = sample.bones[i].GetText();
+    }
+    dst.bones = (char**)sample.bones_.data();
+    dst.num_bones = n;
+}
+
 
 } // namespace usdi

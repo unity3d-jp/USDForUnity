@@ -7,7 +7,7 @@ namespace UTJ
 {
     public class usdiMenu
     {
-        [MenuItem("Assets/UTJ/USD/Import USD")]
+        [MenuItem("Assets/Import USD or Alembic")]
         public static void ImportUSD()
         {
             var path = EditorUtility.OpenFilePanel("Select USD or Alembic file (.usd, .usda, .usdc, .abc)", Application.streamingAssetsPath, "");

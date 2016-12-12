@@ -325,14 +325,17 @@ namespace UTJ
             public IntPtr   counts;
             public IntPtr   indices;
             public IntPtr   indices_triangulated;
+
             public IntPtr   weights;
-            public IntPtr   bone_names;
+            public IntPtr   bones;
+            public IntPtr   root_bone;
 
             public int      num_points;
             public int      num_counts;
             public int      num_indices;
             public int      num_indices_triangulated;
             public int      num_bones;
+            public int      max_bone_weights;
 
             public Vector3  center;
             public Vector3  extents;
@@ -344,7 +347,9 @@ namespace UTJ
             {
                 get
                 {
-                    return default(MeshData);
+                    var ret = default(MeshData);
+                    ret.max_bone_weights = 4;
+                    return ret;
                 }
             }
         }
@@ -525,14 +530,16 @@ namespace UTJ
         [DllImport ("usdi")] public static extern bool          usdiAttrReadSample(Attribute attr, ref AttributeData dst, double t, Bool copy);
         [DllImport ("usdi")] public static extern bool          usdiAttrWriteSample(Attribute attr, ref AttributeData src, double t);
 
-        [DllImport ("usdi")] public static extern IntPtr        usdiIndexCharPtrArray(IntPtr v, int i);
+        [DllImport ("usdi")] public static extern IntPtr        usdiIndexStringArray(IntPtr v, int i);
+        [DllImport ("usdi")] public static extern void          usdiMeshAssignRootBone(Mesh mesh, ref MeshData dst, string v);
+        [DllImport ("usdi")] public static extern void          usdiMeshAssignBones(Mesh mesh, ref MeshData dst, string[] v, int n);
 
         public static string[] usdiMeshGetBoneNames(Mesh mesh, ref MeshData src)
         {
             string[] ret = new string[src.num_bones];
             for (int i = 0; i < src.num_bones; ++i)
             {
-                ret[i] = S(usdiIndexCharPtrArray(src.bone_names, i));
+                ret[i] = S(usdiIndexStringArray(src.bones, i));
             }
             return ret;
         }

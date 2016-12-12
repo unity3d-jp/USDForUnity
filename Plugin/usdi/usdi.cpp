@@ -652,11 +652,4 @@ usdiAPI bool usdiAttrWriteSample(usdi::Attribute *attr, const usdi::AttributeDat
     return attr->writeSample(*src, t);
 }
 
-usdiAPI const char* usdiIndexCharPtrArray(const char **v, int i)
-{
-    if (!v) { return ""; }
-    return v[i];
-}
-
-
 } // extern "C"

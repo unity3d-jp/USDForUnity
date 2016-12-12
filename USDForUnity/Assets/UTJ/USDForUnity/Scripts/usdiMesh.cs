@@ -116,7 +116,7 @@ namespace UTJ
         // async
         void usdiAllocateMeshData(double t)
         {
-            usdi.MeshData md = default(usdi.MeshData);
+            usdi.MeshData md = usdi.MeshData.default_value;
             usdi.usdiMeshReadSample(m_mesh, ref md, t, true);
 
             m_meshData = md;

@@ -33,6 +33,7 @@ namespace UTJ
             public usdi.Context ctx { get { return m_exporter.m_ctx; } }
             public ComponentCapturer parent { get { return m_parent; } }
             public usdi.Schema usd { get { return m_usd; } }
+            public string primPath { get { return usdi.usdiPrimGetPathS(m_usd); } }
             public abstract void Capture(double t); // called from main thread
             public abstract void Flush(double t); // called from worker thread
 
@@ -128,6 +129,7 @@ namespace UTJ
 
                 if (m_captureEveryFrame || m_count == 0)
                 {
+                    t = m_count == 0 ? usdi.defaultTime : t;
                     usdi.usdiXformWriteSample(usdi.usdiAsXform(m_usd), ref m_data, t);
                     ++m_count;
                 }
@@ -138,6 +140,7 @@ namespace UTJ
         {
             Camera m_target;
             usdi.CameraData m_data = usdi.CameraData.default_value;
+            int m_count = 0;
 
             public CameraCapturer(usdiExporter exporter, ComponentCapturer parent, Camera target)
                 : base(exporter, parent, target.GetComponent<Transform>(), false)
@@ -166,7 +169,9 @@ namespace UTJ
                 base.Flush(t);
                 if (m_target == null) { return; }
 
+                t = m_count == 0 ? usdi.defaultTime : t;
                 usdi.usdiCameraWriteSample(usdi.usdiAsCamera(m_usd), ref m_data, t);
+                ++m_count;
             }
         }
 
@@ -175,12 +180,18 @@ namespace UTJ
             public int[] indices;
             public Vector3[] vertices;
             public Vector3[] normals;
+            public Vector4[] tangents;
             public Vector2[] uvs;
+
+            public BoneWeight[] weights;
+            public string rootBone;
+            public string[] bones;
         }
 
         public static void CaptureMesh(
-            Mesh mesh, Cloth cloth, MeshBuffer dst_buf, ref usdi.MeshData data, double t,
-            bool capture_normals, bool capture_uvs, bool capture_indices)
+            usdi.Mesh usd, Mesh mesh, Cloth cloth, MeshBuffer dst_buf, ref usdi.MeshData data,
+            bool capture_normals, bool capture_tangents, bool capture_uvs, bool capture_weights, bool capture_indices,
+            Mesh srcMesh = null, string rootBone = null, string[] bones = null)
         {
             dst_buf.indices = capture_indices ? mesh.triangles : null;
             dst_buf.uvs = capture_uvs ? mesh.uv : null;
@@ -194,6 +205,19 @@ namespace UTJ
                 dst_buf.vertices = cloth.vertices;
                 dst_buf.normals = capture_normals ? cloth.normals : null;
             }
+            dst_buf.tangents = capture_tangents ? mesh.tangents : null;
+
+            dst_buf.weights = capture_weights ? srcMesh.boneWeights : null;
+            if (rootBone != null && bones != null)
+            {
+                dst_buf.rootBone = rootBone;
+                dst_buf.bones = bones;
+            }
+            else
+            {
+                dst_buf.rootBone = null;
+                dst_buf.bones = null;
+            }
 
             data = usdi.MeshData.default_value;
             if (dst_buf.vertices != null)
@@ -206,13 +230,24 @@ namespace UTJ
                 data.indices = usdi.GetArrayPtr(dst_buf.indices);
                 data.num_indices = dst_buf.indices.Length;
             }
-            if(dst_buf.normals != null)
+            if (dst_buf.normals != null)
             {
                 data.normals = usdi.GetArrayPtr(dst_buf.normals);
             }
-            if(dst_buf.uvs != null)
+            if (dst_buf.tangents != null)
+            {
+                data.tangents = usdi.GetArrayPtr(dst_buf.tangents);
+            }
+            if (dst_buf.uvs != null)
             {
                 data.uvs = usdi.GetArrayPtr(dst_buf.uvs);
+            }
+            if (dst_buf.weights != null && dst_buf.bones != null)
+            {
+                data.weights = usdi.GetArrayPtr(dst_buf.weights);
+                data.num_bones = dst_buf.bones.Length;
+                usdi.usdiMeshAssignBones(usd, ref data, dst_buf.bones, dst_buf.bones.Length);
+                usdi.usdiMeshAssignRootBone(usd, ref data, dst_buf.rootBone);
             }
         }
 
@@ -222,6 +257,7 @@ namespace UTJ
             MeshBuffer m_mesh_buffer;
             usdi.MeshData m_data = default(usdi.MeshData);
             bool m_captureNormals = true;
+            bool m_captureTangents = true;
             bool m_captureUVs = true;
             bool m_captureEveryFrame = false;
             bool m_captureEveryFrameUV = false;
@@ -236,12 +272,14 @@ namespace UTJ
                 m_mesh_buffer = new MeshBuffer();
 
                 m_captureNormals = exporter.m_captureMeshNormals;
+                m_captureTangents = exporter.m_captureMeshTangents;
                 m_captureUVs = exporter.m_captureMeshUVs;
 
                 var conf = target.GetComponent<usdiMeshExportConfig>();
                 if(conf != null)
                 {
                     m_captureNormals = conf.m_captureNormals;
+                    m_captureTangents = conf.m_captureTangents;
                     m_captureUVs = conf.m_captureUVs;
                     m_captureEveryFrame = conf.m_captureEveryFrame;
                     m_captureEveryFrameUV = conf.m_captureEveryFrameUV;
@@ -259,8 +297,8 @@ namespace UTJ
                     bool captureUV = m_captureUVs && (m_count == 0 || m_captureEveryFrameUV);
                     bool captureIndices = m_count == 0 || m_captureEveryFrameIndices;
                     CaptureMesh(
-                        m_target.GetComponent<MeshFilter>().sharedMesh, null, m_mesh_buffer, ref m_data, t,
-                        m_captureNormals, captureUV, captureIndices);
+                        usdi.usdiAsMesh(m_usd), m_target.GetComponent<MeshFilter>().sharedMesh, null, m_mesh_buffer, ref m_data,
+                        m_captureNormals, m_captureTangents, captureUV, false, captureIndices);
                 }
             }
 
@@ -271,6 +309,7 @@ namespace UTJ
 
                 if (m_captureEveryFrame || m_count == 0)
                 {
+                    t = m_count == 0 ? usdi.defaultTime : t;
                     usdi.usdiMeshWriteSample(usdi.usdiAsMesh(m_usd), ref m_data, t);
                     ++m_count;
                 }
@@ -284,7 +323,9 @@ namespace UTJ
             MeshBuffer m_mesh_buffer;
             usdi.MeshData m_data = default(usdi.MeshData);
             bool m_captureNormals = true;
+            bool m_captureTangents = true;
             bool m_captureUVs = true;
+            bool m_captureBones = false;
             bool m_captureEveryFrame = true;
             bool m_captureEveryFrameUV = false;
             bool m_captureEveryFrameIndices = false;
@@ -303,12 +344,15 @@ namespace UTJ
                 }
 
                 m_captureNormals = exporter.m_captureMeshNormals;
+                m_captureTangents = exporter.m_captureMeshTangents;
                 m_captureUVs = exporter.m_captureMeshUVs;
+                m_captureBones = exporter.m_captureSkinnedMeshAs == SkinnedMeshCaptureMode.BoneAndWeights;
 
                 var conf = target.GetComponent<usdiMeshExportConfig>();
                 if (conf != null)
                 {
                     m_captureNormals = conf.m_captureNormals;
+                    m_captureTangents = conf.m_captureTangents;
                     m_captureUVs = conf.m_captureUVs;
                     m_captureEveryFrame = conf.m_captureEveryFrame;
                     m_captureEveryFrameUV = conf.m_captureEveryFrameUV;
@@ -325,10 +369,36 @@ namespace UTJ
                 {
                     if (m_mesh == null) { m_mesh = new Mesh(); }
                     m_target.BakeMesh(m_mesh);
+                    var srcMesh = m_target.sharedMesh;
                     bool captureUV = m_captureUVs && (m_count == 0 || m_captureEveryFrameUV);
                     bool captureIndices = m_count == 0 || m_captureEveryFrameIndices;
-                    CaptureMesh(m_mesh, m_target.GetComponent<Cloth>(), m_mesh_buffer, ref m_data, t,
-                        m_captureNormals, captureUV, captureIndices);
+                    bool captureBones = m_captureBones && m_count == 0;
+
+                    string rootBoneName = null;
+                    string[] boneNames = null;
+                    if (captureBones)
+                    {
+                        var root = m_exporter.FindNode(m_target.rootBone);
+                        if(root != null)
+                        {
+                            rootBoneName = root.capturer.primPath;
+                        }
+
+                        var bones = m_target.bones;
+                        if(bones != null)
+                        {
+                            boneNames = new string[bones.Length];
+                            for (int i = 0; i < bones.Length; ++i)
+                            {
+                                var bone = m_exporter.FindNode(bones[i]);
+                                boneNames[i] = bone.capturer.primPath;
+                            }
+                        }
+                    }
+                    CaptureMesh(
+                        usdi.usdiAsMesh(m_usd), m_mesh, m_target.GetComponent<Cloth>(), m_mesh_buffer, ref m_data,
+                        m_captureNormals, m_captureTangents, captureUV, captureBones, captureIndices,
+                        srcMesh, rootBoneName, boneNames);
                 }
             }
 
@@ -339,6 +409,7 @@ namespace UTJ
 
                 if (m_captureEveryFrame || m_count == 0)
                 {
+                    t = m_count == 0 ? usdi.defaultTime : t;
                     usdi.usdiMeshWriteSample(usdi.usdiAsMesh(m_usd), ref m_data, t);
                     ++m_count;
                 }
@@ -485,6 +556,12 @@ namespace UTJ
             CurrentBranch,
         }
 
+        public enum SkinnedMeshCaptureMode
+        {
+            VertexCache,
+            BoneAndWeights,
+        }
+
         #region fields
         [Header("USD")]
 
@@ -504,7 +581,9 @@ namespace UTJ
         public bool m_captureCamera = true;
         public bool m_customCapturer = true;
         [Space(8)]
+        public SkinnedMeshCaptureMode m_captureSkinnedMeshAs = SkinnedMeshCaptureMode.VertexCache;
         public bool m_captureMeshNormals = true;
+        public bool m_captureMeshTangents = true;
         public bool m_captureMeshUVs = true;
 
         [Header("Capture Setting")]
@@ -604,32 +683,41 @@ namespace UTJ
             public ComponentCapturer capturer;
         }
 
-        Dictionary<Transform, CaptureNode> m_capture_node;
-        List<CaptureNode> m_top_nodes;
+        Dictionary<Transform, CaptureNode> m_captureNodes;
+        List<CaptureNode> m_rootNodes;
+
+        CaptureNode FindNode(Transform t)
+        {
+            CaptureNode ret;
+            if(m_captureNodes.TryGetValue(t, out ret)) { return ret; }
+            return null;
+        }
 
         CaptureNode ConstructTree(Transform trans)
         {
             if(trans == null) { return null; }
             usdiLog("ConstructTree() : " + trans.name);
 
-            CaptureNode cn;
-            if (m_capture_node.TryGetValue(trans, out cn)) { return cn; }
+            // return existing one if found
+            CaptureNode ret;
+            if (m_captureNodes.TryGetValue(trans, out ret)) { return ret; }
 
-            cn = new CaptureNode();
-            cn.trans = trans;
-            m_capture_node.Add(trans, cn);
+            ret = new CaptureNode();
+            ret.trans = trans;
+            m_captureNodes.Add(trans, ret);
 
             var parent = ConstructTree(trans.parent);
             if (parent != null)
             {
-                parent.children.Add(cn);
+                ret.parent = parent;
+                parent.children.Add(ret);
             }
             else
             {
-                m_top_nodes.Add(cn);
+                m_rootNodes.Add(ret);
             }
 
-            return cn;
+            return ret;
         }
 
 
@@ -644,6 +732,10 @@ namespace UTJ
             if (node.componentType == null)
             {
                 node.capturer = new TransformCapturer(this, parent_capturer, node.trans);
+            }
+            else if (node.componentType == typeof(Transform))
+            {
+                node.capturer = new TransformCapturer(this, parent_capturer, node.trans.GetComponent<Transform>());
             }
             else if (node.componentType == typeof(Camera))
             {
@@ -680,8 +772,10 @@ namespace UTJ
         void ConstructCaptureTree()
         {
             m_root = new RootCapturer(this, usdi.usdiGetRoot(m_ctx));
-            m_capture_node = new Dictionary<Transform, CaptureNode>();
-            m_top_nodes = new List<CaptureNode>();
+            m_captureNodes = new Dictionary<Transform, CaptureNode>();
+            m_rootNodes = new List<CaptureNode>();
+
+            var bones = new HashSet<Transform>();
 
             // construct tree
             // (bottom-up)
@@ -710,6 +804,22 @@ namespace UTJ
                     if (ShouldBeIgnored(t)) { continue; }
                     var node = ConstructTree(t.GetComponent<Transform>());
                     node.componentType = t.GetType();
+
+                    // capture bones as well
+                    if(m_captureSkinnedMeshAs == SkinnedMeshCaptureMode.BoneAndWeights)
+                    {
+                        if(t.rootBone != null)
+                        {
+                            bones.Add(t.rootBone);
+                        }
+                        if(t.bones != null)
+                        {
+                            foreach (var bone in t.bones)
+                            {
+                                bones.Add(bone);
+                            }
+                        }
+                    }
                 }
             }
             if (m_captureParticleSystem)
@@ -731,15 +841,17 @@ namespace UTJ
                 }
             }
 
+            foreach(var t in bones)
+            {
+                var node = ConstructTree(t.GetComponent<Transform>());
+                node.componentType = t.GetType();
+            }
+
             // make component capturers (top-down)
-            foreach (var c in m_top_nodes)
+            foreach (var c in m_rootNodes)
             {
                 SetupComponentCapturer(null, c);
             }
-
-
-            m_top_nodes = null;
-            m_capture_node = null;
         }
 
         void ApplyExportConfig()

@@ -25,27 +25,27 @@ struct vertex_v3n3u2t4_source;
 
 struct vertex_v3n3_source
 {
-    typedef vertex_v3n3 vertex_t;
+    using vertex_t = vertex_v3n3;
     const float3 *points;
     const float3 *normals;
 };
 struct vertex_v3n3
 {
-    typedef vertex_v3n3_source source_t;
+    using source_t = vertex_v3n3_source;
     float3 p;
     float3 n;
 };
 
 struct vertex_v3n3u2_source
 {
-    typedef vertex_v3n3u2 vertex_t;
+    using vertex_t = vertex_v3n3u2;
     const float3 *points;
     const float3 *normals;
     const float2 *uvs;
 };
 struct vertex_v3n3u2
 {
-    typedef vertex_v3n3u2_source source_t;
+    using source_t = vertex_v3n3u2_source;
     float3 p;
     float3 n;
     float2 u;
@@ -53,7 +53,7 @@ struct vertex_v3n3u2
 
 struct vertex_v3n3u2t4_source
 {
-    typedef vertex_v3n3u2t4 vertex_t;
+    using vertex_t = vertex_v3n3u2t4;
     const float3 *points;
     const float3 *normals;
     const float2 *uvs;
@@ -61,7 +61,7 @@ struct vertex_v3n3u2t4_source
 };
 struct vertex_v3n3u2t4
 {
-    typedef vertex_v3n3u2t4_source source_t;
+    using source_t = vertex_v3n3u2t4_source;
     float3 p;
     float3 n;
     float2 u;

@@ -14,7 +14,9 @@ namespace UTJ
     {
         #region fields
         public bool m_captureNormals = true;
+        public bool m_captureTangents = true;
         public bool m_captureUVs = true;
+        public bool m_captureBones = false;
         public bool m_captureEveryFrame = false;
         public bool m_captureEveryFrameUV = false;
         public bool m_captureEveryFrameIndices = false;

@@ -195,7 +195,7 @@ template<int N>
 struct Weights
 {
     float   weight[N] = {};
-    int     bone_indices[N] = {};
+    int     indices[N] = {};
 };
 using Weights4 = Weights<4>;
 using Weights8 = Weights<8>;
@@ -218,22 +218,28 @@ struct MeshData
 {
     // these pointers can be null (in this case, just be ignored).
     // otherwise, if you pass to usdiMeshSampleReadData(), pointers must point valid memory block to store data.
-    float3      *points = nullptr;
-    float3      *velocities = nullptr;
-    float3      *normals = nullptr;
-    float4      *tangents = nullptr;
-    float2      *uvs = nullptr;
-    int         *counts = nullptr;
-    int         *indices = nullptr;
-    int         *indices_triangulated = nullptr;
-    Weights4    *weights4 = nullptr;
-    char        **bone_names = nullptr;
+    float3  *points = nullptr;
+    float3  *velocities = nullptr;
+    float3  *normals = nullptr;
+    float4  *tangents = nullptr;
+    float2  *uvs = nullptr;
+    int     *counts = nullptr;
+    int     *indices = nullptr;
+    int     *indices_triangulated = nullptr;
+
+    union {
+        Weights4 *weights4 = nullptr;
+        Weights8 *weights8;
+    };
+    char    **bones = nullptr;
+    char    *root_bone = nullptr;
 
     uint    num_points = 0;
     uint    num_counts = 0;
     uint    num_indices = 0;
     uint    num_indices_triangulated = 0;
     uint    num_bones = 0;
+    uint    max_bone_weights = 4;
 
     float3  center = { 0.0f, 0.0f, 0.0f };
     float3  extents = { 0.0f, 0.0f, 0.0f };
@@ -399,9 +405,6 @@ usdiAPI const char*      usdiAttrGetTypeName(usdi::Attribute *attr);
 usdiAPI void             usdiAttrGetSummary(usdi::Attribute *attr, usdi::AttributeSummary *dst);
 usdiAPI bool             usdiAttrReadSample(usdi::Attribute *attr, usdi::AttributeData *dst, usdi::Time t, bool copy);
 usdiAPI bool             usdiAttrWriteSample(usdi::Attribute *attr, const usdi::AttributeData *src, usdi::Time t = usdiDefaultTime());
-
-// just for C#
-usdiAPI const char*      usdiIndexCharPtrArray(const char **v, int i);
 
 } // extern "C"
 

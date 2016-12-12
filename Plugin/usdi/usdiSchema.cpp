@@ -145,6 +145,12 @@ Attribute* Schema::findAttribute(const char *name) const
     }
     return nullptr;
 }
+Attribute* Schema::findAttribute(const char *name, AttributeType type) const
+{
+    auto *ret = findAttribute(name);
+    auto summary = ret->getSummary();
+    return summary.type == type ? ret : nullptr;
+}
 
 Attribute* Schema::createAttribute(const char *name, AttributeType type)
 {
