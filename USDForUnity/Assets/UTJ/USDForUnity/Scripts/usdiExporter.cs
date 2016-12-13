@@ -178,6 +178,16 @@ namespace UTJ
 
         public class MeshBuffer
         {
+            Mesh bakedMesh_;
+            public Mesh bakedMesh
+            {
+                get
+                {
+                    if(bakedMesh_ == null) { bakedMesh_ = new Mesh(); }
+                    return bakedMesh_;
+                }
+            }
+
             public int[] indices;
             public Vector3[] vertices;
             public Vector3[] normals;
@@ -190,45 +200,18 @@ namespace UTJ
             public string[] bones;
         }
 
-        public static void CaptureMesh(
-            usdi.Mesh usd, Mesh mesh, MeshBuffer dst_buf, ref usdi.MeshData data,
-            bool capture_normals, bool capture_tangents, bool capture_uvs, bool capture_weights, bool capture_indices,
-            SkinnedMeshRenderer smr = null, string rootBone = null, string[] bones = null)
+        public class MeshCaptureFlags
         {
-            dst_buf.indices = capture_indices ? mesh.triangles : null;
-            dst_buf.uvs = capture_uvs ? mesh.uv : null;
+            public bool points;
+            public bool indices;
+            public bool normals;
+            public bool tangents;
+            public bool uvs;
+        }
 
-            Cloth cloth = null;
-            if (smr != null)
-            {
-                cloth = smr.GetComponent<Cloth>();
-            }
 
-            if (cloth != null)
-            {
-                dst_buf.vertices = cloth.vertices;
-                dst_buf.normals = capture_normals ? cloth.normals : null;
-                dst_buf.tangents = capture_tangents ? mesh.tangents : null;
-            }
-            else if (capture_weights && smr != null && bones != null && bones.Length != 0)
-            {
-                var srcMesh = smr.sharedMesh;
-                dst_buf.vertices = srcMesh.vertices;
-                dst_buf.normals = capture_normals ? srcMesh.normals : null;
-                dst_buf.tangents = capture_tangents ? srcMesh.tangents : null;
-
-                dst_buf.weights = srcMesh.boneWeights;
-                dst_buf.bindposes = srcMesh.bindposes;
-                dst_buf.rootBone = rootBone;
-                dst_buf.bones = bones;
-            }
-            else
-            {
-                dst_buf.vertices = mesh.vertices;
-                dst_buf.normals = capture_normals ? mesh.normals : null;
-                dst_buf.tangents = capture_tangents ? mesh.tangents : null;
-            }
-
+        public static void CaptureMesh(usdi.Mesh usd, ref usdi.MeshData data, MeshBuffer dst_buf)
+        {
             data = usdi.MeshData.default_value;
             if (dst_buf.vertices != null)
             {
@@ -263,10 +246,68 @@ namespace UTJ
             }
         }
 
+        public static void CaptureMesh(
+            usdi.Mesh usd, ref usdi.MeshData data, MeshBuffer buf,
+            Mesh mesh, MeshCaptureFlags flags)
+        {
+            buf.vertices = flags.points ? mesh.vertices : null;
+            buf.normals = flags.normals ? mesh.normals : null;
+            buf.tangents = flags.tangents ? mesh.tangents : null;
+            buf.indices = flags.indices ? mesh.triangles : null;
+            buf.uvs = flags.uvs ? mesh.uv : null;
+            CaptureMesh(usd, ref data, buf);
+        }
+
+        public static void CaptureMesh(
+            usdi.Mesh usd, ref usdi.MeshData data, MeshBuffer buf,
+            SkinnedMeshRenderer smr, MeshCaptureFlags flags, bool captureBones)
+        {
+
+            Cloth cloth = smr.GetComponent<Cloth>();
+
+            if (cloth != null)
+            {
+                var mesh = buf.bakedMesh;
+                smr.BakeMesh(mesh);
+
+                buf.vertices = flags.points ? cloth.vertices : null;
+                buf.normals  = flags.normals ? cloth.normals : null;
+                buf.tangents = flags.tangents ? mesh.tangents : null;
+                buf.indices  = flags.indices ? mesh.triangles : null;
+                buf.uvs      = flags.uvs ? mesh.uv : null;
+            }
+            else if (captureBones && buf.bones != null)
+            {
+                var mesh = smr.sharedMesh;
+
+                buf.vertices = flags.points ? mesh.vertices : null;
+                buf.normals  = flags.normals ? mesh.normals : null;
+                buf.tangents = flags.tangents ? mesh.tangents : null;
+                buf.indices  = flags.indices ? mesh.triangles : null;
+                buf.uvs      = flags.uvs ? mesh.uv : null;
+
+                buf.weights   = mesh.boneWeights;
+                buf.bindposes = mesh.bindposes;
+            }
+            else
+            {
+                var mesh = buf.bakedMesh;
+                smr.BakeMesh(mesh);
+
+                buf.vertices = flags.points ? mesh.vertices : null;
+                buf.normals  = flags.normals ? mesh.normals : null;
+                buf.tangents = flags.tangents ? mesh.tangents : null;
+                buf.indices  = flags.indices ? mesh.triangles : null;
+                buf.uvs      = flags.uvs ? mesh.uv : null;
+            }
+
+            CaptureMesh(usd, ref data, buf);
+        }
+
         public class MeshCapturer : TransformCapturer
         {
             MeshRenderer m_target;
-            MeshBuffer m_mesh_buffer;
+            MeshBuffer m_buffer;
             usdi.MeshData m_data = default(usdi.MeshData);
             bool m_captureNormals = true;
             bool m_captureTangents = true;
@@ -281,7 +322,7 @@ namespace UTJ
             {
                 m_usd = usdi.usdiCreateMesh(ctx, parent.usd, CreateName(target));
                 m_target = target;
-                m_mesh_buffer = new MeshBuffer();
+                m_buffer = new MeshBuffer();
 
                 m_captureNormals = exporter.m_captureMeshNormals;
                 m_captureTangents = exporter.m_captureMeshTangents;
@@ -306,11 +347,16 @@ namespace UTJ
 
                 if (m_captureEveryFrame || m_count == 0)
                 {
-                    bool captureUV = m_captureUVs && (m_count == 0 || m_captureEveryFrameUV);
-                    bool captureIndices = m_count == 0 || m_captureEveryFrameIndices;
-                    CaptureMesh(
-                        usdi.usdiAsMesh(m_usd), m_target.GetComponent<MeshFilter>().sharedMesh, m_mesh_buffer, ref m_data,
-                        m_captureNormals, m_captureTangents, captureUV, false, captureIndices);
+                    var mesh = m_target.GetComponent<MeshFilter>().sharedMesh;
+                    var flags = new MeshCaptureFlags
+                    {
+                        points   = true,
+                        normals  = m_captureNormals,
+                        tangents = m_captureTangents,
+                        uvs      = m_captureUVs && (m_count == 0 || m_captureEveryFrameUV),
+                        indices  = m_count == 0 || m_captureEveryFrameIndices,
+                    };
+                    CaptureMesh(usdi.usdiAsMesh(m_usd), ref m_data, m_buffer, mesh, flags);
                 }
             }
 
@@ -331,8 +377,7 @@ namespace UTJ
         public class SkinnedMeshCapturer : TransformCapturer
         {
             SkinnedMeshRenderer m_target;
-            Mesh m_mesh;
-            MeshBuffer m_mesh_buffer;
+            MeshBuffer m_buffer;
             usdi.MeshData m_data = default(usdi.MeshData);
             bool m_captureNormals = true;
             bool m_captureTangents = true;
@@ -348,7 +393,7 @@ namespace UTJ
             {
                 m_usd = usdi.usdiCreateMesh(ctx, parent.usd, CreateName(target));
                 m_target = target;
-                m_mesh_buffer = new MeshBuffer();
+                m_buffer = new MeshBuffer();
 
                 if (m_target.GetComponent<Cloth>() != null)
                 {
@@ -380,37 +425,43 @@ namespace UTJ
 
                 if (m_captureEveryFrame || m_count == 0)
                 {
-                    if (m_mesh == null) { m_mesh = new Mesh(); }
-                    m_target.BakeMesh(m_mesh);
-                    bool captureUV = m_captureUVs && (m_count == 0 || m_captureEveryFrameUV);
-                    bool captureIndices = m_count == 0 || m_captureEveryFrameIndices;
                     bool captureBones = m_captureBones && m_count == 0;
 
-                    string rootBoneName = null;
-                    string[] boneNames = null;
                     if (captureBones)
                     {
                         var root = m_exporter.FindNode(m_target.rootBone);
                         if (root != null)
                         {
-                            rootBoneName = root.capturer.primPath;
+                            m_buffer.rootBone = root.capturer.primPath;
                         }
 
                         var bones = m_target.bones;
-                        if (bones != null)
+                        if (bones != null && bones.Length > 0)
                         {
-                            boneNames = new string[bones.Length];
+                            m_buffer.bones = new string[bones.Length];
                             for (int i = 0; i < bones.Length; ++i)
                             {
                                 var bone = m_exporter.FindNode(bones[i]);
-                                boneNames[i] = bone.capturer.primPath;
+                                m_buffer.bones[i] = bone.capturer.primPath;
+                            }
+
+                            if (m_exporter.m_swapHandedness)
+                            {
+                                Debug.LogWarning("Swap Handedness export option is enabled. This may cause broken skinning animation.");
                             }
                         }
                     }
-                    CaptureMesh(
-                        usdi.usdiAsMesh(m_usd), m_mesh, m_mesh_buffer, ref m_data,
-                        m_captureNormals, m_captureTangents, captureUV, captureBones, captureIndices,
-                        m_target, rootBoneName, boneNames);
+
+                    var flags = new MeshCaptureFlags
+                    {
+                        points   = true,
+                        normals  = m_captureNormals,
+                        tangents = m_captureTangents,
+                        uvs      = m_captureUVs && (m_count == 0 || m_captureEveryFrameUV),
+                        indices  = m_count == 0 || m_captureEveryFrameIndices,
+                    };
+
+                    CaptureMesh(usdi.usdiAsMesh(m_usd), ref m_data, m_buffer, m_target, flags, captureBones);
                 }
             }
 

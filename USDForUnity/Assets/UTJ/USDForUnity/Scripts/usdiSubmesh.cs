@@ -350,6 +350,11 @@ namespace UTJ
 
                 if(m_count == 0 && m_weights != null)
                 {
+                    if(m_stream.importSettings.swapHandedness)
+                    {
+                        Debug.LogWarning("Swap Handedness import option is enabled. This may cause broken skinning animation.");
+                    }
+
                     m_umesh.boneWeights = m_weights;
                     m_umesh.bindposes = m_bindposes;
                     var renderer = m_renderer as SkinnedMeshRenderer;
