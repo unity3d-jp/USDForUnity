@@ -20,6 +20,7 @@
  *     misrepresented as being the original software.
  *  3. This notice may not be removed or altered from any source distribution.
  */
+#pragma warning(disable:4201 4204 4456)
 
 #include <assert.h>
 #include <stdio.h>

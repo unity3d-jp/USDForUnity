@@ -24,7 +24,7 @@ void LogImpl(int level, const char *format, ...)
 }
 
 
-static uint32_t GetThreadID()
+uint32_t GetThreadID()
 {
     std::hash<std::thread::id> hasher;
     return (uint32_t)hasher(std::this_thread::get_id());

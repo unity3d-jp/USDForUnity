@@ -98,7 +98,7 @@ ComPtr<IDirect3DSurface9> GraphicsInterfaceD3D9::createStagingSurface(int width,
     if (internal_format == D3DFMT_UNKNOWN) { return nullptr; }
 
     auto ret = ComPtr<IDirect3DSurface9>();
-    auto hr = m_device->CreateOffscreenPlainSurface(width, height, internal_format, D3DPOOL_SYSTEMMEM, &ret, nullptr);
+    m_device->CreateOffscreenPlainSurface(width, height, internal_format, D3DPOOL_SYSTEMMEM, &ret, nullptr);
     return ret;
 }
 
@@ -145,7 +145,7 @@ void GraphicsInterfaceD3D9::sync()
     }
 }
 
-Result GraphicsInterfaceD3D9::createTexture2D(void **dst_tex, int width, int height, TextureFormat format, const void *data, ResourceFlags flags)
+Result GraphicsInterfaceD3D9::createTexture2D(void **dst_tex, int width, int height, TextureFormat format, const void *data, ResourceFlags /*flags*/)
 {
     if (!dst_tex) { return Result::InvalidParameter; }
 
@@ -308,7 +308,7 @@ static HRESULT UnmapBuffer(void *buf, BufferType type)
     }
 }
 
-Result GraphicsInterfaceD3D9::createBuffer(void **dst_buf, size_t size, BufferType type, const void *data, ResourceFlags flags)
+Result GraphicsInterfaceD3D9::createBuffer(void **dst_buf, size_t size, BufferType type, const void *data, ResourceFlags /*flags*/)
 {
     if (!dst_buf) { return Result::InvalidParameter; }
 

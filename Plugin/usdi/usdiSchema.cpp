@@ -279,7 +279,7 @@ bool Schema::setVariantSelection(int iset, int ival)
     }
 
     auto& vset = m_variant_sets[iset];
-    auto& dst = m_prim.GetVariantSet(vset.name);
+    auto dst = m_prim.GetVariantSet(vset.name);
     auto sel = dst.GetVariantSelection();
 
     bool ret = false;
@@ -357,7 +357,7 @@ bool Schema::beginEditVariant(int iset, int ival)
         return false;
     }
 
-    auto& dst = m_prim.GetVariantSet(vset.name);
+    auto dst = m_prim.GetVariantSet(vset.name);
     dst.SetVariantSelection(vset.variants[ival]);
     m_ctx->beginEdit(dst.GetVariantEditTarget());
     return true;

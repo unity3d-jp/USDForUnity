@@ -101,7 +101,7 @@ ComPtr<ID3D11Texture2D> GraphicsInterfaceD3D11::createStagingTexture(int width, 
     }
 
     auto ret = ComPtr<ID3D11Texture2D>();
-    auto hr = m_device->CreateTexture2D(&desc, nullptr, &ret);
+    m_device->CreateTexture2D(&desc, nullptr, &ret);
     return ret;
 }
 
@@ -118,7 +118,7 @@ ComPtr<ID3D11Buffer> GraphicsInterfaceD3D11::createStagingBuffer(size_t size, St
     }
 
     auto ret = ComPtr<ID3D11Buffer>();
-    auto hr = m_device->CreateBuffer(&desc, nullptr, &ret);
+    m_device->CreateBuffer(&desc, nullptr, &ret);
     return ret;
 }
 

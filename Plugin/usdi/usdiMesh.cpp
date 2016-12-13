@@ -408,10 +408,10 @@ void Mesh::updateSample(Time t_)
         CopyWithIndices(sms.tangents, sample.tangents, sample.indices_triangulated, ibegin, iend, !tangents_are_expanded);
         CopyWithIndices(sms.uvs, sample.uvs, sample.indices_triangulated, ibegin, iend, !uvs_are_expanded);
         if (!sample.weights4.empty()) {
-            CopyWithIndices(sms.weights4, sample.weights4, sample.indices_triangulated, ibegin, iend, !points_are_expanded);
+            CopyWithIndices(sms.weights4, sample.weights4, sample.indices_triangulated, ibegin, iend, !weights_are_expanded);
         }
         else if (!sample.weights8.empty()) {
-            CopyWithIndices(sms.weights8, sample.weights8, sample.indices_triangulated, ibegin, iend, !points_are_expanded);
+            CopyWithIndices(sms.weights8, sample.weights8, sample.indices_triangulated, ibegin, iend, !weights_are_expanded);
         }
 
         ComputeBounds((float3*)sms.points.cdata(), sms.points.size(), sms.bounds_min, sms.bounds_max);
@@ -562,7 +562,7 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
 
 #define CreateAttributeIfNeeded(VName, AName, Type) if(!VName) { VName=createAttribute(AName, Type); }
 
-    bool  ret;
+    bool  ret = false;
     if (src.points) {
         sample.points.assign((GfVec3f*)src.points, (GfVec3f*)src.points + src.num_points);
         if (conf.swap_handedness) {

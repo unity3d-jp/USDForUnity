@@ -20,7 +20,7 @@ UnityPluginUnload()
     gi::UnityPluginUnload();
 }
 
-static void UNITY_INTERFACE_API UnityRenderEventFunc(int eventID)
+static void UNITY_INTERFACE_API UnityRenderEventFunc(int /*eventID*/)
 {
     usdiVtxCmdProcess();
 }

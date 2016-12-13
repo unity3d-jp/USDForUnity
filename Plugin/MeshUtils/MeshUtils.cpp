@@ -118,8 +118,8 @@ struct TSpaceContext
         (float2&)*o_tcoord = _this->t[face[ivtx]];
     }
 
-    static void setTangent(const SMikkTSpaceContext *tctx, const float tangent[], const float bitangent[],
-        float fMagS, float fMagT, tbool IsOrientationPreserving, int iface, int ivtx)
+    static void setTangent(const SMikkTSpaceContext *tctx, const float* tangent, const float* /*bitangent*/,
+        float /*fMagS*/, float /*fMagT*/, tbool IsOrientationPreserving, int iface, int ivtx)
     {
         auto *_this = reinterpret_cast<TSpaceContext*>(tctx->m_pUserData);
         const int *face = &_this->indices[_this->offsets[iface]];
@@ -153,18 +153,18 @@ bool CalculateTangents(
 
 template<class VertexT> static inline void InterleaveImpl(VertexT *dst, const typename VertexT::source_t& src, size_t i);
 
-template<> static inline void InterleaveImpl(vertex_v3n3 *dst, const vertex_v3n3::source_t& src, size_t i)
+template<> inline void InterleaveImpl(vertex_v3n3 *dst, const vertex_v3n3::source_t& src, size_t i)
 {
     dst[i].p = src.points[i];
     dst[i].n = src.normals[i];
 }
-template<> static inline void InterleaveImpl(vertex_v3n3u2 *dst, const vertex_v3n3u2::source_t& src, size_t i)
+template<> inline void InterleaveImpl(vertex_v3n3u2 *dst, const vertex_v3n3u2::source_t& src, size_t i)
 {
     dst[i].p = src.points[i];
     dst[i].n = src.normals[i];
     dst[i].u = src.uvs[i];
 }
-template<> static inline void InterleaveImpl(vertex_v3n3u2t4 *dst, const vertex_v3n3u2t4::source_t& src, size_t i)
+template<> inline void InterleaveImpl(vertex_v3n3u2t4 *dst, const vertex_v3n3u2t4::source_t& src, size_t i)
 {
     dst[i].p = src.points[i];
     dst[i].n = src.normals[i];

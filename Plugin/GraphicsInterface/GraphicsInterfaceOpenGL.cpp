@@ -72,7 +72,7 @@ GraphicsInterface* CreateGraphicsInterfaceOpenGL(void *device)
 void* GraphicsInterfaceOpenGL::getDevicePtr() { return nullptr; }
 DeviceType GraphicsInterfaceOpenGL::getDeviceType() { return DeviceType::OpenGL; }
 
-GraphicsInterfaceOpenGL::GraphicsInterfaceOpenGL(void *device)
+GraphicsInterfaceOpenGL::GraphicsInterfaceOpenGL(void * /*device*/)
 {
     InitializeOpenGL();
 }
@@ -132,7 +132,7 @@ void GraphicsInterfaceOpenGL::sync()
     glFinish();
 }
 
-Result GraphicsInterfaceOpenGL::createTexture2D(void **dst_tex, int width, int height, TextureFormat format, const void *data, ResourceFlags flags)
+Result GraphicsInterfaceOpenGL::createTexture2D(void **dst_tex, int width, int height, TextureFormat format, const void *data, ResourceFlags /*flags*/)
 {
     GLenum gl_format = 0;
     GLenum gl_type = 0;

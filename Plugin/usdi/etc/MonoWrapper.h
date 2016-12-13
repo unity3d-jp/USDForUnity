@@ -349,13 +349,10 @@ template<class T> mObject mGetSystemType() { return mGetSystemType(mTypeof<T>())
 #ifdef usdiDebug
     #define mTypeCheck(T1, T2)\
         if(T1 != T2) {\
-            auto *typename1 = T1.getName();\
-            auto *typename2 = T2.getName();\
             assert(T1 == T2);\
         }
     #define mTypeCheckThis()\
         if(!isNull() && getClass() != mThisClass) {\
-            auto *type_name = getClass().getName();\
             assert(getClass() == mThisClass);\
         }
 #else

@@ -74,13 +74,13 @@ void* OverrideDLLImport(void *module, const char *modname, const char *funcname,
     IMAGE_IMPORT_DESCRIPTOR *pImportDesc = (IMAGE_IMPORT_DESCRIPTOR*)(ImageBase + RVAImports);
     while (pImportDesc->Name != 0) {
         if (_stricmp((const char*)(ImageBase + pImportDesc->Name), modname) == 0) {
-            const char *dllname = (const char*)(ImageBase + pImportDesc->Name);
+            //const char *dllname = (const char*)(ImageBase + pImportDesc->Name);
             IMAGE_IMPORT_BY_NAME **func_names = (IMAGE_IMPORT_BY_NAME**)(ImageBase + pImportDesc->Characteristics);
             void **import_table = (void**)(ImageBase + pImportDesc->FirstThunk);
             for (size_t i = 0; ; ++i) {
                 if ((size_t)func_names[i] == 0) { break; }
-                const char *funcname = (const char*)(ImageBase + (size_t)func_names[i]->Name);
-                if (strcmp(funcname, funcname) == 0) {
+                const char *n = (const char*)(ImageBase + (size_t)func_names[i]->Name);
+                if (strcmp(n, funcname) == 0) {
                     void *before = import_table[i];
                     ForceWrite<void*>(import_table[i], replacement);
                     return before;

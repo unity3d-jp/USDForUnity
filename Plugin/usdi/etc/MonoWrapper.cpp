@@ -115,7 +115,7 @@ mMethod mMethod::inflate(mClass *params, size_t nparams, void *& mem)
     }
 
     auto *minst = (MonoGenericInst*)mem;
-    minst->id = -1;
+    minst->id = guint(-1);
     minst->is_open = 0; // must be zero!
     minst->type_argc = nparams;
     for (size_t i = 0; i < nparams; ++i) {
@@ -161,19 +161,18 @@ mMethod mClass::findMethod(const char *name, int num_args, const char **typename
 {
     if (typenames) {
         for (mClass mc = m_rep; mc; mc = mc.getParent()) {
-            MonoMethod *method;
-            gpointer iter = nullptr;
-            while ((method = mono_class_get_methods(m_rep, &iter))) {
+            gpointer imethod = nullptr;
+            while (MonoMethod *method = mono_class_get_methods(m_rep, &imethod)) {
                 if (strcmp(mono_method_get_name(method), name) != 0) { continue; }
 
                 MonoMethodSignature *sig = mono_method_signature(method);
-                if (mono_signature_get_param_count(sig) != num_args) { continue; }
+                if (mono_signature_get_param_count(sig) != (guint32)num_args) { continue; }
 
                 MonoType *mt = nullptr;
-                gpointer iter = nullptr;
+                gpointer isignature = nullptr;
                 bool match = true;
                 for (int i = 0; i < num_args; ++i) {
-                    mt = mono_signature_get_params(sig, &iter);
+                    mt = mono_signature_get_params(sig, &isignature);
                     if (strcmp(mono_type_get_name(mt), typenames[i]) != 0) {
                         match = false;
                         break;
@@ -196,9 +195,8 @@ mMethod mClass::findMethod(const char *name, int num_args, const char **typename
 
 void mClass::eachFields(const std::function<void(mField&)> &f)
 {
-    MonoClassField *field = nullptr;
     gpointer iter = nullptr;
-    while ((field = mono_class_get_fields(m_rep, &iter))) {
+    while (MonoClassField *field = mono_class_get_fields(m_rep, &iter)) {
         mField mf = field;
         f(mf);
     }
@@ -206,9 +204,8 @@ void mClass::eachFields(const std::function<void(mField&)> &f)
 
 void mClass::eachProperties(const std::function<void(mProperty&)> &f)
 {
-    MonoProperty *prop = nullptr;
     gpointer iter = nullptr;
-    while ((prop = mono_class_get_properties(m_rep, &iter))) {
+    while (MonoProperty *prop = mono_class_get_properties(m_rep, &iter)) {
         mProperty mp = prop;
         f(mp);
     }
@@ -216,9 +213,8 @@ void mClass::eachProperties(const std::function<void(mProperty&)> &f)
 
 void mClass::eachMethods(const std::function<void(mMethod&)> &f)
 {
-    MonoMethod *method = nullptr;
     gpointer iter = nullptr;
-    while ((method = mono_class_get_methods(m_rep, &iter))) {
+    while (MonoMethod *method = mono_class_get_methods(m_rep, &iter)) {
         mMethod mm = method;
         f(mm);
     }
@@ -228,9 +224,8 @@ void mClass::eachFieldsUpwards(const std::function<void(mField&, mClass&)> &f)
 {
     mClass c = m_rep;
     do {
-        MonoClassField *field = nullptr;
         gpointer iter = nullptr;
-        while (field = mono_class_get_fields(c.m_rep, &iter)) {
+        while (MonoClassField *field = mono_class_get_fields(c.m_rep, &iter)) {
             mField m = field;
             f(m, c);
         }
@@ -242,9 +237,8 @@ void mClass::eachPropertiesUpwards(const std::function<void(mProperty&, mClass&)
 {
     mClass c = m_rep;
     do {
-        MonoProperty *prop = nullptr;
         gpointer iter = nullptr;
-        while (prop = mono_class_get_properties(c.m_rep, &iter)) {
+        while (MonoProperty *prop = mono_class_get_properties(c.m_rep, &iter)) {
             mProperty m = prop;
             f(m, c);
         }
@@ -256,9 +250,8 @@ void mClass::eachMethodsUpwards(const std::function<void(mMethod&, mClass&)> &f)
 {
     mClass c = m_rep;
     do {
-        MonoMethod *method = nullptr;
         gpointer iter = nullptr;
-        while (method = mono_class_get_methods(c.m_rep, &iter)) {
+        while (MonoMethod *method = mono_class_get_methods(c.m_rep, &iter)) {
             mMethod m = method;
             f(m, c);
         }

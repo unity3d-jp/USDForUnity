@@ -48,7 +48,6 @@ void Camera::updateSample(Time t_)
     if (m_update_flag.variant_set_changed) { m_summary_needs_update = true; }
 
     auto t = UsdTimeCode(t_);
-    const auto& conf = getImportSettings();
     auto& sample = m_sample;
 
     {
@@ -87,7 +86,6 @@ bool Camera::readSample(CameraData& dst, Time t)
 bool Camera::writeSample(const CameraData& src, Time t_)
 {
     auto t = UsdTimeCode(t_);
-    const auto& conf = getExportSettings();
 
     {
         auto range = GfVec2f(src.near_clipping_plane, src.far_clipping_plane);

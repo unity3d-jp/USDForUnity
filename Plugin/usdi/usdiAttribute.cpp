@@ -62,8 +62,8 @@ EachAttributeTypes(DefTraits)
 template<class T>
 struct AttrArgs
 {
-    static void load(const T& s, void *a, size_t n) { *(T*)a = s; }
-    static void store(T& s, const void *a, size_t n) { s = *(const T*)a; }
+    static void load(const T& s, void *a, size_t /*n*/) { *(T*)a = s; }
+    static void store(T& s, const void *a, size_t /*n*/) { s = *(const T*)a; }
     static void* address(T& s) { return &s; }
 };
 template<class V>
@@ -85,22 +85,22 @@ struct AttrArgs<VtArray<V>>
 template<>
 struct AttrArgs<TfToken>
 {
-    static void load(const TfToken& s, void *a, size_t n) { *(const char**)a = s.GetText(); }
-    static void store(TfToken& s, const void *a, size_t n) { s = TfToken((const char*)a); }
+    static void load(const TfToken& s, void *a, size_t /*n*/) { *(const char**)a = s.GetText(); }
+    static void store(TfToken& s, const void *a, size_t /*n*/) { s = TfToken((const char*)a); }
     static void* address(TfToken& s) { return (void*)s.GetText(); }
 };
 template<>
 struct AttrArgs<std::string>
 {
-    static void load(const std::string& s, void *a, size_t n) { *(const char**)a = s.c_str(); }
-    static void store(std::string& s, const void *a, size_t n) { s = std::string((const char*)a); }
+    static void load(const std::string& s, void *a, size_t /*n*/) { *(const char**)a = s.c_str(); }
+    static void store(std::string& s, const void *a, size_t /*n*/) { s = std::string((const char*)a); }
     static void* address(std::string& s) { return (void*)s.c_str(); }
 };
 template<>
 struct AttrArgs<SdfAssetPath>
 {
-    static void load(const SdfAssetPath& s, void *a, size_t n) { *(const char**)a = s.GetAssetPath().c_str(); }
-    static void store(SdfAssetPath& s, const void *a, size_t n) { s = SdfAssetPath((const char*)a); }
+    static void load(const SdfAssetPath& s, void *a, size_t /*n*/) { *(const char**)a = s.GetAssetPath().c_str(); }
+    static void store(SdfAssetPath& s, const void *a, size_t /*n*/) { s = SdfAssetPath((const char*)a); }
     static void* address(SdfAssetPath& s) { return (void*)s.GetAssetPath().c_str(); }
 };
 

@@ -67,12 +67,12 @@ GraphicsInterfaceD3D12::GraphicsInterfaceD3D12(void *device)
         ZeroMemory(&desc, sizeof(desc));
         desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
         desc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
-        auto hr = m_device->CreateCommandQueue(&desc, IID_PPV_ARGS(&m_cqueue));
+        m_device->CreateCommandQueue(&desc, IID_PPV_ARGS(&m_cqueue));
     }
 
     // create command allocator & list
     {
-        auto hr = m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_calloc));
+        m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_calloc));
     }
 
     // create signal
@@ -174,7 +174,7 @@ ComPtr<ID3D12Resource> GraphicsInterfaceD3D12::createStagingBuffer(size_t size, 
     return ret;
 }
 
-Result GraphicsInterfaceD3D12::createTexture2D(void **dst_tex, int width, int height, TextureFormat format, const void *data, ResourceFlags flags)
+Result GraphicsInterfaceD3D12::createTexture2D(void **dst_tex, int width, int height, TextureFormat format, const void *data, ResourceFlags /*flags*/)
 {
     D3D12_HEAP_PROPERTIES heap  = {};
     heap.Type                   = D3D12_HEAP_TYPE_DEFAULT;
@@ -262,9 +262,11 @@ Result GraphicsInterfaceD3D12::readTexture2D(void *dst, size_t read_size, void *
         CD3DX12_TEXTURE_COPY_LOCATION dst_region(staging.Get(), src_layout);
         CD3DX12_TEXTURE_COPY_LOCATION src_region(src_tex, 0);
 
-        clist->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(src_tex, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_SOURCE));
+        auto t1 = CD3DX12_RESOURCE_BARRIER::Transition(src_tex, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_SOURCE);
+        auto t2 = CD3DX12_RESOURCE_BARRIER::Transition(src_tex, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COMMON);
+        clist->ResourceBarrier(1, &t1);
         clist->CopyTextureRegion(&dst_region, 0, 0, 0, &src_region, nullptr);
-        clist->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(src_tex, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COMMON));
+        clist->ResourceBarrier(1, &t2);
     });
     if (FAILED(hr)) { return TranslateReturnCode(hr); }
 
@@ -317,9 +319,11 @@ Result GraphicsInterfaceD3D12::writeTexture2D(void *dst_tex_, int width, int hei
         CD3DX12_TEXTURE_COPY_LOCATION dst_region(dst_tex, 0);
         CD3DX12_TEXTURE_COPY_LOCATION src_region(staging.Get(), dst_layout);
 
-        clist->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(dst_tex, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST));
+        auto t1 = CD3DX12_RESOURCE_BARRIER::Transition(dst_tex, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST);
+        auto t2 = CD3DX12_RESOURCE_BARRIER::Transition(dst_tex, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COMMON);
+        clist->ResourceBarrier(1, &t1);
         clist->CopyTextureRegion(&dst_region, 0, 0, 0, &src_region, nullptr);
-        clist->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(dst_tex, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COMMON));
+        clist->ResourceBarrier(1, &t2);
     });
     if (FAILED(hr)) { return TranslateReturnCode(hr); }
 
@@ -389,9 +393,11 @@ void GraphicsInterfaceD3D12::releaseBuffer(void *buf_)
 HRESULT GraphicsInterfaceD3D12::copyResource(ID3D12Resource *dst, ID3D12Resource *src)
 {
     return executeCommands([&](ID3D12GraphicsCommandList *clist) {
-        clist->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(src, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_SOURCE));
+        auto t1 = CD3DX12_RESOURCE_BARRIER::Transition(src, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_SOURCE);
+        auto t2 = CD3DX12_RESOURCE_BARRIER::Transition(src, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COMMON);
+        clist->ResourceBarrier(1, &t1);
         clist->CopyResource(dst, src);
-        clist->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(src, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COMMON));
+        clist->ResourceBarrier(1, &t2);
     });
 }
 
@@ -428,9 +434,11 @@ Result GraphicsInterfaceD3D12::mapBuffer(MapContext& ctx)
             if (staging) {
                 // copy content to staging
                 hr = executeCommands([&](ID3D12GraphicsCommandList *clist) {
-                    clist->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(resource, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_SOURCE));
+                    auto t1 = CD3DX12_RESOURCE_BARRIER::Transition(resource, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_SOURCE);
+                    auto t2 = CD3DX12_RESOURCE_BARRIER::Transition(resource, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COMMON);
+                    clist->ResourceBarrier(1, &t1);
                     clist->CopyResource(staging.Get(), resource);
-                    clist->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(resource, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COMMON));
+                    clist->ResourceBarrier(1, &t2);
                 });
                 if (FAILED(hr)) {
                     staging = nullptr;
@@ -468,9 +476,11 @@ Result GraphicsInterfaceD3D12::unmapBuffer(MapContext& ctx)
         if (ctx.mode == MapMode::Write) {
             // copy content to dest
             executeCommands([&](ID3D12GraphicsCommandList *clist) {
-                clist->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(resource, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST));
+                auto t1 = CD3DX12_RESOURCE_BARRIER::Transition(resource, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST);
+                auto t2 = CD3DX12_RESOURCE_BARRIER::Transition(resource, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COMMON);
+                clist->ResourceBarrier(1, &t1);
                 clist->CopyResource(resource, staging);
-                clist->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(resource, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COMMON));
+                clist->ResourceBarrier(1, &t2);
             });
         }
         if (!ctx.keep_staging_resource) {

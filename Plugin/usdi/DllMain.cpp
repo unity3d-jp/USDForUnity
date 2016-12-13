@@ -6,7 +6,7 @@
 #include "etc/Mono.h"
 #include "etc/MonoWrapper.h"
 
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+BOOL WINAPI DllMain(HINSTANCE /*hinstDLL*/, DWORD fdwReason, LPVOID /*lpvReserved*/)
 {
     if (fdwReason == DLL_PROCESS_ATTACH) {
 //#ifndef usdiEnableMonoThreadGuard

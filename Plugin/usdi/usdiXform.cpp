@@ -35,7 +35,7 @@ static quatf EulerToQuaternion(const float3& euler, UsdGeomXformOp::Type order)
 static float Clamp(float v, float vmin, float vmax) { return std::min<float>(std::max<float>(v, vmin), vmax); }
 static float Saturate(float v) { return Clamp(v, -1.0f, 1.0f); }
 
-static float3 QuaternionToEulerZXY(const quatf& q)
+float3 QuaternionToEulerZXY(const quatf& q)
 {
     float d[] = {
         q.x*q.x, q.x*q.y, q.x*q.z, q.x*q.w,
@@ -222,10 +222,10 @@ void Xform::updateSample(Time t_)
         GfTransform gft;
         gft.SetMatrix(result);
 
-        sample.transform = (const float4x4&)GfMatrix4f(result);
-        sample.position = (const float3&)GfVec3f(gft.GetTranslation());
-        sample.rotation = (const quatf&)GfQuatf(gft.GetRotation().GetQuat());
-        sample.scale = (const float3&)GfVec3f(gft.GetScale());
+        (GfMatrix4f&)sample.transform = GfMatrix4f(result);
+        (GfVec3f&)sample.position = GfVec3f(gft.GetTranslation());
+        (GfQuatf&)sample.rotation = GfQuatf(gft.GetRotation().GetQuat());
+        (GfVec3f&)sample.scale = GfVec3f(gft.GetScale());
     }
 
     int update_flags = 0;

@@ -54,7 +54,7 @@ public:
     const_iterator end() const { return m_data + m_size; }
 
     static void* allocate(size_t size) { return AlignedMalloc(size, Alignment); }
-    static void deallocate(void *addr, size_t size) { AlignedFree(addr); }
+    static void deallocate(void *addr, size_t /*size*/) { AlignedFree(addr); }
 
     void reserve(size_t s)
     {

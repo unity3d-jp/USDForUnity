@@ -88,7 +88,6 @@ void VertexUpdateCommand::map()
 
 void VertexUpdateCommand::copy()
 {
-    auto *ifs = gi::GetGraphicsInterface();
     auto& buf = GetTemporaryBuffer();
 
     if (m_ctx_vb.data_ptr) {
