@@ -40,7 +40,7 @@ namespace usdi {
 
 #include "usdi.h"
 
-#define usdiInvalidTime DBL_MIN
+#define usdiInvalidTime usdiDefaultTime()
 
 namespace usdi {
 

@@ -71,7 +71,8 @@ namespace UTJ
             bool m_captureEveryFrame = true;
             int m_count = 0;
 
-            public bool inherits {
+            public bool inherits
+            {
                 get { return m_inherits; }
                 set { m_inherits = value; }
             }
@@ -85,18 +86,18 @@ namespace UTJ
                 : base(exporter, parent)
             {
                 m_target = target;
-                if(create_usd_node)
+                if (create_usd_node)
                 {
                     m_usd = usdi.usdiCreateXform(ctx, parent.usd, CreateName(target));
                 }
 
-                if(m_target.gameObject.isStatic)
+                if (m_target.gameObject.isStatic)
                 {
                     m_captureEveryFrame = false;
                 }
 
                 var config = target.GetComponent<usdiTransformExportConfig>();
-                if(config)
+                if (config)
                 {
                     m_captureEveryFrame = config.m_captureEveryFrame;
                 }
@@ -106,7 +107,7 @@ namespace UTJ
             {
                 if (m_target == null) { return; }
 
-                if(m_captureEveryFrame || m_count == 0)
+                if (m_captureEveryFrame || m_count == 0)
                 {
                     if (inherits)
                     {
@@ -198,26 +199,24 @@ namespace UTJ
             dst_buf.uvs = capture_uvs ? mesh.uv : null;
 
             Cloth cloth = null;
-            if(smr != null)
+            if (smr != null)
             {
                 cloth = smr.GetComponent<Cloth>();
             }
 
-            if (cloth == null)
-            {
-                dst_buf.vertices = mesh.vertices;
-                dst_buf.normals = capture_normals ? mesh.normals : null;
-            }
-            else
+            if (cloth != null)
             {
                 dst_buf.vertices = cloth.vertices;
                 dst_buf.normals = capture_normals ? cloth.normals : null;
+                dst_buf.tangents = capture_tangents ? mesh.tangents : null;
             }
-            dst_buf.tangents = capture_tangents ? mesh.tangents : null;
-
-            if(capture_weights && smr != null)
+            else if (capture_weights && smr != null && bones != null && bones.Length != 0)
             {
                 var srcMesh = smr.sharedMesh;
+                dst_buf.vertices = srcMesh.vertices;
+                dst_buf.normals = capture_normals ? srcMesh.normals : null;
+                dst_buf.tangents = capture_tangents ? srcMesh.tangents : null;
+
                 dst_buf.weights = srcMesh.boneWeights;
                 dst_buf.bindposes = srcMesh.bindposes;
                 dst_buf.rootBone = rootBone;
@@ -225,10 +224,9 @@ namespace UTJ
             }
             else
             {
-                dst_buf.bindposes = null;
-                dst_buf.weights = null;
-                dst_buf.rootBone = null;
-                dst_buf.bones = null;
+                dst_buf.vertices = mesh.vertices;
+                dst_buf.normals = capture_normals ? mesh.normals : null;
+                dst_buf.tangents = capture_tangents ? mesh.tangents : null;
             }
 
             data = usdi.MeshData.default_value;
@@ -237,7 +235,7 @@ namespace UTJ
                 data.points = usdi.GetArrayPtr(dst_buf.vertices);
                 data.num_points = dst_buf.vertices.Length;
             }
-            if(dst_buf.indices != null)
+            if (dst_buf.indices != null)
             {
                 data.indices = usdi.GetArrayPtr(dst_buf.indices);
                 data.num_indices = dst_buf.indices.Length;
@@ -290,7 +288,7 @@ namespace UTJ
                 m_captureUVs = exporter.m_captureMeshUVs;
 
                 var conf = target.GetComponent<usdiMeshExportConfig>();
-                if(conf != null)
+                if (conf != null)
                 {
                     m_captureNormals = conf.m_captureNormals;
                     m_captureTangents = conf.m_captureTangents;
@@ -306,7 +304,7 @@ namespace UTJ
                 base.Capture(t);
                 if (m_target == null) { return; }
 
-                if(m_captureEveryFrame || m_count == 0)
+                if (m_captureEveryFrame || m_count == 0)
                 {
                     bool captureUV = m_captureUVs && (m_count == 0 || m_captureEveryFrameUV);
                     bool captureIndices = m_count == 0 || m_captureEveryFrameIndices;
@@ -393,13 +391,13 @@ namespace UTJ
                     if (captureBones)
                     {
                         var root = m_exporter.FindNode(m_target.rootBone);
-                        if(root != null)
+                        if (root != null)
                         {
                             rootBoneName = root.capturer.primPath;
                         }
 
                         var bones = m_target.bones;
-                        if(bones != null)
+                        if (bones != null)
                         {
                             boneNames = new string[bones.Length];
                             for (int i = 0; i < bones.Length; ++i)
@@ -451,7 +449,7 @@ namespace UTJ
                 m_target = target;
 
                 var config = target.GetComponent<usdiParticleExportConfig>();
-                if(config != null)
+                if (config != null)
                 {
                     m_captureRotations = config.m_captureRotations;
                 }
@@ -561,7 +559,7 @@ namespace UTJ
         }
 #endif
 
-#endregion
+        #endregion
 
 
         public enum Scope
@@ -650,7 +648,7 @@ namespace UTJ
 
         T[] GetTargets<T>() where T : Component
         {
-            if(m_scope == Scope.CurrentBranch)
+            if (m_scope == Scope.CurrentBranch)
             {
                 return GetComponentsInChildren<T>();
             }
@@ -702,15 +700,15 @@ namespace UTJ
 
         CaptureNode FindNode(Transform t)
         {
-            if(t == null) { return null; }
+            if (t == null) { return null; }
             CaptureNode ret;
-            if(m_captureNodes.TryGetValue(t, out ret)) { return ret; }
+            if (m_captureNodes.TryGetValue(t, out ret)) { return ret; }
             return null;
         }
 
         CaptureNode ConstructTree(Transform trans)
         {
-            if(trans == null) { return null; }
+            if (trans == null) { return null; }
             usdiLog("ConstructTree() : " + trans.name);
 
             // return existing one if found
@@ -773,7 +771,7 @@ namespace UTJ
                 node.capturer = new CustomCapturerHandler(this, parent_capturer, node.trans.GetComponent<usdiCustomComponentCapturer>());
             }
 
-            if(node.capturer != null)
+            if (node.capturer != null)
             {
                 m_capturers.Add(node.capturer);
             }
@@ -821,13 +819,13 @@ namespace UTJ
                     node.componentType = t.GetType();
 
                     // capture bones as well
-                    if(m_captureSkinnedMeshAs == SkinnedMeshCaptureMode.BoneAndWeights)
+                    if (m_captureSkinnedMeshAs == SkinnedMeshCaptureMode.BoneAndWeights)
                     {
-                        if(t.rootBone != null)
+                        if (t.rootBone != null)
                         {
                             bones.Add(t.rootBone);
                         }
-                        if(t.bones != null)
+                        if (t.bones != null)
                         {
                             foreach (var bone in t.bones)
                             {
@@ -856,7 +854,7 @@ namespace UTJ
                 }
             }
 
-            foreach(var t in bones)
+            foreach (var t in bones)
             {
                 var node = ConstructTree(t.GetComponent<Transform>());
                 node.componentType = t.GetType();
@@ -881,14 +879,15 @@ namespace UTJ
 
         public bool BeginCapture()
         {
-            if(m_recording) {
+            if (m_recording)
+            {
                 Debug.Log("usdiExporter: already started");
                 return false;
             }
 
             // create context and open archive
             m_ctx = usdi.usdiCreateContext();
-            if(!usdi.usdiCreateStage(m_ctx, m_outputPath))
+            if (!usdi.usdiCreateStage(m_ctx, m_outputPath))
             {
                 Debug.Log("usdiExporter: failed to create " + m_outputPath);
                 usdi.usdiDestroyContext(m_ctx);
@@ -903,7 +902,7 @@ namespace UTJ
             m_recording = true;
             //m_time = m_conf.startTime;
             m_frameCount = 0;
-    
+
             Debug.Log("usdiExporter: start " + m_outputPath);
             return true;
         }
@@ -969,16 +968,17 @@ namespace UTJ
 
             // kick flush task
 #if UNITY_EDITOR
-            if(m_forceSingleThread)
+            if (m_forceSingleThread)
             {
                 foreach (var c in m_capturers) { c.Flush(time); }
             }
             else
 #endif
             {
-                if(m_asyncFlush == null)
+                if (m_asyncFlush == null)
                 {
-                    m_asyncFlush = new usdi.DelegateTask((var) => {
+                    m_asyncFlush = new usdi.DelegateTask((var) =>
+                    {
                         try
                         {
                             foreach (var c in m_capturers) { c.Flush(m_timeFlush); }
@@ -996,7 +996,7 @@ namespace UTJ
             ++m_frameCount;
 
             // flush to file when needed
-            if(m_flushEveryNthFrames > 0 && m_frameCount % m_flushEveryNthFrames == 0)
+            if (m_flushEveryNthFrames > 0 && m_frameCount % m_flushEveryNthFrames == 0)
             {
                 FlushUSD();
             }
@@ -1004,7 +1004,7 @@ namespace UTJ
             m_elapsed = Time.realtimeSinceStartup - begin_time;
             usdiLog("usdiExporter.ProcessCapture(): " + (m_elapsed * 1000.0f) + "ms");
 
-            if(m_maxCaptureFrame > 0 && m_frameCount >= m_maxCaptureFrame)
+            if (m_maxCaptureFrame > 0 && m_frameCount >= m_maxCaptureFrame)
             {
                 EndCapture();
             }
@@ -1013,7 +1013,7 @@ namespace UTJ
         IEnumerator ProcessRecording()
         {
             yield return new WaitForEndOfFrame();
-            if(!m_recording) { yield break; }
+            if (!m_recording) { yield break; }
 
             ProcessCapture();
         }
@@ -1068,7 +1068,7 @@ namespace UTJ
 
         void Update()
         {
-            if(m_recording)
+            if (m_recording)
             {
                 StartCoroutine(ProcessRecording());
             }

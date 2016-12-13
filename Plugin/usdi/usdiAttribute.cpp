@@ -238,10 +238,9 @@ public:
 
     void updateSample(Time t) override
     {
-        if (t != m_time_prev) {
-            m_time_prev = t;
-            m_usdattr.Get(&m_sample, t);
-        }
+        if (t == m_time_prev) { return; }
+        m_time_prev = t;
+        m_usdattr.Get(&m_sample, t);
     }
 
     bool readSample(AttributeData& dst, Time t, bool copy) override
@@ -269,9 +268,7 @@ public:
 
     bool getImmediate(void *dst, Time t) override
     {
-        updateSample(t);
-        *(T*)dst = m_sample;
-        return true;
+        return m_usdattr.Get((T*)dst, t);
     }
 
     bool setImmediate(const void *src, Time t) override
@@ -307,10 +304,9 @@ public:
 
     void updateSample(Time t) override
     {
-        if (t != m_time_prev) {
-            m_time_prev = t;
-            m_usdattr.Get(&m_sample, t);
-        }
+        if (t == m_time_prev) { return; }
+        m_time_prev = t;
+        m_usdattr.Get(&m_sample, t);
     }
 
     bool readSample(AttributeData& dst, Time t, bool copy) override
@@ -338,9 +334,7 @@ public:
 
     bool getImmediate(void *dst, Time t) override
     {
-        updateSample(t);
-        *(VtArray<V>*)dst = m_sample;
-        return true;
+        return m_usdattr.Get((VtArray<V>*)dst, t);
     }
 
     bool setImmediate(const void *src, Time t) override
@@ -383,11 +377,10 @@ public:
 
     void updateSample(Time t) override
     {
-        if (t != m_time_prev) {
-            m_time_prev = t;
-            m_usdattr.Get(&m_tmp, t);
-            m_sample = T(m_tmp);
-        }
+        if (t == m_time_prev) { return; }
+        m_time_prev = t;
+        m_usdattr.Get(&m_tmp, t);
+        m_sample = T(m_tmp);
     }
 
     bool readSample(AttributeData& dst, Time t, bool copy) override
@@ -415,8 +408,8 @@ public:
 
     bool getImmediate(void *dst, Time t) override
     {
-        updateSample(t);
-        *(T*)dst = m_sample;
+        m_usdattr.Get(&m_tmp, t);
+        *(T*)dst = T(m_tmp);
         return true;
     }
 
@@ -485,11 +478,10 @@ public:
 
     void updateSample(Time t) override
     {
-        if (t != m_time_prev) {
-            m_time_prev = t;
-            m_usdattr.Get(&m_tmp, t);
-            Assign()(m_sample, m_tmp);
-        }
+        if (t == m_time_prev) { return; }
+        m_time_prev = t;
+        m_usdattr.Get(&m_tmp, t);
+        Assign()(m_sample, m_tmp);
     }
 
     bool readSample(AttributeData& dst, Time t, bool copy) override
@@ -517,8 +509,8 @@ public:
 
     bool getImmediate(void *dst, Time t) override
     {
-        updateSample(t);
-        *(T*)dst = m_sample;
+        m_usdattr.Get(&m_tmp, t);
+        Assign()(*(T*)dst, m_tmp);
         return true;
     }
 
