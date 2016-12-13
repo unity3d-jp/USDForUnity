@@ -148,8 +148,11 @@ Attribute* Schema::findAttribute(const char *name) const
 Attribute* Schema::findAttribute(const char *name, AttributeType type) const
 {
     auto *ret = findAttribute(name);
-    auto summary = ret->getSummary();
-    return summary.type == type ? ret : nullptr;
+    if (ret) {
+        auto summary = ret->getSummary();
+        return summary.type == type ? ret : nullptr;
+    }
+    return nullptr;
 }
 
 Attribute* Schema::createAttribute(const char *name, AttributeType type)

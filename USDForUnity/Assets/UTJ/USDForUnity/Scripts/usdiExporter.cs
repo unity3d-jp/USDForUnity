@@ -361,6 +361,7 @@ namespace UTJ
                 m_captureTangents = exporter.m_captureMeshTangents;
                 m_captureUVs = exporter.m_captureMeshUVs;
                 m_captureBones = exporter.m_captureSkinnedMeshAs == SkinnedMeshCaptureMode.BoneAndWeights;
+                m_captureEveryFrame = !m_captureBones;
 
                 var conf = target.GetComponent<usdiMeshExportConfig>();
                 if (conf != null)
@@ -701,6 +702,7 @@ namespace UTJ
 
         CaptureNode FindNode(Transform t)
         {
+            if(t == null) { return null; }
             CaptureNode ret;
             if(m_captureNodes.TryGetValue(t, out ret)) { return ret; }
             return null;
