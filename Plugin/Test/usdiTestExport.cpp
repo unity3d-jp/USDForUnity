@@ -14,40 +14,37 @@ template<class T> void* ToPtr(const T& v) { return (void*)&v; }
 template<class T> void* ToPtr(const T* v) { return (void*)v; }
 
 
+static void AddAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type, const char* v)
+{
+    auto *attr = usdiPrimCreateAttribute(schema, name, type);
+
+    usdi::AttributeData data;
+    data.data = (void*)v;
+    data.num_elements = 1;
+    usdiAttrWriteSample(attr, &data, usdiDefaultTime());
+}
+
 template<class T>
-static void AddAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type, const T& v, int num_samples = 5)
+static void AddAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type, const T& v)
 {
     auto *attr = usdiPrimCreateAttribute(schema, name, type);
 
     usdi::AttributeData data;
     data.data = ToPtr(v);
     data.num_elements = 1;
-    if (num_samples == 1) {
-        usdiAttrWriteSample(attr, &data, usdiDefaultTime());
-    }
-    else {
-        for (int i = 0; i < num_samples; ++i) {
-            usdi::Time t = 1.0 / 30.0 * i;
-            usdiAttrWriteSample(attr, &data, t);
-        }
-    }
+    usdiAttrWriteSample(attr, &data, usdiDefaultTime());
 }
 template<class T, size_t N>
-static void AddAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type, const T (&v)[N], int num_samples = 5)
+static void AddAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type, const T (&v)[N])
 {
     auto *attr = usdiPrimCreateAttribute(schema, name, type);
 
     usdi::AttributeData data;
     data.data = (void*)v;
     data.num_elements = N;
-    if (num_samples == 1) {
-        usdiAttrWriteSample(attr, &data, usdiDefaultTime());
-    }
-    else {
-        for (int i = 0; i < num_samples; ++i) {
-            usdi::Time t = 1.0 / 30.0 * i;
-            usdiAttrWriteSample(attr, &data, t);
-        }
+    for (int i = 0; i < N; ++i) {
+        usdi::Time t = 1.0 / 30.0 * i;
+        usdiAttrWriteSample(attr, &data, t);
     }
 }
 
@@ -76,7 +73,7 @@ static void TestAttributes(usdi::Schema *schema)
     }
     {
         quatf v = { 1.23f, 2.34f, 3.45f, 4.56f };
-        AddAttribute(schema, "quaternion_scalar", usdi::AttributeType::Quaternion, v);
+        AddAttribute(schema, "quatf_scalar", usdi::AttributeType::QuatF, v);
     }
     {
         const char *v = "test_token";
@@ -109,7 +106,7 @@ static void TestAttributes(usdi::Schema *schema)
     }
     {
         quatf v[] = { { 1.23f, 2.34f, 3.45f, 4.56f } ,{ 5.67f, 6.78f, 7.89f, 8.90f } ,{ 9.01f, 0.12f, 1.23f, 2.34f } };
-        AddAttribute(schema, "quaternion_array", usdi::AttributeType::QuaternionArray, v);
+        AddAttribute(schema, "quatf_array", usdi::AttributeType::QuatFArray, v);
     }
     {
         const char *v[] = { "test_token0", "test_token1", "test_token2" };
@@ -214,9 +211,9 @@ void TestExport(const char *filename)
             usdiMeshWriteSample(mesh2, &data, t);
         }
 
-        AddAttribute(mesh2, "TestImageAsset", usdi::AttributeType::Asset, "USDAssets/test.exr", 1);
-        AddAttribute(mesh2, "TestFBXAsset", usdi::AttributeType::Asset, "USDAssets/test.fbx", 1);
-        AddAttribute(mesh2, "TestMDLAsset", usdi::AttributeType::Asset, "USDAssets/test.mdl", 1);
+        AddAttribute(mesh2, "TestImageAsset", usdi::AttributeType::Asset, "USDAssets/test.exr");
+        AddAttribute(mesh2, "TestFBXAsset", usdi::AttributeType::Asset, "USDAssets/test.fbx");
+        AddAttribute(mesh2, "TestMDLAsset", usdi::AttributeType::Asset, "USDAssets/test.mdl");
     }
     {
         auto CreateTestXformTree = [](usdi::Context *ctx, usdi::Schema *parent, std::vector<std::string> names)

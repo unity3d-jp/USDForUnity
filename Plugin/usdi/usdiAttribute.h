@@ -40,6 +40,25 @@ protected:
 
 Attribute* WrapExistingAttribute(Schema *parent, UsdAttribute usd);
 Attribute* WrapExistingAttribute(Schema *parent, const char *name);
-Attribute* CreateNewAttribute(Schema *parent, const char *name, AttributeType type);
+
+template<class T>
+Attribute* CreateAttribute(Schema *parent, const char *name);
+Attribute* CreateAttribute(Schema *parent, const char *name, AttributeType type);
+
+template<class Internal, class External>
+Attribute* CreateWrappedAttribute(Schema *parent, const char *name);
+Attribute* CreateWrappedAttribute(Schema *parent, const char *name, AttributeType internal_type, AttributeType external_type);
+
+
+// custom attribute names
+#define usdiUVAttrName              "primvars:uv"
+#define usdiUVAttrName2             "uv"
+#define usdiTangentAttrName         "tangents"
+#define usdiBoneWeightsAttrName     "boneWeights"
+#define usdiBoneIndicesAttrName     "boneIndices"
+#define usdiBindPosesAttrName       "bindposes"
+#define usdiBonesAttrName           "bones"
+#define usdiRootBoneAttrName        "rootBone"
+#define usdiMaxBoneWeightAttrName   "maxBoneWeights"
 
 } // namespace usdi

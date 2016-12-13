@@ -100,16 +100,6 @@ void MeshSample::clear()
 }
 
 
-#define usdiUVAttrName              "primvars:uv"
-#define usdiUVAttrName2             "uv"
-#define usdiTangentAttrName         "tangents"
-#define usdiBoneWeightsAttrName     "boneWeights"
-#define usdiBoneIndicesAttrName     "boneIndices"
-#define usdiBindPosesAttrName       "bindposes"
-#define usdiBonesAttrName           "bones"
-#define usdiRootBoneAttrName        "rootBone"
-#define usdiMaxBoneWeightAttrName   "maxBoneWeights"
-
 RegisterSchemaHandler(Mesh)
 
 Mesh::Mesh(Context *ctx, Schema *parent, const UsdPrim& prim)

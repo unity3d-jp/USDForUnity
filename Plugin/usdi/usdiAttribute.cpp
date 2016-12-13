@@ -6,50 +6,64 @@
 
 namespace usdi {
 
+// workaround to use comma in macros...
+#define Comma ,
 
 // SdfValueTypeNames has no Matrix2f, Matrix3f, Matrix4f.
 // because of this, store these as Matrix2d, Matrix3d, Matrix4d :(
 #define EachAttributeTypes(Body)\
-    Body(bool, AttributeType::Bool, SdfValueTypeNames->Bool, TAttribute)\
-    Body(byte, AttributeType::Byte, SdfValueTypeNames->UChar, TAttribute)\
-    Body(int, AttributeType::Int, SdfValueTypeNames->Int, TAttribute)\
-    Body(uint, AttributeType::UInt, SdfValueTypeNames->UInt, TAttribute)\
-    Body(float, AttributeType::Float, SdfValueTypeNames->Float, TAttribute)\
-    Body(GfVec2f, AttributeType::Float2, SdfValueTypeNames->Float2, TAttribute)\
-    Body(GfVec3f, AttributeType::Float3, SdfValueTypeNames->Float3, TAttribute)\
-    Body(GfVec4f, AttributeType::Float4, SdfValueTypeNames->Float4, TAttribute)\
-    Body(GfQuatf, AttributeType::Quaternion, SdfValueTypeNames->Quatf, TAttribute)\
-    Body(GfMatrix2f, AttributeType::Float2x2, SdfValueTypeNames->Matrix2d, TAttributeWrapped)\
-    Body(GfMatrix3f, AttributeType::Float3x3, SdfValueTypeNames->Matrix3d, TAttributeWrapped)\
-    Body(GfMatrix4f, AttributeType::Float4x4, SdfValueTypeNames->Matrix4d, TAttributeWrapped)\
-    Body(std::string, AttributeType::String, SdfValueTypeNames->String, TAttribute)\
-    Body(TfToken, AttributeType::Token, SdfValueTypeNames->Token, TAttribute)\
-    Body(SdfAssetPath, AttributeType::Asset, SdfValueTypeNames->Asset, TAttribute)\
-    Body(VtArray<bool>, AttributeType::BoolArray, SdfValueTypeNames->BoolArray, TAttribute)\
-    Body(VtArray<byte>, AttributeType::ByteArray, SdfValueTypeNames->UCharArray, TAttribute)\
-    Body(VtArray<int>, AttributeType::IntArray, SdfValueTypeNames->IntArray, TAttribute)\
-    Body(VtArray<uint>, AttributeType::UIntArray, SdfValueTypeNames->UIntArray, TAttribute)\
-    Body(VtArray<float>, AttributeType::FloatArray, SdfValueTypeNames->FloatArray, TAttribute)\
-    Body(VtArray<GfVec2f>, AttributeType::Float2Array, SdfValueTypeNames->Float2Array, TAttribute)\
-    Body(VtArray<GfVec3f>, AttributeType::Float3Array, SdfValueTypeNames->Float3Array, TAttribute)\
-    Body(VtArray<GfVec4f>, AttributeType::Float4Array, SdfValueTypeNames->Float4Array, TAttribute)\
-    Body(VtArray<GfQuatf>, AttributeType::QuaternionArray, SdfValueTypeNames->QuatfArray, TAttribute)\
-    Body(VtArray<GfMatrix2f>, AttributeType::Float2x2Array, SdfValueTypeNames->Matrix2dArray, TAttributeWrapped)\
-    Body(VtArray<GfMatrix3f>, AttributeType::Float3x3Array, SdfValueTypeNames->Matrix3dArray, TAttributeWrapped)\
-    Body(VtArray<GfMatrix4f>, AttributeType::Float4x4Array, SdfValueTypeNames->Matrix4dArray, TAttributeWrapped)\
-    Body(VtArray<std::string>, AttributeType::StringArray, SdfValueTypeNames->StringArray, TAttribute)\
-    Body(VtArray<TfToken>, AttributeType::TokenArray, SdfValueTypeNames->TokenArray, TAttribute)\
-    Body(VtArray<SdfAssetPath>, AttributeType::AssetArray, SdfValueTypeNames->AssetArray, TAttribute)
-
+    Body(bool, AttributeType::Bool, SdfValueTypeNames->Bool, TAttribute<bool>)\
+    Body(byte, AttributeType::Byte, SdfValueTypeNames->UChar, TAttribute<byte>)\
+    Body(int, AttributeType::Int, SdfValueTypeNames->Int, TAttribute<int>)\
+    Body(uint, AttributeType::UInt, SdfValueTypeNames->UInt, TAttribute<uint>)\
+    Body(half, AttributeType::Half, SdfValueTypeNames->Half, TAttribute<half>)\
+    Body(GfVec2h, AttributeType::Half2, SdfValueTypeNames->Half2, TAttribute<GfVec2h>)\
+    Body(GfVec3h, AttributeType::Half3, SdfValueTypeNames->Half3, TAttribute<GfVec3h>)\
+    Body(GfVec4h, AttributeType::Half4, SdfValueTypeNames->Half4, TAttribute<GfVec4h>)\
+    Body(GfQuath, AttributeType::QuatH, SdfValueTypeNames->Quath, TAttribute<GfQuath>)\
+    Body(float, AttributeType::Float, SdfValueTypeNames->Float, TAttribute<float>)\
+    Body(GfVec2f, AttributeType::Float2, SdfValueTypeNames->Float2, TAttribute<GfVec2f>)\
+    Body(GfVec3f, AttributeType::Float3, SdfValueTypeNames->Float3, TAttribute<GfVec3f>)\
+    Body(GfVec4f, AttributeType::Float4, SdfValueTypeNames->Float4, TAttribute<GfVec4f>)\
+    Body(GfQuatf, AttributeType::QuatF, SdfValueTypeNames->Quatf, TAttribute<GfQuatf>)\
+    Body(GfMatrix2f, AttributeType::Float2x2, SdfValueTypeNames->Matrix2d, TWrappedAttribute<GfMatrix2d Comma GfMatrix2f>)\
+    Body(GfMatrix3f, AttributeType::Float3x3, SdfValueTypeNames->Matrix3d, TWrappedAttribute<GfMatrix3d Comma GfMatrix3f>)\
+    Body(GfMatrix4f, AttributeType::Float4x4, SdfValueTypeNames->Matrix4d, TWrappedAttribute<GfMatrix4d Comma GfMatrix4f>)\
+    Body(std::string, AttributeType::String, SdfValueTypeNames->String, TStringAttribute<std::string>)\
+    Body(TfToken, AttributeType::Token, SdfValueTypeNames->Token, TStringAttribute<TfToken>)\
+    Body(SdfAssetPath, AttributeType::Asset, SdfValueTypeNames->Asset, TStringAttribute<SdfAssetPath>)\
+    Body(VtArray<bool>, AttributeType::BoolArray, SdfValueTypeNames->BoolArray, TArrayAttribute<bool>)\
+    Body(VtArray<byte>, AttributeType::ByteArray, SdfValueTypeNames->UCharArray, TArrayAttribute<byte>)\
+    Body(VtArray<int>, AttributeType::IntArray, SdfValueTypeNames->IntArray, TArrayAttribute<int>)\
+    Body(VtArray<uint>, AttributeType::UIntArray, SdfValueTypeNames->UIntArray, TArrayAttribute<uint>)\
+    Body(VtArray<half>, AttributeType::HalfArray, SdfValueTypeNames->HalfArray, TArrayAttribute<half>)\
+    Body(VtArray<GfVec2h>, AttributeType::Half2Array, SdfValueTypeNames->Half2Array, TArrayAttribute<GfVec2h>)\
+    Body(VtArray<GfVec3h>, AttributeType::Half3Array, SdfValueTypeNames->Half3Array, TArrayAttribute<GfVec3h>)\
+    Body(VtArray<GfVec4h>, AttributeType::Half4Array, SdfValueTypeNames->Half4Array, TArrayAttribute<GfVec4h>)\
+    Body(VtArray<GfQuath>, AttributeType::QuatHArray, SdfValueTypeNames->QuathArray, TArrayAttribute<GfQuath>)\
+    Body(VtArray<float>, AttributeType::FloatArray, SdfValueTypeNames->FloatArray, TArrayAttribute<float>)\
+    Body(VtArray<GfVec2f>, AttributeType::Float2Array, SdfValueTypeNames->Float2Array, TArrayAttribute<GfVec2f>)\
+    Body(VtArray<GfVec3f>, AttributeType::Float3Array, SdfValueTypeNames->Float3Array, TArrayAttribute<GfVec3f>)\
+    Body(VtArray<GfVec4f>, AttributeType::Float4Array, SdfValueTypeNames->Float4Array, TArrayAttribute<GfVec4f>)\
+    Body(VtArray<GfQuatf>, AttributeType::QuatFArray, SdfValueTypeNames->QuatfArray, TArrayAttribute<GfQuatf>)\
+    Body(VtArray<GfMatrix2f>, AttributeType::Float2x2Array, SdfValueTypeNames->Matrix2dArray, TWrappedArrayAttribute<GfMatrix2d Comma GfMatrix2f>)\
+    Body(VtArray<GfMatrix3f>, AttributeType::Float3x3Array, SdfValueTypeNames->Matrix3dArray, TWrappedArrayAttribute<GfMatrix3d Comma GfMatrix3f>)\
+    Body(VtArray<GfMatrix4f>, AttributeType::Float4x4Array, SdfValueTypeNames->Matrix4dArray, TWrappedArrayAttribute<GfMatrix4d Comma GfMatrix4f>)\
+    Body(VtArray<std::string>, AttributeType::StringArray, SdfValueTypeNames->StringArray, TStringArrayAttribute<std::string>)\
+    Body(VtArray<TfToken>, AttributeType::TokenArray, SdfValueTypeNames->TokenArray, TStringArrayAttribute<TfToken>)\
+    Body(VtArray<SdfAssetPath>, AttributeType::AssetArray, SdfValueTypeNames->AssetArray, TStringArrayAttribute<SdfAssetPath>)
 
 template<class T> class TAttribute;
-template<class T> class TAttributeWrapped;
+template<class T> class TArrayAttribute;
+template<class T> class TStringAttribute;
+template<class T> class TStringArrayAttribute;
+template<class InT, class ExT> class TWrappedAttribute;
+template<class InT, class ExT> class TWrappedArrayAttribute;
 template<class T> struct AttrTypeTraits;
 
-#define DefTraits(Type, Enum, Sdf, Template)\
+#define DefTraits(Type, Enum, Sdf, AType)\
     template<> struct AttrTypeTraits<Type> {\
-        using value_type = Type;\
-        using attr_type = Template<Type>;\
+        using attr_type = AType;\
         static const AttributeType type_enum = Enum;\
         static SdfValueTypeName sdf_typename() { return Sdf; }\
     };
@@ -57,110 +71,6 @@ template<class T> struct AttrTypeTraits;
 EachAttributeTypes(DefTraits)
 #undef DefTraits
 
-
-// generic load / store
-template<class T>
-struct AttrArgs
-{
-    static void load(const T& s, void *a, size_t /*n*/) { *(T*)a = s; }
-    static void store(T& s, const void *a, size_t /*n*/) { s = *(const T*)a; }
-    static void* address(T& s) { return &s; }
-};
-template<class V>
-struct AttrArgs<VtArray<V>>
-{
-    static void load(const VtArray<V>& s, void *a, size_t n) {
-        if (!s.empty()) {
-            memcpy(a, &s[0], sizeof(V) * std::min<size_t>(n, s.size()));
-        }
-    }
-    static void store(VtArray<V>& s, const void *a, size_t n) {
-        s.assign((V*)a, (V*)a + n);
-    }
-    static void* address(VtArray<V>& s) { return (void*)s.cdata(); }
-};
-
-
-// specialization for string types
-template<>
-struct AttrArgs<TfToken>
-{
-    static void load(const TfToken& s, void *a, size_t /*n*/) { *(const char**)a = s.GetText(); }
-    static void store(TfToken& s, const void *a, size_t /*n*/) { s = TfToken((const char*)a); }
-    static void* address(TfToken& s) { return (void*)s.GetText(); }
-};
-template<>
-struct AttrArgs<std::string>
-{
-    static void load(const std::string& s, void *a, size_t /*n*/) { *(const char**)a = s.c_str(); }
-    static void store(std::string& s, const void *a, size_t /*n*/) { s = std::string((const char*)a); }
-    static void* address(std::string& s) { return (void*)s.c_str(); }
-};
-template<>
-struct AttrArgs<SdfAssetPath>
-{
-    static void load(const SdfAssetPath& s, void *a, size_t /*n*/) { *(const char**)a = s.GetAssetPath().c_str(); }
-    static void store(SdfAssetPath& s, const void *a, size_t /*n*/) { s = SdfAssetPath((const char*)a); }
-    static void* address(SdfAssetPath& s) { return (void*)s.GetAssetPath().c_str(); }
-};
-
-template<>
-struct AttrArgs<VtArray<TfToken>>
-{
-    static void load(const VtArray<TfToken>& s, void *a, size_t n) {
-        auto dst = (const char**)a;
-        n = std::min<size_t>(n, s.size());
-        for (size_t i = 0; i < n; ++i) {
-            dst[i] = s[i].GetText();
-        }
-    }
-    static void store(VtArray<TfToken>& s, const void *a, size_t n) {
-        auto src = (const char**)a;
-        s.resize(n);
-        for (size_t i = 0; i < n; ++i) {
-            s[i] = TfToken(src[i]);
-        }
-    }
-    static void* address(VtArray<TfToken>& s) { return (void*)s.cdata(); }
-};
-template<>
-struct AttrArgs<VtArray<std::string>>
-{
-    static void load(const VtArray<std::string>& s, void *a, size_t n) {
-        auto dst = (const char**)a;
-        n = std::min<size_t>(n, s.size());
-        for (size_t i = 0; i < n; ++i) {
-            dst[i] = s[i].c_str();
-        }
-    }
-    static void store(VtArray<std::string>& s, const void *a, size_t n) {
-        auto src = (const char**)a;
-        s.resize(n);
-        for (size_t i = 0; i < n; ++i) {
-            s[i] = std::string(src[i]);
-        }
-    }
-    static void* address(VtArray<std::string>& s) { return (void*)s.cdata(); }
-};
-template<>
-struct AttrArgs<VtArray<SdfAssetPath>>
-{
-    static void load(const VtArray<SdfAssetPath>& s, void *a, size_t n) {
-        auto dst = (const char**)a;
-        n = std::min<size_t>(n, s.size());
-        for (size_t i = 0; i < n; ++i) {
-            dst[i] = s[i].GetAssetPath().c_str();
-        }
-    }
-    static void store(VtArray<SdfAssetPath>& s, const void *a, size_t n) {
-        auto src = (const char**)a;
-        s.resize(n);
-        for (size_t i = 0; i < n; ++i) {
-            s[i] = SdfAssetPath(src[i]);
-        }
-    }
-    static void* address(VtArray<SdfAssetPath>& s) { return (void*)s.cdata(); }
-};
 
 
 
@@ -220,21 +130,19 @@ class TAttribute : public Attribute
 {
 typedef Attribute super;
 public:
-    using Traits = AttrTypeTraits<T>;
-    using Args = AttrArgs<T>;
+    using rep_t = T;
 
     TAttribute(Schema *parent, UsdAttribute usdattr)
         : super(parent, usdattr)
     {
-        m_type = Traits::type_enum;
-        usdiLogTrace("Attribute::Attribute(): %s (%s)\n", getName(), getTypeName());
+        m_type = AttrTypeTraits<rep_t>::type_enum;
+        usdiLogTrace("TAttribute::TAttribute(): %s (%s)\n", getName(), getTypeName());
     }
 
     ~TAttribute()
     {
-        usdiLogTrace("Attribute::~Attribute()\n");
+        usdiLogTrace("TAttribute::~TAttribute()\n");
     }
-
 
     void updateSample(Time t) override
     {
@@ -250,56 +158,54 @@ public:
         dst.num_elements = 1;
         if (copy) {
             if (dst.data) {
-                Args::load(m_sample, dst.data, 1);
+                *(rep_t*)dst.data = m_sample;
             }
         }
         else {
-            dst.data = Args::address(m_sample);
+            dst.data = &m_sample;
         }
         return true;
     }
 
     bool writeSample(const AttributeData& src, Time t) override
     {
-        Args::store(m_sample, src.data, src.num_elements);
+        m_sample = *(const rep_t*)src.data;
         m_usdattr.Set(m_sample, t);
         return true;
     }
 
     bool getImmediate(void *dst, Time t) override
     {
-        return m_usdattr.Get((T*)dst, t);
+        return m_usdattr.Get((rep_t*)dst, t);
     }
 
     bool setImmediate(const void *src, Time t) override
     {
-        return m_usdattr.Set(*(const T*)src, t);
+        return m_usdattr.Set(*(const rep_t*)src, t);
     }
 
 private:
-    T m_sample;
+    rep_t m_sample;
 };
 
 // array attribute impl
-template<class V>
-class TAttribute<VtArray<V>> : public Attribute
+template<class T>
+class TArrayAttribute : public Attribute
 {
 typedef Attribute super;
 public:
-    using T = VtArray<V>;
-    using Traits = AttrTypeTraits<T>;
-    using Args = AttrArgs<T>;
+    using rep_t = VtArray<T>;
 
-    TAttribute(Schema *parent, UsdAttribute usdattr)
+    TArrayAttribute(Schema *parent, UsdAttribute usdattr)
         : super(parent, usdattr)
     {
-        m_type = Traits::type_enum;
-        usdiLogTrace("Attribute::Attribute(): %s (%s)\n", getName(), getTypeName());
+        m_type = AttrTypeTraits<rep_t>::type_enum;
+        usdiLogTrace("TArrayAttribute::TArrayAttribute(): %s (%s)\n", getName(), getTypeName());
     }
 
-    ~TAttribute()
+    ~TArrayAttribute()
     {
-        usdiLogTrace("Attribute::~Attribute()\n");
+        usdiLogTrace("TArrayAttribute::~TArrayAttribute()\n");
     }
 
     void updateSample(Time t) override
@@ -316,61 +222,185 @@ public:
         dst.num_elements = (int)m_sample.size();
         if (copy) {
             if (dst.data) {
-                Args::load(m_sample, dst.data, dst.num_elements);
+                size_t n = std::min<size_t>(m_sample.size(), (size_t)dst.num_elements);
+                memcpy(dst.data, m_sample.cdata(), sizeof(T)*n);
             }
         }
         else {
-            dst.data = Args::address(m_sample);
+            dst.data = m_sample.data();
         }
         return true;
     }
 
     bool writeSample(const AttributeData& src, Time t) override
     {
-        Args::store(m_sample, src.data, src.num_elements);
+        m_sample.resize(src.num_elements);
+        memcpy(m_sample.data(), src.data, sizeof(T)*src.num_elements);
         m_usdattr.Set(m_sample, t);
         return true;
     }
 
     bool getImmediate(void *dst, Time t) override
     {
-        return m_usdattr.Get((VtArray<V>*)dst, t);
+        return m_usdattr.Get((rep_t*)dst, t);
     }
 
     bool setImmediate(const void *src, Time t) override
     {
-        return m_usdattr.Set(*(const VtArray<V>*)src, t);
+        return m_usdattr.Set(*(const rep_t*)src, t);
     }
 
 private:
-    VtArray<V> m_sample;
+    rep_t m_sample;
 };
 
 
-template<class T> struct GetStoreType;
-template<> struct GetStoreType<GfMatrix2f> { using type = GfMatrix2d; };
-template<> struct GetStoreType<GfMatrix3f> { using type = GfMatrix3d; };
-template<> struct GetStoreType<GfMatrix4f> { using type = GfMatrix4d; };
-template<> struct GetStoreType<VtArray<GfMatrix2f>> { using type = VtArray<GfMatrix2d>; };
-template<> struct GetStoreType<VtArray<GfMatrix3f>> { using type = VtArray<GfMatrix3d>; };
-template<> struct GetStoreType<VtArray<GfMatrix4f>> { using type = VtArray<GfMatrix4d>; };
+// string attributes impl
+
+template<class T> const char* cstr(const T& v);
+template<> const char* cstr(const std::string& v) { return v.c_str(); }
+template<> const char* cstr(const TfToken& v) { return v.GetText(); }
+template<> const char* cstr(const SdfAssetPath& v) { return v.GetAssetPath().c_str(); }
 
 template<class T>
-class TAttributeWrapped : public Attribute
+class TStringAttribute : public Attribute
 {
 typedef Attribute super;
 public:
-    using Traits = AttrTypeTraits<T>;
-    using StoreT = typename GetStoreType<T>::type;
+    using rep_t = T;
 
-    TAttributeWrapped(Schema *parent, UsdAttribute usdattr)
+    TStringAttribute(Schema *parent, UsdAttribute usdattr)
         : super(parent, usdattr)
     {
-        m_type = Traits::type_enum;
+        m_type = AttrTypeTraits<rep_t>::type_enum;
+        usdiLogTrace("TStringAttribute::TStringAttribute(): %s (%s)\n", getName(), getTypeName());
+    }
+
+    ~TStringAttribute()
+    {
+        usdiLogTrace("TStringAttribute::~TStringAttribute()\n");
+    }
+
+    void updateSample(Time t) override
+    {
+        if (t == m_time_prev) { return; }
+        m_time_prev = t;
+        m_usdattr.Get(&m_sample, t);
+    }
+
+    bool readSample(AttributeData& dst, Time t, bool copy) override
+    {
+        updateSample(t);
+
+        dst.num_elements = 1;
+        *(const char**)dst.data = cstr(m_sample);
+        return true;
+    }
+
+    bool writeSample(const AttributeData& src, Time t) override
+    {
+        m_sample = rep_t((const char*)src.data);
+        m_usdattr.Set(m_sample, t);
+        return true;
+    }
+
+    bool getImmediate(void *dst, Time t) override
+    {
+        return m_usdattr.Get((rep_t*)dst, t);
+    }
+
+    bool setImmediate(const void *src, Time t) override
+    {
+        return m_usdattr.Set(*(const rep_t*)src, t);
+    }
+
+private:
+    rep_t m_sample;
+};
+
+template<class T>
+class TStringArrayAttribute : public Attribute
+{
+typedef Attribute super;
+public:
+    using rep_t = VtArray<T>;
+
+    TStringArrayAttribute(Schema *parent, UsdAttribute usdattr)
+        : super(parent, usdattr)
+    {
+        m_type = AttrTypeTraits<rep_t>::type_enum;
+        usdiLogTrace("TStringArrayAttribute::TStringArrayAttribute(): %s (%s)\n", getName(), getTypeName());
+    }
+
+    ~TStringArrayAttribute()
+    {
+        usdiLogTrace("TStringArrayAttribute::~TStringArrayAttribute()\n");
+    }
+
+    void updateSample(Time t) override
+    {
+        if (t == m_time_prev) { return; }
+        m_time_prev = t;
+        m_usdattr.Get(&m_sample, t);
+
+        m_pointers.resize(m_sample.size());
+        for (size_t i = 0; i < m_sample.size(); ++i) {
+            m_pointers[i] = cstr(m_sample[i]);
+        }
+        m_pointers.push_back(nullptr);
+    }
+
+    bool readSample(AttributeData& dst, Time t, bool copy) override
+    {
+        updateSample(t);
+
+        dst.num_elements = (int)m_sample.size();
+        *(const char***)dst.data = m_pointers.data();
+        return true;
+    }
+
+    bool writeSample(const AttributeData& src, Time t) override
+    {
+        m_sample.resize(src.num_elements);
+        for (int i = 0; i < src.num_elements; ++i) {
+            m_sample[i] = T(((const char**)src.data)[i]);
+        }
+        m_usdattr.Set(m_sample, t);
+        return true;
+    }
+
+    bool getImmediate(void *dst, Time t) override
+    {
+        return m_usdattr.Get((rep_t*)dst, t);
+    }
+
+    bool setImmediate(const void *src, Time t) override
+    {
+        return m_usdattr.Set(*(const rep_t*)src, t);
+    }
+
+private:
+    rep_t m_sample;
+    std::vector<const char*> m_pointers;
+};
+
+
+template<class InT, class ExT>
+class TWrappedAttribute : public Attribute
+{
+typedef Attribute super;
+public:
+    using internal_t = InT;
+    using external_t = ExT;
+
+    TWrappedAttribute(Schema *parent, UsdAttribute usdattr)
+        : super(parent, usdattr)
+    {
+        m_type = AttrTypeTraits<external_t>::type_enum;
         usdiLogTrace("TAttributeWrapped::TAttributeWrapped(): %s (%s)\n", getName(), getTypeName());
     }
 
-    ~TAttributeWrapped()
+    ~TWrappedAttribute()
     {
         usdiLogTrace("TAttributeWrapped::~TAttributeWrapped()\n");
     }
@@ -380,7 +410,7 @@ public:
         if (t == m_time_prev) { return; }
         m_time_prev = t;
         m_usdattr.Get(&m_tmp, t);
-        m_sample = T(m_tmp);
+        m_sample = external_t(m_tmp);
     }
 
     bool readSample(AttributeData& dst, Time t, bool copy) override
@@ -390,7 +420,7 @@ public:
         dst.num_elements = 1;
         if (copy) {
             if (dst.data) {
-                *(T*)dst.data = m_sample;
+                *(external_t*)dst.data = m_sample;
             }
         }
         else {
@@ -401,7 +431,7 @@ public:
 
     bool writeSample(const AttributeData& src, Time t) override
     {
-        m_tmp = StoreT(*(const T*)src.data);
+        m_tmp = internal_t(*(const external_t*)src.data);
         m_usdattr.Set(m_tmp, t);
         return true;
     }
@@ -409,19 +439,19 @@ public:
     bool getImmediate(void *dst, Time t) override
     {
         m_usdattr.Get(&m_tmp, t);
-        *(T*)dst = T(m_tmp);
+        *(external_t*)dst = external_t(m_tmp);
         return true;
     }
 
     bool setImmediate(const void *src, Time t) override
     {
-        m_tmp = StoreT(*(T*)src);
+        m_tmp = internal_t(*(external_t*)src);
         return m_usdattr.Set(m_tmp, t);
     }
 
 private:
-    StoreT m_tmp;
-    T m_sample;
+    internal_t m_tmp;
+    external_t m_sample;
 };
 
 
@@ -453,26 +483,28 @@ struct TAssigner
     }
 };
 
-template<class V>
-class TAttributeWrapped<VtArray<V>> : public Attribute
+template<class InT, class ExT>
+class TWrappedArrayAttribute : public Attribute
 {
 typedef Attribute super;
 public:
-    using T = VtArray<V>;
-    using Traits = AttrTypeTraits<T>;
-    using StoreT = typename GetStoreType<T>::type;
-    using Assign = TAssigner<V, typename StoreT::value_type>;
+    using internal_t = InT;
+    using external_t = ExT;
+    using internal_array = VtArray<internal_t>;
+    using external_array = VtArray<external_t>;
 
-    TAttributeWrapped(Schema *parent, UsdAttribute usdattr)
+    using Assign = TAssigner<external_t, internal_t>;
+
+    TWrappedArrayAttribute(Schema *parent, UsdAttribute usdattr)
         : super(parent, usdattr)
     {
-        m_type = Traits::type_enum;
-        usdiLogTrace("TAttributeWrapped::TAttributeWrapped(): %s (%s)\n", getName(), getTypeName());
+        m_type = AttrTypeTraits<external_array>::type_enum;
+        usdiLogTrace("TWrappedArrayAttribute::TWrappedArrayAttribute(): %s (%s)\n", getName(), getTypeName());
     }
 
-    ~TAttributeWrapped()
+    ~TWrappedArrayAttribute()
     {
-        usdiLogTrace("TAttributeWrapped::~TAttributeWrapped()\n");
+        usdiLogTrace("TWrappedArrayAttribute::~TWrappedArrayAttribute()\n");
     }
 
 
@@ -488,10 +520,10 @@ public:
     {
         updateSample(t);
 
-        dst.num_elements = 1;
+        dst.num_elements = (int)m_sample.size();
         if (copy) {
             if (dst.data) {
-                Assign()((V*)dst.data, (size_t)dst.num_elements, m_sample);
+                Assign()((external_t*)dst.data, (size_t)dst.num_elements, m_sample);
             }
         }
         else {
@@ -502,7 +534,7 @@ public:
 
     bool writeSample(const AttributeData& src, Time t) override
     {
-        Assign()(m_tmp, (const V*)src.data, (size_t)src.num_elements);
+        Assign()(m_tmp, (const external_t*)src.data, (size_t)src.num_elements);
         m_usdattr.Set(m_tmp, t);
         return true;
     }
@@ -510,19 +542,19 @@ public:
     bool getImmediate(void *dst, Time t) override
     {
         m_usdattr.Get(&m_tmp, t);
-        Assign()(*(T*)dst, m_tmp);
+        Assign()(*(external_array*)dst, m_tmp);
         return true;
     }
 
     bool setImmediate(const void *src, Time t) override
     {
-        Assign()(m_tmp, *(T*)src);
+        Assign()(m_tmp, *(external_array*)src);
         return m_usdattr.Set(m_tmp, t);
     }
 
 private:
-    StoreT m_tmp;
-    T m_sample;
+    internal_array m_tmp;
+    external_array m_sample;
 };
 
 Attribute* WrapExistingAttribute(Schema *parent, UsdAttribute usd)
@@ -530,19 +562,31 @@ Attribute* WrapExistingAttribute(Schema *parent, UsdAttribute usd)
     if (!usd) { return nullptr; }
 
     auto tname = usd.GetTypeName();
-#define Def(Type, Enum, Sdf, Template) if(tname == Sdf) { return new Template<Type>(parent, usd); }
+#define Def(Type, Enum, Sdf, AType) if(tname == Sdf) { return new AType(parent, usd); }
     EachAttributeTypes(Def)
 #undef Def
 
-#define Reinterpret(Sdf, Type) if (tname == SdfValueTypeNames->Sdf) { return new TAttribute<Type>(parent, usd); }
-    Reinterpret(Vector3f, GfVec3f)
-    Reinterpret(Normal3f, GfVec3f)
-    Reinterpret(Point3f, GfVec3f)
-    Reinterpret(Color3f, GfVec3f)
-    Reinterpret(Vector3fArray, VtArray<GfVec3f>)
-    Reinterpret(Normal3fArray, VtArray<GfVec3f>)
-    Reinterpret(Point3fArray, VtArray<GfVec3f>)
-    Reinterpret(Color3fArray, VtArray<GfVec3f>)
+#define Reinterpret(Sdf, AttrType) if (tname == SdfValueTypeNames->Sdf) { return new AttrType(parent, usd); }
+    Reinterpret(Vector3h, TAttribute<GfVec3h>)
+    Reinterpret(Normal3h, TAttribute<GfVec3h>)
+    Reinterpret(Point3h,  TAttribute<GfVec3h>)
+    Reinterpret(Color3h,  TAttribute<GfVec3h>)
+    Reinterpret(Color4h,  TAttribute<GfVec4h>)
+    Reinterpret(Vector3f, TAttribute<GfVec3f>)
+    Reinterpret(Normal3f, TAttribute<GfVec3f>)
+    Reinterpret(Point3f,  TAttribute<GfVec3f>)
+    Reinterpret(Color3f,  TAttribute<GfVec3f>)
+    Reinterpret(Color4f,  TAttribute<GfVec4f>)
+    Reinterpret(Vector3hArray, TArrayAttribute<GfVec3h>)
+    Reinterpret(Normal3hArray, TArrayAttribute<GfVec3h>)
+    Reinterpret(Point3hArray,  TArrayAttribute<GfVec3h>)
+    Reinterpret(Color3hArray,  TArrayAttribute<GfVec3h>)
+    Reinterpret(Color4hArray,  TArrayAttribute<GfVec4h>)
+    Reinterpret(Vector3fArray, TArrayAttribute<GfVec3f>)
+    Reinterpret(Normal3fArray, TArrayAttribute<GfVec3f>)
+    Reinterpret(Point3fArray,  TArrayAttribute<GfVec3f>)
+    Reinterpret(Color3fArray,  TArrayAttribute<GfVec3f>)
+    Reinterpret(Color4fArray,  TArrayAttribute<GfVec4f>)
 #undef Reinterpret
 
     usdiLogInfo("failed to interpret attribute: %s (%s)\n", usd.GetName().GetText(), usd.GetTypeName().GetAsToken().GetText());
@@ -552,21 +596,22 @@ Attribute* WrapExistingAttribute(Schema *parent, UsdAttribute usd)
 Attribute* WrapExistingAttribute(Schema *parent, const char *name)
 {
     UsdAttribute usd = parent->getUsdPrim().GetAttribute(TfToken(name));
+    if (!usd) { return nullptr; }
     return WrapExistingAttribute(parent, usd);
 }
 
 template<class T>
-static Attribute* CreateNewAttribute(Schema *parent, const char *name)
+Attribute* CreateAttribute(Schema *parent, const char *name)
 {
     UsdAttribute usd = parent->getUsdPrim().CreateAttribute(TfToken(name), AttrTypeTraits<T>::sdf_typename());
     if (!usd) { return nullptr; }
     return new AttrTypeTraits<T>::attr_type(parent, usd);
 }
 
-Attribute* CreateNewAttribute(Schema *parent, const char *name, AttributeType type)
+Attribute* CreateAttribute(Schema *parent, const char *name, AttributeType type)
 {
     switch (type) {
-#define Def(Type, Enum, Sdf, Template) case Enum: return CreateNewAttribute<Type>(parent, name);
+#define Def(Type, Enum, Sdf, AType) case Enum: return CreateAttribute<Type>(parent, name);
         EachAttributeTypes(Def)
 #undef Def
     }
@@ -575,9 +620,37 @@ Attribute* CreateNewAttribute(Schema *parent, const char *name, AttributeType ty
     return nullptr;
 }
 
-#define Def(Type, Enum, Sdf, Template) template class Template<Type>;
+#define Def(Type, Enum, Sdf, AType) template class AType;
 EachAttributeTypes(Def)
 #undef Def
+
+
+// wrapped attribute
+
+template<class Internal, class External>
+struct WrappedAttributeFactory
+{
+    static Attribute* create(Schema *parent, UsdAttribute usd)
+    {
+        return new TWrappedAttribute<Internal, External>(parent, usd);
+    }
+};
+template<class Internal, class External>
+struct WrappedAttributeFactory<VtArray<Internal>, VtArray<External>>
+{
+    static Attribute* create(Schema *parent, UsdAttribute usd)
+    {
+        return new TWrappedArrayAttribute<Internal, External>(parent, usd);
+    }
+};
+
+template<class Internal, class External>
+Attribute* CreateWrappedAttribute(Schema *parent, const char *name)
+{
+    UsdAttribute usd = parent->getUsdPrim().CreateAttribute(TfToken(name), AttrTypeTraits<Internal>::sdf_typename());
+    if (!usd) { return nullptr; }
+    return WrappedAttributeFactory::create(parent, usd);
+}
 
 
 } // namespace usdi

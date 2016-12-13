@@ -159,7 +159,7 @@ Attribute* Schema::createAttribute(const char *name, AttributeType type)
 {
     if (auto *f = findAttribute(name)) { return f; }
 
-    if (auto *c = CreateNewAttribute(this, name, type)) {
+    if (auto *c = CreateAttribute(this, name, type)) {
         m_attributes.emplace_back(c);
         return c;
     }

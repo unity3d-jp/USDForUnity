@@ -11,15 +11,24 @@ using usdi::float4;
 using usdi::quatf;
 
 template<class T> void P(T v);
-template<> void P<byte>(byte v) { printf("0x%02X", v); }
-template<> void P<int>(int v) { printf("%d", v); }
-template<> void P<uint>(uint v) { printf("%u", v); }
-template<> void P<float>(float v) { printf("%.3f", v); }
-template<> void P<float2>(float2 v) { printf("(%.3f, %.3f)", v.x, v.y); }
-template<> void P<float3>(float3 v) { printf("(%.3f, %.3f, %.3f)", v.x, v.y, v.z); }
-template<> void P<float4>(float4 v) { printf("(%.3f, %.3f, %.3f, %.3f)", v.x, v.y, v.z, v.w); }
-template<> void P<quatf>(quatf v) { printf("(%.3f, %.3f, %.3f, %.3f)", v.x, v.y, v.z, v.w); }
-template<> void P<const char*>(const char* v) { printf("\"%s\"", v); }
+template<> void P(byte v) { printf("0x%02X", v); }
+template<> void P(int v) { printf("%d", v); }
+template<> void P(uint v) { printf("%u", v); }
+template<> void P(float v) { printf("%.3f", v); }
+template<> void P(float2 v) { printf("(%.3f, %.3f)", v.x, v.y); }
+template<> void P(float3 v) { printf("(%.3f, %.3f, %.3f)", v.x, v.y, v.z); }
+template<> void P(float4 v) { printf("(%.3f, %.3f, %.3f, %.3f)", v.x, v.y, v.z, v.w); }
+template<> void P(quatf v) { printf("(%.3f, %.3f, %.3f, %.3f)", v.x, v.y, v.z, v.w); }
+template<> void P(const char* v) { printf("\"%s\"", v); }
+
+template<> void P(const char** v)
+{
+    for (int i = 0; ; ++i) {
+        if (!v[i]) { break; }
+        if (i > 0) { printf(", "); }
+        printf("\"%s\"", v[i]);
+    }
+}
 
 
 template<class T>
@@ -39,7 +48,7 @@ static void InspectAttribute(usdi::Attribute *attr)
 
     usdi::Time t = 0.0;
 
-#define ImplScalar(Enum, Type)\
+#define PScalar(Enum, Type)\
     case usdi::AttributeType::Enum:\
     {\
         Type buf;\
@@ -49,8 +58,8 @@ static void InspectAttribute(usdi::Attribute *attr)
         break;\
     }
 
-#define ImplVector(Enum, Type)\
-    case usdi::AttributeType::Enum##Array:\
+#define PVector(Enum, Type)\
+    case usdi::AttributeType::Enum:\
     {\
         std::vector<Type> buf;\
         usdi::AttributeData data;\
@@ -63,40 +72,39 @@ static void InspectAttribute(usdi::Attribute *attr)
         break;\
     }
 
-
     usdi::AttributeSummary summary;
     usdiAttrGetSummary(attr, &summary);
     printf("    %s (%s): ", usdiAttrGetName(attr), usdiAttrGetTypeName(attr));
 
 
     switch (summary.type) {
-        ImplScalar(Byte, byte);
-        ImplScalar(Int, int);
-        ImplScalar(UInt, uint);
-        ImplScalar(Float, float);
-        ImplScalar(Float2, float2);
-        ImplScalar(Float3, float3);
-        ImplScalar(Float4, float4);
-        ImplScalar(Quaternion, quatf);
-        ImplScalar(Token, const char*);
-        ImplScalar(String, const char*);
-        ImplScalar(Asset, const char*);
+        PScalar(Byte, byte);
+        PScalar(Int, int);
+        PScalar(UInt, uint);
+        PScalar(Float, float);
+        PScalar(Float2, float2);
+        PScalar(Float3, float3);
+        PScalar(Float4, float4);
+        PScalar(QuatF, quatf);
+        PScalar(Token, const char*);
+        PScalar(String, const char*);
+        PScalar(Asset, const char*);
 
-        ImplVector(Byte, byte);
-        ImplVector(Int, int);
-        ImplVector(UInt, uint);
-        ImplVector(Float, float);
-        ImplVector(Float2, float2);
-        ImplVector(Float3, float3);
-        ImplVector(Float4, float4);
-        ImplVector(Quaternion, quatf);
-        ImplVector(Token, const char*);
-        ImplVector(String, const char*);
-        ImplVector(Asset, const char*);
+        PVector(ByteArray, byte);
+        PVector(IntArray, int);
+        PVector(UIntArray, uint);
+        PVector(FloatArray, float);
+        PVector(Float2Array, float2);
+        PVector(Float3Array, float3);
+        PVector(Float4Array, float4);
+        PVector(QuatFArray, quatf);
+        PScalar(TokenArray, const char**);
+        PScalar(StringArray, const char**);
+        PScalar(AssetArray, const char**);
     }
 
-#undef ImplScalar
-#undef ImplVector
+#undef PScalar
+#undef PVector
 
     printf("\n");
 }

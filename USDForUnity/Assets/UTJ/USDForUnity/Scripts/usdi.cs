@@ -61,14 +61,20 @@ namespace UTJ
         {
             Unknown,
             Bool, Byte, Int, UInt,
-            Float, Float2, Float3, Float4, Quaternion,
+            Half, Half2, Half3, Half4, QuatH,
+            Float, Float2, Float3, Float4, QuatF,
+            Double, Double2, Double3, Double4, QuatD,
             Float2x2, Float3x3, Float4x4,
+            Double2x2, Double3x3, Double4x4,
             String, Token, Asset,
 
             UnknownArray = 0x100,
             BoolArray, ByteArray, IntArray, UIntArray,
-            FloatArray, Float2Array, Float3Array, Float4Array, QuaternionArray,
+            HalfArray, Half2Array, Half3Array, Half4Array, QuatHArray,
+            FloatArray, Float2Array, Float3Array, Float4Array, QuatFArray,
+            DoubleArray, Double2Array, Double3Array, Double4Array, QuatDArray,
             Float2x2Array, Float3x3Array, Float4x4Array,
+            Double2x2Array, Double3x3Array, Double4x4Array,
             StringArray, TokenArray, AssetArray,
         };
 
