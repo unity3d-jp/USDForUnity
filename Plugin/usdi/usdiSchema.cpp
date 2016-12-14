@@ -147,21 +147,52 @@ Attribute* Schema::findAttribute(const char *name) const
 }
 Attribute* Schema::findAttribute(const char *name, AttributeType type) const
 {
-    auto *ret = findAttribute(name);
-    if (ret) {
-        auto summary = ret->getSummary();
-        return summary.type == type ? ret : nullptr;
+    for (const auto& a : m_attributes) {
+        if (strcmp(a->getName(), name) == 0) {
+            if (a->getType() == type) {
+                return a.get();
+            }
+            else {
+                return a->findOrCreateConverter(type);
+            }
+        }
     }
     return nullptr;
 }
 
 Attribute* Schema::createAttribute(const char *name, AttributeType type)
 {
-    if (auto *f = findAttribute(name)) { return f; }
+    if (auto *f = findAttribute(name, type)) {
+        return f;
+    }
+
+    switch (type) {
+        // USD doesn't support these types. use emulation (conversion) to support.
+#define Forward(ExT, InT) case ExT: return createAttribute(name, ExT, InT)
+        Forward(AttributeType::Float2x2, AttributeType::Double2x2);
+        Forward(AttributeType::Float3x3, AttributeType::Double3x3);
+        Forward(AttributeType::Float4x4, AttributeType::Double4x4);
+        Forward(AttributeType::Float2x2Array, AttributeType::Double2x2Array);
+        Forward(AttributeType::Float3x3Array, AttributeType::Double3x3Array);
+        Forward(AttributeType::Float4x4Array, AttributeType::Double4x4Array);
+#undef Forward
+    }
 
     if (auto *c = CreateAttribute(this, name, type)) {
         m_attributes.emplace_back(c);
         return c;
+    }
+    return nullptr;
+}
+Attribute* Schema::createAttribute(const char *name, AttributeType type, AttributeType internal_type)
+{
+    if (auto *f = findAttribute(name, type)) {
+        return f;
+    }
+
+    if (auto *c = CreateAttribute(this, name, internal_type)) {
+        m_attributes.emplace_back(c);
+        return c->findOrCreateConverter(type);
     }
     return nullptr;
 }

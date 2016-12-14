@@ -361,17 +361,19 @@ usdiAPI usdi::Attribute* usdiPrimGetAttribute(usdi::Schema *schema, int i)
     if (!schema) { return nullptr; }
     return schema->getAttribute(i);
 }
-usdiAPI usdi::Attribute* usdiPrimFindAttribute(usdi::Schema *schema, const char *name)
+usdiAPI usdi::Attribute* usdiPrimFindAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type)
 {
     usdiTraceFunc();
     if (!schema) { return nullptr; }
-    return schema->findAttribute(name);
+    return type == usdi::AttributeType::Unknown ?
+        schema->findAttribute(name) : schema->findAttribute(name, type);
 }
-usdiAPI usdi::Attribute* usdiPrimCreateAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type)
+usdiAPI usdi::Attribute* usdiPrimCreateAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type, usdi::AttributeType internal_type)
 {
     usdiTraceFunc();
     if (!schema) { return nullptr; }
-    return schema->createAttribute(name, type);
+    return internal_type == usdi::AttributeType::Unknown ?
+        schema->createAttribute(name, type) : schema->createAttribute(name, type, internal_type);
 }
 
 usdiAPI int usdiPrimGetNumVariantSets(usdi::Schema *schema)

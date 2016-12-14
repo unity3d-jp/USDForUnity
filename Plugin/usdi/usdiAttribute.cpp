@@ -26,39 +26,44 @@ namespace usdi {
     Body(GfVec3f, AttributeType::Float3, SdfValueTypeNames->Float3, TAttribute<GfVec3f>)\
     Body(GfVec4f, AttributeType::Float4, SdfValueTypeNames->Float4, TAttribute<GfVec4f>)\
     Body(GfQuatf, AttributeType::QuatF, SdfValueTypeNames->Quatf, TAttribute<GfQuatf>)\
-    Body(GfMatrix2f, AttributeType::Float2x2, SdfValueTypeNames->Matrix2d, TWrappedAttribute<GfMatrix2d Comma GfMatrix2f>)\
-    Body(GfMatrix3f, AttributeType::Float3x3, SdfValueTypeNames->Matrix3d, TWrappedAttribute<GfMatrix3d Comma GfMatrix3f>)\
-    Body(GfMatrix4f, AttributeType::Float4x4, SdfValueTypeNames->Matrix4d, TWrappedAttribute<GfMatrix4d Comma GfMatrix4f>)\
+    Body(GfVec2d, AttributeType::Double2, SdfValueTypeNames->Double2, TAttribute<GfVec2d>)\
+    Body(GfVec3d, AttributeType::Double3, SdfValueTypeNames->Double3, TAttribute<GfVec3d>)\
+    Body(GfVec4d, AttributeType::Double4, SdfValueTypeNames->Double4, TAttribute<GfVec4d>)\
+    Body(GfQuatd, AttributeType::QuatD, SdfValueTypeNames->Quatd, TAttribute<GfQuatd>)\
+    Body(GfMatrix2d, AttributeType::Double2x2, SdfValueTypeNames->Matrix2d, TAttribute<GfMatrix2d>)\
+    Body(GfMatrix3d, AttributeType::Double3x3, SdfValueTypeNames->Matrix3d, TAttribute<GfMatrix3d>)\
+    Body(GfMatrix4d, AttributeType::Double4x4, SdfValueTypeNames->Matrix4d, TAttribute<GfMatrix4d>)\
     Body(std::string, AttributeType::String, SdfValueTypeNames->String, TStringAttribute<std::string>)\
     Body(TfToken, AttributeType::Token, SdfValueTypeNames->Token, TStringAttribute<TfToken>)\
     Body(SdfAssetPath, AttributeType::Asset, SdfValueTypeNames->Asset, TStringAttribute<SdfAssetPath>)\
-    Body(VtArray<bool>, AttributeType::BoolArray, SdfValueTypeNames->BoolArray, TArrayAttribute<bool>)\
-    Body(VtArray<byte>, AttributeType::ByteArray, SdfValueTypeNames->UCharArray, TArrayAttribute<byte>)\
-    Body(VtArray<int>, AttributeType::IntArray, SdfValueTypeNames->IntArray, TArrayAttribute<int>)\
-    Body(VtArray<uint>, AttributeType::UIntArray, SdfValueTypeNames->UIntArray, TArrayAttribute<uint>)\
-    Body(VtArray<half>, AttributeType::HalfArray, SdfValueTypeNames->HalfArray, TArrayAttribute<half>)\
-    Body(VtArray<GfVec2h>, AttributeType::Half2Array, SdfValueTypeNames->Half2Array, TArrayAttribute<GfVec2h>)\
-    Body(VtArray<GfVec3h>, AttributeType::Half3Array, SdfValueTypeNames->Half3Array, TArrayAttribute<GfVec3h>)\
-    Body(VtArray<GfVec4h>, AttributeType::Half4Array, SdfValueTypeNames->Half4Array, TArrayAttribute<GfVec4h>)\
-    Body(VtArray<GfQuath>, AttributeType::QuatHArray, SdfValueTypeNames->QuathArray, TArrayAttribute<GfQuath>)\
-    Body(VtArray<float>, AttributeType::FloatArray, SdfValueTypeNames->FloatArray, TArrayAttribute<float>)\
-    Body(VtArray<GfVec2f>, AttributeType::Float2Array, SdfValueTypeNames->Float2Array, TArrayAttribute<GfVec2f>)\
-    Body(VtArray<GfVec3f>, AttributeType::Float3Array, SdfValueTypeNames->Float3Array, TArrayAttribute<GfVec3f>)\
-    Body(VtArray<GfVec4f>, AttributeType::Float4Array, SdfValueTypeNames->Float4Array, TArrayAttribute<GfVec4f>)\
-    Body(VtArray<GfQuatf>, AttributeType::QuatFArray, SdfValueTypeNames->QuatfArray, TArrayAttribute<GfQuatf>)\
-    Body(VtArray<GfMatrix2f>, AttributeType::Float2x2Array, SdfValueTypeNames->Matrix2dArray, TWrappedArrayAttribute<GfMatrix2d Comma GfMatrix2f>)\
-    Body(VtArray<GfMatrix3f>, AttributeType::Float3x3Array, SdfValueTypeNames->Matrix3dArray, TWrappedArrayAttribute<GfMatrix3d Comma GfMatrix3f>)\
-    Body(VtArray<GfMatrix4f>, AttributeType::Float4x4Array, SdfValueTypeNames->Matrix4dArray, TWrappedArrayAttribute<GfMatrix4d Comma GfMatrix4f>)\
-    Body(VtArray<std::string>, AttributeType::StringArray, SdfValueTypeNames->StringArray, TStringArrayAttribute<std::string>)\
-    Body(VtArray<TfToken>, AttributeType::TokenArray, SdfValueTypeNames->TokenArray, TStringArrayAttribute<TfToken>)\
-    Body(VtArray<SdfAssetPath>, AttributeType::AssetArray, SdfValueTypeNames->AssetArray, TStringArrayAttribute<SdfAssetPath>)
+    Body(VtArray<bool>, AttributeType::BoolArray, SdfValueTypeNames->BoolArray, TAttribute<VtArray<bool>>)\
+    Body(VtArray<byte>, AttributeType::ByteArray, SdfValueTypeNames->UCharArray, TAttribute<VtArray<byte>>)\
+    Body(VtArray<int>, AttributeType::IntArray, SdfValueTypeNames->IntArray, TAttribute<VtArray<int>>)\
+    Body(VtArray<uint>, AttributeType::UIntArray, SdfValueTypeNames->UIntArray, TAttribute<VtArray<uint>>)\
+    Body(VtArray<half>, AttributeType::HalfArray, SdfValueTypeNames->HalfArray, TAttribute<VtArray<half>>)\
+    Body(VtArray<GfVec2h>, AttributeType::Half2Array, SdfValueTypeNames->Half2Array, TAttribute<VtArray<GfVec2h>>)\
+    Body(VtArray<GfVec3h>, AttributeType::Half3Array, SdfValueTypeNames->Half3Array, TAttribute<VtArray<GfVec3h>>)\
+    Body(VtArray<GfVec4h>, AttributeType::Half4Array, SdfValueTypeNames->Half4Array, TAttribute<VtArray<GfVec4h>>)\
+    Body(VtArray<GfQuath>, AttributeType::QuatHArray, SdfValueTypeNames->QuathArray, TAttribute<VtArray<GfQuath>>)\
+    Body(VtArray<float>, AttributeType::FloatArray, SdfValueTypeNames->FloatArray, TAttribute<VtArray<float>>)\
+    Body(VtArray<GfVec2f>, AttributeType::Float2Array, SdfValueTypeNames->Float2Array, TAttribute<VtArray<GfVec2f>>)\
+    Body(VtArray<GfVec3f>, AttributeType::Float3Array, SdfValueTypeNames->Float3Array, TAttribute<VtArray<GfVec3f>>)\
+    Body(VtArray<GfVec4f>, AttributeType::Float4Array, SdfValueTypeNames->Float4Array, TAttribute<VtArray<GfVec4f>>)\
+    Body(VtArray<GfQuatf>, AttributeType::QuatFArray, SdfValueTypeNames->QuatfArray, TAttribute<VtArray<GfQuatf>>)\
+    Body(VtArray<GfVec2d>, AttributeType::Double2Array, SdfValueTypeNames->Double2Array, TAttribute<VtArray<GfVec2d>>)\
+    Body(VtArray<GfVec3d>, AttributeType::Double3Array, SdfValueTypeNames->Double3Array, TAttribute<VtArray<GfVec3d>>)\
+    Body(VtArray<GfVec4d>, AttributeType::Double4Array, SdfValueTypeNames->Double4Array, TAttribute<VtArray<GfVec4d>>)\
+    Body(VtArray<GfQuatd>, AttributeType::QuatDArray, SdfValueTypeNames->QuatdArray, TAttribute<VtArray<GfQuatd>>)\
+    Body(VtArray<GfMatrix2d>, AttributeType::Double2x2Array, SdfValueTypeNames->Matrix2dArray, TAttribute<VtArray<GfMatrix2d>>)\
+    Body(VtArray<GfMatrix3d>, AttributeType::Double3x3Array, SdfValueTypeNames->Matrix3dArray, TAttribute<VtArray<GfMatrix3d>>)\
+    Body(VtArray<GfMatrix4d>, AttributeType::Double4x4Array, SdfValueTypeNames->Matrix4dArray, TAttribute<VtArray<GfMatrix4d>>)\
+    Body(VtArray<std::string>, AttributeType::StringArray, SdfValueTypeNames->StringArray, TStringAttribute<VtArray<std::string>>)\
+    Body(VtArray<TfToken>, AttributeType::TokenArray, SdfValueTypeNames->TokenArray, TStringAttribute<VtArray<TfToken>>)\
+    Body(VtArray<SdfAssetPath>, AttributeType::AssetArray, SdfValueTypeNames->AssetArray, TStringAttribute<VtArray<SdfAssetPath>>)
 
 template<class T> class TAttribute;
-template<class T> class TArrayAttribute;
 template<class T> class TStringAttribute;
-template<class T> class TStringArrayAttribute;
-template<class InT, class ExT> class TWrappedAttribute;
-template<class InT, class ExT> class TWrappedArrayAttribute;
+template<class T, class InT> class TConverterAttribute;
 template<class T> struct AttrTypeTraits;
 
 #define DefTraits(Type, Enum, Sdf, AType)\
@@ -67,11 +72,20 @@ template<class T> struct AttrTypeTraits;
         static const AttributeType type_enum = Enum;\
         static SdfValueTypeName sdf_typename() { return Sdf; }\
     };
-
 EachAttributeTypes(DefTraits)
 #undef DefTraits
 
-
+#define DefTraits(Type, Enum)\
+    template<> struct AttrTypeTraits<Type> {\
+        static const AttributeType type_enum = Enum;\
+    };
+DefTraits(GfMatrix2f, AttributeType::Float2x2)
+DefTraits(GfMatrix3f, AttributeType::Float3x3)
+DefTraits(GfMatrix4f, AttributeType::Float4x4)
+DefTraits(VtArray<GfMatrix2f>, AttributeType::Float2x2Array)
+DefTraits(VtArray<GfMatrix3f>, AttributeType::Float3x3Array)
+DefTraits(VtArray<GfMatrix4f>, AttributeType::Float4x4Array)
+#undef DefTraits
 
 
 Attribute::Attribute(Schema *parent, UsdAttribute usdattr)
@@ -122,6 +136,62 @@ AttributeSummary Attribute::getSummary()
     return ret;
 }
 
+Attribute* Attribute::findConverter(AttributeType external_type)
+{
+    if (m_type == external_type) {
+        return this;
+    }
+    for (auto& a : m_converters) {
+        if (a->getType() == external_type) {
+            return a.get();
+        }
+    }
+    return nullptr;
+}
+
+Attribute* Attribute::findOrCreateConverter(AttributeType external_type)
+{
+    return findConverter(external_type);
+}
+
+void Attribute::addConverter(Attribute *attr)
+{
+    m_converters.push_back(AttributePtr(attr));
+}
+
+struct ConverterFactoryBase
+{
+    using Creator = std::function<Attribute* (Attribute*)>;
+    struct Record {
+        AttributeType type;
+        Creator creator;
+    };
+    using Records = std::vector<Record>;
+};
+
+template<class T>
+struct ConverterFactory : public ConverterFactoryBase
+{
+    static Records& getRecords() {
+        static Records s_records;
+        return s_records;
+    }
+
+    Attribute* operator()(T *attr, AttributeType external_type)
+    {
+        if (auto *a = attr->findConverter(external_type)) {
+            return a;
+        }
+        for (auto& r : getRecords()) {
+            if (r.type == external_type) {
+                auto *ret = r.creator(attr);
+                attr->addConverter(ret);
+                return ret;
+            }
+        }
+        return nullptr;
+    }
+};
 
 
 // scalar attribute impl
@@ -130,6 +200,7 @@ class TAttribute : public Attribute
 {
 typedef Attribute super;
 public:
+    using this_t = TAttribute;
     using rep_t = T;
 
     TAttribute(Schema *parent, UsdAttribute usdattr)
@@ -184,28 +255,34 @@ public:
         return m_usdattr.Set(*(const rep_t*)src, t);
     }
 
+    Attribute* findOrCreateConverter(AttributeType external_type) override
+    {
+        return ConverterFactory<this_t>()(this, external_type);
+    }
+
 private:
     rep_t m_sample;
 };
 
 // array attribute impl
 template<class T>
-class TArrayAttribute : public Attribute
+class TAttribute<VtArray<T>> : public Attribute
 {
 typedef Attribute super;
 public:
+    using this_t = TAttribute;
     using rep_t = VtArray<T>;
 
-    TArrayAttribute(Schema *parent, UsdAttribute usdattr)
+    TAttribute(Schema *parent, UsdAttribute usdattr)
         : super(parent, usdattr)
     {
         m_type = AttrTypeTraits<rep_t>::type_enum;
-        usdiLogTrace("TArrayAttribute::TArrayAttribute(): %s (%s)\n", getName(), getTypeName());
+        usdiLogTrace("TAttribute::TAttribute(): %s (%s)\n", getName(), getTypeName());
     }
 
-    ~TArrayAttribute()
+    ~TAttribute()
     {
-        usdiLogTrace("TArrayAttribute::~TArrayAttribute()\n");
+        usdiLogTrace("TAttribute::~TAttribute()\n");
     }
 
     void updateSample(Time t) override
@@ -248,6 +325,11 @@ public:
     bool setImmediate(const void *src, Time t) override
     {
         return m_usdattr.Set(*(const rep_t*)src, t);
+    }
+
+    Attribute* findOrCreateConverter(AttributeType external_type) override
+    {
+        return ConverterFactory<this_t>()(this, external_type);
     }
 
 private:
@@ -319,22 +401,22 @@ private:
 };
 
 template<class T>
-class TStringArrayAttribute : public Attribute
+class TStringAttribute<VtArray<T>> : public Attribute
 {
 typedef Attribute super;
 public:
     using rep_t = VtArray<T>;
 
-    TStringArrayAttribute(Schema *parent, UsdAttribute usdattr)
+    TStringAttribute(Schema *parent, UsdAttribute usdattr)
         : super(parent, usdattr)
     {
         m_type = AttrTypeTraits<rep_t>::type_enum;
-        usdiLogTrace("TStringArrayAttribute::TStringArrayAttribute(): %s (%s)\n", getName(), getTypeName());
+        usdiLogTrace("TStringAttribute::TStringAttribute(): %s (%s)\n", getName(), getTypeName());
     }
 
-    ~TStringArrayAttribute()
+    ~TStringAttribute()
     {
-        usdiLogTrace("TStringArrayAttribute::~TStringArrayAttribute()\n");
+        usdiLogTrace("TStringAttribute::~TStringAttribute()\n");
     }
 
     void updateSample(Time t) override
@@ -385,24 +467,24 @@ private:
 };
 
 
-template<class InT, class ExT>
-class TWrappedAttribute : public Attribute
+template<class T, class InT>
+class TConverterAttribute : public Attribute
 {
 typedef Attribute super;
 public:
     using internal_t = InT;
-    using external_t = ExT;
+    using external_t = T;
 
-    TWrappedAttribute(Schema *parent, UsdAttribute usdattr)
-        : super(parent, usdattr)
+    TConverterAttribute(Attribute *src)
+        : super(src->getParent(), src->getUSDAttribute())
     {
-        m_type = AttrTypeTraits<external_t>::type_enum;
-        usdiLogTrace("TAttributeWrapped::TAttributeWrapped(): %s (%s)\n", getName(), getTypeName());
+        m_type = AttrTypeTraits<T>::type_enum;
+        usdiLogTrace("TConverterAttribute::TConverterAttribute(): %s (%s)\n", getName(), getTypeName());
     }
 
-    ~TWrappedAttribute()
+    ~TConverterAttribute()
     {
-        usdiLogTrace("TAttributeWrapped::~TAttributeWrapped()\n");
+        usdiLogTrace("TConverterAttribute::~TConverterAttribute()\n");
     }
 
     void updateSample(Time t) override
@@ -410,7 +492,7 @@ public:
         if (t == m_time_prev) { return; }
         m_time_prev = t;
         m_usdattr.Get(&m_tmp, t);
-        m_sample = external_t(m_tmp);
+        m_sample = T(m_tmp);
     }
 
     bool readSample(AttributeData& dst, Time t, bool copy) override
@@ -420,7 +502,7 @@ public:
         dst.num_elements = 1;
         if (copy) {
             if (dst.data) {
-                *(external_t*)dst.data = m_sample;
+                *(T*)dst.data = m_sample;
             }
         }
         else {
@@ -431,7 +513,7 @@ public:
 
     bool writeSample(const AttributeData& src, Time t) override
     {
-        m_tmp = internal_t(*(const external_t*)src.data);
+        m_tmp = internal_t(*(const T*)src.data);
         m_usdattr.Set(m_tmp, t);
         return true;
     }
@@ -483,30 +565,28 @@ struct TAssigner
     }
 };
 
-template<class InT, class ExT>
-class TWrappedArrayAttribute : public Attribute
+template<class T, class InT>
+class TConverterAttribute<VtArray<T>, VtArray<InT>> : public Attribute
 {
 typedef Attribute super;
 public:
-    using internal_t = InT;
-    using external_t = ExT;
-    using internal_array = VtArray<internal_t>;
-    using external_array = VtArray<external_t>;
+    using internal_v = InT;
+    using external_v = T;
+    using internal_t = VtArray<InT>;
+    using external_t = VtArray<T>;
+    using Assign = TAssigner<external_v, internal_v>;
 
-    using Assign = TAssigner<external_t, internal_t>;
-
-    TWrappedArrayAttribute(Schema *parent, UsdAttribute usdattr)
-        : super(parent, usdattr)
+    TConverterAttribute(Attribute *src)
+        : super(src->getParent(), src->getUSDAttribute())
     {
-        m_type = AttrTypeTraits<external_array>::type_enum;
-        usdiLogTrace("TWrappedArrayAttribute::TWrappedArrayAttribute(): %s (%s)\n", getName(), getTypeName());
+        m_type = AttrTypeTraits<external_t>::type_enum;
+        usdiLogTrace("TConverterAttribute::TConverterAttribute(): %s (%s)\n", getName(), getTypeName());
     }
 
-    ~TWrappedArrayAttribute()
+    ~TConverterAttribute()
     {
-        usdiLogTrace("TWrappedArrayAttribute::~TWrappedArrayAttribute()\n");
+        usdiLogTrace("TConverterAttribute::~TConverterAttribute()\n");
     }
-
 
     void updateSample(Time t) override
     {
@@ -523,7 +603,7 @@ public:
         dst.num_elements = (int)m_sample.size();
         if (copy) {
             if (dst.data) {
-                Assign()((external_t*)dst.data, (size_t)dst.num_elements, m_sample);
+                Assign()((external_v*)dst.data, (size_t)dst.num_elements, m_sample);
             }
         }
         else {
@@ -534,7 +614,7 @@ public:
 
     bool writeSample(const AttributeData& src, Time t) override
     {
-        Assign()(m_tmp, (const external_t*)src.data, (size_t)src.num_elements);
+        Assign()(m_tmp, (const external_v*)src.data, (size_t)src.num_elements);
         m_usdattr.Set(m_tmp, t);
         return true;
     }
@@ -542,20 +622,60 @@ public:
     bool getImmediate(void *dst, Time t) override
     {
         m_usdattr.Get(&m_tmp, t);
-        Assign()(*(external_array*)dst, m_tmp);
+        Assign()(*(external_t*)dst, m_tmp);
         return true;
     }
 
     bool setImmediate(const void *src, Time t) override
     {
-        Assign()(m_tmp, *(external_array*)src);
+        Assign()(m_tmp, *(external_t*)src);
         return m_usdattr.Set(m_tmp, t);
     }
 
 private:
-    internal_array m_tmp;
-    external_array m_sample;
+    internal_t m_tmp;
+    external_t m_sample;
 };
+
+// make attributes convertible
+static struct InitConverterFactory
+{
+    InitConverterFactory()
+    {
+#define Block(IType, ...)\
+        {\
+            using itype = IType;\
+            auto& srecords = ConverterFactory<TAttribute<itype>>::getRecords();\
+            auto& vrecords = ConverterFactory<TAttribute<VtArray<itype>>>::getRecords();\
+            __VA_ARGS__\
+        }
+
+#define Add(EType)\
+        srecords.push_back({ AttrTypeTraits<EType>::type_enum , [](Attribute *attr) { return new TConverterAttribute<EType, itype>(attr); } });\
+        vrecords.push_back({ AttrTypeTraits<VtArray<EType>>::type_enum , [](Attribute *attr) { return new TConverterAttribute<VtArray<EType>, VtArray<itype>>(attr); } });
+
+        Block(GfVec2h, Add(GfVec2f) Add(GfVec2d));
+        Block(GfVec3h, Add(GfVec3f) Add(GfVec3d));
+        Block(GfVec4h, Add(GfVec4f) Add(GfVec4d));
+
+        Block(GfVec2f, Add(GfVec2h) Add(GfVec2d));
+        Block(GfVec3f, Add(GfVec3h) Add(GfVec3d));
+        Block(GfVec4f, Add(GfVec4h) Add(GfVec4d));
+
+        Block(GfVec2d, Add(GfVec2h) Add(GfVec2f));
+        Block(GfVec3d, Add(GfVec3h) Add(GfVec3f));
+        Block(GfVec4d, Add(GfVec4h) Add(GfVec4f));
+
+        Block(GfMatrix2d, Add(GfMatrix2f));
+        Block(GfMatrix3d, Add(GfMatrix3f));
+        Block(GfMatrix4d, Add(GfMatrix4f));
+
+#undef Add
+#undef Block
+    }
+} g_InitConverterFactory;
+
+
 
 Attribute* WrapExistingAttribute(Schema *parent, UsdAttribute usd)
 {
@@ -577,16 +697,16 @@ Attribute* WrapExistingAttribute(Schema *parent, UsdAttribute usd)
     Reinterpret(Point3f,  TAttribute<GfVec3f>)
     Reinterpret(Color3f,  TAttribute<GfVec3f>)
     Reinterpret(Color4f,  TAttribute<GfVec4f>)
-    Reinterpret(Vector3hArray, TArrayAttribute<GfVec3h>)
-    Reinterpret(Normal3hArray, TArrayAttribute<GfVec3h>)
-    Reinterpret(Point3hArray,  TArrayAttribute<GfVec3h>)
-    Reinterpret(Color3hArray,  TArrayAttribute<GfVec3h>)
-    Reinterpret(Color4hArray,  TArrayAttribute<GfVec4h>)
-    Reinterpret(Vector3fArray, TArrayAttribute<GfVec3f>)
-    Reinterpret(Normal3fArray, TArrayAttribute<GfVec3f>)
-    Reinterpret(Point3fArray,  TArrayAttribute<GfVec3f>)
-    Reinterpret(Color3fArray,  TArrayAttribute<GfVec3f>)
-    Reinterpret(Color4fArray,  TArrayAttribute<GfVec4f>)
+    Reinterpret(Vector3hArray, TAttribute<VtArray<GfVec3h>>)
+    Reinterpret(Normal3hArray, TAttribute<VtArray<GfVec3h>>)
+    Reinterpret(Point3hArray,  TAttribute<VtArray<GfVec3h>>)
+    Reinterpret(Color3hArray,  TAttribute<VtArray<GfVec3h>>)
+    Reinterpret(Color4hArray,  TAttribute<VtArray<GfVec4h>>)
+    Reinterpret(Vector3fArray, TAttribute<VtArray<GfVec3f>>)
+    Reinterpret(Normal3fArray, TAttribute<VtArray<GfVec3f>>)
+    Reinterpret(Point3fArray,  TAttribute<VtArray<GfVec3f>>)
+    Reinterpret(Color3fArray,  TAttribute<VtArray<GfVec3f>>)
+    Reinterpret(Color4fArray,  TAttribute<VtArray<GfVec4f>>)
 #undef Reinterpret
 
     usdiLogInfo("failed to interpret attribute: %s (%s)\n", usd.GetName().GetText(), usd.GetTypeName().GetAsToken().GetText());
@@ -623,34 +743,6 @@ Attribute* CreateAttribute(Schema *parent, const char *name, AttributeType type)
 #define Def(Type, Enum, Sdf, AType) template class AType;
 EachAttributeTypes(Def)
 #undef Def
-
-
-// wrapped attribute
-
-template<class Internal, class External>
-struct WrappedAttributeFactory
-{
-    static Attribute* create(Schema *parent, UsdAttribute usd)
-    {
-        return new TWrappedAttribute<Internal, External>(parent, usd);
-    }
-};
-template<class Internal, class External>
-struct WrappedAttributeFactory<VtArray<Internal>, VtArray<External>>
-{
-    static Attribute* create(Schema *parent, UsdAttribute usd)
-    {
-        return new TWrappedArrayAttribute<Internal, External>(parent, usd);
-    }
-};
-
-template<class Internal, class External>
-Attribute* CreateWrappedAttribute(Schema *parent, const char *name)
-{
-    UsdAttribute usd = parent->getUsdPrim().CreateAttribute(TfToken(name), AttrTypeTraits<Internal>::sdf_typename());
-    if (!usd) { return nullptr; }
-    return WrappedAttributeFactory::create(parent, usd);
-}
 
 
 } // namespace usdi

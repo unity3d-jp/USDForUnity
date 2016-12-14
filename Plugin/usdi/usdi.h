@@ -344,8 +344,8 @@ usdiAPI usdi::Schema*    usdiPrimGetChild(usdi::Schema *schema, int i);
 
 usdiAPI int              usdiPrimGetNumAttributes(usdi::Schema *schema);
 usdiAPI usdi::Attribute* usdiPrimGetAttribute(usdi::Schema *schema, int i);
-usdiAPI usdi::Attribute* usdiPrimFindAttribute(usdi::Schema *schema, const char *name);
-usdiAPI usdi::Attribute* usdiPrimCreateAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type);
+usdiAPI usdi::Attribute* usdiPrimFindAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type = usdi::AttributeType::Unknown);
+usdiAPI usdi::Attribute* usdiPrimCreateAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type, usdi::AttributeType internal_type = usdi::AttributeType::Unknown);
 
 usdiAPI int              usdiPrimGetNumVariantSets(usdi::Schema *schema);
 usdiAPI int              usdiPrimGetNumVariants(usdi::Schema *schema, int iset);

@@ -550,7 +550,7 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
 
     MeshSample& sample = m_sample[0];
 
-#define CreateAttributeIfNeeded(VName, AName, Type) if(!VName) { VName=createAttribute(AName, Type); }
+#define CreateAttributeIfNeeded(VName, ...) if(!VName) { VName=createAttribute(__VA_ARGS__); }
 
     bool  ret = false;
     if (src.points) {

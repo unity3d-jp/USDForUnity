@@ -452,8 +452,8 @@ namespace UTJ
 
         [DllImport ("usdi")] public static extern int           usdiPrimGetNumAttributes(Schema schema);
         [DllImport ("usdi")] public static extern Attribute     usdiPrimGetAttribute(Schema schema, int i);
-        [DllImport ("usdi")] public static extern Attribute     usdiPrimFindAttribute(Schema schema, string name);
-        [DllImport ("usdi")] public static extern Attribute     usdiPrimCreateAttribute(Schema schema, string name, AttributeType type);
+        [DllImport ("usdi")] public static extern Attribute     usdiPrimFindAttribute(Schema schema, string name, AttributeType type = AttributeType.Unknown);
+        [DllImport ("usdi")] public static extern Attribute     usdiPrimCreateAttribute(Schema schema, string name, AttributeType type, AttributeType internal_type = AttributeType.Unknown);
         
         [DllImport ("usdi")] public static extern int           usdiPrimGetNumVariantSets(Schema schema);
         [DllImport ("usdi")] public static extern IntPtr        usdiPrimGetVariantSetName(Schema schema, int iset);

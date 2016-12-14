@@ -25,12 +25,20 @@ public:
     virtual bool    getImmediate(void *dst, Time t) = 0;
     virtual bool    setImmediate(const void *src, Time t) = 0;
 
+    Attribute*      findConverter(AttributeType external_type);
+    virtual Attribute* findOrCreateConverter(AttributeType external_type);
+    void            addConverter(Attribute *attr); // internal
+
 protected:
+    using AttributePtr = std::unique_ptr<Attribute>;
+    using Attributes = std::vector<AttributePtr>;
+
     Schema *m_parent = nullptr;
     UsdAttribute m_usdattr;
-    AttributeType m_type;
+    AttributeType m_type = AttributeType::Unknown;
     Time m_time_start = usdiInvalidTime, m_time_end = usdiInvalidTime;
     Time m_time_prev = usdiInvalidTime;
+    Attributes m_converters;
 
 #ifdef usdiDebug
     const char *m_dbg_name = nullptr;
@@ -44,10 +52,6 @@ Attribute* WrapExistingAttribute(Schema *parent, const char *name);
 template<class T>
 Attribute* CreateAttribute(Schema *parent, const char *name);
 Attribute* CreateAttribute(Schema *parent, const char *name, AttributeType type);
-
-template<class Internal, class External>
-Attribute* CreateWrappedAttribute(Schema *parent, const char *name);
-Attribute* CreateWrappedAttribute(Schema *parent, const char *name, AttributeType internal_type, AttributeType external_type);
 
 
 // custom attribute names

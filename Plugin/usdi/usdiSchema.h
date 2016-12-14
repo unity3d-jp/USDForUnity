@@ -40,6 +40,7 @@ public:
     Attribute*      findAttribute(const char *name) const;
     Attribute*      findAttribute(const char *name, AttributeType type) const; // type check
     Attribute*      createAttribute(const char *name, AttributeType type);
+    Attribute*      createAttribute(const char *name, AttributeType type, AttributeType internal_type);
 
     // parent & child interface
 
