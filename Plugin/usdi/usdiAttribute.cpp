@@ -138,7 +138,7 @@ AttributeSummary Attribute::getSummary()
 
 Attribute* Attribute::findConverter(AttributeType external_type)
 {
-    if (m_type == external_type) {
+    if (m_type == AttributeType::Unknown || m_type == external_type) {
         return this;
     }
     for (auto& a : m_converters) {
@@ -467,6 +467,34 @@ private:
 };
 
 
+template<class Dst, class Src> inline void TAssign(Dst& dst, const Src& src) { dst = Dst(src); }
+#define V2(Dst, Src) template<> inline void TAssign(Dst& dst, const Src& src) { dst = Dst(src[0], src[1]); }
+V2(GfVec2h, GfVec3h) V2(GfVec2h, GfVec3f) V2(GfVec2h, GfVec3d) V2(GfVec2h, GfVec4h) V2(GfVec2h, GfVec4f) V2(GfVec2h, GfVec4d)
+V2(GfVec2f, GfVec3h) V2(GfVec2f, GfVec3f) V2(GfVec2f, GfVec3d) V2(GfVec2f, GfVec4h) V2(GfVec2f, GfVec4f) V2(GfVec2f, GfVec4d)
+V2(GfVec2d, GfVec3h) V2(GfVec2d, GfVec3f) V2(GfVec2d, GfVec3d) V2(GfVec2d, GfVec4h) V2(GfVec2d, GfVec4f) V2(GfVec2d, GfVec4d)
+#undef V2
+#define V3(Dst, Src) template<> inline void TAssign(Dst& dst, const Src& src) { dst = Dst(src[0], src[1], 0); }
+V3(GfVec3h, GfVec2h) V3(GfVec3h, GfVec2f) V3(GfVec3h, GfVec2d)
+V3(GfVec3f, GfVec2h) V3(GfVec3f, GfVec2f) V3(GfVec3f, GfVec2d)
+V3(GfVec3d, GfVec2h) V3(GfVec3d, GfVec2f) V3(GfVec3d, GfVec2d)
+#undef V3
+#define V3(Dst, Src) template<> inline void TAssign(Dst& dst, const Src& src) { dst = Dst(src[0], src[1], src[2]); }
+V3(GfVec3h, GfVec4h) V3(GfVec3h, GfVec4f) V3(GfVec3h, GfVec4d)
+V3(GfVec3f, GfVec4h) V3(GfVec3f, GfVec4f) V3(GfVec3f, GfVec4d)
+V3(GfVec3d, GfVec4h) V3(GfVec3d, GfVec4f) V3(GfVec3d, GfVec4d)
+#undef V3
+#define V4(Dst, Src) template<> inline void TAssign(Dst& dst, const Src& src) { dst = Dst(src[0], src[1], 0, 0); }
+V4(GfVec4h, GfVec2h) V4(GfVec4h, GfVec2f) V4(GfVec4h, GfVec2d)
+V4(GfVec4f, GfVec2h) V4(GfVec4f, GfVec2f) V4(GfVec4f, GfVec2d)
+V4(GfVec4d, GfVec2h) V4(GfVec4d, GfVec2f) V4(GfVec4d, GfVec2d)
+#undef V4
+#define V4(Dst, Src) template<> inline void TAssign(Dst& dst, const Src& src) { dst = Dst(src[0], src[1], src[2], 0); }
+V4(GfVec4h, GfVec3h) V4(GfVec4h, GfVec3f) V4(GfVec4h, GfVec3d)
+V4(GfVec4f, GfVec3h) V4(GfVec4f, GfVec3f) V4(GfVec4f, GfVec3d)
+V4(GfVec4d, GfVec3h) V4(GfVec4d, GfVec3f) V4(GfVec4d, GfVec3d)
+#undef V4
+
+
 template<class T, class InT>
 class TConverterAttribute : public Attribute
 {
@@ -492,7 +520,7 @@ public:
         if (t == m_time_prev) { return; }
         m_time_prev = t;
         m_usdattr.Get(&m_tmp, t);
-        m_sample = T(m_tmp);
+        TAssign(m_sample, m_tmp);
     }
 
     bool readSample(AttributeData& dst, Time t, bool copy) override
@@ -513,7 +541,7 @@ public:
 
     bool writeSample(const AttributeData& src, Time t) override
     {
-        m_tmp = internal_t(*(const T*)src.data);
+        TAssign(m_tmp, *(const T*)src.data);
         m_usdattr.Set(m_tmp, t);
         return true;
     }
@@ -521,13 +549,13 @@ public:
     bool getImmediate(void *dst, Time t) override
     {
         m_usdattr.Get(&m_tmp, t);
-        *(external_t*)dst = external_t(m_tmp);
+        TAssign(*(external_t*)dst, m_tmp);
         return true;
     }
 
     bool setImmediate(const void *src, Time t) override
     {
-        m_tmp = internal_t(*(external_t*)src);
+        TAssign(m_tmp, *(const external_t*)src);
         return m_usdattr.Set(m_tmp, t);
     }
 
@@ -536,15 +564,14 @@ private:
     external_t m_sample;
 };
 
-
 template<class T, class U>
-struct TAssigner
+struct TConvert
 {
     void operator()(VtArray<T>& dst, const VtArray<U>& src)
     {
         size_t n = src.size();
         dst.resize(n);
-        for (size_t i = 0; i < n; ++i) { dst[i] = T(src[i]); }
+        for (size_t i = 0; i < n; ++i) { TAssign(dst[i], src[i]); }
     }
     void operator()(T* dst, size_t dst_len, const VtArray<T>& src)
     {
@@ -555,13 +582,13 @@ struct TAssigner
     {
         size_t n = src.size();
         dst.resize(n);
-        for (size_t i = 0; i < n; ++i) { dst[i] = U(src[i]); }
+        for (size_t i = 0; i < n; ++i) { TAssign(dst[i], src[i]); }
     }
     void operator()(VtArray<U>& dst, const T *src, size_t src_len)
     {
         size_t n = src_len;
         dst.resize(n);
-        for (size_t i = 0; i < n; ++i) { dst[i] = U(src[i]); }
+        for (size_t i = 0; i < n; ++i) { TAssign(dst[i], src[i]); }
     }
 };
 
@@ -574,7 +601,7 @@ public:
     using external_v = T;
     using internal_t = VtArray<InT>;
     using external_t = VtArray<T>;
-    using Assign = TAssigner<external_v, internal_v>;
+    using Convert = TConvert<external_v, internal_v>;
 
     TConverterAttribute(Attribute *src)
         : super(src->getParent(), src->getUSDAttribute())
@@ -593,7 +620,7 @@ public:
         if (t == m_time_prev) { return; }
         m_time_prev = t;
         m_usdattr.Get(&m_tmp, t);
-        Assign()(m_sample, m_tmp);
+        Convert()(m_sample, m_tmp);
     }
 
     bool readSample(AttributeData& dst, Time t, bool copy) override
@@ -603,7 +630,7 @@ public:
         dst.num_elements = (int)m_sample.size();
         if (copy) {
             if (dst.data) {
-                Assign()((external_v*)dst.data, (size_t)dst.num_elements, m_sample);
+                Convert()((external_v*)dst.data, (size_t)dst.num_elements, m_sample);
             }
         }
         else {
@@ -614,7 +641,7 @@ public:
 
     bool writeSample(const AttributeData& src, Time t) override
     {
-        Assign()(m_tmp, (const external_v*)src.data, (size_t)src.num_elements);
+        Convert()(m_tmp, (const external_v*)src.data, (size_t)src.num_elements);
         m_usdattr.Set(m_tmp, t);
         return true;
     }
@@ -622,13 +649,13 @@ public:
     bool getImmediate(void *dst, Time t) override
     {
         m_usdattr.Get(&m_tmp, t);
-        Assign()(*(external_t*)dst, m_tmp);
+        Convert()(*(external_t*)dst, m_tmp);
         return true;
     }
 
     bool setImmediate(const void *src, Time t) override
     {
-        Assign()(m_tmp, *(external_t*)src);
+        Convert()(m_tmp, *(external_t*)src);
         return m_usdattr.Set(m_tmp, t);
     }
 
@@ -637,12 +664,11 @@ private:
     external_t m_sample;
 };
 
-// make attributes convertible
 static struct InitConverterFactory
 {
     InitConverterFactory()
     {
-#define Block(IType, ...)\
+#define MakeConvertible(IType, ...)\
         {\
             using itype = IType;\
             auto& srecords = ConverterFactory<TAttribute<itype>>::getRecords();\
@@ -654,24 +680,27 @@ static struct InitConverterFactory
         srecords.push_back({ AttrTypeTraits<EType>::type_enum , [](Attribute *attr) { return new TConverterAttribute<EType, itype>(attr); } });\
         vrecords.push_back({ AttrTypeTraits<VtArray<EType>>::type_enum , [](Attribute *attr) { return new TConverterAttribute<VtArray<EType>, VtArray<itype>>(attr); } });
 
-        Block(GfVec2h, Add(GfVec2f) Add(GfVec2d));
-        Block(GfVec3h, Add(GfVec3f) Add(GfVec3d));
-        Block(GfVec4h, Add(GfVec4f) Add(GfVec4d));
+        // make vector attributes convertible
+        // (this maybe overkill... /bigobj is required because of this)
 
-        Block(GfVec2f, Add(GfVec2h) Add(GfVec2d));
-        Block(GfVec3f, Add(GfVec3h) Add(GfVec3d));
-        Block(GfVec4f, Add(GfVec4h) Add(GfVec4d));
+        MakeConvertible(GfVec2h, Add(GfVec2f) Add(GfVec2d) Add(GfVec3h) Add(GfVec3f) Add(GfVec3d) Add(GfVec4h) Add(GfVec4f) Add(GfVec4d));
+        MakeConvertible(GfVec2f, Add(GfVec2h) Add(GfVec2d) Add(GfVec3h) Add(GfVec3f) Add(GfVec3d) Add(GfVec4h) Add(GfVec4f) Add(GfVec4d));
+        MakeConvertible(GfVec2d, Add(GfVec2h) Add(GfVec2f) Add(GfVec3h) Add(GfVec3f) Add(GfVec3d) Add(GfVec4h) Add(GfVec4f) Add(GfVec4d));
 
-        Block(GfVec2d, Add(GfVec2h) Add(GfVec2f));
-        Block(GfVec3d, Add(GfVec3h) Add(GfVec3f));
-        Block(GfVec4d, Add(GfVec4h) Add(GfVec4f));
+        MakeConvertible(GfVec3h, Add(GfVec2h) Add(GfVec2f) Add(GfVec2d) Add(GfVec3f) Add(GfVec3d) Add(GfVec4h) Add(GfVec4f) Add(GfVec4d));
+        MakeConvertible(GfVec3f, Add(GfVec2h) Add(GfVec2f) Add(GfVec2d) Add(GfVec3h) Add(GfVec3d) Add(GfVec4h) Add(GfVec4f) Add(GfVec4d));
+        MakeConvertible(GfVec3d, Add(GfVec2h) Add(GfVec2f) Add(GfVec2d) Add(GfVec3h) Add(GfVec3f) Add(GfVec4h) Add(GfVec4f) Add(GfVec4d));
 
-        Block(GfMatrix2d, Add(GfMatrix2f));
-        Block(GfMatrix3d, Add(GfMatrix3f));
-        Block(GfMatrix4d, Add(GfMatrix4f));
+        MakeConvertible(GfVec4h, Add(GfVec2h) Add(GfVec2f) Add(GfVec2d) Add(GfVec3h) Add(GfVec3f) Add(GfVec3d) Add(GfVec4f) Add(GfVec4d));
+        MakeConvertible(GfVec4f, Add(GfVec2h) Add(GfVec2f) Add(GfVec2d) Add(GfVec3h) Add(GfVec3f) Add(GfVec3d) Add(GfVec4h) Add(GfVec4d));
+        MakeConvertible(GfVec4d, Add(GfVec2h) Add(GfVec2f) Add(GfVec2d) Add(GfVec3h) Add(GfVec3f) Add(GfVec3d) Add(GfVec4h) Add(GfVec4f));
+
+        MakeConvertible(GfMatrix2d, Add(GfMatrix2f));
+        MakeConvertible(GfMatrix3d, Add(GfMatrix3f));
+        MakeConvertible(GfMatrix4d, Add(GfMatrix4f));
 
 #undef Add
-#undef Block
+#undef MakeConvertible
     }
 } g_InitConverterFactory;
 
@@ -686,27 +715,24 @@ Attribute* WrapExistingAttribute(Schema *parent, UsdAttribute usd)
     EachAttributeTypes(Def)
 #undef Def
 
-#define Reinterpret(Sdf, AttrType) if (tname == SdfValueTypeNames->Sdf) { return new AttrType(parent, usd); }
-    Reinterpret(Vector3h, TAttribute<GfVec3h>)
-    Reinterpret(Normal3h, TAttribute<GfVec3h>)
-    Reinterpret(Point3h,  TAttribute<GfVec3h>)
-    Reinterpret(Color3h,  TAttribute<GfVec3h>)
-    Reinterpret(Color4h,  TAttribute<GfVec4h>)
-    Reinterpret(Vector3f, TAttribute<GfVec3f>)
-    Reinterpret(Normal3f, TAttribute<GfVec3f>)
-    Reinterpret(Point3f,  TAttribute<GfVec3f>)
-    Reinterpret(Color3f,  TAttribute<GfVec3f>)
-    Reinterpret(Color4f,  TAttribute<GfVec4f>)
-    Reinterpret(Vector3hArray, TAttribute<VtArray<GfVec3h>>)
-    Reinterpret(Normal3hArray, TAttribute<VtArray<GfVec3h>>)
-    Reinterpret(Point3hArray,  TAttribute<VtArray<GfVec3h>>)
-    Reinterpret(Color3hArray,  TAttribute<VtArray<GfVec3h>>)
-    Reinterpret(Color4hArray,  TAttribute<VtArray<GfVec4h>>)
-    Reinterpret(Vector3fArray, TAttribute<VtArray<GfVec3f>>)
-    Reinterpret(Normal3fArray, TAttribute<VtArray<GfVec3f>>)
-    Reinterpret(Point3fArray,  TAttribute<VtArray<GfVec3f>>)
-    Reinterpret(Color3fArray,  TAttribute<VtArray<GfVec3f>>)
-    Reinterpret(Color4fArray,  TAttribute<VtArray<GfVec4f>>)
+#define Reinterpret(Sdf, T)\
+        if (tname == SdfValueTypeNames->Sdf) { return new TAttribute<T>(parent, usd); }\
+        if (tname == SdfValueTypeNames->Sdf##Array) { return new TAttribute<VtArray<T>>(parent, usd); }
+    Reinterpret(Vector3h, GfVec3h)
+    Reinterpret(Normal3h, GfVec3h)
+    Reinterpret(Point3h,  GfVec3h)
+    Reinterpret(Color3h,  GfVec3h)
+    Reinterpret(Color4h,  GfVec4h)
+    Reinterpret(Vector3f, GfVec3f)
+    Reinterpret(Normal3f, GfVec3f)
+    Reinterpret(Point3f,  GfVec3f)
+    Reinterpret(Color3f,  GfVec3f)
+    Reinterpret(Color4f,  GfVec4f)
+    Reinterpret(Vector3d, GfVec3d)
+    Reinterpret(Normal3d, GfVec3d)
+    Reinterpret(Point3d,  GfVec3d)
+    Reinterpret(Color3d,  GfVec3d)
+    Reinterpret(Color4d,  GfVec4d)
 #undef Reinterpret
 
     usdiLogInfo("failed to interpret attribute: %s (%s)\n", usd.GetName().GetText(), usd.GetTypeName().GetAsToken().GetText());

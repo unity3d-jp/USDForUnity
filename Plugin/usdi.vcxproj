@@ -52,7 +52,10 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Master|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="usdi\UnityPlugin.cpp" />
-    <ClCompile Include="usdi\usdiAttribute.cpp" />
+    <ClCompile Include="usdi\usdiAttribute.cpp">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/bigobj %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Master|x64'">/bigobj %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
     <ClCompile Include="usdi\usdiCamera.cpp" />
     <ClCompile Include="usdi\usdiContext.cpp" />
     <ClCompile Include="usdi\usdiInternal.cpp" />

@@ -365,15 +365,13 @@ usdiAPI usdi::Attribute* usdiPrimFindAttribute(usdi::Schema *schema, const char 
 {
     usdiTraceFunc();
     if (!schema) { return nullptr; }
-    return type == usdi::AttributeType::Unknown ?
-        schema->findAttribute(name) : schema->findAttribute(name, type);
+    return schema->findAttribute(name, type);
 }
 usdiAPI usdi::Attribute* usdiPrimCreateAttribute(usdi::Schema *schema, const char *name, usdi::AttributeType type, usdi::AttributeType internal_type)
 {
     usdiTraceFunc();
     if (!schema) { return nullptr; }
-    return internal_type == usdi::AttributeType::Unknown ?
-        schema->createAttribute(name, type) : schema->createAttribute(name, type, internal_type);
+    return schema->createAttribute(name, type, internal_type);
 }
 
 usdiAPI int usdiPrimGetNumVariantSets(usdi::Schema *schema)

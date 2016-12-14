@@ -25,9 +25,9 @@ public:
     virtual bool    getImmediate(void *dst, Time t) = 0;
     virtual bool    setImmediate(const void *src, Time t) = 0;
 
-    Attribute*      findConverter(AttributeType external_type);
-    virtual Attribute* findOrCreateConverter(AttributeType external_type);
-    void            addConverter(Attribute *attr); // internal
+    Attribute*          findConverter(AttributeType external_type);
+    virtual Attribute*  findOrCreateConverter(AttributeType external_type);
+    void                addConverter(Attribute *attr); // internal
 
 protected:
     using AttributePtr = std::unique_ptr<Attribute>;
@@ -36,7 +36,8 @@ protected:
     Schema *m_parent = nullptr;
     UsdAttribute m_usdattr;
     AttributeType m_type = AttributeType::Unknown;
-    Time m_time_start = usdiInvalidTime, m_time_end = usdiInvalidTime;
+    Time m_time_start = usdiInvalidTime;
+    Time m_time_end = usdiInvalidTime;
     Time m_time_prev = usdiInvalidTime;
     Attributes m_converters;
 

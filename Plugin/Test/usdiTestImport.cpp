@@ -58,6 +58,8 @@ static void InspectAttribute(usdi::Attribute *attr)
         break;\
     }
 
+#define PString(Enum, Type) PScalar(Enum, Type)
+
 #define PVector(Enum, Type)\
     case usdi::AttributeType::Enum:\
     {\
@@ -86,9 +88,9 @@ static void InspectAttribute(usdi::Attribute *attr)
         PScalar(Float3, float3);
         PScalar(Float4, float4);
         PScalar(QuatF, quatf);
-        PScalar(Token, const char*);
-        PScalar(String, const char*);
-        PScalar(Asset, const char*);
+        PString(Token, const char*);
+        PString(String, const char*);
+        PString(Asset, const char*);
 
         PVector(ByteArray, byte);
         PVector(IntArray, int);
@@ -98,9 +100,9 @@ static void InspectAttribute(usdi::Attribute *attr)
         PVector(Float3Array, float3);
         PVector(Float4Array, float4);
         PVector(QuatFArray, quatf);
-        PScalar(TokenArray, const char**);
-        PScalar(StringArray, const char**);
-        PScalar(AssetArray, const char**);
+        PString(TokenArray, const char**);
+        PString(StringArray, const char**);
+        PString(AssetArray, const char**);
     }
 
 #undef PScalar

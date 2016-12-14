@@ -37,10 +37,8 @@ public:
 
     int             getNumAttributes() const;
     Attribute*      getAttribute(int i) const;
-    Attribute*      findAttribute(const char *name) const;
-    Attribute*      findAttribute(const char *name, AttributeType type) const; // type check
-    Attribute*      createAttribute(const char *name, AttributeType type);
-    Attribute*      createAttribute(const char *name, AttributeType type, AttributeType internal_type);
+    Attribute*      findAttribute(const char *name, AttributeType type = AttributeType::Unknown) const;
+    Attribute*      createAttribute(const char *name, AttributeType type, AttributeType internal_type = AttributeType::Unknown);
 
     // parent & child interface
 
