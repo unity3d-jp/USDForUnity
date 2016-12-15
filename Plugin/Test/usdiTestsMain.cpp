@@ -1,13 +1,14 @@
-#include <experimental/filesystem>
 #include "usdiTests.h"
 #include "usdiHelper/usdiHelper.h"
-
+#ifdef _WIN32
+    #include <experimental/filesystem>
+#endif
 
 int main(int argc, char *argv[])
 {
+#ifdef _WIN32
     namespace fs = std::experimental::filesystem;
     auto cpath = fs::current_path().string();
-
     AddDLLSearchPath((cpath + "\\plugins\\lib").c_str());
     usdiSetPluginPath((cpath + "\\plugins").c_str());
 
@@ -18,4 +19,7 @@ int main(int argc, char *argv[])
             TestMain(argc, argv);
         }
     }
+#else
+    TestMain(argc, argv);
+#endif
 }

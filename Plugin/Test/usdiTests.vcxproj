@@ -11,12 +11,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="MeshUtilsTest.cpp" />
     <ClCompile Include="usdiTestExport.cpp" />
     <ClCompile Include="usdiTestExportHighMesh.cpp" />
     <ClCompile Include="usdiTestImport.cpp" />
     <ClCompile Include="usdiTests.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\MeshUtils.vcxproj">
+      <Project>{fd3fe1ff-abe5-40db-b867-144e9dd9b23c}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\usdi.vcxproj">
       <Project>{08361722-5520-47ac-a0c2-31e8a062b73f}</Project>
     </ProjectReference>

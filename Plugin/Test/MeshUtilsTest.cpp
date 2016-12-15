@@ -41,14 +41,14 @@ inline bool near_equal(const T (&a)[S], const T (&b)[S])
 
 typedef uint64_t ns;
 
-ns now()
+static ns now()
 {
     using namespace std::chrono;
     return duration_cast<nanoseconds>(steady_clock::now().time_since_epoch()).count();
 }
 
 
-std::vector<float3> GenerateTestData(size_t num, float cycle, float scale)
+static std::vector<float3> GenerateTestData(size_t num, float cycle, float scale)
 {
     std::vector<float3> ret;
     for (size_t i = 0; i < num; ++i) {
@@ -62,7 +62,7 @@ std::vector<float3> GenerateTestData(size_t num, float cycle, float scale)
 #define NumTestData (1024*1024*8)
 #define NumTry 16
 
-void Test_InvertX()
+static void Test_InvertX()
 {
     auto data1 = GenerateTestData(NumTestData, 0.1f, 1.0f);
     auto data2 = data1;
@@ -75,9 +75,12 @@ void Test_InvertX()
         auto start = now();
         InvertX_Generic(data1.data(), data1.size());
         elapsed1 += now() - start;
+
+#ifdef muEnableISPC
         start = now();
         InvertX_ISPC(data2.data(), data2.size());
         elapsed2 += now() - start;
+#endif // muEnableISPC
 
         result = near_equal(data1, data2);
         if (!result) { break; }
@@ -90,7 +93,7 @@ void Test_InvertX()
 }
 
 
-void Test_Scale()
+static void Test_Scale()
 {
     auto data1 = GenerateTestData(NumTestData, 0.1f, 1.0f);
     auto data2 = data1;
@@ -104,9 +107,12 @@ void Test_Scale()
         auto start = now();
         Scale_Generic(data1.data(), scale, data1.size());
         elapsed1 += now() - start;
+
+#ifdef muEnableISPC
         start = now();
         Scale_ISPC(data2.data(), scale, data2.size());
         elapsed2 += now() - start;
+#endif // muEnableISPC
 
         result = near_equal(data1, data2);
         if (!result) { break; }
@@ -119,7 +125,7 @@ void Test_Scale()
 }
 
 
-void Test_ComputeBounds()
+static void Test_ComputeBounds()
 {
     auto data = GenerateTestData(NumTestData, 0.1f, 1.0f);
     float3 bounds1[2];
@@ -133,9 +139,12 @@ void Test_ComputeBounds()
         auto start = now();
         ComputeBounds_Generic(data.data(), data.size(), bounds1[0], bounds1[1]);
         elapsed1 += now() - start;
+
+#ifdef muEnableISPC
         start = now();
         ComputeBounds_ISPC(data.data(), data.size(), bounds2[0], bounds2[1]);
         elapsed2 += now() - start;
+#endif // muEnableISPC
 
         result = near_equal(bounds1, bounds2);
         if (!result) { break; }
@@ -148,7 +157,7 @@ void Test_ComputeBounds()
 }
 
 
-void Test_Normalize()
+static void Test_Normalize()
 {
     auto data1 = GenerateTestData(NumTestData, 0.1f, 1.0f);
     auto data2 = data1;
@@ -161,9 +170,12 @@ void Test_Normalize()
         auto start = now();
         Normalize_Generic(data1.data(), data1.size());
         elapsed1 += now() - start;
+
+#ifdef muEnableISPC
         start = now();
         Normalize_ISPC(data2.data(), data2.size());
         elapsed2 += now() - start;
+#endif // muEnableISPC
 
         result = near_equal(data1, data2);
         if (!result) { break; }
@@ -176,7 +188,7 @@ void Test_Normalize()
 }
 
 
-void Test_CalculateNormals()
+static void Test_CalculateNormals()
 {
     auto points = GenerateTestData(NumTestData, 0.1f, 1.0f);
     std::vector<int> indices;
@@ -194,9 +206,12 @@ void Test_CalculateNormals()
         auto start = now();
         CalculateNormals_Generic(normals1.data(), points.data(), indices.data(), points.size(), indices.size());
         elapsed1 += now() - start;
+
+#ifdef muEnableISPC
         start = now();
         CalculateNormals_ISPC(normals2.data(), points.data(), indices.data(), points.size(), indices.size());
         elapsed2 += now() - start;
+#endif // muEnableISPC
 
         result = near_equal(normals1, normals2);
         if (!result) { break; }
@@ -208,16 +223,11 @@ void Test_CalculateNormals()
     printf("\n");
 }
 
-
-int main(int argc, char *argv[])
+void MeshUtilsTest()
 {
     Test_InvertX();
     Test_Scale();
     Test_ComputeBounds();
     Test_Normalize();
     Test_CalculateNormals();
-
-    printf("done.\n");
-    char c;
-    scanf("%c", &c);
 }
