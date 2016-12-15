@@ -74,7 +74,6 @@ namespace UTJ
         double m_prevUpdateTime = Double.NaN;
         usdi.Task m_asyncUpdate;
         bool m_recordUndo;
-        public Bool testBool;
         #endregion
 
 
@@ -660,7 +659,7 @@ namespace UTJ
 
             usdi.usdiUniTransformNotfyChange(GetComponent<Transform>());
 
-            if (m_directVBUpdate)
+            if (m_directVBUpdate && usdi.usdiVtxCmdIsAvailable())
             {
                 GL.IssuePluginEvent(usdi.usdiGetRenderEventFunc(), 0);
             }

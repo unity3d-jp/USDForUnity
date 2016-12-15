@@ -610,7 +610,7 @@ namespace UTJ
         [DllImport("usdi")] public static extern IntPtr usdiTaskCreateAttrReadSample(Attribute points, ref AttributeData dst, ref double t);
         [DllImport("usdi")] public static extern IntPtr usdiTaskCreateComposite(IntPtr tasks, int num);
 
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+#if (UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN) && !(UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX)
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern void usdiUniTransformAssign(UnityEngine.Transform trans, ref XformData data);
         [MethodImpl(MethodImplOptions.InternalCall)]
@@ -751,6 +751,7 @@ namespace UTJ
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void InitializePluginPass1()
         {
+#if (UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN) && !(UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX)
             usdi.AddDLLSearchPath(GetModulePath());
 
             string platform_suffix = "";
@@ -766,6 +767,7 @@ namespace UTJ
             var usdPluginDir = Application.streamingAssetsPath + "/UTJ/USDForUnity/plugins" + platform_suffix;
             usdi.AddDLLSearchPath(usdPluginDir + "/lib");
             usdi.usdiSetPluginPath(usdPluginDir);
+#endif
         }
 
         // separate pass because loading usdi.dll will fail in InitializePluginPass1()

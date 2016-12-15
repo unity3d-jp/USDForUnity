@@ -9,7 +9,7 @@ using UnityEditor;
 namespace UTJ
 {
 
-    [AddComponentMenu("UTJ/USD/Mesh Export Config")]
+    [AddComponentMenu("USD/Mesh Export Config")]
     public class usdiMeshExportConfig : MonoBehaviour
     {
         #region fields

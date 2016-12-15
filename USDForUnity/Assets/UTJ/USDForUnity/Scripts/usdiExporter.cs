@@ -13,7 +13,7 @@ using UnityEditor;
 namespace UTJ
 {
     [ExecuteInEditMode]
-    [AddComponentMenu("UTJ/USD/Exporter")]
+    [AddComponentMenu("USD/Exporter")]
     public class usdiExporter : MonoBehaviour
     {
         #region impl

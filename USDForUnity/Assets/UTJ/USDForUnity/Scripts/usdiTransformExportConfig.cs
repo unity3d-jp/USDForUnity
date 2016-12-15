@@ -9,7 +9,7 @@ using UnityEditor;
 namespace UTJ
 {
 
-    [AddComponentMenu("UTJ/USD/Transform Export Config")]
+    [AddComponentMenu("USD/Transform Export Config")]
     public class usdiTransformExportConfig : MonoBehaviour
     {
         #region fields

@@ -120,14 +120,30 @@ MonoClass* (*mono_get_array_class)();
 MonoClass* (*mono_get_thread_class)();
 MonoClass* (*mono_get_exception_class)();
 
+using module_t = void*;
+#ifdef _WIN32
+module_t DLLLoad(const char *path) { return ::LoadLibraryA(path); }
+void     DLLUnload(module_t mod) { ::FreeLibrary((HMODULE)mod); }
+void*    DLLGetSymbol(module_t mod, const char *name) { return ::GetProcAddress((HMODULE)mod, name); }
+#else 
+module_t DLLLoad(const char *path) { return ::dlopen(path, RTLD_GLOBAL); }
+void     DLLUnload(module_t mod) { ::dlclose(mod); }
+void*    DLLGetSymbol(module_t mod, const char *name) { return ::dlsym(mod, name); }
+#endif
+
+#if defined(_WIN32)
+    #define MonoModule "mono.dll"
+#elif defined(__linux__)
+    #define MonoModule "libmono.so"
+#endif
+
 
 void ImportMonoFunctions()
 {
-#ifdef _WIN32
-    auto mono = ::GetModuleHandleA("mono.dll");
+    auto mono = DLLLoad(MonoModule);
     g_mono_dll = mono;
     if (mono) {
-#define Import(Name) (void*&)Name = ::GetProcAddress(mono, #Name)
+#define Import(Name) (void*&)Name = DLLGetSymbol(mono, #Name)
 
         Import(g_free);
 
@@ -239,9 +255,6 @@ void ImportMonoFunctions()
         Import(mono_get_exception_class);
 #undef Import
     }
-#else
-    // todo
-#endif
 }
 
 static struct _ImportMonoFunctions {

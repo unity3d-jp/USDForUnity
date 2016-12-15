@@ -9,7 +9,7 @@ using UnityEditor;
 namespace UTJ
 {
 
-    [AddComponentMenu("UTJ/USD/Particle Export Config")]
+    [AddComponentMenu("USD/Particle Export Config")]
     public class usdiParticleExportConfig : MonoBehaviour
     {
         #region fields

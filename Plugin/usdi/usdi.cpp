@@ -277,19 +277,19 @@ usdiAPI usdi::Schema* usdiPrimGetInstance(usdi::Schema *schema, int i)
 usdiAPI bool usdiPrimIsInstance(usdi::Schema *schema)
 {
     usdiTraceFunc();
-    if (!schema) { return nullptr; }
+    if (!schema) { return false; }
     return schema->isInstance();
 }
 usdiAPI bool usdiPrimIsInstanceable(usdi::Schema *schema)
 {
     usdiTraceFunc();
-    if (!schema) { return nullptr; }
+    if (!schema) { return false; }
     return schema->isInstanceable();
 }
 usdiAPI bool usdiPrimIsMaster(usdi::Schema *schema)
 {
     usdiTraceFunc();
-    if (!schema) { return nullptr; }
+    if (!schema) { return false; }
     return schema->isMaster();
 }
 usdiAPI void usdiPrimSetInstanceable(usdi::Schema *schema, bool v)
