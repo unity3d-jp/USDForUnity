@@ -197,7 +197,8 @@ void VertexCommandManager::process()
         for (auto& t : dirty) { t->copy(); }
 #else
         size_t grain = std::max<size_t>(dirty.size()/32, 1);
-        tbb::parallel_for(tbb::blocked_range<size_t>(0, dirty.size(), grain), [&dirty](const auto& r) {
+        using range_t = tbb::blocked_range<size_t>;
+        tbb::parallel_for(range_t(0, dirty.size(), grain), [&dirty](const range_t& r) {
             for (size_t i = r.begin(); i != r.end(); ++i) {
                 dirty[i]->copy();
             }

@@ -103,7 +103,7 @@ namespace UTJ
         }
         public bool directVBUpdate
         {
-            get { return m_directVBUpdate; }
+            get { return m_directVBUpdate && usdi.usdiVtxCmdIsAvailable(); }
         }
         public bool deferredUpdate
         {
@@ -659,7 +659,7 @@ namespace UTJ
 
             usdi.usdiUniTransformNotfyChange(GetComponent<Transform>());
 
-            if (m_directVBUpdate && usdi.usdiVtxCmdIsAvailable())
+            if (directVBUpdate)
             {
                 GL.IssuePluginEvent(usdi.usdiGetRenderEventFunc(), 0);
             }
