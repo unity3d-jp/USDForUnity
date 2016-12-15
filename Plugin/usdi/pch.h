@@ -39,7 +39,12 @@
 #include <cmath>
 #include <cctype>
 #include <type_traits>
-#include <experimental/filesystem>
+#ifdef usdiEnableBoostFilesystem
+    #include <boost/filesystem.hpp>
+#else
+    #include <experimental/filesystem>
+#endif
+#include <tbb/tbb.h>
 
 #pragma warning(push)
 #pragma warning(disable:4100 4127 4244 4305)

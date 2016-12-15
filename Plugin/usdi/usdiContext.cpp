@@ -11,10 +11,10 @@ void mDetachAllThreads();
 
 namespace usdi {
 
-#ifdef usdiEnableUnityExtension
-    void InitializeInternalMethods();
-    void ClearInternalMethodsCache();
-#endif // usdiEnableUnityExtension
+#if usdiEnableMono && usdiEnableUnityExtension
+void InitializeInternalMethods();
+void ClearInternalMethodsCache();
+#endif
 
 static int g_ctx_count;
 
@@ -23,9 +23,9 @@ Context::Context()
 {
     ++g_ctx_count;
     if (g_ctx_count == 1) {
-#ifdef usdiEnableUnityExtension
+#if usdiEnableMono && usdiEnableUnityExtension
         usdi::InitializeInternalMethods();
-#endif // usdiEnableUnityExtension
+#endif
     }
 
     initialize();
@@ -38,12 +38,12 @@ Context::~Context()
     usdiLogTrace("Context::~Context()\n");
     --g_ctx_count;
 
-#ifdef usdiEnableUnityExtension
+#if usdiEnableMono && usdiEnableUnityExtension
     if (g_ctx_count == 0) {
         //mDetachAllThreads();
         usdi::ClearInternalMethodsCache();
     }
-#endif // usdiEnableUnityExtension
+#endif
 }
 
 bool Context::valid() const
@@ -69,7 +69,12 @@ void Context::initialize()
 
 bool Context::createStage(const char *identifier)
 {
-    namespace fs = std::experimental::filesystem;
+    namespace fs =
+#ifdef usdiEnableBoostFilesystem
+        boost::filesystem;
+#else
+        std::experimental::filesystem;
+#endif
 
     initialize();
 
@@ -375,7 +380,8 @@ void Context::updateAllSamples(Time t)
     }
 #else
     size_t grain = std::max<size_t>(m_schemas.size() / 32, 1);
-    tbb::parallel_for(tbb::blocked_range<size_t>(0, m_schemas.size(), grain), [t, this](const auto& r) {
+    using range_t = tbb::blocked_range<size_t>;
+    tbb::parallel_for(range_t(0, m_schemas.size(), grain), [t, this](const range_t& r) {
         for (size_t i = r.begin(); i != r.end(); ++i) {
             m_schemas[i]->updateSample(t);
         }

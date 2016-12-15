@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#ifdef usdiEnableMono
 typedef char        mchar8;
 typedef uint16_t    mchar16;
 
@@ -361,3 +362,4 @@ template<class T> mObject mGetSystemType() { return mGetSystemType(mTypeof<T>())
 #endif
 
 #include "MonoWrapperImpl.h"
+#endif // usdiEnableMono

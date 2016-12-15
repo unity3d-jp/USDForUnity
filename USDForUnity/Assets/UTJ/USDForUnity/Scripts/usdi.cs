@@ -590,6 +590,7 @@ namespace UTJ
 
         // ext
 
+        [DllImport("usdi")] public static extern Bool usdiVtxCmdIsAvailable();
         [DllImport("usdi")] public static extern IntPtr usdiVtxCmdCreate(string dbg_name);
         [DllImport("usdi")] public static extern void usdiVtxCmdDestroy(IntPtr h);
         [DllImport("usdi")] public static extern void usdiVtxCmdUpdate(IntPtr h, ref MeshData data, IntPtr vb, IntPtr ib);
@@ -609,15 +610,38 @@ namespace UTJ
         [DllImport("usdi")] public static extern IntPtr usdiTaskCreateAttrReadSample(Attribute points, ref AttributeData dst, ref double t);
         [DllImport("usdi")] public static extern IntPtr usdiTaskCreateComposite(IntPtr tasks, int num);
 
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern void usdiUniTransformAssign(UnityEngine.Transform trans, ref XformData data);
         [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern void usdiUniTransformNotfyChange(UnityEngine.Transform trans);
         [MethodImpl(MethodImplOptions.InternalCall)]
-        public static extern void usdiUniCameraAssign(UnityEngine.Camera cam, ref CameraData data);
-        [MethodImpl(MethodImplOptions.InternalCall)]
         public static extern void usdiUniMeshAssignBounds(UnityEngine.Mesh mesh, ref Vector3 center, ref Vector3 extents);
-
+#else
+        public static void usdiUniTransformAssign(UnityEngine.Transform trans, ref XformData data)
+        {
+            if ((data.flags & (int)usdi.XformData.Flags.UpdatedPosition) != 0)
+            {
+                trans.localPosition = data.position;
+            }
+            if ((data.flags & (int)usdi.XformData.Flags.UpdatedRotation) != 0)
+            {
+                trans.localRotation = data.rotation;
+            }
+            if ((data.flags & (int)usdi.XformData.Flags.UpdatedScale) != 0)
+            {
+                trans.localScale = data.scale;
+            }
+        }
+        public static void usdiUniTransformNotfyChange(UnityEngine.Transform trans)
+        {
+            // nothing to do
+        }
+        public static void usdiUniMeshAssignBounds(UnityEngine.Mesh mesh, ref Vector3 center, ref Vector3 extents)
+        {
+            mesh.bounds = new Bounds(center, extents);
+        }
+#endif
 
 
         public class VertexUpdateCommand

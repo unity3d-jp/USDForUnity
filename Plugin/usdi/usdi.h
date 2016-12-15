@@ -10,8 +10,10 @@
     #else
         #define usdiAPI
     #endif
+    #define usdiSTDCall __stdcall
 #else
     #define usdiAPI
+    #define usdiSTDCall
 #endif
 
 namespace usdi {
@@ -144,12 +146,12 @@ struct XformData
     float3 position = { 0.0f, 0.0f, 0.0f};
     quatf rotation = { 0.0f, 0.0f, 0.0f, 1.0f };
     float3 scale = { 1.0f, 1.0f, 1.0f };
-    float4x4 transform = {
-        1.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, 1.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 1.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 1.0f
-    };
+    float4x4 transform = { {
+        {1.0f, 0.0f, 0.0f, 0.0f},
+        {0.0f, 1.0f, 0.0f, 0.0f},
+        {0.0f, 0.0f, 1.0f, 0.0f},
+        {0.0f, 0.0f, 0.0f, 1.0f}
+    } };
 };
 
 

@@ -54,20 +54,6 @@ namespace UTJ
             {
                 usdi.usdiUniTransformAssign(m_trans, ref m_xfData);
             }
-
-            //// fall back
-            //if ((m_xfData.flags & (int)usdi.XformData.Flags.UpdatedPosition) != 0)
-            //{
-            //    m_trans.localPosition = m_xfData.position;
-            //}
-            //if ((m_xfData.flags & (int)usdi.XformData.Flags.UpdatedRotation) != 0)
-            //{
-            //    m_trans.localRotation = m_xfData.rotation;
-            //}
-            //if ((m_xfData.flags & (int)usdi.XformData.Flags.UpdatedScale) != 0)
-            //{
-            //    m_trans.localScale = m_xfData.scale;
-            //}
         }
         #endregion
     }

@@ -1,5 +1,6 @@
 #pragma once
 
+#ifdef usdiEnableMono
 #include "usdiExt.h"
 #include "UnityEngineBinding.h"
 
@@ -207,3 +208,4 @@ private:
 
 #endif // usdiEnableComponentUpdator
 } // namespace usdi
+#endif // usdiEnableMono

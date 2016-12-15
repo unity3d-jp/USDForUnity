@@ -14,13 +14,15 @@ MonoThreadScope::MonoThreadScope()
 
 MonoThreadScope::~MonoThreadScope()
 {
+#ifdef usdiEnableMono
 #ifdef usdiEnableMonoThreadGuard
     mono_thread_detach(mono_thread_current());
+#endif
 #endif
 }
 
 
-
+#ifdef usdiEnableGraphicsInterface
 VertexUpdateCommand::VertexUpdateCommand(const char *dbg_name)
     : m_dbg_name(!dbg_name ? "" : dbg_name)
 {
@@ -211,6 +213,7 @@ void VertexCommandManager::wait()
 {
     lock_t l(m_mutex_processing);
 }
+#endif // usdiEnableGraphicsInterface
 
 
 

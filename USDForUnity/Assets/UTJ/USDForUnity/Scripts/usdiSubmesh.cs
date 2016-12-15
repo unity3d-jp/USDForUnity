@@ -369,7 +369,7 @@ namespace UTJ
                 m_umesh.UploadMeshData(false);
 
 #if UNITY_5_5_OR_NEWER
-                if (m_stream.directVBUpdate)
+                if (m_stream.directVBUpdate && usdi.usdiVtxCmdIsAvailable())
                 {
                     m_VB = m_umesh.GetNativeVertexBufferPtr(0);
                     m_IB = m_umesh.GetNativeIndexBufferPtr();

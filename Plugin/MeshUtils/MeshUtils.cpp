@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "MeshUtils.h"
-#include "MeshUtilsCore.h"
 #include "mikktspace.h"
 
 namespace mu {
@@ -180,7 +179,9 @@ void Interleave_Generic(VertexT *dst, const typename VertexT::source_t& src, siz
     }
 }
 
-#ifdef muUseISPC
+#ifdef muEnableISPC
+#include "MeshUtilsCore.h"
+
 void InvertX_ISPC(float3 *dst, size_t num)
 {
     ispc::InvertXF3((ispc::float3*)dst, (int)num);
@@ -230,7 +231,7 @@ void CalculateNormals_ISPC(float3 *dst, const float3 *p, const int *indices, siz
 
 
 
-#ifdef muUseISPC
+#ifdef muEnableISPC
     #define Forward(Name, ...) Name##_ISPC(__VA_ARGS__)
 #else
     #define Forward(Name, ...) Name##_Generic(__VA_ARGS__)

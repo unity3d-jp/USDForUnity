@@ -751,7 +751,7 @@ Attribute* CreateAttribute(Schema *parent, const char *name)
 {
     UsdAttribute usd = parent->getUsdPrim().CreateAttribute(TfToken(name), AttrTypeTraits<T>::sdf_typename());
     if (!usd) { return nullptr; }
-    return new AttrTypeTraits<T>::attr_type(parent, usd);
+    return new typename AttrTypeTraits<T>::attr_type(parent, usd);
 }
 
 Attribute* CreateAttribute(Schema *parent, const char *name, AttributeType type)

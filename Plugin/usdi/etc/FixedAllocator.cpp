@@ -88,9 +88,14 @@ static FixedAllocator g_allocators[] = {
 
 static inline size_t _SizeToIndex(size_t size)
 {
+#ifdef _MSC_VER
     unsigned long index;
     _BitScanReverse64(&index, size);
     return index + (__popcnt64(size) > 1 ? 1 : 0);
+#else
+    unsigned long index = 31 - __builtin_clzll(size);
+    return index + (__builtin_popcountll(size) > 1 ? 1 : 0);
+#endif
 }
 
 void* FixedMalloc(size_t size)

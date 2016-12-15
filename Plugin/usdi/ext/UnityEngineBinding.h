@@ -1,4 +1,5 @@
 #pragma once
+#ifdef usdiEnableMono
 #include "etc/MonoWrapper.h"
 
 namespace usdi {
@@ -244,3 +245,4 @@ public:
 };
 
 } // namespace usdi
+#endif // usdiEnableMono

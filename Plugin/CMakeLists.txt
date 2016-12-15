@@ -1,53 +1,99 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 PROJECT(usdi)
 
-OPTION(USDI_DEBUG "Enable Debug" OFF)
+SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+FIND_PACKAGE(PythonLibs 2.7 QUIET)
+FIND_PACKAGE(Boost QUIET)
+FIND_PACKAGE(TBB QUIET)
+FIND_PACKAGE(OpenEXR QUIET)
+FIND_PACKAGE(DoubleConversion QUIET)
+FIND_PACKAGE(GLEW QUIET)
 
-SET(USD_ROOT /opt/pixar/usd)
-SET(USD_VFX_ROOT /opt/pixar/usd-vfx2015)
+SET(USD_ROOT "/opt/pixar" CACHE PATH "path to USD root")
+
+OPTION(USDI_BUILD_TESTS "" OFF)
+OPTION(USDI_ENABLE_DEBUG "" OFF)
+OPTION(USDI_ENABLE_ISPC "" OFF)
+OPTION(USDI_ENABLE_UNITY_EXTENSION "" ON)
+OPTION(USDI_ENABLE_GRAPHICS_INTERFACE "" OFF)
+OPTION(USDI_ENABLE_MONO "" OFF)
 
 
-IF(MSVC)
-ELSE()
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++11 -Wno-deprecated")
-    SET(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-rpath,${USD_ROOT}/lib:${USD_VFX_ROOT}/lib")
-ENDIF()
 
-ADD_DEFINITIONS(-DBUILD_OPTLEVEL_OPT -DBUILD_COMPONENT_SRC_PREFIX="usdi")
-IF(USDI_DEBUG)
-    ADD_DEFINITIONS(-DusdiDebug)
-    SET(CMAKE_BUILD_TYPE Debug)
-ELSE()
-    SET(CMAKE_BUILD_TYPE Release)
-ENDIF()
-
+ADD_DEFINITIONS(-DBUILD_OPTLEVEL_OPT -DBUILD_COMPONENT_SRC_PREFIX="pxr/")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++11 -Wno-deprecated")
 
 INCLUDE_DIRECTORIES(
-    ${INCLUDES}
     .
+    ${INCLUDES}
+    ${PYTHON_INCLUDE_DIRS}
+    ${Boost_INCLUDE_DIRS}
+    ${TBB_INCLUDE_DIRS}
+    ${OPENEXR_INCLUDE_DIRS}
+    ${DOUBLE_CONVERSION_INCLUDE_DIRS}
+    ${GLEW_INCLUDE_DIR}
     ${USD_ROOT}/include
-    ${USD_VFX_ROOT}/include
-    ${USD_VFX_ROOT}/include/python2.7
-    ${USD_VFX_ROOT}/packages/openexr-2.2.0/include/OpenEXR
 )
 
 LINK_DIRECTORIES (
     ${USD_ROOT}/lib
-    ${USD_VFX_ROOT}/lib
 )
 
 
-FILE(GLOB USDI_CXX_FILES usdi/*.cpp)
-FILE(GLOB USDI_H_FILES usdi/*.h)
+# GraphicsInterface
+IF(USDI_USE_GRAPHICS_INTERFACE)
+    FILE(GLOB GI_CXX_FILES GraphicsInterface/*.cpp)
+    FILE(GLOB GI_H_FILES GraphicsInterface/*.h)
+    ADD_LIBRARY(GraphicsInterface STATIC ${GI_CXX_FILES} ${GI_H_FILES})
+    TARGET_INCLUDE_DIRECTORIES(GraphicsInterface PUBLIC ./GraphicsInterface)
+ENDIF()
+
+
+# MeshUtils
+FILE(GLOB MU_CXX_FILES MeshUtils/*.cpp MeshUtils/*.c)
+FILE(GLOB MU_H_FILES MeshUtils/*.h)
+ADD_LIBRARY(MeshUtils STATIC ${MU_CXX_FILES} ${MU_H_FILES})
+TARGET_INCLUDE_DIRECTORIES(MeshUtils PUBLIC ./MeshUtils)
+
+
+# usdi
+FILE(GLOB USDI_CXX_FILES usdi/*.cpp usdi/etc/*.cpp usdi/ext/*.cpp)
+FILE(GLOB USDI_H_FILES usdi/*.h usdi/etc/*.h usdi/ext/*.h)
 ADD_LIBRARY(usdi SHARED ${USDI_CXX_FILES} ${USDI_H_FILES})
-TARGET_LINK_LIBRARIES(usdi usd usdGeom usdUtils boost_python-mt)
+ADD_DEPENDENCIES(usdi MeshUtils)
+TARGET_INCLUDE_DIRECTORIES(usdi PUBLIC
+    ./usdi
+    ./External/Unity/include
+)
+TARGET_LINK_LIBRARIES(usdi
+    usd usdGeom usdUtils
+    ${PYTHON_LIBRARY}
+    ${Boost_PYTHON_LIBRARY_RELEASE}
+    ${TBB_tbb_LIBRARY_RELEASE}
+    ${OPENEXR_Half_LIBRARY}
+    ${DOUBLE_CONVERSION_LIBRARY}
+)
+ADD_DEFINITIONS(-DusdiEnableBoostFilesystem)
+ADD_DEFINITIONS(-DusdiEnableUnityExtension)
+IF(USDI_ENABLE_UNITY_EXTENSION)
+    ADD_DEFINITIONS(-DusdiEnableUnityExtension)
+ENDIF()
+IF(USDI_ENABLE_DEBUG)
+    ADD_DEFINITIONS(-DusdiDebug)
+ENDIF()
+IF(USDI_ENABLE_MONO)
+    ADD_DEFINITIONS(-DusdiEnableMono)
+ENDIF()
+IF(USDI_USE_GRAPHICS_INTERFACE)
+    ADD_DEFINITIONS(-DusdiEnableGraphicsInterface)
+    ADD_DEPENDENCIES(usdi GraphicsInterface)
+    TARGET_LINK_LIBRARIES(usdi GraphicsInterface ${GLEW_LIBRARIES})
+ENDIF()
 
 
-ADD_EXECUTABLE(test_import Test/usdiTestImport.cpp)
-ADD_DEPENDENCIES(test_import usdi)
-TARGET_LINK_LIBRARIES(test_import usdi)
-
-
-ADD_EXECUTABLE(test_export Test/usdiTestExport.cpp)
-ADD_DEPENDENCIES(test_export usdi)
-TARGET_LINK_LIBRARIES(test_export usdi)
+# tests
+IF(USDI_BUILD_TESTS)
+    ADD_EXECUTABLE(usdiTests Test/*.cpp Test/*.h)
+    ADD_DEPENDENCIES(usdiTests usdi)
+    TARGET_LINK_LIBRARIES(usdiTests usdi)
+ENDIF()

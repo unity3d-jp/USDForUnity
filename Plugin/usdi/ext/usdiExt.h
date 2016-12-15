@@ -4,7 +4,7 @@
 
 namespace usdi {
     typedef size_t Handle;
-    typedef void(__stdcall *MonoDelegate)(void*);
+    typedef void(usdiSTDCall *MonoDelegate)(void*);
 
     class Task;
 } // namespace usdi

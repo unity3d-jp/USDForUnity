@@ -1,4 +1,5 @@
 #include "pch.h"
+#ifdef usdiEnableMono
 #include "usdiInternal.h"
 #include "UnityEngineBinding.h"
 #include "usdiComponentUpdater.h"
@@ -603,3 +604,4 @@ void PointsUpdater::update(Time time)
 }
 #endif // usdiEnableComponentUpdator
 } // namespace usdi
+#endif // usdiEnableMono

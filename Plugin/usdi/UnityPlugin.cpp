@@ -1,4 +1,5 @@
 #include "pch.h"
+#ifdef usdiEnableUnityExtension
 #include "usdiInternal.h"
 #include "ext/usdiExt.h"
 #include "GraphicsInterface/GraphicsInterface.h"
@@ -36,3 +37,4 @@ extern "C" UNITY_INTERFACE_EXPORT IUnityInterfaces* GetUnityInterface()
 {
     return g_unity_interface;
 }
+#endif // usdiEnableUnityExtension

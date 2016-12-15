@@ -1,4 +1,5 @@
 #include "pch.h"
+#ifdef usdiEnableMono
 #include "Mono.h"
 #ifdef _WIN32
     #include <windows.h>
@@ -247,3 +248,4 @@ static struct _ImportMonoFunctions {
     _ImportMonoFunctions() { ImportMonoFunctions(); }
 } g_ImportMonoFunctions;
 
+#endif // usdiEnableMono

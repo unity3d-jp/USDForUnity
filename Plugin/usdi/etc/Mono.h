@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#ifdef usdiEnableMono
 typedef int            gboolean;
 typedef int            gint;
 typedef unsigned int   guint;
@@ -265,3 +266,4 @@ extern MonoClass* (*mono_get_array_class)();
 extern MonoClass* (*mono_get_thread_class)();
 extern MonoClass* (*mono_get_exception_class)();
 
+#endif // usdiEnableMono

@@ -159,15 +159,14 @@ Attribute* Schema::createAttribute(const char *name, AttributeType type, Attribu
 
     if (internal_type == AttributeType::Unknown) {
         switch (type) {
-        // USD doesn't support these types. use emulation (conversion) to support.
-#define Forward(ExT, InT) case AttributeType::ExT: internal_type = AttributeType::InT; break;
-        Forward(Float2x2, Double2x2);
-        Forward(Float3x3, Double3x3);
-        Forward(Float4x4, Double4x4);
-        Forward(Float2x2Array, Double2x2Array);
-        Forward(Float3x3Array, Double3x3Array);
-        Forward(Float4x4Array, Double4x4Array);
-#undef Forward
+        // USD doesn't support these types. adding convert layer to emulate.
+#define Case(T, InT)\
+    case AttributeType::T: internal_type = AttributeType::InT; break;\
+    case AttributeType::T##Array: internal_type = AttributeType::InT##Array; break;
+        Case(Float2x2, Double2x2);
+        Case(Float3x3, Double3x3);
+        Case(Float4x4, Double4x4);
+#undef Case
         default: internal_type = type; break;
         }
     }

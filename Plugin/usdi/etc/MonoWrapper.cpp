@@ -1,8 +1,8 @@
 ﻿#include "pch.h"
+#ifdef usdiEnableMono
 #include "Mono.h"
 #include "MonoWrapper.h"
 #include "tls.h"
-
 
 
 mImage mDomain::findImage(const char *name)
@@ -526,3 +526,5 @@ mObject mGetSystemType(mClass c)
     void *args[] = { mToMString(qname).get() };
     return s_GetType.invoke(nullptr, args);
 }
+
+#endif // usdiEnableMono

@@ -1,7 +1,9 @@
 #pragma once
 
 #ifdef usdiEnableUnityExtension
-#include "GraphicsInterface/GraphicsInterface.h"
+#ifdef usdiEnableGraphicsInterface
+    #include "GraphicsInterface/GraphicsInterface.h"
+#endif // usdiEnableGraphicsInterface
 #include "etc/HandleBasedVector.h"
 #include "etc/FixedAllocator.h"
 #include "usdiExt.h"
@@ -16,6 +18,7 @@ public:
 };
 
 
+#ifdef usdiEnableGraphicsInterface
 using MapContext = gi::MapContext;
 
 class VertexUpdateCommand
@@ -78,6 +81,7 @@ private:
     HandleBasedVector<CommandPtr>   m_commands;
     std::vector<Command*>           m_dirty_commands;
 };
+#endif // usdiEnableGraphicsInterface
 
 
 class Task
