@@ -5,16 +5,6 @@
 using namespace mu;
 
 
-void* operator new(std::size_t s) throw(std::bad_alloc)
-{
-    return AlignedMalloc(s, 0x20);
-}
-
-void operator delete(void *addr) throw()
-{
-    AlignedFree(addr);
-}
-
 template<class T>
 inline bool near_equal(const std::vector<T>& a, const std::vector<T>& b)
 {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "usdiConfig.h"
+#include "etc/Platform.h"
 
 
 #define usdiImpl
@@ -33,7 +34,6 @@
 
 
 #include "MeshUtils/muVector.h"
-#include "MeshUtils/muAllocator.h"
 namespace usdi {
     using namespace mu;
 } // namespace usdi

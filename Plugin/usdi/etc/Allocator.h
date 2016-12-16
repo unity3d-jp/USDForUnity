@@ -23,6 +23,9 @@ private:
     mutex_t m_mutex;
 };
 
+void* AlignedMalloc(size_t size, size_t alignment);
+void  AlignedFree(void *addr);
+
 void* FixedMalloc(size_t size);
 void  FixedFree(size_t size, void *addr);
 

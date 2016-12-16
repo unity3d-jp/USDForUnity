@@ -10,6 +10,7 @@ FIND_PACKAGE(DoubleConversion QUIET)
 FIND_PACKAGE(GLEW QUIET)
 
 SET(USD_ROOT "/opt/pixar" CACHE PATH "path to USD root")
+SET(ISPC "/usr/local/bin/ispc" CACHE PATH "path to Intel ISPC")
 
 OPTION(USDI_BUILD_TESTS "" ON)
 OPTION(USDI_ENABLE_DEBUG "" OFF)
@@ -51,6 +52,11 @@ ENDIF()
 
 
 # MeshUtils
+IF(USDI_ENABLE_ISPC)
+    #ADD_CUSTOM_COMMAND()
+    #${ISPC} MeshUtils/MeshUtilsCore.ispc -o MeshUtilsCore.o -h MeshUtilsCore.h --target=sse2,sse4,avx --arch=x86-64 --opt=fast-masked-vload --opt=fast-math --opt=force-aligned-memory
+ENDIF()
+
 FILE(GLOB MU_CXX_FILES MeshUtils/*.cpp MeshUtils/*.c)
 FILE(GLOB MU_H_FILES MeshUtils/*.h)
 ADD_LIBRARY(MeshUtils STATIC ${MU_CXX_FILES} ${MU_H_FILES})

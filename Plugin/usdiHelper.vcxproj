@@ -27,7 +27,6 @@
     <ClCompile Include="usdiHelper\usdiHelper.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="usdiHelper\Platform.h" />
     <ClInclude Include="usdiHelper\usdiHelper.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

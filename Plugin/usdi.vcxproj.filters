@@ -40,9 +40,6 @@
     <ClCompile Include="usdi\usdiXform.cpp">
       <Filter>usdi</Filter>
     </ClCompile>
-    <ClCompile Include="usdi\etc\FixedAllocator.cpp">
-      <Filter>usdi\etc</Filter>
-    </ClCompile>
     <ClCompile Include="usdi\etc\Hook.cpp">
       <Filter>usdi\etc</Filter>
     </ClCompile>
@@ -66,6 +63,9 @@
     </ClCompile>
     <ClCompile Include="usdi\ext\usdiComponentUpdater.cpp">
       <Filter>usdi\ext</Filter>
+    </ClCompile>
+    <ClCompile Include="usdi\etc\Allocator.cpp">
+      <Filter>usdi\etc</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -102,9 +102,6 @@
     <ClInclude Include="usdi\usdiXform.h">
       <Filter>usdi</Filter>
     </ClInclude>
-    <ClInclude Include="usdi\etc\FixedAllocator.h">
-      <Filter>usdi\etc</Filter>
-    </ClInclude>
     <ClInclude Include="usdi\etc\HandleBasedVector.h">
       <Filter>usdi\etc</Filter>
     </ClInclude>
@@ -140,6 +137,12 @@
     </ClInclude>
     <ClInclude Include="usdi\ext\usdiComponentUpdater.h">
       <Filter>usdi\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="usdi\etc\Platform.h">
+      <Filter>usdi\etc</Filter>
+    </ClInclude>
+    <ClInclude Include="usdi\etc\Allocator.h">
+      <Filter>usdi\etc</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

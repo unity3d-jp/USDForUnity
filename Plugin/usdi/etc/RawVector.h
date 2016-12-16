@@ -1,5 +1,7 @@
 #pragma once
 
+#include "etc/Allocator.h"
+
 namespace usdi {
 
 template<class T, size_t Alignment = 0x20>

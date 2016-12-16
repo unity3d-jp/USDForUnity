@@ -3,12 +3,13 @@
 #else 
     #include <stdlib.h>
     #include <dlfcn.h>
-#endif // _WIN32
+    #include <link.h>
+#endif
 #include <string>
 
 #define usdihImpl
 #include "usdiHelper.h"
-#include "Platform.h"
+#include "../usdi/etc/Platform.h"
 
 extern "C" {
 
@@ -46,7 +47,8 @@ usdihAPI const char* GetModulePath()
     }
     return s_path;
 #else
-
+    Dl_info info;
+    int i = dladdr(&GetModulePath, &info);
     return "";
 #endif
 }
@@ -75,7 +77,23 @@ usdihAPI void AddDLLSearchPath(const char *v)
         ::SetEnvironmentVariableA("PATH", path.c_str());
     }
 #else
-
+    #ifdef __APPLE__
+        #define LIBRARY_PATH "DYLD_LIBRARY_PATH"
+    #else
+        #define LIBRARY_PATH "LD_LIBRARY_PATH"
+    #endif
+    std::string path = ::getenv(LIBRARY_PATH);
+    if (path.find(v) == std::string::npos) {
+        path += ";";
+        auto pos = path.size();
+        path += v;
+        for (size_t i = pos; i < path.size(); ++i) {
+            if (path[i] == '\\') {
+                path[i] = '/';
+            }
+        }
+        ::setenv(LIBRARY_PATH, path.c_str());
+    }
 #endif
 }
 

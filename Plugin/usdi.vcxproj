@@ -11,12 +11,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="usdi\etc\FixedAllocator.h" />
+    <ClInclude Include="usdi\etc\Allocator.h" />
     <ClInclude Include="usdi\etc\HandleBasedVector.h" />
     <ClInclude Include="usdi\etc\Hook.h" />
     <ClInclude Include="usdi\etc\Mono.h" />
     <ClInclude Include="usdi\etc\MonoWrapper.h" />
     <ClInclude Include="usdi\etc\MonoWrapperImpl.h" />
+    <ClInclude Include="usdi\etc\Platform.h" />
     <ClInclude Include="usdi\etc\RawVector.h" />
     <ClInclude Include="usdi\etc\tls.h" />
     <ClInclude Include="usdi\ext\UnityEngineBinding.h" />
@@ -38,7 +39,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="usdi\DllMain.cpp" />
-    <ClCompile Include="usdi\etc\FixedAllocator.cpp" />
+    <ClCompile Include="usdi\etc\Allocator.cpp" />
     <ClCompile Include="usdi\etc\Hook.cpp" />
     <ClCompile Include="usdi\etc\Mono.cpp" />
     <ClCompile Include="usdi\etc\MonoWrapper.cpp" />

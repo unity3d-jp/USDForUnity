@@ -5,7 +5,7 @@
     #include "GraphicsInterface/GraphicsInterface.h"
 #endif // usdiEnableGraphicsInterface
 #include "etc/HandleBasedVector.h"
-#include "etc/FixedAllocator.h"
+#include "etc/Allocator.h"
 #include "usdiExt.h"
 
 namespace usdi {
