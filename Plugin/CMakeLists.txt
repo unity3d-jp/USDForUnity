@@ -22,7 +22,7 @@ OPTION(USDI_ENABLE_MONO "" OFF)
 
 ADD_DEFINITIONS(-DBUILD_OPTLEVEL_OPT -DBUILD_COMPONENT_SRC_PREFIX="pxr/")
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++11 -fPIC -Wno-deprecated")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++11 -fPIC -Wno-deprecated -DTF_NO_GNU_EXT")
 
 INCLUDE_DIRECTORIES(
     .
@@ -70,7 +70,7 @@ TARGET_INCLUDE_DIRECTORIES(usdi PUBLIC
     ./External/Unity/include
 )
 TARGET_LINK_LIBRARIES(usdi
-    usd usdGeom usdUtils MeshUtils
+    ar arch tf gf pcp vt sdf usd usdGeom usdUtils MeshUtils
     ${PYTHON_LIBRARY}
     ${Boost_PYTHON_LIBRARY_RELEASE}
     ${Boost_SYSTEM_LIBRARY_RELEASE}

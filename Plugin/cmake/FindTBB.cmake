@@ -95,35 +95,28 @@ if(NOT TBB_FOUND)
       set(TBB_USE_DEBUG_BUILD FALSE)
     endif()
   endif()
-  
+
   ##################################
   # Set the TBB search directories
   ##################################
-  
+
   # Define search paths based on user input and environment variables
   set(TBB_SEARCH_DIR ${TBB_ROOT_DIR} $ENV{TBB_INSTALL_DIR} $ENV{TBBROOT})
-  
+
   # Define the search directories based on the current platform
   if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set(TBB_DEFAULT_SEARCH_DIR "C:/Program Files/Intel/TBB"
                                "C:/Program Files (x86)/Intel/TBB")
     # TODO: Set the proper suffix paths based on compiler introspection.
-  
+
   elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     # OS X
     set(TBB_DEFAULT_SEARCH_DIR "/opt/intel/tbb")
-    
-    # TODO: Check to see which C++ library is being used by the compiler.
-    if(NOT ${CMAKE_SYSTEM_VERSION} VERSION_LESS 13.0)
-      # The default C++ library on OS X 10.9 and later is libc++
-      set(TBB_LIB_PATH_SUFFIX "lib/libc++")
-    else()
-      set(TBB_LIB_PATH_SUFFIX "lib")
-    endif()
+    set(TBB_LIB_PATH_SUFFIX "lib")
   elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     # Linux
     set(TBB_DEFAULT_SEARCH_DIR "/opt/intel/tbb")
-    
+
     # TODO: Check compiler version to see the suffix should be <arch>/gcc4.1 or
     #       <arch>/gcc4.1. For now, assume that the compiler is more recent than
     #       gcc 4.4.x or later.
