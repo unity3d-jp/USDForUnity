@@ -38,6 +38,7 @@ rtAPI void        SetEnv(const char *name, const char *value);
 rtAPI module_t DLLLoad(const char *path);
 rtAPI void     DLLUnload(module_t mod);
 rtAPI void*    DLLGetSymbol(module_t mod, const char *name);
+rtAPI module_t DLLGetHandle(const char *modname);
 
 rtAPI void     usdiSetPluginPath(const char *path);
 

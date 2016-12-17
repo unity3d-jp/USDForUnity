@@ -10,12 +10,12 @@ BOOL WINAPI DllMain(HINSTANCE /*hinstDLL*/, DWORD fdwReason, LPVOID /*lpvReserve
 {
     if (fdwReason == DLL_PROCESS_ATTACH) {
 //#ifndef usdiEnableMonoBindingThreadGuard
-        // redirect mono_thread_suspend_all_other_threads to mono_thread_abort_all_other_threads to avoid
+        // redirect _mono_thread_suspend_all_other_threads to _mono_thread_abort_all_other_threads to avoid
         // Mono wait TBB worker threads forever...
 #ifdef usdiEnableMonoBinding
         if (g_mono_dll) {
-            ForceWrite(mono_thread_suspend_all_other_threads, 14, [=]() {
-                EmitJumpInstruction(mono_thread_suspend_all_other_threads, mono_thread_abort_all_other_threads);
+            ForceWrite(_mono_thread_suspend_all_other_threads, 14, [=]() {
+                EmitJumpInstruction(_mono_thread_suspend_all_other_threads, _mono_thread_abort_all_other_threads);
             });
         }
 #endif // usdiEnableMonoBinding

@@ -102,15 +102,46 @@ rtAPI void SetEnv(const char *name, const char *value)
 
 #ifdef _WIN32
 
-rtAPI module_t DLLLoad(const char *path) { return ::LoadLibraryA(path); }
-rtAPI void DLLUnload(module_t mod) { ::FreeLibrary((HMODULE)mod); }
-rtAPI void* DLLGetSymbol(module_t mod, const char *name) { return ::GetProcAddress((HMODULE)mod, name); }
+rtAPI module_t  DLLLoad(const char *path) { return ::LoadLibraryA(path); }
+rtAPI void      DLLUnload(module_t mod) { ::FreeLibrary((HMODULE)mod); }
+rtAPI void*     DLLGetSymbol(module_t mod, const char *name) { return ::GetProcAddress((HMODULE)mod, name); }
+rtAPI module_t  DLLGetHandle(const char *modname) { return ::GetModuleHandleA(modname); }
 
 #else 
 
-rtAPI module_t DLLLoad(const char *path) { return ::dlopen(path, RTLD_GLOBAL); }
-rtAPI void DLLUnload(module_t mod) { ::dlclose(mod); }
-rtAPI void* DLLGetSymbol(module_t mod, const char *name) { return ::dlsym(mod, name); }
+rtAPI module_t  DLLLoad(const char *path) { return ::dlopen(path, RTLD_LAZY); }
+rtAPI void      DLLUnload(module_t mod) { ::dlclose(mod); }
+rtAPI void*     DLLGetSymbol(module_t mod, const char *name)
+{
+    return ::dlsym(mod, name);
+}
+
+rtAPI module_t DLLGetHandle(const char *modname)
+{
+#ifdef __APPLE__
+
+    for (auto i = _dyld_image_count(); i >= 0; i--) {
+        auto *path = _dyld_get_image_name(i);
+        if (strstr(path, modname)) {
+            return dlopen(it->l_name, RTLD_LAZY);
+        }
+    }
+
+#else
+
+    auto *mod = dlopen(nullptr, RTLD_LAZY);
+    link_map *it = nullptr;
+    dlinfo(mod, RTLD_DI_LINKMAP, &it);
+    while (it) {
+        if (strstr(it->l_name, modname)) {
+            return dlopen(it->l_name, RTLD_LAZY);
+        }
+        it = it->l_next;
+    }
+
+#endif
+    return nullptr;
+}
 
 #endif
 

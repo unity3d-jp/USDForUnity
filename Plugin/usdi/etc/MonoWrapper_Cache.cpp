@@ -127,7 +127,7 @@ void mRebindCache()
 
 mDomainCache::mDomainCache() : mDomain(nullptr) { mRegisterCache(this); }
 void mDomainCache::clear() { m_rep = nullptr; }
-void mDomainCache::rebind() { m_rep = mono_domain_get(); }
+void mDomainCache::rebind() { m_rep = _mono_domain_get(); }
 
 mDomain& mGetDomain()
 {

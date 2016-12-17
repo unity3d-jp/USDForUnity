@@ -68,6 +68,7 @@ IF(USDI_ENABLE_ISPC)
         ${MUCORE_DIR}/MeshUtilsCore_avx${CMAKE_CXX_OUTPUT_EXTENSION}
     )
 
+    # create dummy files to make cmake can find it
     EXECUTE_PROCESS(COMMAND mkdir -p ${MUCORE_DIR})
     FOREACH(F ${MUCORE_FILES})
         EXECUTE_PROCESS(COMMAND touch ${F})

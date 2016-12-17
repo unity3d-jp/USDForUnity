@@ -16,8 +16,8 @@ MonoThreadScope::~MonoThreadScope()
 {
 #ifdef usdiEnableMonoBinding
 #ifdef usdiEnableMonoBindingThreadGuard
-    if (mono_thread_detach && mono_thread_current) {
-        mono_thread_detach(mono_thread_current());
+    if (_mono_thread_detach && _mono_thread_current) {
+        _mono_thread_detach(_mono_thread_current());
     }
 #endif
 #endif

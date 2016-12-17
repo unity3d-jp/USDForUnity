@@ -1,11 +1,18 @@
+#pragma once
+
+#define rtImpl
+
 #ifdef _WIN32
     #include <windows.h>
 #else 
-    #include <stdlib.h>
     #include <dlfcn.h>
-    #include <link.h>
+    #ifdef __APPLE__
+        #include <mach-o/dyld.h>
+    #else
+        #include <link.h>
+    #endif
 #endif
+#include <cstdio>
+#include <cstring>
 #include <string>
 
-
-#define rtImpl

@@ -7,38 +7,38 @@
 
 mImage mDomain::findImage(const char *name)
 {
-    return mono_assembly_get_image(mono_domain_assembly_open(mGetDomain().get(), name));
+    return _mono_assembly_get_image(_mono_domain_assembly_open(mGetDomain().get(), name));
 }
 
 std::string mAssembly::getAssemblyName() const
 {
-    char *aname = mono_stringify_assembly_name(&m_rep->aname);
+    char *aname = _mono_stringify_assembly_name(&m_rep->aname);
     std::string ret = aname;
-    g_free((void*)aname);
+    _g_free((void*)aname);
     return ret;
 
 }
 
 mAssembly mImage::getAssembly()
 {
-    return mono_image_get_assembly(m_rep);
+    return _mono_image_get_assembly(m_rep);
 }
 
 mClass mImage::findClass(const char *namespace_, const char *class_name)
 {
-    return mono_class_from_name(m_rep, namespace_, class_name);
+    return _mono_class_from_name(m_rep, namespace_, class_name);
 }
 
 
 const char* mType::getName() const
 {
     if (!m_rep) { return nullptr; }
-    return mono_type_get_name(m_rep);
+    return _mono_type_get_name(m_rep);
 }
 
 mClass mType::getClass() const
 {
-    return mono_type_get_class(m_rep);
+    return _mono_type_get_class(m_rep);
 }
 
 
@@ -46,48 +46,48 @@ mClass mType::getClass() const
 const char* mField::getName() const
 {
     if (!m_rep) { return nullptr; }
-    return mono_field_get_name(m_rep);
+    return _mono_field_get_name(m_rep);
 }
 
 mType mField::getType() const
 {
-    return mono_field_get_type(m_rep);
+    return _mono_field_get_type(m_rep);
 }
 
 int mField::getOffset() const
 {
-    return mono_field_get_offset(m_rep);
+    return _mono_field_get_offset(m_rep);
 }
 
 void mField::getValueImpl(mObject obj, void *p) const
 {
     if (!m_rep) { return; }
-    mono_field_get_value(obj.get(), m_rep, p);
+    _mono_field_get_value(obj.get(), m_rep, p);
 }
 
 void mField::setValueImpl(mObject obj, const void *p)
 {
     if (!m_rep) { return; }
-    mono_field_set_value(obj.get(), m_rep, (void*)p);
+    _mono_field_set_value(obj.get(), m_rep, (void*)p);
 }
 
 
 const char* mProperty::getName() const
 {
     if (!m_rep) { return nullptr; }
-    return mono_property_get_name(m_rep);
+    return _mono_property_get_name(m_rep);
 }
 
 mMethod mProperty::getGetter() const
 {
     if (!m_rep) { return nullptr; }
-    return mono_property_get_get_method(m_rep);
+    return _mono_property_get_get_method(m_rep);
 }
 
 mMethod mProperty::getSetter() const
 {
     if (!m_rep) { return nullptr; }
-    return mono_property_get_set_method(m_rep);
+    return _mono_property_get_set_method(m_rep);
 }
 
 
@@ -95,17 +95,17 @@ mMethod mProperty::getSetter() const
 
 const char* mMethod::getName() const
 {
-    return mono_method_get_name(m_rep);
+    return _mono_method_get_name(m_rep);
 }
 
 mClass mMethod::getClass() const
 {
-    return mono_method_get_class(m_rep);
+    return _mono_method_get_class(m_rep);
 }
 
 mObject mMethod::invoke(mObject obj, void **args)
 {
-    return mono_runtime_invoke(m_rep, obj.get(), args, nullptr);
+    return _mono_runtime_invoke(m_rep, obj.get(), args, nullptr);
 }
 
 mMethod mMethod::inflate(mClass *params, size_t nparams, void *& mem)
@@ -123,38 +123,38 @@ mMethod mMethod::inflate(mClass *params, size_t nparams, void *& mem)
     }
 
     MonoGenericContext ctx = { nullptr, minst };
-    return mono_class_inflate_generic_method(m_rep, &ctx);
+    return _mono_class_inflate_generic_method(m_rep, &ctx);
 }
 
 
 const char* mClass::getName() const
 {
-    return mono_class_get_name(m_rep);
+    return _mono_class_get_name(m_rep);
 }
 
 const char* mClass::getNamespace() const
 {
-    return mono_class_get_namespace(m_rep);
+    return _mono_class_get_namespace(m_rep);
 }
 
 mImage mClass::getImage() const
 {
-    return mono_class_get_image(m_rep);
+    return _mono_class_get_image(m_rep);
 }
 
 mType mClass::getType() const
 {
-    return mono_class_get_type(m_rep);
+    return _mono_class_get_type(m_rep);
 }
 
 mField mClass::findField(const char *name) const
 {
-    return mono_class_get_field_from_name(m_rep, name);
+    return _mono_class_get_field_from_name(m_rep, name);
 }
 
 mProperty mClass::findProperty(const char *name) const
 {
-    return mono_class_get_property_from_name(m_rep, name);
+    return _mono_class_get_property_from_name(m_rep, name);
 }
 
 mMethod mClass::findMethod(const char *name, int num_args, const char **typenames) const
@@ -162,18 +162,18 @@ mMethod mClass::findMethod(const char *name, int num_args, const char **typename
     if (typenames) {
         for (mClass mc = m_rep; mc; mc = mc.getParent()) {
             gpointer imethod = nullptr;
-            while (MonoMethod *method = mono_class_get_methods(m_rep, &imethod)) {
-                if (strcmp(mono_method_get_name(method), name) != 0) { continue; }
+            while (MonoMethod *method = _mono_class_get_methods(m_rep, &imethod)) {
+                if (strcmp(_mono_method_get_name(method), name) != 0) { continue; }
 
-                MonoMethodSignature *sig = mono_method_signature(method);
-                if (mono_signature_get_param_count(sig) != (guint32)num_args) { continue; }
+                MonoMethodSignature *sig = _mono_method_signature(method);
+                if (_mono_signature_get_param_count(sig) != (guint32)num_args) { continue; }
 
                 MonoType *mt = nullptr;
                 gpointer isignature = nullptr;
                 bool match = true;
                 for (int i = 0; i < num_args; ++i) {
-                    mt = mono_signature_get_params(sig, &isignature);
-                    if (strcmp(mono_type_get_name(mt), typenames[i]) != 0) {
+                    mt = _mono_signature_get_params(sig, &isignature);
+                    if (strcmp(_mono_type_get_name(mt), typenames[i]) != 0) {
                         match = false;
                         break;
                     }
@@ -184,7 +184,7 @@ mMethod mClass::findMethod(const char *name, int num_args, const char **typename
     }
     else {
         for (mClass mc = m_rep; mc; mc = mc.getParent()) {
-            if (MonoMethod *ret = mono_class_get_method_from_name(mc.m_rep, name, num_args)) {
+            if (MonoMethod *ret = _mono_class_get_method_from_name(mc.m_rep, name, num_args)) {
                 return ret;
             }
         }
@@ -196,7 +196,7 @@ mMethod mClass::findMethod(const char *name, int num_args, const char **typename
 void mClass::eachFields(const std::function<void(mField&)> &f)
 {
     gpointer iter = nullptr;
-    while (MonoClassField *field = mono_class_get_fields(m_rep, &iter)) {
+    while (MonoClassField *field = _mono_class_get_fields(m_rep, &iter)) {
         mField mf = field;
         f(mf);
     }
@@ -205,7 +205,7 @@ void mClass::eachFields(const std::function<void(mField&)> &f)
 void mClass::eachProperties(const std::function<void(mProperty&)> &f)
 {
     gpointer iter = nullptr;
-    while (MonoProperty *prop = mono_class_get_properties(m_rep, &iter)) {
+    while (MonoProperty *prop = _mono_class_get_properties(m_rep, &iter)) {
         mProperty mp = prop;
         f(mp);
     }
@@ -214,7 +214,7 @@ void mClass::eachProperties(const std::function<void(mProperty&)> &f)
 void mClass::eachMethods(const std::function<void(mMethod&)> &f)
 {
     gpointer iter = nullptr;
-    while (MonoMethod *method = mono_class_get_methods(m_rep, &iter)) {
+    while (MonoMethod *method = _mono_class_get_methods(m_rep, &iter)) {
         mMethod mm = method;
         f(mm);
     }
@@ -225,7 +225,7 @@ void mClass::eachFieldsUpwards(const std::function<void(mField&, mClass&)> &f)
     mClass c = m_rep;
     do {
         gpointer iter = nullptr;
-        while (MonoClassField *field = mono_class_get_fields(c.m_rep, &iter)) {
+        while (MonoClassField *field = _mono_class_get_fields(c.m_rep, &iter)) {
             mField m = field;
             f(m, c);
         }
@@ -238,7 +238,7 @@ void mClass::eachPropertiesUpwards(const std::function<void(mProperty&, mClass&)
     mClass c = m_rep;
     do {
         gpointer iter = nullptr;
-        while (MonoProperty *prop = mono_class_get_properties(c.m_rep, &iter)) {
+        while (MonoProperty *prop = _mono_class_get_properties(c.m_rep, &iter)) {
             mProperty m = prop;
             f(m, c);
         }
@@ -251,7 +251,7 @@ void mClass::eachMethodsUpwards(const std::function<void(mMethod&, mClass&)> &f)
     mClass c = m_rep;
     do {
         gpointer iter = nullptr;
-        while (MonoMethod *method = mono_class_get_methods(c.m_rep, &iter)) {
+        while (MonoMethod *method = _mono_class_get_methods(c.m_rep, &iter)) {
             mMethod m = method;
             f(m, c);
         }
@@ -262,23 +262,23 @@ void mClass::eachMethodsUpwards(const std::function<void(mMethod&, mClass&)> &f)
 
 mClass mClass::getParent() const
 {
-    return mono_class_get_parent(m_rep);
+    return _mono_class_get_parent(m_rep);
 }
 
 
 mClass mObject::getClass() const
 {
-    return mono_object_get_class(m_rep);
+    return _mono_object_get_class(m_rep);
 }
 
 MonoDomain* mObject::getDomain() const
 {
-    return mono_object_get_domain(m_rep);
+    return _mono_object_get_domain(m_rep);
 }
 
 /*static*/ mObject mObject::New(mClass mclass)
 {
-    return mono_object_new(mGetDomain().get(), mclass.get());
+    return _mono_object_new(mGetDomain().get(), mclass.get());
 }
 
 void* mObject::unbox() { return m_rep + 1; }
@@ -299,42 +299,42 @@ mMethod mObject::findMethod(const char *name, int num_args, const char **typenam
 
 mObject mObject::invoke(mMethod method)
 {
-    return mono_runtime_invoke(method.get(), m_rep, nullptr, nullptr);
+    return _mono_runtime_invoke(method.get(), m_rep, nullptr, nullptr);
 }
 mObject mObject::invoke(mMethod method, void *a0)
 {
     void *args[] = { a0 };
-    return mono_runtime_invoke(method.get(), m_rep, args, nullptr);
+    return _mono_runtime_invoke(method.get(), m_rep, args, nullptr);
 }
 mObject mObject::invoke(mMethod method, void *a0, void *a1)
 {
     void *args[] = { a0, a1 };
-    return mono_runtime_invoke(method.get(), m_rep, args, nullptr);
+    return _mono_runtime_invoke(method.get(), m_rep, args, nullptr);
 }
 mObject mObject::invoke(mMethod method, void *a0, void *a1, void *a2)
 {
     void *args[] = { a0, a1, a2 };
-    return mono_runtime_invoke(method.get(), m_rep, args, nullptr);
+    return _mono_runtime_invoke(method.get(), m_rep, args, nullptr);
 }
 
 mObject mObject::sinvoke(mMethod method)
 {
-    return mono_runtime_invoke(method.get(), nullptr, nullptr, nullptr);
+    return _mono_runtime_invoke(method.get(), nullptr, nullptr, nullptr);
 }
 mObject mObject::sinvoke(mMethod method, void *a0)
 {
     void *args[] = { a0 };
-    return mono_runtime_invoke(method.get(), nullptr, args, nullptr);
+    return _mono_runtime_invoke(method.get(), nullptr, args, nullptr);
 }
 mObject mObject::sinvoke(mMethod method, void *a0, void *a1)
 {
     void *args[] = { a0, a1 };
-    return mono_runtime_invoke(method.get(), nullptr, args, nullptr);
+    return _mono_runtime_invoke(method.get(), nullptr, args, nullptr);
 }
 mObject mObject::sinvoke(mMethod method, void *a0, void *a1, void *a2)
 {
     void *args[] = { a0, a1, a2 };
-    return mono_runtime_invoke(method.get(), nullptr, args, nullptr);
+    return _mono_runtime_invoke(method.get(), nullptr, args, nullptr);
 }
 
 
@@ -376,24 +376,24 @@ void cpsMethodManager::addMethod(const char * name, void *method)
 void cpsMethodManager::registerAll()
 {
     for (auto m : m_methods) {
-        mono_add_internal_call(m.first, m.second);
+        _mono_add_internal_call(m.first, m.second);
     }
 }
 
 
 bool mIsSubclassOf(mClass parent, mClass child)
 {
-    return mono_class_is_subclass_of(parent.get(), child.get(), false) != 0;
+    return _mono_class_is_subclass_of(parent.get(), child.get(), false) != 0;
 }
 
 void mAddMethod(const char *name, void *addr)
 {
-    mono_add_internal_call(name, addr);
+    _mono_add_internal_call(name, addr);
 }
 
 /*static*/ mString mString::New(const mchar8 *str, int len)
 {
-    return mString(mono_string_new_len(mGetDomain().get(), str, len == -1 ? (int)strlen(str) : len));
+    return mString(_mono_string_new_len(mGetDomain().get(), str, len == -1 ? (int)strlen(str) : len));
 }
 
 /*static*/ mString mString::New(const mchar16 *str, int len)
@@ -403,7 +403,7 @@ void mAddMethod(const char *name, void *addr)
             if (str[len] == 0) { break; }
         }
     }
-    return mString(mono_string_new_utf16(mGetDomain().get(), str, len));
+    return mString(_mono_string_new_utf16(mGetDomain().get(), str, len));
 }
 
 size_t mString::size() const
@@ -413,18 +413,18 @@ size_t mString::size() const
 
 const mchar8* mString::toUTF8()
 {
-    return mono_string_to_utf8((MonoString*)m_rep);
+    return _mono_string_to_utf8((MonoString*)m_rep);
 }
 
 const mchar16* mString::toUTF16()
 {
-    return mono_string_to_utf16((MonoString*)m_rep);
+    return _mono_string_to_utf16((MonoString*)m_rep);
 }
 
 
 /*static*/ mArray mArray::New(mClass klass, size_t size)
 {
-    MonoArray *ret = mono_array_new(mGetDomain().get(), klass.get(), (mono_array_size_t)size);
+    MonoArray *ret = _mono_array_new(mGetDomain().get(), klass.get(), (mono_array_size_t)size);
     return ret;
 }
 
@@ -444,16 +444,16 @@ void* mArray::data()
     const char* Type::_getTypenameRef() { return MonoTypename "&"; }\
     const char* Type::_getTypenameArray() { return MonoTypename "[]"; }
 
-mDefBuiltinType(mVoid,   mono_get_void_class,   "System.Void"   );
-mDefBuiltinType(mIntPtr, mono_get_intptr_class, "System.IntPtr" );
-mDefBuiltinType(mBool,   mono_get_boolean_class,"System.Boolean");
-mDefBuiltinType(mByte,   mono_get_byte_class,   "System.Byte"   );
-mDefBuiltinType(mInt32,  mono_get_int32_class,  "System.Int32"  );
-mDefBuiltinType(mEnum,   mono_get_enum_class,   "System.Enum"   );
-mDefBuiltinType(mSingle, mono_get_single_class, "System.Single" );
-mDefBuiltinType(mDouble, mono_get_double_class, "System.Double" );
-mDefBuiltinType(mObject, mono_get_object_class, "System.Object" );
-mDefBuiltinType(mString, mono_get_string_class, "System.String" );
+mDefBuiltinType(mVoid,   _mono_get_void_class,   "System.Void"   );
+mDefBuiltinType(mIntPtr, _mono_get_intptr_class, "System.IntPtr" );
+mDefBuiltinType(mBool,   _mono_get_boolean_class,"System.Boolean");
+mDefBuiltinType(mByte,   _mono_get_byte_class,   "System.Byte"   );
+mDefBuiltinType(mInt32,  _mono_get_int32_class,  "System.Int32"  );
+mDefBuiltinType(mEnum,   _mono_get_enum_class,   "System.Enum"   );
+mDefBuiltinType(mSingle, _mono_get_single_class, "System.Single" );
+mDefBuiltinType(mDouble, _mono_get_double_class, "System.Double" );
+mDefBuiltinType(mObject, _mono_get_object_class, "System.Object" );
+mDefBuiltinType(mString, _mono_get_string_class, "System.String" );
 #undef mDefBuiltinType
 
 mString mToMString(const char *s) { return mString::New(s); }
@@ -462,17 +462,17 @@ std::string mToCString(mObject v) { return mString(v.get()).toUTF8(); }
 
 uint32_t mGCHandleAllocate(mObject obj, bool pin)
 {
-    return mono_gchandle_new(obj.get(), (gboolean)pin);
+    return _mono_gchandle_new(obj.get(), (gboolean)pin);
 }
 
 void mGCHandleFree(uint32_t handle)
 {
-    mono_gchandle_free(handle);
+    _mono_gchandle_free(handle);
 }
 
 mObject mGCHandleGetObject(uint32_t handle)
 {
-    return mono_gchandle_get_target(handle);
+    return _mono_gchandle_get_target(handle);
 }
 
 
@@ -484,11 +484,11 @@ static tls<MonoThread*> g_mthreads;
 
 void mAttachThread()
 {
-    if (mono_thread_current() != nullptr) { return; }
+    if (_mono_thread_current() != nullptr) { return; }
 
     auto *& mthread = g_mthreads.local();
     if (!mthread) {
-        mthread = mono_thread_attach(mGetDomain().get());
+        mthread = _mono_thread_attach(mGetDomain().get());
     }
 }
 
@@ -496,7 +496,7 @@ void mDetachThread()
 {
     auto *& mthread = g_mthreads.local();
     if (mthread) {
-        mono_thread_detach(mthread);
+        _mono_thread_detach(mthread);
         mthread = nullptr;
     }
 }
@@ -505,7 +505,7 @@ void mDetachAllThreads()
 {
     g_mthreads.eachChild([](MonoThread *mthread) {
         if (mthread) {
-            mono_thread_detach(mthread);
+            _mono_thread_detach(mthread);
             mthread = nullptr;
         }
     });
