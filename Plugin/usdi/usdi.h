@@ -289,6 +289,11 @@ usdiAPI void             usdiSetPluginPath(const char *path);
 usdiAPI void             usdiInitialize();
 usdiAPI void             usdiFinalize();
 
+usdiAPI void*            usdiAlignedMalloc(size_t size, size_t alignment);
+usdiAPI void             usdiAlignedFree(void *addr);
+usdiAPI void*            usdiFixedMalloc(size_t size);
+usdiAPI void             usdiFixedFree(size_t size, void *addr);
+
 
 // Context interface
 usdiAPI usdi::Context*   usdiCreateContext();

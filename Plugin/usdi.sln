@@ -17,7 +17,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "usdiTests", "Test\usdiTests
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "usdiTestsMain", "Test\usdiTestsMain.vcxproj", "{11990C37-1C63-418F-9AB1-74076C470584}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "usdiHelper", "usdiHelper.vcxproj", "{66397903-6FF2-46C6-B51E-B323FD248FAD}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "usdiRT", "usdiRT.vcxproj", "{66397903-6FF2-46C6-B51E-B323FD248FAD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -503,7 +503,7 @@ void mDetachThread()
 
 void mDetachAllThreads()
 {
-    g_mthreads.eachChild([](auto *& mthread) {
+    g_mthreads.eachChild([](MonoThread *mthread) {
         if (mthread) {
             mono_thread_detach(mthread);
             mthread = nullptr;

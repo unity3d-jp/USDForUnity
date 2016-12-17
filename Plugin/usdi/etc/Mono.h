@@ -13,17 +13,17 @@ typedef const void *   gconstpointer;
 typedef char           gchar;
 typedef unsigned char  guchar;
 
-typedef __int8              gint8;
-typedef unsigned __int8     guint8;
-typedef __int16             gint16;
-typedef unsigned __int16    guint16;
-typedef __int32             gint32;
-typedef unsigned __int32    guint32;
-typedef __int64             gint64;
-typedef unsigned __int64    guint64;
-typedef float               gfloat;
-typedef double              gdouble;
-typedef unsigned __int16    gunichar2;
+typedef int8_t      gint8;
+typedef uint8_t     guint8;
+typedef int16_t     gint16;
+typedef uint16_t    guint16;
+typedef int32_t     gint32;
+typedef uint32_t    guint32;
+typedef int64_t     gint64;
+typedef uint64_t    guint64;
+typedef float       gfloat;
+typedef double      gdouble;
+typedef guint16     gunichar2;
 
 typedef guint32 mono_array_size_t;
 typedef gint32 mono_array_lower_bound_t;

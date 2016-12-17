@@ -393,11 +393,11 @@ namespace UTJ
             PS4,
         };
 
-        [DllImport ("usdiHelper")] public static extern Platform GetPlatform();
-        [DllImport ("usdiHelper")] public static extern IntPtr GetModulePath();
-        [DllImport ("usdiHelper")] public static extern void AddDLLSearchPath(IntPtr path);
-        [DllImport ("usdiHelper")] public static extern void AddDLLSearchPath(string path);
-        [DllImport ("usdiHelper")] public static extern void usdiSetPluginPath(string path);
+        [DllImport ("usdiRT")] public static extern Platform GetPlatform();
+        [DllImport ("usdiRT")] public static extern IntPtr GetModulePath();
+        [DllImport ("usdiRT")] public static extern void AddDLLSearchPath(IntPtr path);
+        [DllImport ("usdiRT")] public static extern void AddDLLSearchPath(string path);
+        [DllImport ("usdiRT")] public static extern void usdiSetPluginPath(string path);
 
 
         [DllImport("usdi")] public static extern void usdiInitialize();
@@ -751,7 +751,6 @@ namespace UTJ
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void InitializePluginPass1()
         {
-#if (UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN) && !(UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX)
             usdi.AddDLLSearchPath(GetModulePath());
 
             string platform_suffix = "";
@@ -767,7 +766,6 @@ namespace UTJ
             var usdPluginDir = Application.streamingAssetsPath + "/UTJ/USDForUnity/plugins" + platform_suffix;
             usdi.AddDLLSearchPath(usdPluginDir + "/lib");
             usdi.usdiSetPluginPath(usdPluginDir);
-#endif
         }
 
         // separate pass because loading usdi.dll will fail in InitializePluginPass1()

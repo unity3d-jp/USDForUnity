@@ -138,9 +138,9 @@ public:
     const char* getName() const;
     mType getType() const;
     int getOffset() const;
-    template<class T> void getValue(mObject obj, T &o) const { getValueImpl(obj, &o); }
-    template<class T> void setValue(mObject obj, const T &o) { setValueImpl(obj, &o); }
-    template<class T> void setValueRef(mObject obj, T *o) { setValueImpl(obj, o); }
+    template<class T> void getValue(mObject obj, T &o) const;
+    template<class T> void setValue(mObject obj, const T &o);
+    template<class T> void setValueRef(mObject obj, T *o);
 
     void getValueImpl(mObject obj, void *p) const;
     void setValueImpl(mObject obj, const void *p);

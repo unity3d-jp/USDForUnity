@@ -1,19 +1,10 @@
-#ifdef _WIN32
-    #include <windows.h>
-#else 
-    #include <stdlib.h>
-    #include <dlfcn.h>
-    #include <link.h>
-#endif
-#include <string>
-
-#define usdihImpl
-#include "usdiHelper.h"
+#include "pch.h"
+#include "usdiRT.h"
 #include "../usdi/etc/Platform.h"
 
 extern "C" {
 
-usdihAPI Platform GetPlatform()
+rtAPI Platform GetPlatform()
 {
 #if defined(__Windows_x86_64__)
     return Platform::Windows_x86_64;
@@ -30,7 +21,7 @@ usdihAPI Platform GetPlatform()
 #endif
 }
 
-usdihAPI const char* GetModulePath()
+rtAPI const char* GetModulePath()
 {
 #ifdef _WIN32
     static char s_path[MAX_PATH + 1];
@@ -47,21 +38,23 @@ usdihAPI const char* GetModulePath()
     }
     return s_path;
 #else
-    Dl_info info;
-    int i = dladdr(&GetModulePath, &info);
-    return "";
+    static Dl_info s_info;
+    if (!s_info.dli_fname) {
+        dladdr((const void*)&GetModulePath, &s_info);
+    }
+    return s_info.dli_fname;
 #endif
 }
 
-usdihAPI void AddDLLSearchPath(const char *v)
+rtAPI void AddDLLSearchPath(const char *v)
 {
 #ifdef _WIN32
     std::string path;
     {
-        DWORD size = ::GetEnvironmentVariableA("PATH", nullptr, 0);
+        DWORD size = ::GetEnvironmentVariableA(LIBRARY_PATH, nullptr, 0);
         if (size > 0) {
             path.resize(size);
-            ::GetEnvironmentVariableA("PATH", &path[0], (DWORD)path.size());
+            ::GetEnvironmentVariableA(LIBRARY_PATH, &path[0], (DWORD)path.size());
             path.pop_back(); // delete last '\0'
         }
     }
@@ -74,17 +67,12 @@ usdihAPI void AddDLLSearchPath(const char *v)
                 path[i] = '\\';
             }
         }
-        ::SetEnvironmentVariableA("PATH", path.c_str());
+        ::SetEnvironmentVariableA(LIBRARY_PATH, path.c_str());
     }
 #else
-    #ifdef __APPLE__
-        #define LIBRARY_PATH "DYLD_LIBRARY_PATH"
-    #else
-        #define LIBRARY_PATH "LD_LIBRARY_PATH"
-    #endif
     std::string path = ::getenv(LIBRARY_PATH);
     if (path.find(v) == std::string::npos) {
-        path += ";";
+        path += ":";
         auto pos = path.size();
         path += v;
         for (size_t i = pos; i < path.size(); ++i) {
@@ -92,12 +80,12 @@ usdihAPI void AddDLLSearchPath(const char *v)
                 path[i] = '/';
             }
         }
-        ::setenv(LIBRARY_PATH, path.c_str());
+        ::setenv(LIBRARY_PATH, path.c_str(), 0);
     }
 #endif
 }
 
-usdihAPI void SetEnv(const char *name, const char *value)
+rtAPI void SetEnv(const char *name, const char *value)
 {
 #ifdef _WIN32
     // get/setenv() and Set/GetEnvironmentVariable() is *not* compatible.
@@ -111,19 +99,19 @@ usdihAPI void SetEnv(const char *name, const char *value)
 
 #ifdef _WIN32
 
-usdihAPI module_t DLLLoad(const char *path) { return ::LoadLibraryA(path); }
-usdihAPI void DLLUnload(module_t mod) { ::FreeLibrary((HMODULE)mod); }
-usdihAPI void* DLLGetSymbol(module_t mod, const char *name) { return ::GetProcAddress((HMODULE)mod, name); }
+rtAPI module_t DLLLoad(const char *path) { return ::LoadLibraryA(path); }
+rtAPI void DLLUnload(module_t mod) { ::FreeLibrary((HMODULE)mod); }
+rtAPI void* DLLGetSymbol(module_t mod, const char *name) { return ::GetProcAddress((HMODULE)mod, name); }
 
 #else 
 
-usdihAPI module_t DLLLoad(const char *path) { return ::dlopen(path, RTLD_GLOBAL); }
-usdihAPI void DLLUnload(module_t mod) { ::dlclose(mod); }
-usdihAPI void* DLLGetSymbol(module_t mod, const char *name) { return ::dlsym(mod, name); }
+rtAPI module_t DLLLoad(const char *path) { return ::dlopen(path, RTLD_GLOBAL); }
+rtAPI void DLLUnload(module_t mod) { ::dlclose(mod); }
+rtAPI void* DLLGetSymbol(module_t mod, const char *name) { return ::dlsym(mod, name); }
 
 #endif
 
-usdihAPI void usdiSetPluginPath(const char *path)
+rtAPI void usdiSetPluginPath(const char *path)
 {
     SetEnv("PXR_PLUGINPATH_NAME", path);
 }

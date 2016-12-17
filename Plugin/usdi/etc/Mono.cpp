@@ -1,11 +1,16 @@
 #include "pch.h"
 #ifdef usdiEnableMono
+#include "usdiRT/usdiRT.h"
 #include "Mono.h"
-#ifdef _WIN32
-    #include <windows.h>
+
+#if defined(_WIN32)
+    #define MonoModule "mono.dll"
+#elif defined(__APPLE__)
+    #define MonoModule "libmono.dylib"
 #else
-    #include <dlfcn.h>
+    #define MonoModule "libmono.so"
 #endif
+
 
 
 // mono functions
@@ -119,24 +124,6 @@ MonoClass* (*mono_get_enum_class)();
 MonoClass* (*mono_get_array_class)();
 MonoClass* (*mono_get_thread_class)();
 MonoClass* (*mono_get_exception_class)();
-
-using module_t = void*;
-#ifdef _WIN32
-module_t DLLLoad(const char *path) { return ::LoadLibraryA(path); }
-void     DLLUnload(module_t mod) { ::FreeLibrary((HMODULE)mod); }
-void*    DLLGetSymbol(module_t mod, const char *name) { return ::GetProcAddress((HMODULE)mod, name); }
-#else 
-module_t DLLLoad(const char *path) { return ::dlopen(path, RTLD_GLOBAL); }
-void     DLLUnload(module_t mod) { ::dlclose(mod); }
-void*    DLLGetSymbol(module_t mod, const char *name) { return ::dlsym(mod, name); }
-#endif
-
-#if defined(_WIN32)
-    #define MonoModule "mono.dll"
-#elif defined(__linux__)
-    #define MonoModule "libmono.so"
-#endif
-
 
 void ImportMonoFunctions()
 {

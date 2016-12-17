@@ -1,5 +1,8 @@
 #pragma once
 
+template<class T> void mField::getValue(mObject obj, T &o) const { getValueImpl(obj, &o); }
+template<class T> void mField::setValue(mObject obj, const T &o) { setValueImpl(obj, &o); }
+template<class T> void mField::setValueRef(mObject obj, T *o) { setValueImpl(obj, o); }
 
 template<class T> struct mTypeofImpl
 {

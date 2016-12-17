@@ -12,3 +12,11 @@
     #define __Android_ARM64__
 // todo: PS4
 #endif
+
+#if defined(_WIN32)
+    #define LIBRARY_PATH "PATH"
+#elif defined(__APPLE__)
+    #define LIBRARY_PATH "DYLD_LIBRARY_PATH"
+#else
+    #define LIBRARY_PATH "LD_LIBRARY_PATH"
+#endif

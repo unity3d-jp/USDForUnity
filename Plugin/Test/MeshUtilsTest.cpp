@@ -2,8 +2,18 @@
 #include <vector>
 #include <chrono>
 #include "MeshUtils/MeshUtils.h"
+#include "usdi/usdi.h"
 using namespace mu;
 
+// force to align 0x20 for AVX functions
+void* operator new(std::size_t s) throw(std::bad_alloc)
+{
+    return usdiAlignedMalloc(s, 0x20);
+}
+void operator delete(void *addr) throw()
+{
+    usdiAlignedFree(addr);
+}
 
 template<class T>
 inline bool near_equal(const std::vector<T>& a, const std::vector<T>& b)

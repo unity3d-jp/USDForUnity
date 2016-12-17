@@ -71,10 +71,10 @@ void InitializeInternalMethods()
         MeshAssignBounds = NM_Mesh_SetBounds ? MeshAssignBoundsN : MeshAssignBoundsM;
 
         if (g_mono_dll) {
-            mAddMethod("UTJ.usdi::usdiUniTransformAssign", TransformAssign);
-            mAddMethod("UTJ.usdi::usdiUniTransformNotfyChange", TransformNotfyChange);
-            mAddMethod("UTJ.usdi::usdiUniCameraAssign", CameraAssign);
-            mAddMethod("UTJ.usdi::usdiUniMeshAssignBounds", MeshAssignBounds);
+            mAddMethod("UTJ.usdi::usdiUniTransformAssign", (void*)TransformAssign);
+            mAddMethod("UTJ.usdi::usdiUniTransformNotfyChange", (void*)TransformNotfyChange);
+            mAddMethod("UTJ.usdi::usdiUniCameraAssign", (void*)CameraAssign);
+            mAddMethod("UTJ.usdi::usdiUniMeshAssignBounds", (void*)MeshAssignBounds);
 #ifdef usdiEnableComponentUpdator
             StreamUpdater::registerICalls();
 #endif // usdiEnableComponentUpdator

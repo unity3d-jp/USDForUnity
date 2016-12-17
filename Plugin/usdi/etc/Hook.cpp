@@ -160,4 +160,33 @@ void* FindSymbolByName(const char *name)
 
 // todo
 
+int SetMemoryFlags(void *addr, size_t size, MemoryFlags flags)
+{
+    return 0;
+}
+
+void ForceWrite(void *dst, const void *src, size_t s)
+{
+}
+
+void* EmitJumpInstruction(void* from, const void* to)
+{
+    return from;
+}
+
+void* OverrideDLLImport(void *module, const char *target_module, const char *target_funcname, void *replacement)
+{
+    return nullptr;
+}
+
+void* OverrideDLLExport(void *module, const char *funcname, void *replacement)
+{
+    return nullptr;
+}
+
+void* FindSymbolByName(const char *name)
+{
+    return nullptr;
+}
+
 #endif

@@ -80,6 +80,9 @@
     <ProjectReference Include="setup.vcxproj">
       <Project>{1c5de91b-7ae9-4304-9fa1-0de1aba8c02d}</Project>
     </ProjectReference>
+    <ProjectReference Include="usdiRT.vcxproj">
+      <Project>{66397903-6ff2-46c6-b51e-b323fd248fad}</Project>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="usdi\usdiContext.i" />

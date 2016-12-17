@@ -14,7 +14,7 @@
     <ClCompile Include="usdiTestsMain.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\usdiHelper.vcxproj">
+    <ProjectReference Include="..\usdiRT.vcxproj">
       <Project>{66397903-6ff2-46c6-b51e-b323fd248fad}</Project>
     </ProjectReference>
     <ProjectReference Include="usdiTests.vcxproj">

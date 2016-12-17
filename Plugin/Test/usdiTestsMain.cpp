@@ -1,5 +1,5 @@
 #include "usdiTests.h"
-#include "usdiHelper/usdiHelper.h"
+#include "usdiRT/usdiRT.h"
 #ifdef _WIN32
     #include <experimental/filesystem>
 #endif

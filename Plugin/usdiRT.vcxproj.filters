@@ -1,18 +1,24 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="usdiHelper">
+    <Filter Include="usdRT">
       <UniqueIdentifier>{3237f8ad-c7f0-48ee-86b7-d556ffa05c9f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="usdiHelper\usdiHelper.cpp">
-      <Filter>usdiHelper</Filter>
+    <ClCompile Include="usdiRT\usdiRT.cpp">
+      <Filter>usdRT</Filter>
+    </ClCompile>
+    <ClCompile Include="usdiRT\pch.cpp">
+      <Filter>usdRT</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="usdiHelper\usdiHelper.h">
-      <Filter>usdiHelper</Filter>
+    <ClInclude Include="usdiRT\usdiRT.h">
+      <Filter>usdRT</Filter>
+    </ClInclude>
+    <ClInclude Include="usdiRT\pch.h">
+      <Filter>usdRT</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

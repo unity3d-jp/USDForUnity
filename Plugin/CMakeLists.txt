@@ -24,6 +24,9 @@ OPTION(USDI_ENABLE_MONO "" OFF)
 ADD_DEFINITIONS(-DBUILD_OPTLEVEL_OPT -DBUILD_COMPONENT_SRC_PREFIX="pxr/")
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++11 -fPIC -Wno-deprecated -DTF_NO_GNU_EXT")
+IF(USDI_ENABLE_DEBUG)
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+ENDIF()
 
 INCLUDE_DIRECTORIES(
     .
@@ -53,16 +56,30 @@ ENDIF()
 
 # MeshUtils
 IF(USDI_ENABLE_ISPC)
-    #ADD_CUSTOM_COMMAND()
-    #${ISPC} MeshUtils/MeshUtilsCore.ispc -o MeshUtilsCore.o -h MeshUtilsCore.h --target=sse2,sse4,avx --arch=x86-64 --opt=fast-masked-vload --opt=fast-math --opt=force-aligned-memory
+    SET(MUCORE_DIR ${CMAKE_CURRENT_BINARY_DIR}/MeshUtilsCore)
+    ADD_CUSTOM_TARGET(MeshUtilsCore ALL
+        COMMAND mkdir -p ${MUCORE_DIR}
+        COMMAND ${ISPC} ${CMAKE_CURRENT_SOURCE_DIR}/MeshUtils/MeshUtilsCore.ispc -o ${MUCORE_DIR}/MeshUtilsCore${CMAKE_CXX_OUTPUT_EXTENSION} -h ${MUCORE_DIR}/MeshUtilsCore.h --pic --target=sse2,sse4,avx --arch=x86-64 --opt=fast-masked-vload --opt=fast-math --opt=force-aligned-memory
+    )
+    SET(MUCORE_H_FILES
+        ${MUCORE_DIR}/MeshUtilsCore.h
+    )
+    SET(MUCORE_OBJ_FILES
+        ${MUCORE_DIR}/MeshUtilsCore${CMAKE_CXX_OUTPUT_EXTENSION}
+        ${MUCORE_DIR}/MeshUtilsCore_sse2${CMAKE_CXX_OUTPUT_EXTENSION}
+        ${MUCORE_DIR}/MeshUtilsCore_sse4${CMAKE_CXX_OUTPUT_EXTENSION}
+        ${MUCORE_DIR}/MeshUtilsCore_avx${CMAKE_CXX_OUTPUT_EXTENSION}
+    )
 ENDIF()
 
 FILE(GLOB MU_CXX_FILES MeshUtils/*.cpp MeshUtils/*.c)
 FILE(GLOB MU_H_FILES MeshUtils/*.h)
-ADD_LIBRARY(MeshUtils STATIC ${MU_CXX_FILES} ${MU_H_FILES})
+ADD_LIBRARY(MeshUtils STATIC ${MU_CXX_FILES} ${MU_H_FILES} ${MUCORE_H_FILES} ${MUCORE_OBJ_FILES})
 TARGET_INCLUDE_DIRECTORIES(MeshUtils PUBLIC ./MeshUtils)
 IF(USDI_ENABLE_ISPC)
     ADD_DEFINITIONS(-DmuEnableISPC)
+    ADD_DEPENDENCIES(MeshUtils MeshUtilsCore)
+    TARGET_INCLUDE_DIRECTORIES(MeshUtils PUBLIC ${MUCORE_DIR})
 ENDIF()
 
 
@@ -103,11 +120,31 @@ IF(USDI_USE_GRAPHICS_INTERFACE)
 ENDIF()
 
 
-# tests
+# usdiRT
+FILE(GLOB USDIRT_CXX_FILES usdiRT/*.cpp)
+FILE(GLOB USDIRT_H_FILES usdiRT/*.h)
+ADD_LIBRARY(usdiRT SHARED ${USDIRT_CXX_FILES} ${USDIRT_H_FILES})
+TARGET_INCLUDE_DIRECTORIES(usdiRT PUBLIC
+    ./usdiRT
+)
+
+
+# testsCMAKE_CURRENT_BINARY_DIR
 IF(USDI_BUILD_TESTS)
     FILE(GLOB Tests_CXX_FILES Test/*.cpp)
     FILE(GLOB Tests_H_FILES Test/*.h)
     ADD_EXECUTABLE(usdiTests ${Tests_CXX_FILES} ${Tests_H_FILES})
-    ADD_DEPENDENCIES(usdiTests usdi MeshUtils)
-    TARGET_LINK_LIBRARIES(usdiTests usdi MeshUtils)
+    ADD_DEPENDENCIES(usdiTests usdi usdiRT MeshUtils)
+    TARGET_LINK_LIBRARIES(usdiTests usdi usdiRT MeshUtils)
 ENDIF()
+
+
+# deploy
+SET(ASSETS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../USDForUnity/Assets")
+SET(PLUGINS_DIR "${ASSETS_DIR}/UTJ/Plugins/x86_64")
+ADD_CUSTOM_TARGET(deploy ALL
+    COMMAND cp $<TARGET_FILE:usdi> ${PLUGINS_DIR}
+    COMMAND cp $<TARGET_FILE:usdiRT> ${PLUGINS_DIR}
+    DEPENDS usdi
+    DEPENDS usdiRT
+)
