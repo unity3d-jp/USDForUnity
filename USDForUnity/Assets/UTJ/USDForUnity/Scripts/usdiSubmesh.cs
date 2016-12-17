@@ -301,11 +301,11 @@ namespace UTJ
 
         public void usdiUpdateBounds(ref usdi.MeshData data)
         {
-            usdi.usdiUniMeshAssignBounds(m_umesh, ref data.center, ref data.extents);
+            usdi.MeshAssignBounds(m_umesh, ref data.center, ref data.extents);
         }
         public void usdiUpdateBounds(ref usdi.SubmeshData data)
         {
-            usdi.usdiUniMeshAssignBounds(m_umesh, ref data.center, ref data.extents);
+            usdi.MeshAssignBounds(m_umesh, ref data.center, ref data.extents);
         }
 
         public void usdiSetActive(bool v)
@@ -369,7 +369,7 @@ namespace UTJ
                 m_umesh.UploadMeshData(false);
 
 #if UNITY_5_5_OR_NEWER
-                if (m_stream.directVBUpdate && usdi.usdiVtxCmdIsAvailable())
+                if (m_stream.directVBUpdate && usdi.usdiIsVtxCmdAvailable())
                 {
                     m_VB = m_umesh.GetNativeVertexBufferPtr(0);
                     m_IB = m_umesh.GetNativeIndexBufferPtr();

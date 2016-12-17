@@ -1,5 +1,5 @@
 #include "pch.h"
-#ifdef usdiEnableMono
+#ifdef usdiEnableMonoBinding
 #include "usdiInternal.h"
 #include "UnityEngineBinding.h"
 #include "usdiComponentUpdater.h"
@@ -382,4 +382,4 @@ mDefTraits(UnityEngine, "UnityEngine", "Light", mLight);
 mLight::mLight(MonoObject *component) : super(component) { mTypeCheckThis(); }
 
 } // namespace usdi
-#endif // usdiEnableMono
+#endif // usdiEnableMonoBinding

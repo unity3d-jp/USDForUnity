@@ -1,5 +1,5 @@
 #include "pch.h"
-#ifdef usdiEnableMono
+#ifdef usdiEnableMonoBinding
 #include "Mono.h"
 #include "MonoWrapper.h"
 
@@ -266,4 +266,4 @@ mProperty& mCreatePropertyCache(mClass& mclass, const char *name)
 {
     return *new mPropertyCache(mclass, name);
 }
-#endif // usdiEnableMono
+#endif // usdiEnableMonoBinding

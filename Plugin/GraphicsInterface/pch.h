@@ -1,5 +1,6 @@
 #include <cmath>
 #include <cstdio>
+#include <cstring>
 #include <cstdint>
 #include <array>
 #include <vector>

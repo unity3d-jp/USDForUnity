@@ -590,7 +590,9 @@ namespace UTJ
 
         // ext
 
-        [DllImport("usdi")] public static extern Bool usdiVtxCmdIsAvailable();
+        [DllImport("usdi")] public static extern Bool usdiIsMonoBindingAvailable();
+        [DllImport("usdi")] public static extern Bool usdiIsVtxCmdAvailable();
+
         [DllImport("usdi")] public static extern IntPtr usdiVtxCmdCreate(string dbg_name);
         [DllImport("usdi")] public static extern void usdiVtxCmdDestroy(IntPtr h);
         [DllImport("usdi")] public static extern void usdiVtxCmdUpdate(IntPtr h, ref MeshData data, IntPtr vb, IntPtr ib);
@@ -610,15 +612,14 @@ namespace UTJ
         [DllImport("usdi")] public static extern IntPtr usdiTaskCreateAttrReadSample(Attribute points, ref AttributeData dst, ref double t);
         [DllImport("usdi")] public static extern IntPtr usdiTaskCreateComposite(IntPtr tasks, int num);
 
-#if (UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN) && !(UNITY_EDITOR_LINUX || UNITY_STANDALONE_LINUX)
         [MethodImpl(MethodImplOptions.InternalCall)]
-        public static extern void usdiUniTransformAssign(UnityEngine.Transform trans, ref XformData data);
+        private static extern void usdiUniTransformAssign(UnityEngine.Transform trans, ref XformData data);
         [MethodImpl(MethodImplOptions.InternalCall)]
-        public static extern void usdiUniTransformNotfyChange(UnityEngine.Transform trans);
+        private static extern void usdiUniTransformNotfyChange(UnityEngine.Transform trans);
         [MethodImpl(MethodImplOptions.InternalCall)]
-        public static extern void usdiUniMeshAssignBounds(UnityEngine.Mesh mesh, ref Vector3 center, ref Vector3 extents);
-#else
-        public static void usdiUniTransformAssign(UnityEngine.Transform trans, ref XformData data)
+        private static extern void usdiUniMeshAssignBounds(UnityEngine.Mesh mesh, ref Vector3 center, ref Vector3 extents);
+
+        private static void TransformAssignImpl(UnityEngine.Transform trans, ref XformData data)
         {
             if ((data.flags & (int)usdi.XformData.Flags.UpdatedPosition) != 0)
             {
@@ -633,15 +634,22 @@ namespace UTJ
                 trans.localScale = data.scale;
             }
         }
-        public static void usdiUniTransformNotfyChange(UnityEngine.Transform trans)
+        private static void TransformNotfyChangeImpl(UnityEngine.Transform trans)
         {
             // nothing to do
         }
-        public static void usdiUniMeshAssignBounds(UnityEngine.Mesh mesh, ref Vector3 center, ref Vector3 extents)
+        private static void MeshAssignBoundsImpl(UnityEngine.Mesh mesh, ref Vector3 center, ref Vector3 extents)
         {
             mesh.bounds = new Bounds(center, extents);
         }
-#endif
+
+        public delegate void TransformAssignT(UnityEngine.Transform trans, ref XformData data);
+        public delegate void TransformNotfyChangeT(UnityEngine.Transform trans);
+        public delegate void MeshAssignBoundsT(UnityEngine.Mesh mesh, ref Vector3 center, ref Vector3 extents);
+
+        public static TransformAssignT TransformAssign;
+        public static TransformNotfyChangeT TransformNotfyChange;
+        public static MeshAssignBoundsT MeshAssignBounds;
 
 
         public class VertexUpdateCommand
@@ -685,6 +693,12 @@ namespace UTJ
 
             ~Task()
             {
+                Clear();
+            }
+
+            public void Clear()
+            {
+                Wait();
                 usdiTaskDestroy(m_handle);
             }
 
@@ -773,6 +787,19 @@ namespace UTJ
         public static void InitializePluginPass2()
         {
             usdi.usdiInitialize();
+
+            if(usdi.usdiIsMonoBindingAvailable())
+            {
+                TransformAssign = usdiUniTransformAssign;
+                TransformNotfyChange = usdiUniTransformNotfyChange;
+                MeshAssignBounds = usdiUniMeshAssignBounds;
+            }
+            else
+            {
+                TransformAssign = TransformAssignImpl;
+                TransformNotfyChange = TransformNotfyChangeImpl;
+                MeshAssignBounds = MeshAssignBoundsImpl;
+            }
         }
 
         public static void FinalizePlugin()

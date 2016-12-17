@@ -70,7 +70,10 @@ rtAPI void AddDLLSearchPath(const char *v)
         ::SetEnvironmentVariableA(LIBRARY_PATH, path.c_str());
     }
 #else
-    std::string path = ::getenv(LIBRARY_PATH);
+    std::string path;
+    if (auto path_ = ::getenv(LIBRARY_PATH)) {
+        path = path_;
+    }
     if (path.find(v) == std::string::npos) {
         path += ":";
         auto pos = path.size();
@@ -80,7 +83,7 @@ rtAPI void AddDLLSearchPath(const char *v)
                 path[i] = '/';
             }
         }
-        ::setenv(LIBRARY_PATH, path.c_str(), 0);
+        ::setenv(LIBRARY_PATH, path.c_str(), 1);
     }
 #endif
 }

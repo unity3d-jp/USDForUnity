@@ -11,6 +11,7 @@ namespace UTJ
         usdi.ImportSettings m_importOptions = usdi.ImportSettings.default_value;
         double m_initialTime = 0.0;
         bool m_forceSingleThread = false;
+        bool m_directVBUpdate = true;
 
         public static void Open(string path)
         {
@@ -42,6 +43,7 @@ namespace UTJ
             EditorGUILayout.Space();
             m_initialTime = EditorGUILayout.FloatField("Initial Time", (float)m_initialTime);
             m_forceSingleThread = EditorGUILayout.Toggle("Force Single Thread", m_forceSingleThread);
+            m_directVBUpdate = EditorGUILayout.Toggle("Direct VB Update", m_directVBUpdate);
 
             GUILayout.Space(10.0f);
 
@@ -51,6 +53,7 @@ namespace UTJ
                     stream.importSettings = m_importOptions;
                     stream.playTime = m_initialTime;
                     stream.forceSingleThread = m_forceSingleThread;
+                    stream.directVBUpdate = m_directVBUpdate;
                 });
                 Selection.activeGameObject = usd.gameObject;
                 Close();

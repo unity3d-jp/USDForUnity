@@ -11,6 +11,9 @@ namespace usdi {
 
 extern "C" {
 
+usdiAPI bool            usdiIsMonoBindingAvailable();
+usdiAPI bool            usdiIsVtxCmdAvailable();
+
 usdiAPI usdi::Handle    usdiVtxCmdCreate(const char *dbg_name);
 usdiAPI void            usdiVtxCmdDestroy(usdi::Handle h);
 usdiAPI void            usdiVtxCmdUpdate(usdi::Handle h, const usdi::MeshData *src, void *vb, void *ib);

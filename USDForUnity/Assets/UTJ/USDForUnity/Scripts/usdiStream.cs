@@ -103,7 +103,8 @@ namespace UTJ
         }
         public bool directVBUpdate
         {
-            get { return m_directVBUpdate && usdi.usdiVtxCmdIsAvailable(); }
+            get { return m_directVBUpdate && usdi.usdiIsVtxCmdAvailable(); }
+            set { m_directVBUpdate = value; }
         }
         public bool deferredUpdate
         {
@@ -657,7 +658,7 @@ namespace UTJ
             usdiWaitAsyncUpdateTask();
             usdiUpdate(m_time);
 
-            usdi.usdiUniTransformNotfyChange(GetComponent<Transform>());
+            usdi.TransformNotfyChange(GetComponent<Transform>());
 
             if (directVBUpdate)
             {

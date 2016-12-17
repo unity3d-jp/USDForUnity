@@ -1,5 +1,5 @@
 ﻿#include "pch.h"
-#ifdef usdiEnableMono
+#ifdef usdiEnableMonoBinding
 #include "Mono.h"
 #include "MonoWrapper.h"
 #include "tls.h"
@@ -527,4 +527,4 @@ mObject mGetSystemType(mClass c)
     return s_GetType.invoke(nullptr, args);
 }
 
-#endif // usdiEnableMono
+#endif // usdiEnableMonoBinding

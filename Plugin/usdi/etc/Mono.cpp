@@ -1,5 +1,5 @@
 #include "pch.h"
-#ifdef usdiEnableMono
+#ifdef usdiEnableMonoBinding
 #include "usdiRT/usdiRT.h"
 #include "Mono.h"
 
@@ -248,4 +248,4 @@ static struct _ImportMonoFunctions {
     _ImportMonoFunctions() { ImportMonoFunctions(); }
 } g_ImportMonoFunctions;
 
-#endif // usdiEnableMono
+#endif // usdiEnableMonoBinding

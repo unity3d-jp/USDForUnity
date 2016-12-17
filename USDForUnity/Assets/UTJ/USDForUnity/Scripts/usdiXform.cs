@@ -52,7 +52,7 @@ namespace UTJ
             base.usdiUpdate(time);
             if(m_goAssigned)
             {
-                usdi.usdiUniTransformAssign(m_trans, ref m_xfData);
+                usdi.TransformAssign(m_trans, ref m_xfData);
             }
         }
         #endregion

@@ -18,8 +18,17 @@
 
 
 extern "C" {
+    
+usdiAPI bool usdiIsMonoBindingAvailable()
+{
+#ifdef usdiEnableMonoBinding
+    return g_mono_dll != nullptr;
+#else
+    return false;
+#endif
+}
 
-usdiAPI bool usdiVtxCmdIsAvailable()
+usdiAPI bool usdiIsVtxCmdAvailable()
 {
 #ifdef usdiEnableGraphicsInterface
     return gi::GetGraphicsInterface() != nullptr;
@@ -86,24 +95,28 @@ usdiAPI void usdiVtxCmdWait()
 usdiAPI void usdiTaskDestroy(usdi::Task *t)
 {
     usdiTraceFunc();
+    if (!t) { return; }
     delete t;
 }
 
 usdiAPI void usdiTaskRun(usdi::Task *t)
 {
     usdiTraceFunc();
+    if (!t) { return; }
     t->run();
 }
 
 usdiAPI bool usdiTaskIsRunning(usdi::Task *t)
 {
     usdiTraceFunc();
+    if (!t) { return false; }
     return t->isRunning();
 }
 
 usdiAPI void usdiTaskWait(usdi::Task *t)
 {
     usdiTraceFunc();
+    if (!t) { return; }
     t->wait();
 }
 

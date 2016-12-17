@@ -2,33 +2,35 @@
 #include "giInternal.h"
 
 #ifdef giSupportOpenGL
-#ifdef _WIN32
+#if defined(_WIN32)
     #pragma comment(lib, "opengl32.lib")
     #define GLEW_STATIC
-#endif
-#include <GL/glew.h>
-
-#if defined(_WIN32)
-#   define glGetProcAddress(name)  wglGetProcAddress(name)
-#elif defined(__APPLE__) && !defined(GLEW_APPLE_GLX)
-#   define glGetProcAddress(name) NSGLGetProcAddress(name)
-#elif defined(__ANDROID__)
-#   define glGetProcAddress(name) NULL /* TODO */
-#else /* __linux */
-#   define glGetProcAddress(name) (*glXGetProcAddressARB)(name)
+    #include <GL/glew.h>
+#else // linux
+    #include <GL/glxew.h>
 #endif
 
-static PFNGLGENBUFFERSPROC      _glGenBuffers;
-static PFNGLDELETEBUFFERSPROC   _glDeleteBuffers;
-static PFNGLBINDBUFFERPROC      _glBindBuffer;
-static PFNGLBUFFERDATAPROC      _glBufferData;
-static PFNGLMAPBUFFERPROC       _glMapBuffer;
-static PFNGLUNMAPBUFFERPROC     _glUnmapBuffer;
+#ifdef _WIN32
+    static PFNGLGENBUFFERSPROC      _glGenBuffers;
+    static PFNGLDELETEBUFFERSPROC   _glDeleteBuffers;
+    static PFNGLBINDBUFFERPROC      _glBindBuffer;
+    static PFNGLBUFFERDATAPROC      _glBufferData;
+    static PFNGLMAPBUFFERPROC       _glMapBuffer;
+    static PFNGLUNMAPBUFFERPROC     _glUnmapBuffer;
+#else
+    #define _glGenBuffers    glGenBuffers
+    #define _glDeleteBuffers glDeleteBuffers
+    #define _glBindBuffer    glBindBuffer
+    #define _glBufferData    glBufferData
+    #define _glMapBuffer     glMapBuffer
+    #define _glUnmapBuffer   glUnmapBuffer
+#endif // _WIN32
 
 static void InitializeOpenGL()
 {
+#ifdef _WIN32
     if (_glGenBuffers) { return; }
-#define GetProc(name) (void*&)_##name = glGetProcAddress(#name)
+#define GetProc(name) (void*&)_##name = (void*)wglGetProcAddress(#name)
     GetProc(glGenBuffers);
     GetProc(glDeleteBuffers);
     GetProc(glBindBuffer);
@@ -36,6 +38,7 @@ static void InitializeOpenGL()
     GetProc(glMapBuffer);
     GetProc(glUnmapBuffer);
 #undef GetProc
+#endif // _WIN32
 }
 
 namespace gi {

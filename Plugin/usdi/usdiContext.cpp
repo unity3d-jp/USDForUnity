@@ -11,7 +11,7 @@ void mDetachAllThreads();
 
 namespace usdi {
 
-#if usdiEnableMono && usdiEnableUnityExtension
+#if usdiEnableMonoBinding && usdiEnableUnityExtension
 void InitializeInternalMethods();
 void ClearInternalMethodsCache();
 #endif
@@ -23,7 +23,7 @@ Context::Context()
 {
     ++g_ctx_count;
     if (g_ctx_count == 1) {
-#if usdiEnableMono && usdiEnableUnityExtension
+#if usdiEnableMonoBinding && usdiEnableUnityExtension
         usdi::InitializeInternalMethods();
 #endif
     }
@@ -38,7 +38,7 @@ Context::~Context()
     usdiLogTrace("Context::~Context()\n");
     --g_ctx_count;
 
-#if usdiEnableMono && usdiEnableUnityExtension
+#if usdiEnableMonoBinding && usdiEnableUnityExtension
     if (g_ctx_count == 0) {
         //mDetachAllThreads();
         usdi::ClearInternalMethodsCache();
