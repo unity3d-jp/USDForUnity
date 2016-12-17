@@ -29,15 +29,16 @@
 static void InitializeOpenGL()
 {
 #ifdef _WIN32
-    if (_glGenBuffers) { return; }
-#define GetProc(name) (void*&)_##name = (void*)wglGetProcAddress(#name)
-    GetProc(glGenBuffers);
-    GetProc(glDeleteBuffers);
-    GetProc(glBindBuffer);
-    GetProc(glBufferData);
-    GetProc(glMapBuffer);
-    GetProc(glUnmapBuffer);
-#undef GetProc
+#define Import(name) (void*&)_##name = (void*)wglGetProcAddress(#name)
+    Import(glGenBuffers);
+    Import(glDeleteBuffers);
+    Import(glBindBuffer);
+    Import(glBufferData);
+    Import(glMapBuffer);
+    Import(glUnmapBuffer);
+#undef Import
+#else
+    glewInit();
 #endif // _WIN32
 }
 
@@ -68,6 +69,7 @@ public:
 
 GraphicsInterface* CreateGraphicsInterfaceOpenGL(void *device)
 {
+    InitializeOpenGL();
     return new GraphicsInterfaceOpenGL(device);
 }
 
@@ -77,7 +79,6 @@ DeviceType GraphicsInterfaceOpenGL::getDeviceType() { return DeviceType::OpenGL;
 
 GraphicsInterfaceOpenGL::GraphicsInterfaceOpenGL(void * /*device*/)
 {
-    InitializeOpenGL();
 }
 
 GraphicsInterfaceOpenGL::~GraphicsInterfaceOpenGL()
