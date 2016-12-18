@@ -34,6 +34,6 @@ int main(int argc, char *argv[])
         }
     }
     else {
-        printf("failed to load %s/\n", TestModule);
+        printf("failed to load %s\n", TestModule);
     }
 }

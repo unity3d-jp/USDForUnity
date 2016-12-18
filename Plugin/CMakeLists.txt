@@ -106,7 +106,9 @@ ADD_LIBRARY(usdiRT SHARED ${RT_CXX_FILES} ${RT_H_FILES})
 TARGET_INCLUDE_DIRECTORIES(usdiRT PUBLIC
     ./usdiRT
 )
-
+IF(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    TARGET_LINK_LIBRARIES(usdiRT dl)
+ENDIF()
 
 # usdi
 FILE(GLOB USDI_CXX_FILES usdi/*.cpp usdi/etc/*.cpp usdi/ext/*.cpp)

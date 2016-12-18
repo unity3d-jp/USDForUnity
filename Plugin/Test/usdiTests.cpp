@@ -26,7 +26,7 @@ testsAPI void TestMain(int argc, char *argv[])
 } // extern "C"
 
 
-// dummy
 int main(int argc, char *argv[])
 {
+    TestMain(argc, argv);
 }
