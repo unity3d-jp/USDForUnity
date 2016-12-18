@@ -1,3 +1,4 @@
+*.o
 *.obj
 *.pch
 *.lib
@@ -14,18 +15,11 @@
 *.tlog
 *.db
 *.opendb
-*.cmake
 
 *.exe
 *.dll
 *.so
-
-*.usda
-*.usda.meta
-*.usdc
-*.usdc.meta
-*.abc
-*.abc.meta
+*.dylib
 
 Makefile
 

@@ -15,16 +15,29 @@ SET(ISPC "/usr/local/bin/ispc" CACHE PATH "path to Intel ISPC")
 
 OPTION(USDI_BUILD_TESTS "" ON)
 OPTION(USDI_ENABLE_DEBUG "" OFF)
-OPTION(USDI_ENABLE_ISPC "" OFF)
-OPTION(USDI_ENABLE_UNITY_EXTENSION "" ON)
-OPTION(USDI_ENABLE_GRAPHICS_INTERFACE "" OFF)
-OPTION(USDI_ENABLE_MONO_BINDING "" OFF)
+OPTION(USDI_ENABLE_ISPC "Use Intel ISPC to generate SIMDified code. It can significantly boost performance and strongly recommended." OFF)
+OPTION(USDI_ENABLE_UNITY_EXTENSION "Generate Unity extensions. This is must to build as Unity plugin." ON)
+OPTION(USDI_ENABLE_GRAPHICS_INTERFACE "Use OpenGL or Direct3D to directry update vertex buffers. It can significantly boost performance and strongly recommended." ON)
+OPTION(USDI_ENABLE_MONO_BINDING "Generate mono bindings. " OFF)
 
 
 
 ADD_DEFINITIONS(-DBUILD_OPTLEVEL_OPT -DBUILD_COMPONENT_SRC_PREFIX="pxr/")
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --std=c++11 -fPIC -Wno-deprecated -DTF_NO_GNU_EXT")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -std=c++11 -Wno-deprecated -DTF_NO_GNU_EXT")
+
+IF(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    SET(USD_PLUGINS_DIR_NAME "plugins_linux")
+ELSEIF(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    SET(USD_PLUGINS_DIR_NAME "plugins_mac")
+    SET(CMAKE_MACOSX_RPATH ON)
+ELSEIF(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    SET(USD_PLUGINS_DIR_NAME "plugins_win64")
+ENDIF()
+SET(ASSETS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../USDForUnity/Assets")
+SET(PLUGINS_DIR "${ASSETS_DIR}/UTJ/Plugins/x86_64")
+SET(USD_PLUGINS_DIR "${ASSETS_DIR}/StreamingAssets/UTJ/USDForUnity/${USD_PLUGINS_DIR_NAME}")
+
 
 INCLUDE_DIRECTORIES(
     .
@@ -70,9 +83,8 @@ IF(USDI_ENABLE_ISPC)
     )
 
     # create dummy files to make cmake can find it
-    EXECUTE_PROCESS(COMMAND mkdir -p ${MUCORE_DIR})
     FOREACH(F ${MUCORE_FILES})
-        EXECUTE_PROCESS(COMMAND touch ${F})
+        FILE(WRITE ${F} "")
     ENDFOREACH(F)
 ENDIF()
 
@@ -88,9 +100,9 @@ ENDIF()
 
 
 # usdiRT
-FILE(GLOB USDIRT_CXX_FILES usdiRT/*.cpp)
-FILE(GLOB USDIRT_H_FILES usdiRT/*.h)
-ADD_LIBRARY(usdiRT SHARED ${USDIRT_CXX_FILES} ${USDIRT_H_FILES})
+FILE(GLOB RT_CXX_FILES usdiRT/*.cpp)
+FILE(GLOB RT_H_FILES usdiRT/*.h)
+ADD_LIBRARY(usdiRT SHARED ${RT_CXX_FILES} ${RT_H_FILES})
 TARGET_INCLUDE_DIRECTORIES(usdiRT PUBLIC
     ./usdiRT
 )
@@ -114,8 +126,8 @@ TARGET_LINK_LIBRARIES(usdi
     ${OPENEXR_Half_LIBRARY}
     ${DOUBLE_CONVERSION_LIBRARY}
 )
+
 ADD_DEFINITIONS(-DusdiEnableBoostFilesystem)
-ADD_DEFINITIONS(-DusdiEnableUnityExtension)
 IF(USDI_ENABLE_UNITY_EXTENSION)
     ADD_DEFINITIONS(-DusdiEnableUnityExtension)
 ENDIF()
@@ -128,26 +140,43 @@ ENDIF()
 IF(USDI_ENABLE_GRAPHICS_INTERFACE)
     ADD_DEFINITIONS(-DusdiEnableGraphicsInterface)
     ADD_DEPENDENCIES(usdi GraphicsInterface)
-    TARGET_LINK_LIBRARIES(usdi GraphicsInterface ${OPENGL_gl_LIBRARY} ${GLEW_LIBRARY})
+    TARGET_LINK_LIBRARIES(usdi
+        GraphicsInterface
+        ${OPENGL_gl_LIBRARY}
+        ${GLEW_LIBRARY}
+    )
 ENDIF()
 
 
-# testsCMAKE_CURRENT_BINARY_DIR
+# tests
 IF(USDI_BUILD_TESTS)
     FILE(GLOB Tests_CXX_FILES Test/*.cpp)
     FILE(GLOB Tests_H_FILES Test/*.h)
+    FILE(GLOB TestsMain_CXX_FILE Test/usdiTestsMain.cpp)
+    LIST(REMOVE_ITEM Tests_CXX_FILES ${TestsMain_CXX_FILE})
+
     ADD_EXECUTABLE(usdiTests ${Tests_CXX_FILES} ${Tests_H_FILES})
     ADD_DEPENDENCIES(usdiTests usdi usdiRT MeshUtils)
     TARGET_LINK_LIBRARIES(usdiTests usdi usdiRT MeshUtils)
+
+    ADD_EXECUTABLE(usdiTestsMain ${TestsMain_CXX_FILE})
+    ADD_DEPENDENCIES(usdiTestsMain usdiTests)
+    TARGET_LINK_LIBRARIES(usdiTestsMain
+        usdiRT MeshUtils
+        ${Boost_SYSTEM_LIBRARY_RELEASE}
+        ${Boost_FILESYSTEM_LIBRARY_RELEASE}
+    )
 ENDIF()
 
 
 # deploy
-SET(ASSETS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../USDForUnity/Assets")
-SET(PLUGINS_DIR "${ASSETS_DIR}/UTJ/Plugins/x86_64")
-ADD_CUSTOM_TARGET(deploy ALL
-    COMMAND cp $<TARGET_FILE:usdi> ${PLUGINS_DIR}
-    COMMAND cp $<TARGET_FILE:usdiRT> ${PLUGINS_DIR}
-    DEPENDS usdi
-    DEPENDS usdiRT
-)
+IF(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    # make bundle
+ELSE()
+    ADD_CUSTOM_TARGET(deploy ALL
+        COMMAND cp $<TARGET_FILE:usdi> ${PLUGINS_DIR}
+        COMMAND cp $<TARGET_FILE:usdiRT> ${PLUGINS_DIR}
+        DEPENDS usdi
+        DEPENDS usdiRT
+    )
+ENDIF()
