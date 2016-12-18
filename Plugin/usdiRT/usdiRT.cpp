@@ -59,13 +59,12 @@ rtAPI void AddDLLSearchPath(const char *v)
         }
     }
     if (path.find(v) == std::string::npos) {
-        path += ";";
+        if(!path.empty()) { path += ";"; }
         auto pos = path.size();
         path += v;
         for (size_t i = pos; i < path.size(); ++i) {
-            if (path[i] == '/') {
-                path[i] = '\\';
-            }
+            char& c = path[i];
+            if (c == '/') { c = '\\'; }
         }
         ::SetEnvironmentVariableA(LIBRARY_PATH, path.c_str());
     }
@@ -75,13 +74,12 @@ rtAPI void AddDLLSearchPath(const char *v)
         path = path_;
     }
     if (path.find(v) == std::string::npos) {
-        path += ":";
+        if(!path.empty()) { path += ":"; }
         auto pos = path.size();
         path += v;
         for (size_t i = pos; i < path.size(); ++i) {
-            if (path[i] == '\\') {
-                path[i] = '/';
-            }
+            char& c = path[i];
+            if (c == '\\') { c = '/'; }
         }
         ::setenv(LIBRARY_PATH, path.c_str(), 1);
     }
@@ -107,7 +105,7 @@ rtAPI void      DLLUnload(module_t mod) { ::FreeLibrary((HMODULE)mod); }
 rtAPI void*     DLLGetSymbol(module_t mod, const char *name) { return ::GetProcAddress((HMODULE)mod, name); }
 rtAPI module_t  DLLGetHandle(const char *modname) { return ::GetModuleHandleA(modname); }
 
-#else 
+#else
 
 rtAPI module_t  DLLLoad(const char *path) { return ::dlopen(path, RTLD_LAZY); }
 rtAPI void      DLLUnload(module_t mod) { ::dlclose(mod); }
@@ -145,9 +143,17 @@ rtAPI module_t DLLGetHandle(const char *modname)
 
 #endif
 
-rtAPI void usdiSetPluginPath(const char *path)
+rtAPI void usdiSetPluginPath(const char *path_)
 {
-    SetEnv("PXR_PLUGINPATH_NAME", path);
+    std::string path = path_;
+    for (char& c : path) {
+#if _WIN32
+        if (c == '/') { c = '\\'; }
+#else
+        if (c == '\\') { c = '/'; }
+#endif
+    }
+    SetEnv("PXR_PLUGINPATH_NAME", path.c_str());
 }
 
 } // extern "C"

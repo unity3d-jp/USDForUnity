@@ -263,6 +263,9 @@ void Normalize(float3 *dst, size_t num)
 
 void CalculateNormals(float3 *dst, const float3 *p, const int *indices, size_t num_points, size_t num_indices)
 {
+    if(num_indices % 3 != 0) {
+        //usdiLogWarning("CalculateNormals(): num_indices % 3 != 0\n");
+    }
     Forward(CalculateNormals, dst, p, indices, num_points, num_indices);
 }
 

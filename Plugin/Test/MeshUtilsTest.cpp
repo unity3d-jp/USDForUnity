@@ -190,7 +190,7 @@ static void Test_Normalize()
 
 static void Test_CalculateNormals()
 {
-    auto points = GenerateTestData(NumTestData, 0.1f, 1.0f);
+    auto points = GenerateTestData(NumTestData - (NumTestData % 3), 0.1f, 1.0f);
     std::vector<int> indices;
     indices.resize(points.size());
     for (size_t i = 0; i < indices.size(); ++i) { indices[i] = (int)i; }
