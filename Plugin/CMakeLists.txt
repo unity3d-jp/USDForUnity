@@ -79,7 +79,7 @@ IF(USDI_ENABLE_ISPC)
         ELSEIF(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
             SET(ISPC_DIR ispc-v${ISPC_VERSION}-osx)
         ENDIF()
-        SET(ISPC ${CMAKE_CURRENT_SOURCE_DIR}/External/${ISPC_DIR}/ispc)
+        SET(ISPC ${CMAKE_CURRENT_SOURCE_DIR}/External/${ISPC_DIR}/ispc CACHE PATH "" FORCE)
 
         SET(ISPC_ARCHIVE ${ISPC_DIR}.tar.gz)
         FILE(DOWNLOAD http://downloads.sourceforge.net/project/ispcmirror/v${ISPC_VERSION}/${ISPC_ARCHIVE} ${CMAKE_CURRENT_BINARY_DIR}/${ISPC_ARCHIVE} SHOW_PROGRESS)
