@@ -6,6 +6,8 @@
     #pragma comment(lib, "opengl32.lib")
     #define GLEW_STATIC
     #include <GL/glew.h>
+#elif defined(__APPLE__)
+    #include <GL/glew.h>
 #else // linux
     #include <GL/glxew.h>
 #endif
@@ -216,6 +218,8 @@ static GLenum GetGLBufferType(BufferType type)
         break;
     case BufferType::Compute:
         gltype = GL_SHADER_STORAGE_BUFFER;
+        break;
+    default:
         break;
     }
     return gltype;

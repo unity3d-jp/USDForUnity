@@ -120,10 +120,10 @@ rtAPI module_t DLLGetHandle(const char *modname)
 {
 #ifdef __APPLE__
 
-    for (auto i = _dyld_image_count(); i >= 0; i--) {
+    for (int i = (int)_dyld_image_count(); i >= 0; i--) {
         auto *path = _dyld_get_image_name(i);
         if (strstr(path, modname)) {
-            return dlopen(it->l_name, RTLD_LAZY);
+            return dlopen(path, RTLD_LAZY);
         }
     }
 

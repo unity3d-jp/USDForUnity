@@ -119,7 +119,7 @@ mMethod mMethod::inflate(mClass *params, size_t nparams, void *& mem)
     minst->is_open = 0; // must be zero!
     minst->type_argc = nparams;
     for (size_t i = 0; i < nparams; ++i) {
-        minst->type_argv[i++] = params[i].getType().get();
+        minst->type_argv[i] = params[i].getType().get();
     }
 
     MonoGenericContext ctx = { nullptr, minst };

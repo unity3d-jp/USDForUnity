@@ -760,6 +760,7 @@ Attribute* CreateAttribute(Schema *parent, const char *name, AttributeType type)
 #define Def(Type, Enum, Sdf, AType) case Enum: return CreateAttribute<Type>(parent, name);
         EachAttributeTypes(Def)
 #undef Def
+        default: break;
     }
 
     usdiLogWarning("failed to create attribute: %s\n", name);

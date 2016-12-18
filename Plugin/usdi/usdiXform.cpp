@@ -28,8 +28,8 @@ static quatf EulerToQuaternion(const float3& euler, UsdGeomXformOp::Type order)
     case UsdGeomXformOp::TypeRotateYZX: return (qX * qZ) * qY;
     case UsdGeomXformOp::TypeRotateZXY: return (qY * qX) * qZ;
     case UsdGeomXformOp::TypeRotateZYX: return (qX * qY) * qZ;
+    default: return {0.0f, 0.0f, 0.0f, 1.0f};
     }
-    return {0.0f, 0.0f, 0.0f, 1.0f};
 }
 
 static float Clamp(float v, float vmin, float vmax) { return std::min<float>(std::max<float>(v, vmin), vmax); }
@@ -153,6 +153,7 @@ void Xform::updateSample(Time t_)
             case UsdGeomXformOp::TypeRotateZYX: // fall through
             case UsdGeomXformOp::TypeOrient:    ++rotation; break;
             case UsdGeomXformOp::TypeTransform: ++transform; break;
+            default: break;
             }
         }
 
@@ -208,6 +209,8 @@ void Xform::updateSample(Time t_)
                 // todo
                 break;
             }
+            default:
+                break;
             }
         }
     }

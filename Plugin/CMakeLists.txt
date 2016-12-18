@@ -7,6 +7,7 @@ FIND_PACKAGE(Boost COMPONENTS python system filesystem QUIET)
 FIND_PACKAGE(TBB QUIET)
 FIND_PACKAGE(OpenEXR QUIET)
 FIND_PACKAGE(DoubleConversion QUIET)
+FIND_PACKAGE(OpenGL QUIET)
 FIND_PACKAGE(GLEW QUIET)
 
 SET(USD_ROOT "/opt/pixar" CACHE PATH "path to USD root")
@@ -86,16 +87,25 @@ IF(USDI_ENABLE_ISPC)
 ENDIF()
 
 
+# usdiRT
+FILE(GLOB USDIRT_CXX_FILES usdiRT/*.cpp)
+FILE(GLOB USDIRT_H_FILES usdiRT/*.h)
+ADD_LIBRARY(usdiRT SHARED ${USDIRT_CXX_FILES} ${USDIRT_H_FILES})
+TARGET_INCLUDE_DIRECTORIES(usdiRT PUBLIC
+    ./usdiRT
+)
+
+
 # usdi
 FILE(GLOB USDI_CXX_FILES usdi/*.cpp usdi/etc/*.cpp usdi/ext/*.cpp)
 FILE(GLOB USDI_H_FILES usdi/*.h usdi/etc/*.h usdi/ext/*.h)
 ADD_LIBRARY(usdi SHARED ${USDI_CXX_FILES} ${USDI_H_FILES})
-ADD_DEPENDENCIES(usdi MeshUtils)
+ADD_DEPENDENCIES(usdi usdiRT MeshUtils)
 TARGET_INCLUDE_DIRECTORIES(usdi PUBLIC
     ./usdi
 )
 TARGET_LINK_LIBRARIES(usdi
-    ar arch tf gf pcp vt sdf usd usdGeom usdUtils MeshUtils
+    ar arch tf gf pcp vt sdf usd usdGeom usdUtils usdiRT MeshUtils
     ${PYTHON_LIBRARY}
     ${Boost_PYTHON_LIBRARY_RELEASE}
     ${Boost_SYSTEM_LIBRARY_RELEASE}
@@ -118,17 +128,8 @@ ENDIF()
 IF(USDI_ENABLE_GRAPHICS_INTERFACE)
     ADD_DEFINITIONS(-DusdiEnableGraphicsInterface)
     ADD_DEPENDENCIES(usdi GraphicsInterface)
-    TARGET_LINK_LIBRARIES(usdi GraphicsInterface GL ${GLEW_LIBRARY})
+    TARGET_LINK_LIBRARIES(usdi GraphicsInterface ${OPENGL_gl_LIBRARY} ${GLEW_LIBRARY})
 ENDIF()
-
-
-# usdiRT
-FILE(GLOB USDIRT_CXX_FILES usdiRT/*.cpp)
-FILE(GLOB USDIRT_H_FILES usdiRT/*.h)
-ADD_LIBRARY(usdiRT SHARED ${USDIRT_CXX_FILES} ${USDIRT_H_FILES})
-TARGET_INCLUDE_DIRECTORIES(usdiRT PUBLIC
-    ./usdiRT
-)
 
 
 # testsCMAKE_CURRENT_BINARY_DIR
