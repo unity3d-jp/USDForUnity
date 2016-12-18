@@ -10,15 +10,16 @@ FIND_PACKAGE(DoubleConversion QUIET)
 FIND_PACKAGE(OpenGL QUIET)
 FIND_PACKAGE(GLEW QUIET)
 
-SET(USD_ROOT "/opt/pixar" CACHE PATH "path to USD root")
-SET(ISPC "/usr/local/bin/ispc" CACHE PATH "path to Intel ISPC")
+SET(USD_ROOT "/opt/pixar" CACHE PATH "Path to USD root")
+SET(ISPC "/usr/local/bin/ispc" CACHE PATH "Path to Intel ISPC")
+MARK_AS_ADVANCED(FORCE ISPC)
 
-OPTION(USDI_BUILD_TESTS "" ON)
-OPTION(USDI_ENABLE_DEBUG "" OFF)
-OPTION(USDI_ENABLE_ISPC "Use Intel ISPC to generate SIMDified code. It can significantly boost performance and strongly recommended." OFF)
-OPTION(USDI_ENABLE_UNITY_EXTENSION "Generate Unity extensions. This is must to build as Unity plugin." ON)
-OPTION(USDI_ENABLE_GRAPHICS_INTERFACE "Use OpenGL or Direct3D to directry update vertex buffers. It can significantly boost performance and strongly recommended." ON)
-OPTION(USDI_ENABLE_MONO_BINDING "Generate mono bindings. " OFF)
+OPTION(USDI_ENABLE_UNITY_EXTENSION "Generate Unity extensions. This is must to use as Unity plugin." ON)
+OPTION(USDI_ENABLE_ISPC "Use Intel ISPC to generate SIMDified code. It can significantly boost performance." ON)
+OPTION(USDI_ENABLE_GRAPHICS_INTERFACE "Use OpenGL or Direct3D to update vertex buffers directry. It can significantly boost performance." ON)
+OPTION(USDI_ENABLE_MONO_BINDING "Generate mono bindings to access C# objects from C++ directly. It can boost performance." ON)
+OPTION(USDI_ENABLE_DEBUG "Enable debug functionalities." OFF)
+OPTION(USDI_ENABLE_TESTS "Build tests." ON)
 
 
 
@@ -70,9 +71,29 @@ ENDIF()
 
 # MeshUtils
 IF(USDI_ENABLE_ISPC)
+    if(NOT EXISTS ${ISPC})
+        # try to download ISPC
+        SET(ISPC_VERSION 1.9.1)
+        IF(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+            SET(ISPC_DIR ispc-v${ISPC_VERSION}-linux)
+        ELSEIF(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+            SET(ISPC_DIR ispc-v${ISPC_VERSION}-osx)
+        ENDIF()
+        SET(ISPC ${CMAKE_CURRENT_SOURCE_DIR}/External/${ISPC_DIR}/ispc)
+
+        SET(ISPC_ARCHIVE ${ISPC_DIR}.tar.gz)
+        FILE(DOWNLOAD http://downloads.sourceforge.net/project/ispcmirror/v${ISPC_VERSION}/${ISPC_ARCHIVE} ${CMAKE_CURRENT_BINARY_DIR}/${ISPC_ARCHIVE} SHOW_PROGRESS)
+        EXECUTE_PROCESS(
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/External
+            COMMAND tar -xzvf ${CMAKE_CURRENT_BINARY_DIR}/${ISPC_ARCHIVE}
+        )
+    ENDIF()
+
     SET(MUCORE_DIR ${CMAKE_CURRENT_BINARY_DIR}/MeshUtilsCore)
     ADD_CUSTOM_TARGET(MeshUtilsCore ALL
-        COMMAND ${ISPC} ${CMAKE_CURRENT_SOURCE_DIR}/MeshUtils/MeshUtilsCore.ispc -o ${MUCORE_DIR}/MeshUtilsCore${CMAKE_CXX_OUTPUT_EXTENSION} -h ${MUCORE_DIR}/MeshUtilsCore.h --pic --target=sse2,sse4,avx --arch=x86-64 --opt=fast-masked-vload --opt=fast-math --opt=force-aligned-memory
+        # not use --opt=force-aligned-memory as I can't force USD to align memory to 0x20.
+        # (Windows port is using with patched USD)
+        COMMAND ${ISPC} ${CMAKE_CURRENT_SOURCE_DIR}/MeshUtils/MeshUtilsCore.ispc -o ${MUCORE_DIR}/MeshUtilsCore${CMAKE_CXX_OUTPUT_EXTENSION} -h ${MUCORE_DIR}/MeshUtilsCore.h --pic --target=sse2,sse4,avx --arch=x86-64 --opt=fast-masked-vload --opt=fast-math
     )
     SET(MUCORE_FILES
         ${MUCORE_DIR}/MeshUtilsCore.h
@@ -151,7 +172,7 @@ ENDIF()
 
 
 # tests
-IF(USDI_BUILD_TESTS)
+IF(USDI_ENABLE_TESTS)
     FILE(GLOB Tests_CXX_FILES Test/*.cpp)
     FILE(GLOB Tests_H_FILES Test/*.h)
     FILE(GLOB TestsMain_CXX_FILE Test/usdiTestsMain.cpp)
