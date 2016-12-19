@@ -16,6 +16,8 @@ namespace usdi {
     Body(byte, AttributeType::Byte, SdfValueTypeNames->UChar, TAttribute<byte>)\
     Body(int, AttributeType::Int, SdfValueTypeNames->Int, TAttribute<int>)\
     Body(uint, AttributeType::UInt, SdfValueTypeNames->UInt, TAttribute<uint>)\
+    Body(int64_t, AttributeType::Int64, SdfValueTypeNames->Int64, TAttribute<int64_t>)\
+    Body(uint64_t, AttributeType::UInt64, SdfValueTypeNames->UInt64, TAttribute<uint64_t>)\
     Body(half, AttributeType::Half, SdfValueTypeNames->Half, TAttribute<half>)\
     Body(GfVec2h, AttributeType::Half2, SdfValueTypeNames->Half2, TAttribute<GfVec2h>)\
     Body(GfVec3h, AttributeType::Half3, SdfValueTypeNames->Half3, TAttribute<GfVec3h>)\
@@ -40,6 +42,8 @@ namespace usdi {
     Body(VtArray<byte>, AttributeType::ByteArray, SdfValueTypeNames->UCharArray, TAttribute<VtArray<byte>>)\
     Body(VtArray<int>, AttributeType::IntArray, SdfValueTypeNames->IntArray, TAttribute<VtArray<int>>)\
     Body(VtArray<uint>, AttributeType::UIntArray, SdfValueTypeNames->UIntArray, TAttribute<VtArray<uint>>)\
+    Body(VtArray<int64_t>, AttributeType::Int64Array, SdfValueTypeNames->Int64Array, TAttribute<VtArray<int64_t>>)\
+    Body(VtArray<uint64_t>, AttributeType::UInt64Array, SdfValueTypeNames->UInt64Array, TAttribute<VtArray<uint64_t>>)\
     Body(VtArray<half>, AttributeType::HalfArray, SdfValueTypeNames->HalfArray, TAttribute<VtArray<half>>)\
     Body(VtArray<GfVec2h>, AttributeType::Half2Array, SdfValueTypeNames->Half2Array, TAttribute<VtArray<GfVec2h>>)\
     Body(VtArray<GfVec3h>, AttributeType::Half3Array, SdfValueTypeNames->Half3Array, TAttribute<VtArray<GfVec3h>>)\
@@ -682,6 +686,9 @@ static struct InitConverterFactory
 
         // make vector attributes convertible
         // (this maybe overkill... /bigobj is required because of this)
+
+        MakeConvertible(int64_t, Add(int));
+        MakeConvertible(uint64_t, Add(uint));
 
         MakeConvertible(GfVec2h, Add(GfVec2f) Add(GfVec2d) Add(GfVec3h) Add(GfVec3f) Add(GfVec3d) Add(GfVec4h) Add(GfVec4f) Add(GfVec4d));
         MakeConvertible(GfVec2f, Add(GfVec2h) Add(GfVec2d) Add(GfVec3h) Add(GfVec3f) Add(GfVec3d) Add(GfVec4h) Add(GfVec4f) Add(GfVec4d));

@@ -616,13 +616,15 @@ namespace UTJ
 #if UNITY_EDITOR
             if (EditorApplication.isCompiling && !m_isCompiling)
             {
+                // on compile begin
                 m_isCompiling = true;
                 usdiUnload();
             }
             else if(!EditorApplication.isCompiling && m_isCompiling)
             {
+                // on compile end
                 m_isCompiling = false;
-                usdi.usdiInitialize();
+                usdi.InitializePluginPass2();
                 usdiLoad(m_path);
             }
 #endif

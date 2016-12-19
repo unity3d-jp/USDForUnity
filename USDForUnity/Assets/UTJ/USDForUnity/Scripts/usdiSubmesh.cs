@@ -329,11 +329,32 @@ namespace UTJ
         }
 
 
-        public void usdiUploadMeshData(bool directVBUpdate, bool topology, bool close)
+        void usdiUpdateSkinningData()
+        {
+            if (m_stream.importSettings.swapHandedness)
+            {
+                Debug.LogWarning("Swap Handedness import option is enabled. This may cause broken skinning animation.");
+            }
+
+            m_umesh.boneWeights = m_weights;
+            m_umesh.bindposes = m_bindposes;
+            var renderer = m_renderer as SkinnedMeshRenderer;
+            if (renderer != null)
+            {
+                renderer.bones = m_bones;
+                renderer.rootBone = m_rootBone;
+            }
+        }
+
+        public void usdiUploadMeshData(bool directVBUpdate, bool topology, bool skinning)
         {
             if (directVBUpdate && m_VB != IntPtr.Zero)
             {
-                // nothing to do here
+                if (m_weights != null && skinning)
+                {
+                    usdiUpdateSkinningData();
+                    m_umesh.UploadMeshData(false);
+                }
             }
             else
             {
@@ -348,24 +369,11 @@ namespace UTJ
                     if (m_normals == null) { m_umesh.RecalculateNormals(); }
                 }
 
-                if(m_count == 0 && m_weights != null)
+                if (m_weights != null && skinning)
                 {
-                    if(m_stream.importSettings.swapHandedness)
-                    {
-                        Debug.LogWarning("Swap Handedness import option is enabled. This may cause broken skinning animation.");
-                    }
-
-                    m_umesh.boneWeights = m_weights;
-                    m_umesh.bindposes = m_bindposes;
-                    var renderer = m_renderer as SkinnedMeshRenderer;
-                    if(renderer != null)
-                    {
-                        renderer.bones = m_bones;
-                        renderer.rootBone = m_rootBone;
-                    }
+                    usdiUpdateSkinningData();
                 }
 
-                //m_umesh.UploadMeshData(close);
                 m_umesh.UploadMeshData(false);
 
 #if UNITY_5_5_OR_NEWER

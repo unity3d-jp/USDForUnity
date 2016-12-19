@@ -80,10 +80,6 @@ float3 QuaternionToEulerZXY(const quatf& q)
     }
 }
 
-static void SwapHandedness(quatf& q)
-{
-    q = {q.x, -q.y, -q.z, q.w};
-}
 
 RegisterSchemaHandler(Xform)
 
@@ -185,7 +181,7 @@ void Xform::updateSample(Time t_)
             {
                 op.GetAs((GfQuatf*)&sample.rotation, t);
                 if (conf.swap_handedness) {
-                    SwapHandedness(sample.rotation);
+                    sample.rotation = swap_handedness(sample.rotation);
                 }
                 break;
             }
@@ -200,7 +196,7 @@ void Xform::updateSample(Time t_)
                 op.GetAs((GfVec3f*)&euler, t);
                 sample.rotation = EulerToQuaternion(euler * Deg2Rad, op.GetOpType());
                 if (conf.swap_handedness) {
-                    SwapHandedness(sample.rotation);
+                    sample.rotation = swap_handedness(sample.rotation);
                 }
                 break;
             }
@@ -271,7 +267,7 @@ bool Xform::writeSample(const XformData& src_, Time t_)
 
     if (conf.swap_handedness) {
         src.position.x *= -1.0f;
-        SwapHandedness(src.rotation);
+        src.rotation = swap_handedness(src.rotation);
     }
 
     m_write_ops[0].Set((const GfVec3f&)src.position, t);

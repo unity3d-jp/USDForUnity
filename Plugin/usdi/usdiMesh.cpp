@@ -358,6 +358,9 @@ void Mesh::updateSample(Time t_)
     }
     if (m_attr_bindposes && sample.bindposes.empty()) {
         m_attr_bindposes->getImmediate(&sample.bindposes, t_);
+        if (conf.swap_handedness) {
+            // todo:
+        }
     }
 
     // bounds

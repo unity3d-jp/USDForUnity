@@ -23,6 +23,7 @@ namespace UTJ
         bool m_allocateMeshDataRequired;
         bool m_updateIndicesRequired;
         bool m_updateVerticesRequired;
+        bool m_updateSkinningRequired;
         bool m_directVBUpdate; // for Unity 5.5 or later
         double m_timeRead; // accessed from worker thread
         usdi.Task m_asyncRead;
@@ -107,6 +108,7 @@ namespace UTJ
             m_allocateMeshDataRequired = false;
             m_updateIndicesRequired = false;
             m_updateVerticesRequired = false;
+            m_updateSkinningRequired = false;
             m_timeRead = 0.0;
 
             m_asyncRead = null;
@@ -159,6 +161,7 @@ namespace UTJ
                 m_allocateMeshDataRequired = false;
                 m_updateIndicesRequired = false;
                 m_updateVerticesRequired = false;
+                m_updateSkinningRequired = false;
             }
             else
             {
@@ -181,6 +184,10 @@ namespace UTJ
                     m_updateVerticesRequired =
                         m_updateIndicesRequired ||
                         m_meshSummary.topology_variance != usdi.TopologyVariance.Constant;
+                }
+                if(!m_updateSkinningRequired)
+                {
+                    m_updateSkinningRequired = m_allocateMeshDataRequired || m_updateFlags.importConfigChanged;
                 }
             }
 
@@ -227,12 +234,12 @@ namespace UTJ
 
 
         // sync
-        void usdiUploadMeshData(double t, bool topology, bool close)
+        void usdiUploadMeshData(double t, bool topology, bool skinning)
         {
             int num_submeshes = m_meshData.num_submeshes == 0 ? 1 : m_meshData.num_submeshes;
             for (int i = 0; i < num_submeshes; ++i)
             {
-                m_submeshes[i].usdiUploadMeshData(m_directVBUpdate, topology, close);
+                m_submeshes[i].usdiUploadMeshData(m_directVBUpdate, topology, skinning);
             }
         }
 
@@ -296,7 +303,7 @@ namespace UTJ
             if (m_allocateMeshDataRequired)
             {
                 bool close = m_meshSummary.topology_variance == usdi.TopologyVariance.Constant;
-                usdiUploadMeshData(time, true, close);
+                usdiUploadMeshData(time, true, true);
             }
             else if(m_updateVerticesRequired)
             {
@@ -316,13 +323,14 @@ namespace UTJ
                 }
                 else
                 {
-                    usdiUploadMeshData(m_timeRead, m_updateIndicesRequired, false);
+                    usdiUploadMeshData(m_timeRead, m_updateIndicesRequired, m_updateSkinningRequired);
                 }
             }
 
             m_allocateMeshDataRequired = false;
             m_updateIndicesRequired = false;
             m_updateVerticesRequired = false;
+            m_updateSkinningRequired = false;
         }
 
         public override void usdiSync()

@@ -4,12 +4,43 @@
 
 namespace mu {
 
-struct float2 { float x, y; };
-struct float3 { float x, y, z; };
-struct float4 { float x, y, z, w; };
-struct quatf { float x, y, z, w; };
-struct float3x3 { float3 v[3]; };
-struct float4x4 { float4 v[4]; };
+struct float2
+{
+    float x, y;
+    float& operator[](int i) { return ((float*)this)[i]; }
+    const float& operator[](int i) const { return ((float*)this)[i]; }
+};
+struct float3
+{
+    float x, y, z;
+    float& operator[](int i) { return ((float*)this)[i]; }
+    const float& operator[](int i) const { return ((float*)this)[i]; }
+};
+struct float4
+{
+    float x, y, z, w;
+    float& operator[](int i) { return ((float*)this)[i]; }
+    const float& operator[](int i) const { return ((float*)this)[i]; }
+};
+struct quatf
+{
+    float x, y, z, w;
+    float& operator[](int i) { return ((float*)this)[i]; }
+    const float& operator[](int i) const { return ((float*)this)[i]; }
+};
+
+struct float3x3
+{
+    float3 v[3];
+    float3& operator[](int i) { return v[i]; }
+    const float3& operator[](int i) const { return v[i]; }
+};
+struct float4x4 
+{
+    float4 v[4];
+    float4& operator[](int i) { return v[i]; }
+    const float4& operator[](int i) const { return v[i]; }
+};
 
 
 inline bool near_equal(float a, float b)
@@ -134,6 +165,30 @@ inline float3 cross(const float3& l, const float3& r)
         l.y * r.z - l.z * r.y,
         l.z * r.x - l.x * r.z,
         l.x * r.y - l.y * r.x };
+}
+
+inline quatf swap_handedness(const quatf& q)
+{
+    return { q.x, -q.y, -q.z, q.w };
+}
+
+inline float3x3 swap_handedness(const float3x3& m)
+{
+    return{ {
+        { m[0].x, m[0].z, m[0].y },
+        { m[2].x, m[2].z, m[2].y },
+        { m[1].x, m[1].z, m[1].y },
+    } };
+}
+
+inline float4x4 swap_handedness(const float4x4& m)
+{
+    return{ {
+        { m[0].x, m[0].z, m[0].y, m[0].w },
+        { m[2].x, m[2].z, m[2].y, m[2].w },
+        { m[1].x, m[1].z, m[1].y, m[1].w },
+        {-m[3].x, m[3].z, m[3].y, m[3].w },
+    } };
 }
 
 } // namespace mu

@@ -60,7 +60,7 @@ using TangentCalculationType = NormalCalculationType;
 enum class AttributeType
 {
     Unknown,
-    Bool, Byte, Int, UInt,
+    Bool, Byte, Int, UInt, Int64, UInt64,
     Half, Half2, Half3, Half4, QuatH,
     Float, Float2, Float3, Float4, QuatF,
     Double, Double2, Double3, Double4, QuatD,
@@ -69,7 +69,7 @@ enum class AttributeType
     String, Token, Asset,
 
     UnknownArray = 0x100,
-    BoolArray, ByteArray, IntArray, UIntArray,
+    BoolArray, ByteArray, IntArray, UIntArray, Int64Array, UInt64Array,
     HalfArray, Half2Array, Half3Array, Half4Array, QuatHArray,
     FloatArray, Float2Array, Float3Array, Float4Array, QuatFArray,
     DoubleArray, Double2Array, Double3Array, Double4Array, QuatDArray,
