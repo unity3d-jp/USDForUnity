@@ -118,7 +118,8 @@ rtAPI module_t DLLGetHandle(const char *modname)
 {
 #ifdef __APPLE__
 
-    for (int i = (int)_dyld_image_count(); i >= 0; i--) {
+    int n = (int)_dyld_image_count();
+    for (int i = 0; i < n; ++i) {
         auto *path = _dyld_get_image_name(i);
         if (strstr(path, modname)) {
             return dlopen(path, RTLD_LAZY);
