@@ -81,12 +81,14 @@ IF(USDI_ENABLE_ISPC)
         ENDIF()
         SET(ISPC ${CMAKE_CURRENT_SOURCE_DIR}/External/${ISPC_DIR}/ispc CACHE PATH "" FORCE)
 
-        SET(ISPC_ARCHIVE ${ISPC_DIR}.tar.gz)
-        FILE(DOWNLOAD http://downloads.sourceforge.net/project/ispcmirror/v${ISPC_VERSION}/${ISPC_ARCHIVE} ${CMAKE_CURRENT_BINARY_DIR}/${ISPC_ARCHIVE} SHOW_PROGRESS)
-        EXECUTE_PROCESS(
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/External
-            COMMAND tar -xzvf ${CMAKE_CURRENT_BINARY_DIR}/${ISPC_ARCHIVE}
-        )
+        if(NOT EXISTS ${ISPC})
+            SET(ISPC_ARCHIVE ${ISPC_DIR}.tar.gz)
+            FILE(DOWNLOAD http://downloads.sourceforge.net/project/ispcmirror/v${ISPC_VERSION}/${ISPC_ARCHIVE} ${CMAKE_CURRENT_BINARY_DIR}/${ISPC_ARCHIVE} SHOW_PROGRESS)
+            EXECUTE_PROCESS(
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/External
+                COMMAND tar -xzvf ${CMAKE_CURRENT_BINARY_DIR}/${ISPC_ARCHIVE}
+            )
+        ENDIF()
     ENDIF()
 
     SET(MUCORE_DIR ${CMAKE_CURRENT_BINARY_DIR}/MeshUtilsCore)
@@ -171,6 +173,12 @@ IF(USDI_ENABLE_GRAPHICS_INTERFACE)
 ENDIF()
 
 
+IF(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    SET_TARGET_PROPERTIES(usdi usdiRT PROPERTIES PREFIX "")
+    SET_TARGET_PROPERTIES(usdi usdiRT PROPERTIES SUFFIX ".bundle")
+ENDIF()
+
+
 # tests
 IF(USDI_ENABLE_TESTS)
     FILE(GLOB Tests_CXX_FILES Test/*.cpp)
@@ -193,13 +201,9 @@ ENDIF()
 
 
 # deploy
-IF(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    # make bundle
-ELSE()
-    ADD_CUSTOM_TARGET(deploy ALL
-        COMMAND cp $<TARGET_FILE:usdi> ${PLUGINS_DIR}
-        COMMAND cp $<TARGET_FILE:usdiRT> ${PLUGINS_DIR}
-        DEPENDS usdi
-        DEPENDS usdiRT
-    )
-ENDIF()
+ADD_CUSTOM_TARGET(deploy ALL
+    COMMAND cp $<TARGET_FILE:usdi> ${PLUGINS_DIR}
+    COMMAND cp $<TARGET_FILE:usdiRT> ${PLUGINS_DIR}
+    DEPENDS usdi
+    DEPENDS usdiRT
+)
