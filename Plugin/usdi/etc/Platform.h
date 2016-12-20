@@ -1,5 +1,12 @@
 #pragma once
 
+#if defined(_M_X64) || defined(__x86_64__)
+    #define __Arch_x86_64__
+#elif defined(_M_IX86) || defined(__x86__)
+    #define __Arch_x86__
+#endif
+
+
 #if defined(_WIN32) && (_M_X64)
     #define __Windows_x86_64__
 #elif defined(__linux__ ) && defined(__x86_64__)

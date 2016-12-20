@@ -8,7 +8,7 @@ enum class MemoryFlags
     ExecuteReadWrite,
 };
 
-int SetMemoryFlags(void *addr, size_t size, MemoryFlags flags);
+void SetMemoryProtection(void *addr, size_t size, MemoryFlags flags);
 
 void ForceWrite(void *dst, const void *src, size_t s);
 template<class T> inline void ForceWrite(T &dst, const T &src);
@@ -39,7 +39,7 @@ inline void ForceWrite(T &dst, const T &src)
 template<class Body>
 inline void ForceWrite(void *dst, size_t size, const Body& body)
 {
-    int f = SetMemoryFlags(dst, size, MemoryFlags::ExecuteReadWrite);
+    SetMemoryProtection(dst, size, MemoryFlags::ExecuteReadWrite);
     body();
-    SetMemoryFlags(dst, size, (MemoryFlags)f);
+    SetMemoryProtection(dst, size, MemoryFlags::ExecuteRead);
 }

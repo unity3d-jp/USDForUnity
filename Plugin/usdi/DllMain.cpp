@@ -1,11 +1,11 @@
 #include "pch.h"
 
-#ifdef _WIN32
 #include "usdiInternal.h"
 #include "etc/Hook.h"
 #include "etc/Mono.h"
 #include "etc/MonoWrapper.h"
 
+#ifdef _WIN32
 BOOL WINAPI DllMain(HINSTANCE /*hinstDLL*/, DWORD fdwReason, LPVOID /*lpvReserved*/)
 {
     if (fdwReason == DLL_PROCESS_ATTACH) {
@@ -23,4 +23,18 @@ BOOL WINAPI DllMain(HINSTANCE /*hinstDLL*/, DWORD fdwReason, LPVOID /*lpvReserve
     }
     return TRUE;
 }
+#elif defined(__APPLE__)
+
+__attribute__((constructor))
+void DllMain()
+{
+#ifdef usdiEnableMonoBinding
+    if (g_mono_dll) {
+        ForceWrite((void*)_mono_thread_suspend_all_other_threads, 14, [=]() {
+            EmitJumpInstruction((void*)_mono_thread_suspend_all_other_threads, (void*)_mono_thread_abort_all_other_threads);
+        });
+    }
+#endif // usdiEnableMonoBinding
+}
+
 #endif // _WIN32

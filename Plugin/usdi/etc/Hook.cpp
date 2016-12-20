@@ -2,12 +2,20 @@
 #include "Hook.h"
 
 #ifdef _WIN32
-#include <windows.h>
-#include <dbghelp.h>
-#pragma comment(lib, "dbghelp.lib")
+    #include <windows.h>
+    #include <dbghelp.h>
+    #pragma comment(lib, "dbghelp.lib")
+#else
+    #include <sys/mman.h>
+    using BYTE = uint8_t;
+    using WORD = uint16_t;
+    using DWORD = uint32_t;
+    using DWORD_PTR = size_t;
+#endif
 
-int SetMemoryFlags(void *addr, size_t size, MemoryFlags flags)
+void SetMemoryProtection(void *addr, size_t size, MemoryFlags flags)
 {
+#ifdef _WIN32
     DWORD flag = 0;
     switch (flags) {
     case MemoryFlags::ReadWrite: flag = PAGE_READWRITE; break;
@@ -16,15 +24,22 @@ int SetMemoryFlags(void *addr, size_t size, MemoryFlags flags)
     }
     DWORD old_flag;
     VirtualProtect(addr, size, flag, &old_flag);
-    return old_flag;
+#else
+    int flag = 0;
+    switch (flags) {
+    case MemoryFlags::ReadWrite: flag = PROT_READ | PROT_WRITE; break;
+    case MemoryFlags::ExecuteRead: flag = PROT_EXEC | PROT_READ; break;
+    case MemoryFlags::ExecuteReadWrite: flag = PROT_EXEC | PROT_READ | PROT_WRITE; break;
+    }
+    mprotect(addr, size, flag);
+#endif
 }
 
-void ForceWrite(void *dst, const void *src, size_t s)
+void ForceWrite(void *dst, const void *src, size_t size)
 {
-    DWORD old_flag;
-    VirtualProtect(dst, s, PAGE_EXECUTE_READWRITE, &old_flag);
-    memcpy(dst, src, s);
-    VirtualProtect(dst, s, old_flag, &old_flag);
+    SetMemoryProtection(dst, size, MemoryFlags::ExecuteReadWrite);
+    memcpy(dst, src, size);
+    SetMemoryProtection(dst, size, MemoryFlags::ExecuteRead);
 }
 
 void* EmitJumpInstruction(void* from_, const void* to_)
@@ -41,29 +56,34 @@ void* EmitJumpInstruction(void* from_, const void* to_)
     if (distance <= 0x7fff0000) {
         from[0] = 0xe9;
         from += 1;
-        *((DWORD*)from) = (DWORD)(to - jump_from);
+        *((DWORD*)from) = (DWORD)((size_t)to - (size_t)jump_from);
         from += 4;
     }
     else {
         from[0] = 0xff;
         from[1] = 0x25;
         from += 2;
-#ifdef _M_IX86
-        *((DWORD*)from) = (DWORD)(from + 4);
-#elif defined(_M_X64)
+#if defined(__Arch_x86_64__)
+        *((DWORD*)from) = (DWORD)((size_t)from + 4);
+#elif defined(__Arch_x86__)
         *((DWORD*)from) = (DWORD)0;
 #endif
         from += 4;
         *((DWORD_PTR*)from) = (DWORD_PTR)(to);
         from += 8;
     }
+
+#ifdef _WIN32
     ::FlushInstructionCache(nullptr, base, size_t(from - base));
+#else
+    __builtin___clear_cache(from, base);
+#endif
     return from;
 }
 
-
 void* OverrideDLLImport(void *module, const char *modname, const char *funcname, void *replacement)
 {
+#ifdef _WIN32
     if (!module) { return nullptr; }
 
     size_t ImageBase = (size_t)module;
@@ -90,10 +110,17 @@ void* OverrideDLLImport(void *module, const char *modname, const char *funcname,
         ++pImportDesc;
     }
     return nullptr;
+
+#else
+
+    // not implemented yet
+    return nullptr;
+#endif
 }
 
 void* OverrideDLLExport(void *module, const char *funcname, void *replacement)
 {
+#ifdef _WIN32
     if (!module) { return nullptr; }
 
     size_t ImageBase = (size_t)module;
@@ -117,10 +144,17 @@ void* OverrideDLLExport(void *module, const char *funcname, void *replacement)
         }
     }
     return nullptr;
+
+#else
+
+    // not implemented yet
+    return nullptr;
+#endif
 }
 
 void* FindSymbolByName(const char *name)
 {
+#ifdef _WIN32
     static bool s_first = true;
 
     if (s_first) {
@@ -154,39 +188,10 @@ void* FindSymbolByName(const char *name)
         return nullptr;
     }
     return (void*)sinfo->Address;
-}
 
 #else
 
-// todo
-
-int SetMemoryFlags(void *addr, size_t size, MemoryFlags flags)
-{
-    return 0;
-}
-
-void ForceWrite(void *dst, const void *src, size_t s)
-{
-}
-
-void* EmitJumpInstruction(void* from, const void* to)
-{
-    return from;
-}
-
-void* OverrideDLLImport(void *module, const char *target_module, const char *target_funcname, void *replacement)
-{
+    // not implemented yet
     return nullptr;
-}
-
-void* OverrideDLLExport(void *module, const char *funcname, void *replacement)
-{
-    return nullptr;
-}
-
-void* FindSymbolByName(const char *name)
-{
-    return nullptr;
-}
-
 #endif
+}

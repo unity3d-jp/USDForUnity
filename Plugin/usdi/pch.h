@@ -64,6 +64,8 @@
 #include "pxr/usd/ar/resolver.h"
 #pragma warning(pop)
 
+#include "etc/Platform.h"
+
 namespace usdi {
     class Context;
     class Attribute;
