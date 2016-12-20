@@ -195,11 +195,18 @@ void TestExport(const char *filename)
             {  0.5f,  0.5f, 0.0f },
             { -0.5f,  0.5f, 0.0f },
         };
+        float2 uv[] = {
+            { 0.0f, 0.0f },
+            { 1.0f, 0.0f },
+            { 1.0f, 1.0f },
+            { 0.0f, 1.0f },
+        };
         int counts[] = { 3, 3 };
         int indices[] = { 0, 1, 2, 0, 2, 3 };
 
         usdi::MeshData data;
         data.points = vertices;
+        data.uvs = uv;
         data.counts = counts;
         data.indices = indices;
         data.num_points = std::extent<decltype(vertices)>::value;
@@ -210,6 +217,7 @@ void TestExport(const char *filename)
             usdi::Time t = (1.0 / 30.0) * i;
             usdiMeshWriteSample(mesh2, &data, t);
         }
+        usdiMeshPreComputeNormals(mesh2, true);
 
         AddAttribute(mesh2, "TestImageAsset", usdi::AttributeType::Asset, "USDAssets/test.exr");
         AddAttribute(mesh2, "TestFBXAsset", usdi::AttributeType::Asset, "USDAssets/test.fbx");

@@ -546,6 +546,8 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
     return dst.num_points > 0;
 }
 
+#define CreateAttributeIfNeeded(VName, ...) if(!VName) { VName=createAttribute(__VA_ARGS__); }
+
 bool Mesh::writeSample(const MeshData& src, Time t_)
 {
     auto t = UsdTimeCode(t_);
@@ -553,7 +555,6 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
 
     MeshSample& sample = m_sample[0];
 
-#define CreateAttributeIfNeeded(VName, ...) if(!VName) { VName=createAttribute(__VA_ARGS__); }
 
     bool  ret = false;
     if (src.points) {
@@ -678,11 +679,83 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
         m_attr_root_bone->setImmediate(&sample.root_bone, t_);
     }
 
-#undef CreateAttributeIfNeeded
-
     m_summary_needs_update = true;
     return ret;
 }
+
+
+
+bool Mesh::preComputeNormals(bool gen_tangents, bool overwrite)
+{
+    auto attr_indices = m_mesh.GetFaceVertexIndicesAttr();
+    auto attr_counts = m_mesh.GetFaceVertexCountsAttr();
+    auto attr_points = m_mesh.GetPointsAttr();
+    auto attr_normals = m_mesh.GetNormalsAttr();
+    auto attr_uv = m_attr_uv ? m_attr_uv->getUSDAttribute() : UsdAttribute();
+    auto attr_tangents = m_attr_tangents ? m_attr_tangents->getUSDAttribute() : UsdAttribute();
+
+    if (!overwrite && attr_normals.HasValue()) {
+        return false;
+    }
+    if (!attr_indices.HasValue() || !attr_counts.HasValue() || !attr_points.HasValue()) {
+        return false;
+    }
+
+    if (!attr_uv) {
+        // computing tangents require uv but this Mesh doesn't have it.
+        gen_tangents = false;
+    }
+    if (gen_tangents && !attr_tangents) {
+        // create tangents attributes if needed
+        CreateAttributeIfNeeded(m_attr_tangents, usdiTangentAttrName, AttributeType::Float4Array);
+        attr_tangents = m_attr_tangents->getUSDAttribute();
+    }
+
+    std::vector<double> times;
+    VtArray<int> indices;
+    VtArray<int> indices_triangulated;
+    VtArray<int> counts;
+    VtArray<int> offsets;
+    VtArray<GfVec3f> points;
+    VtArray<GfVec3f> normals;
+    VtArray<GfVec4f> tangents;
+    VtArray<GfVec2f> uv;
+    int num_indices = 0;
+    int num_indices_triangulated = 0;
+
+    if (!attr_points.GetTimeSamples(&times)) {
+        times.push_back(usdiDefaultTime());
+    }
+
+    for (auto t : times) {
+        // setup indices
+        attr_indices.Get(&indices, t);
+        attr_counts.Get(&counts, t);
+        CountIndices(counts, offsets, num_indices, num_indices_triangulated);
+        indices_triangulated.resize(num_indices_triangulated);
+        TriangulateIndices(indices_triangulated.data(), counts, &indices, false);
+
+        // compute normals
+        attr_points.Get(&points, t);
+        normals.resize(points.size());
+        CalculateNormals((float3*)normals.data(), (const float3*)points.cdata(), indices_triangulated.cdata(), points.size(), indices_triangulated.size());
+        attr_normals.Set(normals, t);
+
+        // compute tangents
+        if (gen_tangents) {
+            attr_uv.Get(&uv, t);
+            tangents.resize(points.size());
+            CalculateTangents((float4*)tangents.data(),
+                (const float3*)points.cdata(), (const float3*)normals.cdata(), (const float2*)uv.cdata(),
+                counts.cdata(), offsets.cdata(), indices.cdata(),
+                points.size(), counts.size());
+            attr_tangents.Set(tangents, t);
+        }
+    }
+    return true;
+}
+
+#undef CreateAttributeIfNeeded
 
 void Mesh::assignRootBone(MeshData& dst, const char *v)
 {

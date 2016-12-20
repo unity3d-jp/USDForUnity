@@ -580,6 +580,13 @@ usdiAPI bool usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src, us
     return mesh->writeSample(*src, t);
 }
 
+usdiAPI bool usdiMeshPreComputeNormals(usdi::Mesh *mesh, bool gen_tangents, bool overwrite)
+{
+    usdiTraceFunc();
+    if (!mesh) return false;
+    return mesh->preComputeNormals(gen_tangents, overwrite);
+}
+
 
 // Points interface
 
