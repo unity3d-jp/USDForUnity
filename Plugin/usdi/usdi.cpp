@@ -51,22 +51,6 @@ usdiAPI usdi::Time usdiDefaultTime()
     return std::numeric_limits<double>::quiet_NaN();
 }
 
-usdiAPI void usdiSetPluginPath(const char *path)
-{
-    usdiTraceFunc();
-
-    const char* env_name = "PXR_PLUGINPATH_NAME";
-#ifdef _WIN32
-    std::string tmp = env_name;
-    tmp += "=";
-    tmp += path;
-    ::_putenv(tmp.c_str());
-#else
-    ::setenv(env_name, path, 1);
-#endif
-}
-
-
 
 usdiAPI void usdiInitialize()
 {

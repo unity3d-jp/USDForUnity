@@ -76,7 +76,7 @@ void* EmitJumpInstruction(void* from_, const void* to_)
 #ifdef _WIN32
     ::FlushInstructionCache(nullptr, base, size_t(from - base));
 #else
-    __builtin___clear_cache(from, base);
+    __builtin___clear_cache((char*)from, (char*)base);
 #endif
     return from;
 }

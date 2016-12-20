@@ -38,11 +38,19 @@ rtAPI const char* GetModulePath()
     }
     return s_path;
 #else
-    static Dl_info s_info;
-    if (!s_info.dli_fname) {
-        dladdr((const void*)&GetModulePath, &s_info);
+    std::string s_path;
+    if(s_path.empty()) {
+        Dl_info info;
+        dladdr((const void*)&GetModulePath, &info);
+        s_path = info.dli_fname;
+        for(auto i = s_path.rbegin(); i != s_path.rend(); ++i) {
+            if(*i == '/') {
+                *i = '\0';
+                break;
+            }
+        }
     }
-    return s_info.dli_fname;
+    return s_path.c_str();
 #endif
 }
 
@@ -81,6 +89,7 @@ rtAPI void AddDLLSearchPath(const char *v)
             char& c = path[i];
             if (c == '\\') { c = '/'; }
         }
+        ::setenv("LD_LIBRARY_PATH", path.c_str(), 1);
         ::setenv(LIBRARY_PATH, path.c_str(), 1);
     }
 #endif
@@ -158,3 +167,9 @@ rtAPI void usdiSetPluginPath(const char *path_)
 }
 
 } // extern "C"
+
+
+int main(int argc, char *argv[])
+{
+    return 0;
+}

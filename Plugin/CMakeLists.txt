@@ -22,22 +22,24 @@ OPTION(USDI_ENABLE_DEBUG "Enable debug functionalities." OFF)
 OPTION(USDI_ENABLE_TESTS "Build tests." ON)
 
 
-
 ADD_DEFINITIONS(-DBUILD_OPTLEVEL_OPT -DBUILD_COMPONENT_SRC_PREFIX="pxr/")
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -std=c++11 -Wno-deprecated -DTF_NO_GNU_EXT")
 
 IF(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    SET(USD_PLUGINS_DIR_NAME "plugins_linux")
 ELSEIF(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    SET(USD_PLUGINS_DIR_NAME "plugins_mac")
+    OPTION(USDI_OSX_BUNDLE "Build bundle." OFF)
     SET(CMAKE_MACOSX_RPATH ON)
-ELSEIF(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    SET(USD_PLUGINS_DIR_NAME "plugins_win64")
+
+    IF(USDI_OSX_BUNDLE)
+        SET(CMAKE_SKIP_RPATH ON)
+    ELSE()
+        SET(CMAKE_SKIP_RPATH OFF)
+    ENDIF()
 ENDIF()
+
 SET(ASSETS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../USDForUnity/Assets")
 SET(PLUGINS_DIR "${ASSETS_DIR}/UTJ/Plugins/x86_64")
-SET(USD_PLUGINS_DIR "${ASSETS_DIR}/StreamingAssets/UTJ/USDForUnity/${USD_PLUGINS_DIR_NAME}")
 
 
 INCLUDE_DIRECTORIES(
@@ -52,9 +54,13 @@ INCLUDE_DIRECTORIES(
     ${USD_ROOT}/include
 )
 
-LINK_DIRECTORIES (
-    ${USD_ROOT}/lib
-)
+SET(LINKER_FLAGS "-L ${USD_ROOT}/lib")
+IF(USDI_OSX_BUNDLE)
+    SET(CMAKE_EXE_LINKER_FLAGS ${LINKER_FLAGS})
+    SET(CMAKE_SHARED_LINKER_FLAGS ${LINKER_FLAGS})
+ELSE()
+    LINK_DIRECTORIES(${USD_ROOT}/lib)
+ENDIF()
 
 
 # GraphicsInterface
@@ -125,7 +131,11 @@ ENDIF()
 # usdiRT
 FILE(GLOB RT_CXX_FILES usdiRT/*.cpp)
 FILE(GLOB RT_H_FILES usdiRT/*.h)
-ADD_LIBRARY(usdiRT SHARED ${RT_CXX_FILES} ${RT_H_FILES})
+IF(USDI_OSX_BUNDLE)
+    ADD_EXECUTABLE(usdiRT MACOSX_BUNDLE ${RT_CXX_FILES} ${RT_H_FILES})
+ELSE()
+    ADD_LIBRARY(usdiRT SHARED ${RT_CXX_FILES} ${RT_H_FILES})
+ENDIF()
 TARGET_INCLUDE_DIRECTORIES(usdiRT PUBLIC
     ./usdiRT
 )
@@ -133,16 +143,21 @@ IF(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     TARGET_LINK_LIBRARIES(usdiRT dl)
 ENDIF()
 
+
 # usdi
-FILE(GLOB USDI_CXX_FILES usdi/*.cpp usdi/etc/*.cpp usdi/ext/*.cpp)
+FILE(GLOB USDI_CXX_FILES usdi/*.cpp usdi/etc/*.cpp usdi/ext/*.cpp usdiRT/*.cpp)
 FILE(GLOB USDI_H_FILES usdi/*.h usdi/etc/*.h usdi/ext/*.h)
-ADD_LIBRARY(usdi SHARED ${USDI_CXX_FILES} ${USDI_H_FILES})
-ADD_DEPENDENCIES(usdi usdiRT MeshUtils)
+IF(USDI_OSX_BUNDLE)
+    ADD_EXECUTABLE(usdi MACOSX_BUNDLE ${USDI_CXX_FILES} ${USDI_H_FILES})
+ELSE()
+    ADD_LIBRARY(usdi SHARED ${USDI_CXX_FILES} ${USDI_H_FILES})
+ENDIF()
+ADD_DEPENDENCIES(usdi MeshUtils)
 TARGET_INCLUDE_DIRECTORIES(usdi PUBLIC
     ./usdi
 )
 TARGET_LINK_LIBRARIES(usdi
-    ar arch tf gf pcp vt sdf usd usdGeom usdUtils usdiRT MeshUtils
+    ar arch tf gf pcp vt sdf usd usdGeom usdUtils MeshUtils
     ${PYTHON_LIBRARY}
     ${Boost_PYTHON_LIBRARY_RELEASE}
     ${Boost_SYSTEM_LIBRARY_RELEASE}
@@ -173,37 +188,37 @@ IF(USDI_ENABLE_GRAPHICS_INTERFACE)
 ENDIF()
 
 
-IF(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    SET_TARGET_PROPERTIES(usdi usdiRT PROPERTIES PREFIX "")
-    SET_TARGET_PROPERTIES(usdi usdiRT PROPERTIES SUFFIX ".bundle")
-ENDIF()
+IF(NOT USDI_OSX_BUNDLE)
+    IF(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+        SET_TARGET_PROPERTIES(usdi usdiRT PROPERTIES PREFIX "")
+        SET_TARGET_PROPERTIES(usdi usdiRT PROPERTIES SUFFIX ".bundle")
+    ENDIF()
 
+    # tests
+    IF(USDI_ENABLE_TESTS)
+        FILE(GLOB Tests_CXX_FILES Test/*.cpp)
+        FILE(GLOB Tests_H_FILES Test/*.h)
+        FILE(GLOB TestsMain_CXX_FILE Test/usdiTestsMain.cpp)
+        LIST(REMOVE_ITEM Tests_CXX_FILES ${TestsMain_CXX_FILE})
 
-# tests
-IF(USDI_ENABLE_TESTS)
-    FILE(GLOB Tests_CXX_FILES Test/*.cpp)
-    FILE(GLOB Tests_H_FILES Test/*.h)
-    FILE(GLOB TestsMain_CXX_FILE Test/usdiTestsMain.cpp)
-    LIST(REMOVE_ITEM Tests_CXX_FILES ${TestsMain_CXX_FILE})
+        ADD_EXECUTABLE(usdiTests ${Tests_CXX_FILES} ${Tests_H_FILES})
+        ADD_DEPENDENCIES(usdiTests usdi usdiRT MeshUtils)
+        TARGET_LINK_LIBRARIES(usdiTests usdi usdiRT MeshUtils)
 
-    ADD_EXECUTABLE(usdiTests ${Tests_CXX_FILES} ${Tests_H_FILES})
-    ADD_DEPENDENCIES(usdiTests usdi usdiRT MeshUtils)
-    TARGET_LINK_LIBRARIES(usdiTests usdi usdiRT MeshUtils)
+        ADD_EXECUTABLE(usdiTestsMain ${TestsMain_CXX_FILE})
+        ADD_DEPENDENCIES(usdiTestsMain usdiTests)
+        TARGET_LINK_LIBRARIES(usdiTestsMain
+            usdiRT MeshUtils
+            ${Boost_SYSTEM_LIBRARY_RELEASE}
+            ${Boost_FILESYSTEM_LIBRARY_RELEASE}
+        )
+    ENDIF()
 
-    ADD_EXECUTABLE(usdiTestsMain ${TestsMain_CXX_FILE})
-    ADD_DEPENDENCIES(usdiTestsMain usdiTests)
-    TARGET_LINK_LIBRARIES(usdiTestsMain
-        usdiRT MeshUtils
-        ${Boost_SYSTEM_LIBRARY_RELEASE}
-        ${Boost_FILESYSTEM_LIBRARY_RELEASE}
+    # deploy
+    ADD_CUSTOM_TARGET(deploy ALL
+        COMMAND cp $<TARGET_FILE:usdi> ${PLUGINS_DIR}
+        COMMAND cp $<TARGET_FILE:usdiRT> ${PLUGINS_DIR}
+        DEPENDS usdi
+        DEPENDS usdiRT
     )
 ENDIF()
-
-
-# deploy
-ADD_CUSTOM_TARGET(deploy ALL
-    COMMAND cp $<TARGET_FILE:usdi> ${PLUGINS_DIR}
-    COMMAND cp $<TARGET_FILE:usdiRT> ${PLUGINS_DIR}
-    DEPENDS usdi
-    DEPENDS usdiRT
-)

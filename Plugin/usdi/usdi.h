@@ -284,8 +284,6 @@ extern "C" {
 usdiAPI void             usdiSetDebugLevel(int l);
 usdiAPI usdi::Time       usdiDefaultTime();
 
-usdiAPI void             usdiSetPluginPath(const char *path);
-
 usdiAPI void             usdiInitialize();
 usdiAPI void             usdiFinalize();
 
@@ -411,5 +409,3 @@ usdiAPI bool             usdiAttrReadSample(usdi::Attribute *attr, usdi::Attribu
 usdiAPI bool             usdiAttrWriteSample(usdi::Attribute *attr, const usdi::AttributeData *src, usdi::Time t = usdiDefaultTime());
 
 } // extern "C"
-
-
