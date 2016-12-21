@@ -25,10 +25,13 @@ BOOL WINAPI DllMain(HINSTANCE /*hinstDLL*/, DWORD fdwReason, LPVOID /*lpvReserve
 }
 #elif defined(__APPLE__)
 
+void ImportMonoFunctions();
+
 __attribute__((constructor))
 void DllMain()
 {
 #ifdef usdiEnableMonoBinding
+    ImportMonoFunctions();
     if (g_mono_dll) {
         ForceWrite((void*)_mono_thread_suspend_all_other_threads, 14, [=]() {
             EmitJumpInstruction((void*)_mono_thread_suspend_all_other_threads, (void*)_mono_thread_abort_all_other_threads);

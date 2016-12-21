@@ -6,7 +6,7 @@
 #if defined(_WIN32)
     #define MonoModule "mono.dll"
 #elif defined(__APPLE__)
-    #define MonoModule "libmono.dylib"
+    #define MonoModule "libmono.0.dylib"
 #else
     #define MonoModule "libmono.so"
 #endif
@@ -125,8 +125,10 @@ MonoClass* (*_mono_get_array_class)();
 MonoClass* (*_mono_get_thread_class)();
 MonoClass* (*_mono_get_exception_class)();
 
-static void ImportMonoFunctions()
+void ImportMonoFunctions()
 {
+    if(g_mono_dll) { return; }
+    
     auto mono = DLLGetHandle(MonoModule);
     g_mono_dll = mono;
     if (mono) {

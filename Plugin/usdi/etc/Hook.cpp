@@ -6,6 +6,7 @@
     #include <dbghelp.h>
     #pragma comment(lib, "dbghelp.lib")
 #else
+    #include <unistd.h>
     #include <sys/mman.h>
     using BYTE = uint8_t;
     using WORD = uint16_t;
@@ -31,7 +32,8 @@ void SetMemoryProtection(void *addr, size_t size, MemoryFlags flags)
     case MemoryFlags::ExecuteRead: flag = PROT_EXEC | PROT_READ; break;
     case MemoryFlags::ExecuteReadWrite: flag = PROT_EXEC | PROT_READ | PROT_WRITE; break;
     }
-    mprotect(addr, size, flag);
+    void *page = (void*)((size_t)addr - ((size_t)addr % getpagesize()));
+    mprotect(page, size, flag);
 #endif
 }
 
