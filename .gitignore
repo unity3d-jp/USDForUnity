@@ -32,6 +32,7 @@ Build/
 Hidden/
 Hidden.meta
 obj/
+Plugin/build_*
 CMakeFiles/
 CMakeCache.txt
 USDForUnity/*.sln

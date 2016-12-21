@@ -302,7 +302,7 @@ namespace UTJ
 
             if (m_allocateMeshDataRequired)
             {
-                bool close = m_meshSummary.topology_variance == usdi.TopologyVariance.Constant;
+                //bool close = m_meshSummary.topology_variance == usdi.TopologyVariance.Constant;
                 usdiUploadMeshData(time, true, true);
             }
             else if(m_updateVerticesRequired)

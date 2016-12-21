@@ -765,21 +765,23 @@ namespace UTJ
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void InitializePluginPass1()
         {
-            usdi.AddDLLSearchPath(GetModulePath());
-
-            string platform_suffix = "";
+			string usdPluginDir = "";
             switch(usdi.GetPlatform())
             {
-                case Platform.Windows_x86_64: platform_suffix = "_win64"; break;
-                case Platform.Linux_x86_64:   platform_suffix = "_linux"; break;
-                case Platform.Mac_x86_64:     platform_suffix = "_mac"; break;
-                case Platform.Android_ARM64:  platform_suffix = "_android"; break;
-                case Platform.PS4:            platform_suffix = "_ps4"; break;
+            case Platform.Windows_x86_64:
+				usdPluginDir = Application.streamingAssetsPath + "/UTJ/USDForUnity/plugins_win64";
+				break;
+			case Platform.Linux_x86_64:
+				usdPluginDir = Application.streamingAssetsPath + "/UTJ/USDForUnity/plugins_linux";
+				break;
+			case Platform.Mac_x86_64:
+				usdPluginDir = usdi.S(GetModulePath()) + "/usdi.bundle/Contents/plugins_mac";
+				break;
             }
 
-            var usdPluginDir = Application.streamingAssetsPath + "/UTJ/USDForUnity/plugins" + platform_suffix;
-            usdi.AddDLLSearchPath(usdPluginDir + "/lib");
-            usdi.usdiSetPluginPath(usdPluginDir);
+			usdi.usdiSetPluginPath(usdPluginDir);
+			usdi.AddDLLSearchPath(usdPluginDir + "/lib");
+			usdi.AddDLLSearchPath(GetModulePath());
         }
 
         // separate pass because loading usdi.dll will fail in InitializePluginPass1()

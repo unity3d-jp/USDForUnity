@@ -38,14 +38,19 @@ rtAPI const char* GetModulePath()
     }
     return s_path;
 #else
-    std::string s_path;
+    static std::string s_path;
     if(s_path.empty()) {
         Dl_info info;
         dladdr((const void*)&GetModulePath, &info);
         s_path = info.dli_fname;
-        for(auto i = s_path.rbegin(); i != s_path.rend(); ++i) {
-            if(*i == '/') {
-                *i = '\0';
+        
+        auto i = s_path.find(".bundle");
+        if(i == std::string::npos) {
+            i = s_path.empty() ? 0 : s_path.size() - 1;
+        }
+        for(; i > 0; --i) {
+            if(s_path[i] == '/') {
+                s_path[i] = '\0';
                 break;
             }
         }

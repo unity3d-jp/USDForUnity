@@ -216,12 +216,12 @@ IF(NOT USDI_ENABLE_OSX_BUNDLE)
             ${Boost_FILESYSTEM_LIBRARY_RELEASE}
         )
     ENDIF()
-ENDIF()
 
-# deploy
-ADD_CUSTOM_TARGET(deploy ALL
-    COMMAND cp $<TARGET_FILE:usdi> ${PLUGINS_DIR}
-    COMMAND cp $<TARGET_FILE:usdiRT> ${PLUGINS_DIR}
-    DEPENDS usdi
-    DEPENDS usdiRT
-)
+    # deploy
+    ADD_CUSTOM_TARGET(deploy ALL
+        COMMAND cp $<TARGET_FILE:usdi> ${PLUGINS_DIR}
+        COMMAND cp $<TARGET_FILE:usdiRT> ${PLUGINS_DIR}
+        DEPENDS usdi
+        DEPENDS usdiRT
+    )
+ENDIF()
