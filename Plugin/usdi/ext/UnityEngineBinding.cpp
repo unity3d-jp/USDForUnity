@@ -21,7 +21,6 @@ namespace usdi {
 
 // native methods
 
-const char Sym_Object_SetDirty[] = "?SetDirty@Object@@QEAAXXZ";
 const char Sym_Transform_SetLocalPositionWithoutNotification[] = "?SetLocalPositionWithoutNotification@Transform@@QEAAXAEBU_float3@math@@@Z";
 const char Sym_Transform_SetLocalRotationWithoutNotification[] = "?SetLocalRotationWithoutNotification@Transform@@QEAAXAEBU_float4@math@@@Z";
 const char Sym_Transform_SetLocalScaleWithoutNotification[] = "?SetLocalScaleWithoutNotification@Transform@@QEAAXAEBU_float3@math@@@Z";
@@ -36,10 +35,6 @@ static void(nMesh::*NM_Mesh_SetBounds)(const AABB &);
 
 
 // mono methods 
-
-
-static MonoDomain *g_mdomain;
-
 
 
 void ClearInternalMethodsCache()

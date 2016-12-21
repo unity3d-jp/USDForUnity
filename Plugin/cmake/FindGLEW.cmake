@@ -123,6 +123,9 @@ if (GLEW_INCLUDE_DIR AND EXISTS "${GLEW_INCLUDE_DIR}/GL/glew.h")
 
 endif ()
 
+mark_as_advanced(GLEW_INCLUDE_DIR)
+mark_as_advanced(GLEW_LIBRARY)
+
 find_package_handle_standard_args(GLEW
     REQUIRED_VARS
         GLEW_INCLUDE_DIR

@@ -59,6 +59,7 @@ elseif (WIN32)
             "OpenEXR library path"
     )
 endif()
+mark_as_advanced(OPENEXR_LIBRARY_DIR)
 
 find_path(OPENEXR_INCLUDE_DIR
     OpenEXR/half.h
@@ -78,6 +79,7 @@ if(OPENEXR_INCLUDE_DIR AND EXISTS "${OPENEXR_INCLUDE_DIR}/OpenEXR/OpenEXRConfig.
        TMP
        REGEX "#define OPENEXR_VERSION_STRING.*$")
   string(REGEX MATCHALL "[0-9.]+" OPENEXR_VERSION ${TMP})
+  mark_as_advanced(OPENEXR_INCLUDE_DIR)
 endif()
 
 
@@ -101,6 +103,7 @@ foreach(OPENEXR_LIB
         DOC
             "OPENEXR's ${OPENEXR_LIB} library path"
     )
+    mark_as_advanced(OPENEXR_${OPENEXR_LIB}_LIBRARY)
 
     if(OPENEXR_${OPENEXR_LIB}_LIBRARY)
         list(APPEND OPENEXR_LIBRARIES ${OPENEXR_${OPENEXR_LIB}_LIBRARY})
@@ -119,4 +122,3 @@ find_package_handle_standard_args(OpenEXR
     VERSION_VAR
         OPENEXR_VERSION
 )
-

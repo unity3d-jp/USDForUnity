@@ -39,6 +39,9 @@ find_library(DOUBLE_CONVERSION_LIBRARY
     PATHS ${LIBRARY_PATHS}
 )
 
+mark_as_advanced(DOUBLE_CONVERSION_INCLUDE_DIR)
+mark_as_advanced(DOUBLE_CONVERSION_LIBRARY)
+
 find_package_handle_standard_args("double-conversion"
     DEFAULT_MSG
     DOUBLE_CONVERSION_LIBRARY
