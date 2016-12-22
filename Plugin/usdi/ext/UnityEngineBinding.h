@@ -8,51 +8,10 @@ void InitializeInternalMethods();
 void ClearInternalMethodsCache();
 
 
-// native class bindings
-
-class nObject;
-class nTransform;
-class nMesh;
-
-class nObject
-{
-public:
-    nObject(void *rep);
-    void* get() const;
-    operator bool() const;
-
-protected:
-    void *m_rep;
-};
-
-
-class nTransform : public nObject
-{
-typedef nObject super;
-public:
-    static bool isAvailable();
-    nTransform(void *rep);
-    nTransform* self();
-    void setLocalPositionWithoutNotification(__m128 v);
-    void setLocalRotationWithoutNotification(__m128 v);
-    void setLocalScaleWithoutNotification(__m128 v);
-    void sendTransformChanged(int mask);
-};
-
-
-class nMesh : public nObject
-{
-typedef nObject super;
-public:
-    static bool isAvailable();
-    nMesh(void *rep);
-    nMesh* self();
-    void setBounds(const AABB &);
-};
-
-
-
-// mono class bindings
+extern void(*TransformAssign)(MonoObject *trans, XformData *data);
+extern void(*TransformNotfyChange)(MonoObject *trans);
+extern void(*CameraAssign)(MonoObject *camera, CameraData *data);
+extern void(*MeshAssignBounds)(MonoObject *mesh, float3 *center, float3  *extents);
 
 
 struct mVector2;

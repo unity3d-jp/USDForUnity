@@ -6,24 +6,6 @@
 
 namespace usdi {
 
-extern void (*TransformAssign)(MonoObject *trans, XformData *data);
-void TransformAssignN(MonoObject *trans, XformData *data);
-void TransformAssignM(MonoObject *trans, XformData *data);
-
-extern void (*TransformNotfyChange)(MonoObject *trans);
-void TransformNotfyChangeN(MonoObject *trans);
-void TransformNotfyChangeM(MonoObject *trans);
-
-extern void(*CameraAssign)(MonoObject *trans, CameraData *data);
-void CameraAssignN(MonoObject *trans, CameraData *data);
-void CameraAssignM(MonoObject *trans, CameraData *data);
-
-extern void(*TransformNotfyChange)(MonoObject *trans);
-
-extern void (*MeshAssignBounds)(MonoObject *mesh, float3 *center, float3  *extents);
-void MeshAssignBoundsN(MonoObject *mesh, float3 *center, float3  *extents);
-void MeshAssignBoundsM(MonoObject *mesh, float3 *center, float3  *extents);
-
 #ifdef usdiEnableComponentUpdator
 
 class IUpdater;

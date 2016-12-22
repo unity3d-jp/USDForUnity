@@ -103,6 +103,7 @@ struct ImportSettings
     InterpolationType interpolation = InterpolationType::Linear;
     NormalCalculationType normal_calculation = NormalCalculationType::WhenMissing;
     TangentCalculationType tangent_calculation = TangentCalculationType::Never;
+    int max_bone_weights = 0; // if 4 or 8, convert source weight data
     float scale = 1.0f;
     bool load_all_payloads = true;
     bool triangulate = true;

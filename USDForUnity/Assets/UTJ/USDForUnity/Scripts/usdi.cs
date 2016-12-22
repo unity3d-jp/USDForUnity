@@ -143,6 +143,7 @@ namespace UTJ
             public InterpolationType interpolation;
             public NormalCalculationType normalCalculation;
             public TangentCalculationType tangentCalculation;
+            [HideInInspector] public int maxBoneWeights;
             public float scale;
             [HideInInspector] public Bool loadAllPayloads;
             [HideInInspector] public Bool triangulate;
@@ -160,6 +161,7 @@ namespace UTJ
                         interpolation = InterpolationType.Linear,
                         normalCalculation = NormalCalculationType.WhenMissing,
                         tangentCalculation = TangentCalculationType.Never,
+                        maxBoneWeights = 4,
                         scale = 1.0f,
                         loadAllPayloads = true,
                         triangulate = true,
@@ -507,6 +509,7 @@ namespace UTJ
         [DllImport ("usdi")] public static extern void          usdiMeshGetSummary(Mesh mesh, ref MeshSummary dst);
         [DllImport ("usdi")] public static extern Bool          usdiMeshReadSample(Mesh mesh, ref MeshData dst, double t, Bool copy);
         [DllImport ("usdi")] public static extern Bool          usdiMeshWriteSample(Mesh mesh, ref MeshData src, double t);
+        [DllImport ("usdi")] public static extern Bool          usdiMeshPreComputeNormals(Mesh mesh, Bool gen_tangents, Bool overwrite);
 
         // Points interface
         [DllImport ("usdi")] public static extern Points        usdiAsPoints(Schema schema);

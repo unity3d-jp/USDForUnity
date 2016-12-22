@@ -19,66 +19,124 @@
 
 namespace usdi {
 
-// native methods
+void(*TransformAssign)(MonoObject *trans, XformData *data);
+void(*TransformNotfyChange)(MonoObject *trans);
+void(*CameraAssign)(MonoObject *camera, CameraData *data);
+void(*MeshAssignBounds)(MonoObject *mesh, float3 *center, float3  *extents);
 
+// mono methods
+
+void TransformAssignM(MonoObject *trans, XformData *data_)
+{
+    if (!trans || !data_) {
+        usdiLogError("TransformAssignM(): invalid parameter\n");
+        return;
+    }
+
+    auto& data = *data_;
+    auto t = mTransform(trans);
+
+    if ((data.flags & (int)XformData::Flags::UpdatedPosition) != 0)
+    {
+        t.setLocalPosition(data.position);
+    }
+    if ((data.flags & (int)XformData::Flags::UpdatedRotation) != 0)
+    {
+        t.setLocalRotation(data.rotation);
+    }
+    if ((data.flags & (int)XformData::Flags::UpdatedScale) != 0)
+    {
+        t.setLocalScale(data.scale);
+    }
+}
+
+void TransformNotfyChangeM(MonoObject *trans)
+{
+    // nothing to do
+}
+
+void MeshAssignBoundsM(MonoObject *mesh, float3 *center, float3  *extents)
+{
+    if (!mesh || !center || !extents) {
+        usdiLogError("MeshAssignBoundsM(): invalid parameter\n");
+        return;
+    }
+
+    AABB bounds = { *center, *extents };
+    mMesh(mesh).setBounds(bounds);
+}
+
+void CameraAssignM(MonoObject *cam_, CameraData *data_)
+{
+    if (!cam_ || !data_) {
+        usdiLogError("CameraAssignM(): invalid parameter\n");
+        return;
+    }
+
+    auto& data = *data_;
+    auto cam = mCamera(cam_);
+    cam.setNearClipPlane(data.near_clipping_plane);
+    cam.setFarClipPlane(data.far_clipping_plane);
+    cam.setFieldOfView(data.field_of_view);
+    //cam.setAspect(data.aspect_ratio);
+}
+
+
+// internal Unity method binding
+#ifdef usdiEnableInternalUnityMethods
+#ifdef _WIN32
 const char Sym_Transform_SetLocalPositionWithoutNotification[] = "?SetLocalPositionWithoutNotification@Transform@@QEAAXAEBU_float3@math@@@Z";
 const char Sym_Transform_SetLocalRotationWithoutNotification[] = "?SetLocalRotationWithoutNotification@Transform@@QEAAXAEBU_float4@math@@@Z";
 const char Sym_Transform_SetLocalScaleWithoutNotification[] = "?SetLocalScaleWithoutNotification@Transform@@QEAAXAEBU_float3@math@@@Z";
 const char Sym_Transform_SendTransformChanged[] = "?SendTransformChanged@Transform@@QEAAXH@Z";
 const char Sym_Mesh_SetBounds[] = "?SetBounds@Mesh@@QEAAXAEBVAABB@@@Z";
+#else
+
+#endif
+
+
+class nObject
+{
+public:
+    nObject(void *rep);
+    void* get() const;
+    operator bool() const;
+
+protected:
+    void *m_rep;
+};
+
+
+class nTransform : public nObject
+{
+    typedef nObject super;
+public:
+    static bool isAvailable();
+    nTransform(void *rep);
+    nTransform* self();
+    void setLocalPositionWithoutNotification(__m128 v);
+    void setLocalRotationWithoutNotification(__m128 v);
+    void setLocalScaleWithoutNotification(__m128 v);
+    void sendTransformChanged(int mask);
+};
+
+
+class nMesh : public nObject
+{
+    typedef nObject super;
+public:
+    static bool isAvailable();
+    nMesh(void *rep);
+    nMesh* self();
+    void setBounds(const AABB &);
+};
+
 
 static void(nTransform::*NM_Transform_SetLocalPositionWithoutNotification)(const __m128 &pos);
 static void(nTransform::*NM_Transform_SetLocalRotationWithoutNotification)(const __m128 &rot);
 static void(nTransform::*NM_Transform_SetLocalScaleWithoutNotification)(const __m128 &scale);
 static void(nTransform::*NM_Transform_SendTransformChanged)(int mask);
 static void(nMesh::*NM_Mesh_SetBounds)(const AABB &);
-
-
-// mono methods 
-
-
-void ClearInternalMethodsCache()
-{
-    mClearCache();
-}
-
-
-void InitializeInternalMethods()
-{
-    static std::once_flag s_once;
-    std::call_once(s_once, []() {
-
-#ifndef usdiDbgForceMono
-#define NMethod(Class, Method)  (void*&)NM_##Class##_##Method = FindSymbolByName(Sym_##Class##_##Method)
-
-        NMethod(Transform, SetLocalPositionWithoutNotification);
-        NMethod(Transform, SetLocalRotationWithoutNotification);
-        NMethod(Transform, SetLocalScaleWithoutNotification);
-        NMethod(Transform, SendTransformChanged);
-        NMethod(Mesh, SetBounds);
-
-#undef NMethod
-#endif // usdiDbgForceMono
-
-        TransformAssign = NM_Transform_SetLocalPositionWithoutNotification ? TransformAssignN : TransformAssignM;
-        TransformNotfyChange = NM_Transform_SendTransformChanged ? TransformNotfyChangeN : TransformNotfyChangeM;
-        CameraAssign = CameraAssignM;
-        MeshAssignBounds = NM_Mesh_SetBounds ? MeshAssignBoundsN : MeshAssignBoundsM;
-
-        if (g_mono_dll) {
-            mAddMethod("UTJ.usdi::usdiUniTransformAssign", (void*)TransformAssign);
-            mAddMethod("UTJ.usdi::usdiUniTransformNotfyChange", (void*)TransformNotfyChange);
-            mAddMethod("UTJ.usdi::usdiUniCameraAssign", (void*)CameraAssign);
-            mAddMethod("UTJ.usdi::usdiUniMeshAssignBounds", (void*)MeshAssignBounds);
-#ifdef usdiEnableComponentUpdator
-            StreamUpdater::registerICalls();
-#endif // usdiEnableComponentUpdator
-        }
-    });
-
-    mRebindCache();
-};
-
 
 nObject::nObject(void *rep) : m_rep(rep) {}
 void* nObject::get() const { return m_rep; }
@@ -110,7 +168,110 @@ nMesh* nMesh::self() { return (nMesh*)m_rep; }
 void nMesh::setBounds(const AABB &v) { (self()->*NM_Mesh_SetBounds)(v); }
 
 
+void TransformAssignN(MonoObject *trans, XformData *data_)
+{
+    if (!trans || !data_) {
+        usdiLogError("TransformAssignN(): invalid parameter\n");
+        return;
+    }
 
+    auto& data = *data_;
+    auto t = mObject(trans).unbox<nTransform>();
+
+    if ((data.flags & (int)XformData::Flags::UpdatedPosition) != 0)
+    {
+        __m128 v = _mm_loadu_ps((float*)&data.position);
+        t.setLocalPositionWithoutNotification(v);
+    }
+    if ((data.flags & (int)XformData::Flags::UpdatedRotation) != 0)
+    {
+        __m128 v = _mm_loadu_ps((float*)&data.rotation);
+        t.setLocalRotationWithoutNotification(v);
+    }
+    if ((data.flags & (int)XformData::Flags::UpdatedScale) != 0)
+    {
+        __m128 v = _mm_loadu_ps((float*)&data.scale);
+        t.setLocalScaleWithoutNotification(v);
+    }
+}
+
+void TransformNotfyChangeN(MonoObject *trans)
+{
+    if (!trans) {
+        usdiLogError("TransformNotfyChangeN(): invalid parameter\n");
+        return;
+    }
+
+    auto t = mObject(trans).unbox<nTransform>();
+    t.sendTransformChanged(0x1 | 0x2 | 0x8);
+}
+
+void MeshAssignBoundsN(MonoObject *mesh, float3 *center, float3  *extents)
+{
+    if (!mesh || !center || !extents) {
+        usdiLogError("MeshAssignBoundsN(): invalid parameter\n");
+        return;
+    }
+
+    AABB bounds = { *center, *extents };
+    auto m = mObject(mesh).unbox<nMesh>();
+    m.setBounds(bounds);
+}
+
+void CameraAssignN(MonoObject *trans, CameraData *data)
+{
+    // todo: implement this if possible
+    CameraAssignM(trans, data);
+}
+
+#endif // usdiEnableInternalUnityMethods
+
+
+
+void ClearInternalMethodsCache()
+{
+    mClearCache();
+}
+
+
+void InitializeInternalMethods()
+{
+    static std::once_flag s_once;
+    std::call_once(s_once, []() {
+
+#ifdef usdiEnableInternalUnityMethods
+#define NMethod(Class, Method)  (void*&)NM_##Class##_##Method = FindSymbolByName(Sym_##Class##_##Method)
+        NMethod(Transform, SetLocalPositionWithoutNotification);
+        NMethod(Transform, SetLocalRotationWithoutNotification);
+        NMethod(Transform, SetLocalScaleWithoutNotification);
+        NMethod(Transform, SendTransformChanged);
+        NMethod(Mesh, SetBounds);
+#undef NMethod
+
+#define Select(F, Method) F ? Method##N : Method##M
+#else
+#define Select(F, Method) Method##M
+#endif // usdiEnableInternalUnityMethods
+
+        TransformAssign = Select(NM_Transform_SetLocalPositionWithoutNotification, TransformAssign);
+        TransformNotfyChange = Select(NM_Transform_SendTransformChanged, TransformNotfyChange);
+        MeshAssignBounds = Select(NM_Mesh_SetBounds, MeshAssignBounds);
+        CameraAssign = CameraAssignM;
+#undef Select
+
+        if (g_mono_dll) {
+            mAddMethod("UTJ.usdi::usdiUniTransformAssign", (void*)TransformAssign);
+            mAddMethod("UTJ.usdi::usdiUniTransformNotfyChange", (void*)TransformNotfyChange);
+            mAddMethod("UTJ.usdi::usdiUniCameraAssign", (void*)CameraAssign);
+            mAddMethod("UTJ.usdi::usdiUniMeshAssignBounds", (void*)MeshAssignBounds);
+#ifdef usdiEnableComponentUpdator
+            StreamUpdater::registerICalls();
+#endif // usdiEnableComponentUpdator
+        }
+    });
+
+    mRebindCache();
+};
 
 
 mDefImage(UnityEngine, "UnityEngine");

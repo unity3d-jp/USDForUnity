@@ -94,7 +94,6 @@ rtAPI void AddDLLSearchPath(const char *v)
             char& c = path[i];
             if (c == '\\') { c = '/'; }
         }
-        ::setenv("LD_LIBRARY_PATH", path.c_str(), 1);
         ::setenv(LIBRARY_PATH, path.c_str(), 1);
     }
 #endif

@@ -9,8 +9,6 @@ namespace usdi {
 // workaround to use comma in macros...
 #define Comma ,
 
-// SdfValueTypeNames has no Matrix2f, Matrix3f, Matrix4f.
-// because of this, store these as Matrix2d, Matrix3d, Matrix4d :(
 #define EachAttributeTypes(Body)\
     Body(bool, AttributeType::Bool, SdfValueTypeNames->Bool, TAttribute<bool>)\
     Body(byte, AttributeType::Byte, SdfValueTypeNames->UChar, TAttribute<byte>)\

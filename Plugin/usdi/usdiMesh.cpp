@@ -63,6 +63,27 @@ static inline void TriangulateIndices(int *triangulated, const CountArray &count
     }
 }
 
+static inline void assign(Weights4& dst, const Weights8& src)
+{
+    // maybe need to sort weights..
+    memcpy(dst.weight, src.weight, sizeof(float) * 4);
+    memcpy(dst.indices, src.indices, sizeof(int) * 4);
+
+    // normalize
+    float scale = 1.0f / (src.weight[0] + src.weight[1] + src.weight[2] + src.weight[3]);
+    for (float& w : dst.weight) {
+        w *= scale;
+    }
+}
+
+static inline void assign(Weights8& dst, const Weights4& src)
+{
+    memcpy(dst.weight, src.weight, sizeof(float) * 4);
+    memcpy(dst.indices, src.indices, sizeof(int) * 4);
+    memset(dst.weight + 4, 0, sizeof(float) * 4);
+    memset(dst.indices + 4, 0, sizeof(int) * 4);
+}
+
 
 void SubmeshSample::clear()
 {
@@ -158,6 +179,13 @@ const MeshSummary& Mesh::getSummary() const
         }
         if (m_attr_max_bone_weights && m_attr_max_bone_weights->hasValue()) {
             m_attr_max_bone_weights->getImmediate(&m_summary.max_bone_weights, usdiDefaultTime());
+
+            // convert if settings.max_bone_weights is set
+            if ((m_summary.max_bone_weights == 4 || m_summary.max_bone_weights == 8) &&
+                (settings.max_bone_weights ==4 || settings.max_bone_weights == 8))
+            {
+                m_summary.max_bone_weights = settings.max_bone_weights;
+            }
         }
 
         if (m_mesh.GetPointsAttr().ValueMightBeTimeVarying()) {
@@ -303,10 +331,10 @@ void Mesh::updateSample(Time t_)
             if (sample.max_bone_weights == 0) {
                 goto END_WEIGHTS;
             }
-        }
-        if (sample.max_bone_weights != 4 && sample.max_bone_weights != 8) {
-            usdiLogError("sample.max_bone_weights != 4 && sample.max_bone_weights != 8\n");
-            goto END_WEIGHTS;
+            else if (sample.max_bone_weights != 4 && sample.max_bone_weights != 8) {
+                usdiLogWarning("sample.max_bone_weights != 4 && sample.max_bone_weights != 8\n");
+                goto END_WEIGHTS;
+            }
         }
 
         m_attr_bone_weights->getImmediate(&sample.bone_weights, t_);
@@ -329,6 +357,14 @@ void Mesh::updateSample(Time t_)
                     w.indices[iw] = sample.bone_indices[ip4 + iw];
                 }
             }
+
+            if (conf.max_bone_weights == 8) {
+                sample.max_bone_weights = 8;
+                sample.weights8.resize(npoints);
+                for (size_t ip = 0; ip < npoints; ++ip) {
+                    assign(sample.weights8[ip], sample.weights4[ip]);
+                }
+            }
         }
         else if (sample.max_bone_weights == 8) {
             const size_t nweights = 8;
@@ -340,6 +376,14 @@ void Mesh::updateSample(Time t_)
                 for (size_t iw = 0; iw < nweights; ++iw) {
                     w.weight[iw] = sample.bone_weights[ip8 + iw];
                     w.indices[iw] = sample.bone_indices[ip8 + iw];
+                }
+            }
+
+            if (conf.max_bone_weights == 4) {
+                sample.max_bone_weights = 4;
+                sample.weights4.resize(npoints);
+                for (size_t ip = 0; ip < npoints; ++ip) {
+                    assign(sample.weights4[ip], sample.weights8[ip]);
                 }
             }
         }
@@ -461,10 +505,10 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
             memcpy(dst.indices_triangulated, sample.indices_triangulated.cdata(), sizeof(int) * m_num_indices_triangulated);
         }
 
-        if (dst.weights4 && !sample.weights4.empty()) {
+        if (dst.weights4 && !sample.weights4.empty() && sample.max_bone_weights == 4) {
             memcpy(dst.weights4, sample.weights4.cdata(), sizeof(Weights4) * dst.num_points);
         }
-        if (dst.weights8 && !sample.weights8.empty()) {
+        else if (dst.weights8 && !sample.weights8.empty() && sample.max_bone_weights == 8) {
             memcpy(dst.weights8, sample.weights8.cdata(), sizeof(Weights8) * dst.num_points);
         }
         if (dst.bindposes && !sample.bindposes.empty()) {
