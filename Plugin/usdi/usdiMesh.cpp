@@ -756,22 +756,35 @@ bool Mesh::preComputeNormals(bool gen_tangents, bool overwrite)
     }
 
     std::vector<double> times;
-    VtArray<int> indices;
-    VtArray<int> indices_triangulated;
-    VtArray<int> counts;
-    VtArray<int> offsets;
-    VtArray<GfVec3f> points;
-    VtArray<GfVec3f> normals;
-    VtArray<GfVec4f> tangents;
-    VtArray<GfVec2f> uv;
-    int num_indices = 0;
-    int num_indices_triangulated = 0;
-
     if (!attr_points.GetTimeSamples(&times)) {
         times.push_back(usdiDefaultTime());
     }
+    int n = (int)times.size();
 
-    for (auto t : times) {
+    std::vector<VtArray<int>> _indices(n);
+    std::vector<VtArray<int>> _indices_triangulated(n);
+    std::vector<VtArray<int>> _counts(n);
+    std::vector<VtArray<int>> _offsets(n);
+    std::vector<VtArray<GfVec3f>> _points(n);
+    std::vector<VtArray<GfVec3f>> _normals(n);
+    std::vector<VtArray<GfVec4f>> _tangents(n);
+    std::vector<VtArray<GfVec2f>> _uv(n);
+    std::vector<int> _num_indices(n);
+    std::vector<int> _num_indices_triangulated(n);
+
+    tbb::parallel_for(0, (int)n, [&](int i) {
+        auto& t = times[i];
+        auto& indices = _indices[i];
+        auto& indices_triangulated = _indices_triangulated[i];
+        auto& counts = _counts[i];
+        auto& offsets = _offsets[i];
+        auto& points = _points[i];
+        auto& normals = _normals[i];
+        auto& tangents = _tangents[i];
+        auto& uv = _uv[i];
+        auto& num_indices = _num_indices[i];
+        auto& num_indices_triangulated = _num_indices_triangulated[i];
+
         // setup indices
         attr_indices.Get(&indices, t);
         attr_counts.Get(&counts, t);
@@ -783,7 +796,6 @@ bool Mesh::preComputeNormals(bool gen_tangents, bool overwrite)
         attr_points.Get(&points, t);
         normals.resize(points.size());
         CalculateNormals((float3*)normals.data(), (const float3*)points.cdata(), indices_triangulated.cdata(), points.size(), indices_triangulated.size());
-        attr_normals.Set(normals, t);
 
         // compute tangents
         if (gen_tangents) {
@@ -793,9 +805,20 @@ bool Mesh::preComputeNormals(bool gen_tangents, bool overwrite)
                 (const float3*)points.cdata(), (const float3*)normals.cdata(), (const float2*)uv.cdata(),
                 counts.cdata(), offsets.cdata(), indices.cdata(),
                 points.size(), counts.size());
+        }
+    });
+
+    for (int i = 0; i < n; ++i) {
+        auto& t = times[i];
+        auto& normals = _normals[i];
+        auto& tangents = _tangents[i];
+
+        attr_normals.Set(normals, t);
+        if (gen_tangents) {
             attr_tangents.Set(tangents, t);
         }
     }
+
     return true;
 }
 
