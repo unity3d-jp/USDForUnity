@@ -12,8 +12,6 @@ using usdi::float3;
 using usdi::float4;
 using usdi::quatf;
 
-const int FrameCount = 200;
-
 static void GenerateWaveMeshTopology(
     std::vector<int>& counts,
     std::vector<int>& indices,
@@ -69,7 +67,7 @@ static void GenerateWaveMesh(
 }
 
 
-void TestExportHighMesh(const char *filename)
+void TestExportHighMesh(const char *filename, int frame_count)
 {
     auto *ctx = usdiCreateContext();
 
@@ -80,23 +78,23 @@ void TestExportHighMesh(const char *filename)
     usdiCreateStage(ctx, filename);
     auto *root = usdiGetRoot(ctx);
 
-    auto *xf = usdiCreateXform(ctx, root, "Root");
+    auto *xf = usdiCreateXform(ctx, root, "WaveMeshRoot");
+    usdiPrimSetInstanceable(xf, true);
     {
         usdi::XformData data;
-        usdi::Time t = 0.0;
-        usdiXformWriteSample(xf, &data, t);
+        usdiXformWriteSample(xf, &data);
     }
 
     auto *mesh = usdiCreateMesh(ctx, xf, "WaveMesh");
     {
-        std::vector<std::vector<int>> counts(FrameCount);
-        std::vector<std::vector<int>> indices(FrameCount);
-        std::vector<std::vector<float3>> points(FrameCount);
-        std::vector<std::vector<float2>> uv(FrameCount);
+        std::vector<std::vector<int>> counts(frame_count);
+        std::vector<std::vector<int>> indices(frame_count);
+        std::vector<std::vector<float3>> points(frame_count);
+        std::vector<std::vector<float2>> uv(frame_count);
 
         usdi::Time t = 0.0;
 
-        tbb::parallel_for(0, FrameCount, [&counts, &indices, &points, &uv](int i) {
+        tbb::parallel_for(0, frame_count, [&counts, &indices, &points, &uv](int i) {
             usdi::Time t = 1.0 / 30.0 * i;
             int resolution = 8;
             if (i < 30)      { resolution = 8; }
@@ -108,7 +106,7 @@ void TestExportHighMesh(const char *filename)
             GenerateWaveMeshTopology(counts[i], indices[i], resolution);
             GenerateWaveMesh(points[i], uv[i], t, resolution);
         });
-        for (int i = 0; i < FrameCount; ++i) {
+        for (int i = 0; i < frame_count; ++i) {
             auto& vertices = points[i];
 
             usdi::Time t = 1.0 / 30.0 * i;
@@ -127,6 +125,24 @@ void TestExportHighMesh(const char *filename)
         //usdiMeshPreComputeNormals(mesh, true);
     }
 
+    {
+        auto *ref1 = usdiCreateXform(ctx, root, "WaveMeshRef1");
+        usdi::XformData data;
+        data.position.x = 1.5f;
+        usdiXformWriteSample(ref1, &data);
+
+        auto *ref = usdiCreateOverride(ctx, "/WaveMeshRef1/Ref");
+        usdiPrimAddReference(ref, nullptr, "/WaveMeshRoot");
+    }
+    {
+        auto *ref2 = usdiCreateXform(ctx, root, "WaveMeshRef2");
+        usdi::XformData data;
+        data.position.x = -1.5f;
+        usdiXformWriteSample(ref2, &data);
+
+        auto *ref = usdiCreateOverride(ctx, "/WaveMeshRef2/Ref");
+        usdiPrimAddReference(ref, nullptr, "/WaveMeshRoot");
+    }
 
     usdiSave(ctx);
     usdiDestroyContext(ctx);

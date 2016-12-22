@@ -162,6 +162,12 @@ namespace UTJ
                 m_updateIndicesRequired = false;
                 m_updateVerticesRequired = false;
                 m_updateSkinningRequired = false;
+
+                usdi.usdiMeshReadSample(m_mesh, ref m_meshData, m_timeRead, true);
+                while (m_submeshes.Count < m_meshData.num_submeshes)
+                {
+                    usdiAddSubmesh();
+                }
             }
             else
             {

@@ -56,7 +56,20 @@ namespace UTJ
             }
         }
 
-        public void usdiSetupComponents(usdiMesh parent_mesh)
+        Mesh usdiShareOrCreateMesh(usdiMesh parent)
+        {
+            var master = parent.master as usdiMesh;
+            if (master != null)
+            {
+                return master.submeshes[m_nth].mesh;
+            }
+            else
+            {
+                return new Mesh();
+            }
+        }
+
+        public void usdiSetupComponents(usdiMesh parent)
         {
             if (!m_setupRequierd) { return; }
             m_setupRequierd = false;
@@ -64,13 +77,13 @@ namespace UTJ
             GameObject go;
             if(m_nth == 0)
             {
-                go = parent_mesh.gameObject;
+                go = parent.gameObject;
             }
             else
             {
                 string name = "Submesh[" + m_nth + "]";
-                var parent = parent_mesh.GetComponent<Transform>();
-                var child = parent.FindChild(name);
+                var ptrans = parent.GetComponent<Transform>();
+                var child = ptrans.FindChild(name);
                 if (child != null)
                 {
                     go = child.gameObject;
@@ -78,14 +91,14 @@ namespace UTJ
                 else
                 {
                     go = new GameObject(name);
-                    go.GetComponent<Transform>().SetParent(parent_mesh.GetComponent<Transform>(), false);
+                    go.GetComponent<Transform>().SetParent(parent.GetComponent<Transform>(), false);
                 }
             }
 
             m_trans = go.GetComponent<Transform>();
 
-            var meshSummary = parent_mesh.meshSummary;
-            var meshData = parent_mesh.meshData;
+            var meshSummary = parent.meshSummary;
+            var meshData = parent.meshData;
             bool assignDefaultMaterial = false;
 
             if (meshSummary.num_bones > 0)
@@ -97,10 +110,9 @@ namespace UTJ
                 {
                     renderer = go.AddComponent<SkinnedMeshRenderer>();
                     assignDefaultMaterial = true;
-
                 }
                 {
-                    var boneNames = usdi.usdiMeshGetBoneNames(parent_mesh.nativeMeshPtr, ref meshData);
+                    var boneNames = usdi.usdiMeshGetBoneNames(parent.nativeMeshPtr, ref meshData);
                     m_bones = new Transform[boneNames.Length];
                     for (int i = 0; i < boneNames.Length; ++i)
                     {
@@ -131,10 +143,13 @@ namespace UTJ
                 }
                 m_renderer = renderer;
 
-                m_umesh = renderer.sharedMesh;
-                if (m_umesh == null)
+                if (renderer.sharedMesh != null && parent.master == null)
                 {
-                    m_umesh = new Mesh();
+                    m_umesh = renderer.sharedMesh;
+                }
+                else
+                {
+                    m_umesh = usdiShareOrCreateMesh(parent);
                     renderer.sharedMesh = m_umesh;
                 }
                 m_umesh.MarkDynamic();
@@ -143,19 +158,15 @@ namespace UTJ
             {
                 // setup MeshFilter and MeshRenderer
 
-                var meshFilter = go.GetComponent<MeshFilter>();
-                if (meshFilter == null || meshFilter.sharedMesh == null)
+                var meshFilter = usdi.GetOrAddComponent<MeshFilter>(go);
+                if (meshFilter.sharedMesh != null && parent.master == null)
                 {
-                    m_umesh = new Mesh();
-                    if (meshFilter == null)
-                    {
-                        meshFilter = go.AddComponent<MeshFilter>();
-                    }
-                    meshFilter.sharedMesh = m_umesh;
+                    m_umesh = meshFilter.sharedMesh;
                 }
                 else
                 {
-                    m_umesh = meshFilter.sharedMesh;
+                    m_umesh = usdiShareOrCreateMesh(parent);
+                    meshFilter.sharedMesh = m_umesh;
                 }
                 m_umesh.MarkDynamic();
 
