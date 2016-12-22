@@ -358,6 +358,11 @@ namespace UTJ
             }
             else
             {
+                if (topology)
+                {
+                    m_umesh.Clear();
+                }
+
                 m_umesh.vertices = m_points;
                 if (m_normals != null) { m_umesh.normals = m_normals; }
                 if (m_uvs != null) { m_umesh.uv = m_uvs; }
@@ -366,7 +371,6 @@ namespace UTJ
                 if (topology)
                 {
                     m_umesh.SetIndices(m_indices, MeshTopology.Triangles, 0);
-                    if (m_normals == null) { m_umesh.RecalculateNormals(); }
                 }
 
                 if (m_weights != null && skinning)

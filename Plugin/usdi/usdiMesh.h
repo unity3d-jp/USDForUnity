@@ -89,8 +89,9 @@ private:
 
     mutable bool        m_summary_needs_update = true;
     mutable MeshSummary m_summary;
-    mutable int         m_num_indices = 0;
-    mutable int         m_num_indices_triangulated = 0;
+    int                 m_num_indices = 0;
+    int                 m_num_indices_triangulated = 0;
+    int                 m_num_current_submeshes = 0;
 };
 
 } // namespace usdi

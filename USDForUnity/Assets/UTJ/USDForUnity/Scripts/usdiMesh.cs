@@ -84,7 +84,7 @@ namespace UTJ
                 usdiAddSubmesh();
             }
 
-            if(isInstance)
+            if (isInstance)
             {
 
             }
@@ -271,15 +271,15 @@ namespace UTJ
                 }
             }
 
-            if ( num_submeshes > 1 &&
-                m_meshSummary.topology_variance == usdi.TopologyVariance.Heterogenous)
+            if (m_meshSummary.topology_variance == usdi.TopologyVariance.Heterogenous)
             {
                 // number of active submeshes may change over time if topology is dynamic.
-                for (int i = 0; i < num_submeshes; ++i)
+                int i = 1;
+                for (; i < num_submeshes; ++i)
                 {
                     m_submeshes[i].usdiSetActive(true);
                 }
-                for (int i = num_submeshes; i < m_submeshes.Count; ++i)
+                for (; i < m_submeshes.Count; ++i)
                 {
                     m_submeshes[i].usdiSetActive(false);
                 }

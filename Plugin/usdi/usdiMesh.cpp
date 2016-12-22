@@ -228,7 +228,7 @@ void Mesh::updateSample(Time t_)
         }
     }
     auto& sample = *m_front_sample;
-    auto& splits = *m_front_submesh;
+    auto& submeshes = *m_front_submesh;
 
     m_mesh.GetPointsAttr().Get(&sample.points, t);
     m_mesh.GetVelocitiesAttr().Get(&sample.velocities, t);
@@ -425,35 +425,40 @@ void Mesh::updateSample(Time t_)
     if (conf.split_mesh) {
         needs_split = sample.points.size() > usdiMaxVertices || points_are_expanded || normals_are_expanded || uvs_are_expanded;
     }
-    if (!needs_split) { return; }
-
-    int num_splits = ceildiv(m_num_indices_triangulated, usdiMaxVertices);
-    splits.resize(num_splits);
-
-    for (int nth = 0; nth < num_splits; ++nth) {
-        auto& sms = splits[nth];
-        int ibegin = usdiMaxVertices * nth;
-        int iend = std::min<int>(usdiMaxVertices * (nth+1), m_num_indices_triangulated);
-        int isize = iend - ibegin;
-
-        {
-            sms.indices.resize(isize);
-            for (int i = 0; i < isize; ++i) { sms.indices[i] = i; }
-        }
-        CopyWithIndices(sms.points, sample.points, sample.indices_triangulated, ibegin, iend, !points_are_expanded);
-        CopyWithIndices(sms.normals, sample.normals, sample.indices_triangulated, ibegin, iend, !normals_are_expanded);
-        CopyWithIndices(sms.tangents, sample.tangents, sample.indices_triangulated, ibegin, iend, !tangents_are_expanded);
-        CopyWithIndices(sms.uvs, sample.uvs, sample.indices_triangulated, ibegin, iend, !uvs_are_expanded);
-        if (!sample.weights4.empty()) {
-            CopyWithIndices(sms.weights4, sample.weights4, sample.indices_triangulated, ibegin, iend, !weights_are_expanded);
-        }
-        else if (!sample.weights8.empty()) {
-            CopyWithIndices(sms.weights8, sample.weights8, sample.indices_triangulated, ibegin, iend, !weights_are_expanded);
+    if (!needs_split) {
+        m_num_current_submeshes = 0;
+    }
+    else {
+        m_num_current_submeshes = ceildiv(m_num_indices_triangulated, usdiMaxVertices);
+        if (m_num_current_submeshes > submeshes.size()) {
+            submeshes.resize(m_num_current_submeshes);
         }
 
-        ComputeBounds((float3*)sms.points.cdata(), sms.points.size(), sms.bounds_min, sms.bounds_max);
-        sms.center = (sms.bounds_min + sms.bounds_max) * 0.5f;
-        sms.extents = sms.bounds_max - sms.bounds_min;
+        for (int nth = 0; nth < m_num_current_submeshes; ++nth) {
+            auto& sms = submeshes[nth];
+            int ibegin = usdiMaxVertices * nth;
+            int iend = std::min<int>(usdiMaxVertices * (nth + 1), m_num_indices_triangulated);
+            int isize = iend - ibegin;
+
+            {
+                sms.indices.resize(isize);
+                for (int i = 0; i < isize; ++i) { sms.indices[i] = i; }
+            }
+            CopyWithIndices(sms.points, sample.points, sample.indices_triangulated, ibegin, iend, !points_are_expanded);
+            CopyWithIndices(sms.normals, sample.normals, sample.indices_triangulated, ibegin, iend, !normals_are_expanded);
+            CopyWithIndices(sms.tangents, sample.tangents, sample.indices_triangulated, ibegin, iend, !tangents_are_expanded);
+            CopyWithIndices(sms.uvs, sample.uvs, sample.indices_triangulated, ibegin, iend, !uvs_are_expanded);
+            if (!sample.weights4.empty()) {
+                CopyWithIndices(sms.weights4, sample.weights4, sample.indices_triangulated, ibegin, iend, !weights_are_expanded);
+            }
+            else if (!sample.weights8.empty()) {
+                CopyWithIndices(sms.weights8, sample.weights8, sample.indices_triangulated, ibegin, iend, !weights_are_expanded);
+            }
+
+            ComputeBounds((float3*)sms.points.cdata(), sms.points.size(), sms.bounds_min, sms.bounds_max);
+            sms.center = (sms.bounds_min + sms.bounds_max) * 0.5f;
+            sms.extents = sms.bounds_max - sms.bounds_min;
+        }
     }
 }
 
@@ -464,13 +469,13 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
     if (!m_front_sample) { return false; }
 
     const auto& sample = *m_front_sample;
-    const auto& splits = *m_front_submesh;
+    const auto& submeshes = *m_front_submesh;
 
     dst.num_points = (uint)sample.points.size();
     dst.num_counts = (uint)sample.counts.size();
     dst.num_indices = (uint)sample.indices.size();
     dst.num_indices_triangulated = m_num_indices_triangulated;
-    dst.num_submeshes = (uint)splits.size();
+    dst.num_submeshes = (uint)m_num_current_submeshes;
     dst.center = sample.center;
     dst.extents = sample.extents;
 
@@ -517,7 +522,7 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
 
         if (dst.submeshes) {
             for (size_t i = 0; i < dst.num_submeshes; ++i) {
-                const auto& ssrc = splits[i];
+                const auto& ssrc = submeshes[i];
                 auto& sdst = dst.submeshes[i];
                 sdst.num_points = (uint)ssrc.points.size();
                 sdst.center = ssrc.center;
@@ -568,7 +573,7 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
 
         if (dst.submeshes) {
             for (size_t i = 0; i < dst.num_submeshes; ++i) {
-                const auto& ssrc = splits[i];
+                const auto& ssrc = submeshes[i];
                 auto& sdst = dst.submeshes[i];
                 sdst.num_points = (uint)ssrc.points.size();
                 if (sdst.indices && !ssrc.indices.empty()) {
