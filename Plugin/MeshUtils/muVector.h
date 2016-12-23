@@ -167,6 +167,16 @@ inline float3 cross(const float3& l, const float3& r)
         l.x * r.y - l.y * r.x };
 }
 
+inline quatf rotate(const float3& axis, float angle)
+{
+    return{
+        axis.x * std::sin(angle *0.5f),
+        axis.y * std::sin(angle *0.5f),
+        axis.z * std::sin(angle *0.5f),
+        std::cos(angle * 0.5f)
+    };
+}
+
 inline quatf swap_handedness(const quatf& q)
 {
     return { q.x, -q.y, -q.z, q.w };

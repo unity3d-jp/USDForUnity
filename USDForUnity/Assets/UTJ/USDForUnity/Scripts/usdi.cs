@@ -761,6 +761,20 @@ namespace UTJ
             }
             return c;
         }
+        public static T GetOrAddComponent<T>(GameObject go, ref bool created) where T : Component
+        {
+            var c = go.GetComponent<T>();
+            if (c == null)
+            {
+                c = go.AddComponent<T>();
+                created = true;
+            }
+            else
+            {
+                created = false;
+            }
+            return c;
+        }
 
         public static string S(IntPtr cstring) { return Marshal.PtrToStringAnsi(cstring); }
         public static IntPtr GetArrayPtr(Array v) { return v == null ? IntPtr.Zero : Marshal.UnsafeAddrOfPinnedArrayElement(v, 0); }

@@ -451,7 +451,7 @@ void Mesh::updateSample(Time t_)
             if (!sample.weights4.empty()) {
                 CopyWithIndices(sms.weights4, sample.weights4, sample.indices_triangulated, ibegin, iend, !weights_are_expanded);
             }
-            else if (!sample.weights8.empty()) {
+            if (!sample.weights8.empty()) {
                 CopyWithIndices(sms.weights8, sample.weights8, sample.indices_triangulated, ibegin, iend, !weights_are_expanded);
             }
 
@@ -545,10 +545,10 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
                 }
 
                 if (sdst.weights4 && !ssrc.weights4.empty()) {
-                    memcpy(sdst.weights4, ssrc.weights4.cdata(), sizeof(Weights4) * dst.num_points);
+                    memcpy(sdst.weights4, ssrc.weights4.cdata(), sizeof(Weights4) * sdst.num_points);
                 }
                 if (sdst.weights8 && !ssrc.weights8.empty()) {
-                    memcpy(sdst.weights8, ssrc.weights8.cdata(), sizeof(Weights8) * dst.num_points);
+                    memcpy(sdst.weights8, ssrc.weights8.cdata(), sizeof(Weights8) * sdst.num_points);
                 }
             }
         }
@@ -688,15 +688,28 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
 
     // bone & weight attributes
 
-    if (src.weights4 && src.max_bone_weights == 4) {
+    if ((src.weights4 || src.weights4) &&
+        (src.max_bone_weights == 4 || src.max_bone_weights == 8))
+    {
         sample.max_bone_weights = src.max_bone_weights;
-        sample.bone_weights.resize(src.num_points * 4);
-        sample.bone_indices.resize(src.num_points * 4);
-        for (uint pi = 0; pi < src.num_points; ++pi) {
-            int pi4 = pi * 4;
-            for (int i = 0; i < 4; ++i) {
-                sample.bone_weights[pi4 + i] = src.weights4[pi].weight[i];
-                sample.bone_indices[pi4 + i] = src.weights4[pi].indices[i];
+        sample.bone_weights.resize(src.num_points * src.max_bone_weights);
+        sample.bone_indices.resize(src.num_points * src.max_bone_weights);
+        if (src.max_bone_weights == 4) {
+            for (uint pi = 0; pi < src.num_points; ++pi) {
+                int pix = pi * 4;
+                for (int i = 0; i < 4; ++i) {
+                    sample.bone_weights[pix + i] = src.weights4[pi].weight[i];
+                    sample.bone_indices[pix + i] = src.weights4[pi].indices[i];
+                }
+            }
+        }
+        else if (src.max_bone_weights == 8) {
+            for (uint pi = 0; pi < src.num_points; ++pi) {
+                int pix = pi * 8;
+                for (int i = 0; i < 8; ++i) {
+                    sample.bone_weights[pix + i] = src.weights8[pi].weight[i];
+                    sample.bone_indices[pix + i] = src.weights8[pi].indices[i];
+                }
             }
         }
 

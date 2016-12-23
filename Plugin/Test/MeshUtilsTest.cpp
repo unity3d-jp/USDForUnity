@@ -60,7 +60,7 @@ static std::vector<float3> GenerateTestData(size_t num, float cycle, float scale
 
 
 #define NumTestData (1024*1024*8)
-#define NumTry 16
+#define NumTry 8
 
 static void Test_InvertX()
 {

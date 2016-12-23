@@ -266,7 +266,7 @@ namespace UTJ
             {
                 for (int i = 0; i < num_submeshes; ++i)
                 {
-                    m_submeshes[i].usdiSetupComponents(this);
+                    m_submeshes[i].usdiSetupComponents();
                 }
             }
             else

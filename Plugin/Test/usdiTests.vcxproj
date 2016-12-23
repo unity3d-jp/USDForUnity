@@ -14,6 +14,7 @@
     <ClCompile Include="MeshUtilsTest.cpp" />
     <ClCompile Include="usdiTestExport.cpp" />
     <ClCompile Include="usdiTestExportHighMesh.cpp" />
+    <ClCompile Include="usdiTestExportSkinnedMesh.cpp" />
     <ClCompile Include="usdiTestImport.cpp" />
     <ClCompile Include="usdiTests.cpp" />
   </ItemGroup>

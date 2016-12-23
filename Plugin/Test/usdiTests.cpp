@@ -4,6 +4,7 @@
 void MeshUtilsTest();
 void TestExport(const char *filename);
 void TestExportHighMesh(const char *filename, int frame_count);
+void TestExportSkinnedMesh(const char *filename, int cseg, int hseg);
 void TestExportReference(const char *filename, const char *flatten);
 bool TestImport(const char *path);
 
@@ -17,6 +18,8 @@ testsAPI void TestMain(int argc, char *argv[])
     TestExport("TestExport.usdc");
     TestExportHighMesh("HighMesh.usda", 1);
     TestExportHighMesh("HighMesh.usdc", 200);
+    TestExportSkinnedMesh("SkinnedMesh.usda", 16, 20);
+    TestExportSkinnedMesh("SkinnedMesh.usdc", 128, 512);
     TestExportReference("TestReference.usda", "Flatten.usda");
 
     TestImport("TestExport.usda");
