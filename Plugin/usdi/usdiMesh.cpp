@@ -12,7 +12,11 @@ namespace usdi {
 
 const int usdiMaxVertices = 64998;
 
-static inline void CountIndices(const VtArray<int> &counts, VtArray<int>& offsets, int& num_indices, int& num_indices_triangulated)
+static inline void CountIndices(
+    const VtArray<int> &counts,
+    VtArray<int>& offsets,
+    int& num_indices,
+    int& num_indices_triangulated)
 {
     int reti = 0, rett = 0;
     size_t num_faces = counts.size();
@@ -28,8 +32,11 @@ static inline void CountIndices(const VtArray<int> &counts, VtArray<int>& offset
     num_indices_triangulated = rett;
 }
 
-template<class CountArray, class IndexArray>
-static inline void TriangulateIndices(int *triangulated, const CountArray &counts, const IndexArray *indices, bool swap_face)
+static inline void TriangulateIndices(
+    VtArray<int>& triangulated,
+    const VtArray<int> &counts,
+    const VtArray<int> *indices,
+    bool swap_face)
 {
     const int i1 = swap_face ? 2 : 1;
     const int i2 = swap_face ? 1 : 2;
@@ -249,8 +256,8 @@ void Mesh::updateSample(Time t_)
     }
 
     // normals
-    bool needs_calculate_normals = conf.normal_calculation == NormalCalculationType::Always;
-    if (!needs_calculate_normals) {
+    bool update_normals = conf.normal_calculation == NormalCalculationType::Always;
+    if (!update_normals) {
         if (m_mesh.GetNormalsAttr().Get(&sample.normals, t)) {
             if (conf.swap_handedness) {
                 InvertX((float3*)sample.normals.data(), sample.normals.size());
@@ -258,7 +265,7 @@ void Mesh::updateSample(Time t_)
         }
         else {
             if (conf.normal_calculation == NormalCalculationType::WhenMissing) {
-                needs_calculate_normals = true;
+                update_normals = true;
             }
             else {
                 // no normal data is present and no recalculation is required.
@@ -270,8 +277,8 @@ void Mesh::updateSample(Time t_)
     }
 
     // tangents
-    bool needs_calculate_tangents = conf.tangent_calculation == NormalCalculationType::Always;
-    if (!needs_calculate_tangents) {
+    bool update_tangents = conf.tangent_calculation == NormalCalculationType::Always;
+    if (!update_tangents) {
         if (m_attr_tangents && m_attr_tangents->getImmediate(&sample.tangents, t_)) {
             if (conf.swap_handedness) {
                 InvertX((float4*)sample.tangents.data(), sample.tangents.size());
@@ -279,7 +286,7 @@ void Mesh::updateSample(Time t_)
         }
         else {
             if (m_attr_uv && conf.tangent_calculation == TangentCalculationType::WhenMissing) {
-                needs_calculate_tangents = true;
+                update_tangents = true;
             }
             else {
                 // nothing to do here
@@ -288,34 +295,34 @@ void Mesh::updateSample(Time t_)
     }
 
     // indices
-    bool needs_calculate_indices =
+    bool update_indices =
         m_num_indices_triangulated == 0 ||
         getSummary().topology_variance == TopologyVariance::Heterogenous ||
         m_update_flag.import_config_updated || m_update_flag.variant_set_changed;
-    bool needs_copy_indices =
+    bool copy_indices =
         sample.indices_triangulated.size() != m_sample[0].indices_triangulated.size() ||
         m_update_flag_prev.variant_set_changed;
-    if (needs_calculate_indices) {
+    if (update_indices) {
         CountIndices(sample.counts, sample.offsets, m_num_indices, m_num_indices_triangulated);
-        if (conf.triangulate || needs_calculate_normals) {
+        if (conf.triangulate || update_normals) {
             sample.indices_triangulated.resize(m_num_indices_triangulated);
-            TriangulateIndices(sample.indices_triangulated.data(), sample.counts, &sample.indices, conf.swap_faces);
+            TriangulateIndices(sample.indices_triangulated, sample.counts, &sample.indices, conf.swap_faces);
         }
     }
-    else if (needs_copy_indices) {
+    else if (copy_indices) {
         sample.indices_triangulated = m_sample[0].indices_triangulated;
         sample.offsets = m_sample[0].offsets;
     }
 
     // calculate normals if needed
-    if (needs_calculate_normals) {
+    if (update_normals) {
         sample.normals.resize(sample.points.size());
         CalculateNormals((float3*)sample.normals.data(), (const float3*)sample.points.cdata(), sample.indices_triangulated.cdata(),
             sample.points.size(), sample.indices_triangulated.size());
     }
 
     // calculate tangents if needed
-    if (needs_calculate_tangents) {
+    if (update_tangents) {
         sample.tangents.resize(sample.points.size());
         CalculateTangents((float4*)sample.tangents.data(),
             (const float3*)sample.points.cdata(), (const float3*)sample.normals.cdata(), (const float2*)sample.uvs.cdata(),
@@ -413,19 +420,15 @@ void Mesh::updateSample(Time t_)
     sample.extents = (sample.bounds_max - sample.bounds_min) * 0.5f;
 
 
-    // mesh split
+    // submesh
 
-    bool points_are_expanded = sample.points.size() == m_num_indices;
-    bool normals_are_expanded = sample.normals.size() == m_num_indices;
-    bool tangents_are_expanded = sample.tangents.size() == m_num_indices;
-    bool uvs_are_expanded = sample.uvs.size() == m_num_indices;
-    bool weights_are_expanded = sample.weights4.size() == m_num_indices || sample.weights8.size() == m_num_indices;
+    bool make_submesh =
+        (conf.split_mesh && sample.points.size() > usdiMaxVertices) ||
+        (!sample.normals.empty() && sample.points.size() != sample.normals.size()) ||
+        (!sample.tangents.empty() && sample.points.size() != sample.tangents.size()) ||
+        (!sample.uvs.empty() && sample.points.size() != sample.uvs.size());
 
-    bool needs_split = false;
-    if (conf.split_mesh) {
-        needs_split = sample.points.size() > usdiMaxVertices || points_are_expanded || normals_are_expanded || uvs_are_expanded;
-    }
-    if (!needs_split) {
+    if (!make_submesh) {
         m_num_current_submeshes = 0;
     }
     else {
@@ -440,19 +443,23 @@ void Mesh::updateSample(Time t_)
             int iend = std::min<int>(usdiMaxVertices * (nth + 1), m_num_indices_triangulated);
             int isize = iend - ibegin;
 
-            {
-                sms.indices.resize(isize);
-                for (int i = 0; i < isize; ++i) { sms.indices[i] = i; }
-            }
-            CopyWithIndices(sms.points, sample.points, sample.indices_triangulated, ibegin, iend, !points_are_expanded);
-            CopyWithIndices(sms.normals, sample.normals, sample.indices_triangulated, ibegin, iend, !normals_are_expanded);
-            CopyWithIndices(sms.tangents, sample.tangents, sample.indices_triangulated, ibegin, iend, !tangents_are_expanded);
-            CopyWithIndices(sms.uvs, sample.uvs, sample.indices_triangulated, ibegin, iend, !uvs_are_expanded);
+            sms.indices.resize(isize);
+            for (int i = 0; i < isize; ++i) { sms.indices[i] = i; }
+
+            bool expanded_points = sample.points.size() != m_num_indices;
+            bool expanded_normals = sample.normals.size() != m_num_indices;
+            bool expanded_tangents = sample.tangents.size() != m_num_indices;
+            bool expand_uv = sample.uvs.size() != m_num_indices;
+            bool expand_weights = sample.weights4.size() != m_num_indices || sample.weights8.size() != m_num_indices;
+            CopyWithIndices(sms.points, sample.points, sample.indices_triangulated, ibegin, iend, expanded_points);
+            CopyWithIndices(sms.normals, sample.normals, sample.indices_triangulated, ibegin, iend, expanded_normals);
+            CopyWithIndices(sms.tangents, sample.tangents, sample.indices_triangulated, ibegin, iend, expanded_tangents);
+            CopyWithIndices(sms.uvs, sample.uvs, sample.indices_triangulated, ibegin, iend, expand_uv);
             if (!sample.weights4.empty()) {
-                CopyWithIndices(sms.weights4, sample.weights4, sample.indices_triangulated, ibegin, iend, !weights_are_expanded);
+                CopyWithIndices(sms.weights4, sample.weights4, sample.indices_triangulated, ibegin, iend, expand_weights);
             }
             if (!sample.weights8.empty()) {
-                CopyWithIndices(sms.weights8, sample.weights8, sample.indices_triangulated, ibegin, iend, !weights_are_expanded);
+                CopyWithIndices(sms.weights8, sample.weights8, sample.indices_triangulated, ibegin, iend, expand_weights);
             }
 
             ComputeBounds((float3*)sms.points.cdata(), sms.points.size(), sms.bounds_min, sms.bounds_max);
@@ -808,7 +815,7 @@ bool Mesh::preComputeNormals(bool gen_tangents, bool overwrite)
         attr_counts.Get(&counts, t);
         CountIndices(counts, offsets, num_indices, num_indices_triangulated);
         indices_triangulated.resize(num_indices_triangulated);
-        TriangulateIndices(indices_triangulated.data(), counts, &indices, false);
+        TriangulateIndices(indices_triangulated, counts, &indices, false);
 
         // compute normals
         attr_points.Get(&points, t);

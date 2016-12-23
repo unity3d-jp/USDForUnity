@@ -38,7 +38,10 @@ namespace UTJ
             {
                 s.usdiSync();
                 s.gameObject = null;
-                s.stream.usdiNotifyUpdateElementsList();
+                if(s.stream != null)
+                {
+                    s.stream.usdiNotifyUpdateElementsList();
+                }
             }
         }
     }

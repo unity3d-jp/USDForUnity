@@ -215,7 +215,7 @@ namespace UTJ
             {
                 go = new GameObject();
                 go.name = name;
-                go.GetComponent<Transform>().SetParent(parent);
+                go.GetComponent<Transform>().SetParent(parent, false);
                 created = true;
             }
 
@@ -503,6 +503,7 @@ namespace UTJ
             {
                 m_schemas[i].usdiUpdate(t);
             }
+            usdi.TransformNotfyChange(GetComponent<Transform>());
 
             m_prevUpdateTime = t;
         }
@@ -661,8 +662,6 @@ namespace UTJ
 
             usdiWaitAsyncUpdateTask();
             usdiUpdate(m_time);
-
-            usdi.TransformNotfyChange(GetComponent<Transform>());
 
             if (directVBUpdate)
             {

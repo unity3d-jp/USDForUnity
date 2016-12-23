@@ -131,14 +131,16 @@ void TestExportSkinnedMesh(const char *filename, int cseg, int hseg)
 
         auto Expand = [&]()
         {
-            points2.resize(indices.size());
-            uv2.resize(indices.size());
-            weights2.resize(indices.size());
-            indices2.resize(indices.size());
-            for (size_t i = 0; i < indices.size(); ++i) {
-                points2[i] = points[indices[i]];
-                uv2[i] = uv[indices[i]];
-                weights2[i] = weights[indices[i]];
+            size_t n = indices.size();
+            points2.resize(n);
+            uv2.resize(n);
+            weights2.resize(n);
+            indices2.resize(n);
+            for (size_t i = 0; i < n; ++i) {
+                int ii = indices[i];
+                points2[i]  = points[ii];
+                uv2[i]      = uv[ii];
+                weights2[i] = weights[ii];
                 indices2[i] = i;
             }
         };
@@ -155,14 +157,15 @@ void TestExportSkinnedMesh(const char *filename, int cseg, int hseg)
 
             Generate(3, hseg);
             Expand();
-            data.counts = counts.data();
             data.num_counts = counts.size();
-            data.indices = indices2.data();
             data.num_indices = indices2.size();
             data.num_points = points2.size();
+            data.counts = counts.data();
+            data.indices = indices2.data();
             data.points = points2.data();
             data.uvs = uv2.data();
             data.weights4 = weights2.data();
+
             usdiPrimBeginEditVariant(xf, "Shape", "Triangular");
             mesh = usdiCreateMesh(ctx, xf, "Triangular");
             usdiMeshWriteSample(mesh, &data);
@@ -172,14 +175,15 @@ void TestExportSkinnedMesh(const char *filename, int cseg, int hseg)
 
             Generate(4, hseg);
             Expand();
-            data.counts = counts.data();
             data.num_counts = counts.size();
-            data.indices = indices2.data();
             data.num_indices = indices2.size();
             data.num_points = points2.size();
+            data.counts = counts.data();
+            data.indices = indices2.data();
             data.points = points2.data();
             data.uvs = uv2.data();
             data.weights4 = weights2.data();
+
             usdiPrimBeginEditVariant(xf, "Shape", "Square");
             mesh = usdiCreateMesh(ctx, xf, "Square");
             usdiMeshWriteSample(mesh, &data);
@@ -188,14 +192,15 @@ void TestExportSkinnedMesh(const char *filename, int cseg, int hseg)
 
 
             Generate(cseg, hseg);
-            data.counts = counts.data();
             data.num_counts = counts.size();
-            data.indices = indices.data();
             data.num_indices = indices.size();
             data.num_points = points.size();
+            data.counts = counts.data();
+            data.indices = indices.data();
             data.points = points.data();
             data.uvs = uv.data();
             data.weights4 = weights.data();
+
             usdiPrimBeginEditVariant(xf, "Shape", "Cylinder");
             mesh = usdiCreateMesh(ctx, xf, "Cylinder");
             usdiMeshWriteSample(mesh, &data);
@@ -235,24 +240,24 @@ void TestExportSkinnedMesh(const char *filename, int cseg, int hseg)
         }
     }
 
-    //{
-    //    auto *ref1 = usdiCreateXform(ctx, root, "SkinnedMeshRef1");
-    //    usdi::XformData data;
-    //    data.position.x = 1.5f;
-    //    usdiXformWriteSample(ref1, &data);
+    {
+        auto *ref1 = usdiCreateXform(ctx, root, "SkinnedMeshRef1");
+        usdi::XformData data;
+        data.position.x = 1.5f;
+        usdiXformWriteSample(ref1, &data);
 
-    //    auto *ref = usdiCreateOverride(ctx, "/SkinnedMeshRef1/Ref");
-    //    usdiPrimAddReference(ref, nullptr, "/SkinnedMeshRoot");
-    //}
-    //{
-    //    auto *ref2 = usdiCreateXform(ctx, root, "SkinnedMeshRef2");
-    //    usdi::XformData data;
-    //    data.position.x = -1.5f;
-    //    usdiXformWriteSample(ref2, &data);
+        auto *ref = usdiCreateOverride(ctx, "/SkinnedMeshRef1/Ref");
+        usdiPrimAddReference(ref, nullptr, "/SkinnedMeshRoot");
+    }
+    {
+        auto *ref2 = usdiCreateXform(ctx, root, "SkinnedMeshRef2");
+        usdi::XformData data;
+        data.position.x = -1.5f;
+        usdiXformWriteSample(ref2, &data);
 
-    //    auto *ref = usdiCreateOverride(ctx, "/SkinnedMeshRef2/Ref");
-    //    usdiPrimAddReference(ref, nullptr, "/SkinnedMeshRoot");
-    //}
+        auto *ref = usdiCreateOverride(ctx, "/SkinnedMeshRef2/Ref");
+        usdiPrimAddReference(ref, nullptr, "/SkinnedMeshRoot");
+    }
 
     usdiSave(ctx);
     usdiDestroyContext(ctx);

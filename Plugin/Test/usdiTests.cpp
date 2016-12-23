@@ -13,15 +13,14 @@ extern "C" {
 testsAPI void TestMain(int argc, char *argv[])
 {
     MeshUtilsTest();
-
     TestExport("TestExport.usda");
     TestExport("TestExport.usdc");
     TestExportHighMesh("HighMesh.usda", 1);
     TestExportHighMesh("HighMesh.usdc", 200);
-    TestExportSkinnedMesh("SkinnedMesh.usda", 16, 20);
-    TestExportSkinnedMesh("SkinnedMesh.usdc", 128, 512);
+    TestExportSkinnedMesh("SkinnedMesh.usda", 6, 5);
+    TestExportSkinnedMesh("SkinnedMesh.usdc", 32, 128);
+    TestExportSkinnedMesh("SkinnedHighMesh.usdc", 128, 512);
     TestExportReference("TestReference.usda", "Flatten.usda");
-
     TestImport("TestExport.usda");
     TestImport("TestReference.usda");
 }
