@@ -18,6 +18,7 @@ using usdi::Weights8;
 
 const float DegToRad = 3.1415926535897932384626433832795f / 180.0f;
 
+
 void TestExportSkinnedMesh(const char *filename, int cseg, int hseg)
 {
     auto *ctx = usdiCreateContext();
@@ -31,62 +32,13 @@ void TestExportSkinnedMesh(const char *filename, int cseg, int hseg)
 
     auto *xf = usdiCreateXform(ctx, root, "SkinnedMeshRoot");
     usdiPrimSetInstanceable(xf, true);
+
     {
         usdi::XformData data;
         usdiXformWriteSample(xf, &data);
     }
 
     {
-        std::vector<int> counts;
-        std::vector<int> indices;
-        std::vector<float3> points;
-        std::vector<Weights4> weights;
-        std::vector<float2> uv;
-
-        const float radius = 0.2f;
-        const float height = 5.0f;
-
-        // generate vertices
-
-        points.resize(cseg * hseg);
-        weights.resize(points.size());
-        uv.resize(points.size());
-
-        for (int ih = 0; ih < hseg; ++ih) {
-            float y = (float(ih) / float(hseg - 1)) * height;
-            Weights4 w;
-            w.indices[0] = std::min<int>((int)y, 4);
-            w.weight[0] = 1.0f;
-
-            for (int ic = 0; ic < cseg; ++ic) {
-                int i = cseg * ih + ic;
-                float ang = ((360.0f / cseg) * ic) * DegToRad;
-                float3 pos { std::cos(ang) * radius, y, std::sin(ang) * radius };
-                float2 t { float(ic) / float(cseg - 1), float(ih) / float(hseg - 1), };
-
-                points[i] = pos;
-                uv[i] = t;
-                weights[i] = w;
-            }
-        }
-
-        // generate topology
-
-        int nfaces = cseg * (hseg - 1);
-        int nindices = nfaces * 4;
-        counts.resize(nfaces, 4);
-        indices.resize(nindices);
-        for (int ih = 0; ih < hseg - 1; ++ih) {
-            for (int ic = 0; ic < cseg; ++ic) {
-                auto *dst = &indices[(ih * cseg + ic) * 4];
-                dst[0] = cseg * ih + ic;
-                dst[1] = cseg * (ih + 1) + ic;
-                dst[2] = cseg * (ih + 1) + ((ic + 1) % cseg);
-                dst[3] = cseg * ih + ((ic + 1) % cseg);
-            }
-        }
-
-
         float4x4 bindposes[5] {
             { {
                 { 1.0f, 0.0f, 0.0f, 0.0f },
@@ -127,27 +79,129 @@ void TestExportSkinnedMesh(const char *filename, int cseg, int hseg)
             "/SkinnedMeshRoot/Bone0/Bone1/Bone2/Bone3/Bone4",
         };
 
-        usdi::MeshData data;
-        data.counts = counts.data();
-        data.num_counts = counts.size();
-        data.indices = indices.data();
-        data.num_indices = indices.size();
-        data.points = points.data();
-        data.num_points = points.size();
-        data.uvs = uv.data();
+        std::vector<int> counts;
+        std::vector<int> indices, indices2;
+        std::vector<float3> points, points2;
+        std::vector<float2> uv, uv2;
+        std::vector<Weights4> weights, weights2;
 
-        data.num_bones = 5;
-        data.max_bone_weights = 4;
-        data.weights4 = weights.data();
-        data.bones = bones;
-        data.root_bone = bones[0];
-        data.bindposes = bindposes;
+        auto Generate = [&](int cseg, int hseg)
+        {
+            const float radius = 0.2f;
+            const float height = 5.0f;
 
-        auto *mesh = usdiCreateMesh(ctx, xf, "SkinnedMesh");
-        usdiMeshWriteSample(mesh, &data);
+            // vertices
+            points.resize(cseg * hseg);
+            weights.resize(points.size());
+            uv.resize(points.size());
 
-        usdiMeshPreComputeNormals(mesh, false);
-        //usdiMeshPreComputeNormals(mesh, true);
+            for (int ih = 0; ih < hseg; ++ih) {
+                float y = (float(ih) / float(hseg - 1)) * height;
+                Weights4 w;
+                w.indices[0] = std::min<int>((int)y, 4);
+                w.weight[0] = 1.0f;
+
+                for (int ic = 0; ic < cseg; ++ic) {
+                    int i = cseg * ih + ic;
+                    float ang = ((360.0f / cseg) * ic) * DegToRad;
+                    float3 pos{ std::cos(ang) * radius, y, std::sin(ang) * radius };
+                    float2 t{ float(ic) / float(cseg - 1), float(ih) / float(hseg - 1), };
+
+                    points[i] = pos;
+                    uv[i] = t;
+                    weights[i] = w;
+                }
+            }
+
+            // topology
+            int nfaces = cseg * (hseg - 1);
+            int nindices = nfaces * 4;
+            counts.resize(nfaces, 4);
+            indices.resize(nindices);
+            for (int ih = 0; ih < hseg - 1; ++ih) {
+                for (int ic = 0; ic < cseg; ++ic) {
+                    auto *dst = &indices[(ih * cseg + ic) * 4];
+                    dst[0] = cseg * ih + ic;
+                    dst[1] = cseg * (ih + 1) + ic;
+                    dst[2] = cseg * (ih + 1) + ((ic + 1) % cseg);
+                    dst[3] = cseg * ih + ((ic + 1) % cseg);
+                }
+            }
+        };
+
+        auto Expand = [&]()
+        {
+            points2.resize(indices.size());
+            uv2.resize(indices.size());
+            weights2.resize(indices.size());
+            indices2.resize(indices.size());
+            for (size_t i = 0; i < indices.size(); ++i) {
+                points2[i] = points[indices[i]];
+                uv2[i] = uv[indices[i]];
+                weights2[i] = weights[indices[i]];
+                indices2[i] = i;
+            }
+        };
+
+        {
+            usdi::Mesh *mesh = nullptr;
+            usdi::MeshData data;
+            data.num_bones = 5;
+            data.max_bone_weights = 4;
+            data.bones = bones;
+            data.root_bone = bones[0];
+            data.bindposes = bindposes;
+
+
+            Generate(3, hseg);
+            Expand();
+            data.counts = counts.data();
+            data.num_counts = counts.size();
+            data.indices = indices2.data();
+            data.num_indices = indices2.size();
+            data.num_points = points2.size();
+            data.points = points2.data();
+            data.uvs = uv2.data();
+            data.weights4 = weights2.data();
+            usdiPrimBeginEditVariant(xf, "Shape", "Triangular");
+            mesh = usdiCreateMesh(ctx, xf, "Triangular");
+            usdiMeshWriteSample(mesh, &data);
+            usdiMeshPreComputeNormals(mesh, false);
+            usdiPrimEndEditVariant(xf);
+
+
+            Generate(4, hseg);
+            Expand();
+            data.counts = counts.data();
+            data.num_counts = counts.size();
+            data.indices = indices2.data();
+            data.num_indices = indices2.size();
+            data.num_points = points2.size();
+            data.points = points2.data();
+            data.uvs = uv2.data();
+            data.weights4 = weights2.data();
+            usdiPrimBeginEditVariant(xf, "Shape", "Square");
+            mesh = usdiCreateMesh(ctx, xf, "Square");
+            usdiMeshWriteSample(mesh, &data);
+            usdiMeshPreComputeNormals(mesh, false);
+            usdiPrimEndEditVariant(xf);
+
+
+            Generate(cseg, hseg);
+            data.counts = counts.data();
+            data.num_counts = counts.size();
+            data.indices = indices.data();
+            data.num_indices = indices.size();
+            data.num_points = points.size();
+            data.points = points.data();
+            data.uvs = uv.data();
+            data.weights4 = weights.data();
+            usdiPrimBeginEditVariant(xf, "Shape", "Cylinder");
+            mesh = usdiCreateMesh(ctx, xf, "Cylinder");
+            usdiMeshWriteSample(mesh, &data);
+            usdiMeshPreComputeNormals(mesh, false);
+            usdiPrimEndEditVariant(xf);
+        }
 
 
         {
@@ -181,24 +235,24 @@ void TestExportSkinnedMesh(const char *filename, int cseg, int hseg)
         }
     }
 
-    {
-        auto *ref1 = usdiCreateXform(ctx, root, "SkinnedMeshRef1");
-        usdi::XformData data;
-        data.position.x = 1.5f;
-        usdiXformWriteSample(ref1, &data);
+    //{
+    //    auto *ref1 = usdiCreateXform(ctx, root, "SkinnedMeshRef1");
+    //    usdi::XformData data;
+    //    data.position.x = 1.5f;
+    //    usdiXformWriteSample(ref1, &data);
 
-        auto *ref = usdiCreateOverride(ctx, "/SkinnedMeshRef1/Ref");
-        usdiPrimAddReference(ref, nullptr, "/SkinnedMeshRoot");
-    }
-    {
-        auto *ref2 = usdiCreateXform(ctx, root, "SkinnedMeshRef2");
-        usdi::XformData data;
-        data.position.x = -1.5f;
-        usdiXformWriteSample(ref2, &data);
+    //    auto *ref = usdiCreateOverride(ctx, "/SkinnedMeshRef1/Ref");
+    //    usdiPrimAddReference(ref, nullptr, "/SkinnedMeshRoot");
+    //}
+    //{
+    //    auto *ref2 = usdiCreateXform(ctx, root, "SkinnedMeshRef2");
+    //    usdi::XformData data;
+    //    data.position.x = -1.5f;
+    //    usdiXformWriteSample(ref2, &data);
 
-        auto *ref = usdiCreateOverride(ctx, "/SkinnedMeshRef2/Ref");
-        usdiPrimAddReference(ref, nullptr, "/SkinnedMeshRoot");
-    }
+    //    auto *ref = usdiCreateOverride(ctx, "/SkinnedMeshRef2/Ref");
+    //    usdiPrimAddReference(ref, nullptr, "/SkinnedMeshRoot");
+    //}
 
     usdiSave(ctx);
     usdiDestroyContext(ctx);

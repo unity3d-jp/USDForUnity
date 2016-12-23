@@ -412,23 +412,11 @@ usdiAPI int usdiPrimFindVariant(usdi::Schema *schema, int iset, const char *name
     if (!schema) { return -1; }
     return schema->findVariant(iset, name);
 }
-usdiAPI int usdiPrimCreateVariantSet(usdi::Schema *schema, const char *name)
-{
-    usdiTraceFunc();
-    if (!schema) { return -1; }
-    return schema->createVariantSet(name);
-}
-usdiAPI int usdiPrimCreateVariant(usdi::Schema *schema, int iset, const char *name)
-{
-    usdiTraceFunc();
-    if (!schema) { return -1; }
-    return schema->createVariant(iset, name);
-}
-usdiAPI bool usdiPrimBeginEditVariant(usdi::Schema *schema, int iset, int ival)
+usdiAPI bool usdiPrimBeginEditVariant(usdi::Schema *schema, const char *set, const char *variant)
 {
     usdiTraceFunc();
     if (!schema) { return false; }
-    return schema->beginEditVariant(iset, ival);
+    return schema->beginEditVariant(set, variant);
 }
 usdiAPI void usdiPrimEndEditVariant(usdi::Schema *schema)
 {

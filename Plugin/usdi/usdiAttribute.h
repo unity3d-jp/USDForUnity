@@ -16,7 +16,7 @@ public:
     bool            isConstant() const;
     bool            hasValue() const;
     size_t          getNumSamples() const;
-    bool            getTimeRange(Time& start, Time& end);
+    void            getTimeRange(Time& start, Time& end);
 
     AttributeSummary getSummary();
     virtual void    updateSample(Time t) = 0;

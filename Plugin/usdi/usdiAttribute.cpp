@@ -118,14 +118,10 @@ bool            Attribute::isConstant() const       { return !m_usdattr.ValueMig
 bool            Attribute::hasValue() const         { return m_usdattr.HasValue(); }
 size_t          Attribute::getNumSamples() const    { return m_usdattr.GetNumTimeSamples(); }
 
-bool Attribute::getTimeRange(Time& start, Time& end)
+void Attribute::getTimeRange(Time& start, Time& end)
 {
-    if (m_time_start != usdiInvalidTime && m_time_end != usdiInvalidTime) {
-        start = m_time_start;
-        end = m_time_end;
-        return true;
-    }
-    return false;
+    start = m_time_start;
+    end = m_time_end;
 }
 
 AttributeSummary Attribute::getSummary()

@@ -78,11 +78,7 @@ public:
     int             findVariantSet(const char *name) const;
     // return -1 if not found
     int             findVariant(int iset, const char *name) const;
-    // return index of created variant set. if variant set with name already exists, return its index.
-    int             createVariantSet(const char *name);
-    // return index of created variant. if variant with name already exists, return its index.
-    int             createVariant(int iset, const char *name);
-    bool            beginEditVariant(int iset, int ival);
+    bool            beginEditVariant(const char *set, const char *variant);
     void            endEditVariant();
 
 

@@ -363,11 +363,7 @@ usdiAPI bool             usdiPrimSetVariantSelection(usdi::Schema *schema, int i
 usdiAPI int              usdiPrimFindVariantSet(usdi::Schema *schema, const char *name);
 // return -1 if not found
 usdiAPI int              usdiPrimFindVariant(usdi::Schema *schema, int iset, const char *name);
-// return index of created variant set. if variant set with name already exists, return its index.
-usdiAPI int              usdiPrimCreateVariantSet(usdi::Schema *schema, const char *name);
-// return index of created variant. if variant with name already exists, return its index.
-usdiAPI int              usdiPrimCreateVariant(usdi::Schema *schema, int iset, const char *name);
-usdiAPI bool             usdiPrimBeginEditVariant(usdi::Schema *schema, int iset, int ival);
+usdiAPI bool             usdiPrimBeginEditVariant(usdi::Schema *schema, const char *set, const char *variant);
 usdiAPI void             usdiPrimEndEditVariant(usdi::Schema *schema);
 
 usdiAPI usdi::UpdateFlags usdiPrimGetUpdateFlags(usdi::Schema *schema);

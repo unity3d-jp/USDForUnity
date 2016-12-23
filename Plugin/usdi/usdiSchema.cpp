@@ -69,15 +69,15 @@ void Schema::syncAttributes()
 
 void Schema::syncTimeRange()
 {
-    double lower = 0.0, upper = 0.0;
-    bool first = true;
+    double lower = usdiInvalidTime;
+    double upper = usdiInvalidTime;
     for (auto& a : m_attributes) {
         double l, u;
-        if (a->getTimeRange(l, u)) {
-            if (first) {
+        a->getTimeRange(l, u);
+        if (!std::isnan(l)) {
+            if (std::isnan(lower)) {
                 lower = l;
                 upper = u;
-                first = false;
             }
             else {
                 lower = std::min(lower, l);
@@ -338,40 +338,13 @@ int Schema::findVariant(int iset, const char *name) const
     return -1;
 }
 
-int Schema::createVariantSet(const char *name)
+bool Schema::beginEditVariant(const char *set, const char *variant)
 {
-    m_prim.GetVariantSets().FindOrCreate(name);
+    auto vset = m_prim.GetVariantSets().FindOrCreate(set);
+    vset.FindOrCreateVariant(variant);
+    vset.SetVariantSelection(variant);
     syncVariantSets();
-    return findVariantSet(name);
-}
-
-int Schema::createVariant(int iset, const char *name)
-{
-    if (iset < 0) { return -1; }
-    if (iset >= m_variant_sets.size()) {
-        usdiLogError("Schema::findOrCreateVariant(): iset >= m_variant_sets.size()\n");
-        return -1;
-    }
-    m_prim.GetVariantSet(m_variant_sets[iset].name).FindOrCreateVariant(name);
-    syncVariantSets();
-    return findVariant(iset, name);
-}
-
-bool Schema::beginEditVariant(int iset, int ival)
-{
-    if (iset < 0 || iset >= m_variant_sets.size()) {
-        usdiLogError("Schema::beginEditVariant(): iset < 0 || iset >= m_variant_sets.size()\n");
-        return false;
-    }
-    auto& vset = m_variant_sets[iset];
-    if (ival < 0 || ival >= vset.variants.size()) {
-        usdiLogError("Schema::beginEditVariant(): ival < 0 || ival >= vset.variants.size()\n");
-        return false;
-    }
-
-    auto dst = m_prim.GetVariantSet(vset.name);
-    dst.SetVariantSelection(vset.variants[ival]);
-    m_ctx->beginEdit(dst.GetVariantEditTarget());
+    m_ctx->beginEdit(vset.GetVariantEditTarget());
     return true;
 }
 
@@ -402,8 +375,13 @@ void Schema::updateSample(Time t)
 
     if(m_update_flag.sample_updated == 0) {
         m_update_flag.sample_updated = 1;
-        if (m_time_prev != usdiInvalidTime) {
-            if (t == m_time_prev) { m_update_flag.sample_updated = 0; }
+        if (!std::isnan(m_time_prev)) {
+            if (t == m_time_prev) {
+                m_update_flag.sample_updated = 0;
+            }
+            else if (std::isnan(m_time_start)) {
+                m_update_flag.sample_updated = 0;
+            }
             else if ((t <= m_time_start && m_time_prev <= m_time_start) || (t >= m_time_end && m_time_prev >= m_time_end)) {
                 m_update_flag.sample_updated = 0;
             }
@@ -416,10 +394,6 @@ void Schema::updateSample(Time t)
     //}
 
     m_time_prev = t;
-
-    //for (auto& a : m_attributes) {
-    //    a->updateSample(t);
-    //}
 }
 
 const ImportSettings& Schema::getImportSettings() const

@@ -399,6 +399,7 @@ namespace UTJ
             usdiConstructTrees();
 
             // fill sample data with initial time
+            m_updateRequired = true;
             usdiAsyncUpdate(m_time);
             usdiUpdate(m_time);
 
@@ -419,6 +420,7 @@ namespace UTJ
             usdiConstructTrees();
 
             // fill sample data with initial time
+            m_updateRequired = true;
             usdiAsyncUpdate(m_time);
             usdiUpdate(m_time);
 

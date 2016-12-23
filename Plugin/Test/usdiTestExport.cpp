@@ -233,17 +233,7 @@ void TestExport(const char *filename)
 
         auto *xf = usdiCreateXform(ctx, root, "TestVariants");
 
-        int vset[] = {
-            usdiPrimCreateVariantSet(xf, "VariantSet0"),
-            usdiPrimCreateVariantSet(xf, "VariantSet1"),
-        };
-        usdiPrimCreateVariant(xf, vset[0], "Variant0-0");
-        usdiPrimCreateVariant(xf, vset[0], "Variant0-1");
-        usdiPrimCreateVariant(xf, vset[1], "Variant1-0");
-        usdiPrimCreateVariant(xf, vset[1], "Variant1-1");
-        usdiPrimCreateVariant(xf, vset[1], "Variant1-2");
-
-        usdiPrimBeginEditVariant(xf, 0, 0);
+        usdiPrimBeginEditVariant(xf, "VariantSet0", "Variant0-0");
         xf = usdiAsXform(usdiFindSchema(ctx, "/TestVariants"));
         for (int i = 0; i < 5; ++i) {
             usdi::Time t = (1.0 / 30.0) * i;
@@ -254,7 +244,7 @@ void TestExport(const char *filename)
         CreateTestXformTree(ctx, xf, { "Variant0-0", "Hoge" });
         usdiPrimEndEditVariant(xf);
 
-        usdiPrimBeginEditVariant(xf, 1, 1);
+        usdiPrimBeginEditVariant(xf, "VariantSet1", "Variant1-1");
         xf = usdiAsXform(usdiFindSchema(ctx, "/TestVariants"));
         for (int i = 0; i < 5; ++i) {
             usdi::Time t = (1.0 / 30.0) * i;
