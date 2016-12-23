@@ -430,7 +430,7 @@ namespace UTJ
         [DllImport ("usdi")] public static extern Schema        usdiGetRoot(Context ctx);
         [DllImport ("usdi")] public static extern int           usdiGetNumMasters(Context ctx);
         [DllImport ("usdi")] public static extern Schema        usdiGetMaster(Context ctx, int i);
-        [DllImport ("usdi")] public static extern Schema        usdiFindSchema(Context ctx, string path);
+        [DllImport ("usdi")] public static extern Schema        usdiFindSchema(Context ctx, string path_or_name);
 
         [DllImport ("usdi")] public static extern void          usdiNotifyForceUpdate(Context ctx);
         [DllImport ("usdi")] public static extern void          usdiUpdateAllSamples(Context ctx, double t);
@@ -451,6 +451,7 @@ namespace UTJ
         [DllImport ("usdi")] public static extern Schema        usdiPrimGetParent(Schema schema);
         [DllImport ("usdi")] public static extern int           usdiPrimGetNumChildren(Schema schema);
         [DllImport ("usdi")] public static extern Schema        usdiPrimGetChild(Schema schema, int i);
+        [DllImport ("usdi")] public static extern Schema        usdiPrimFindChild(Schema schema, string path_or_name, Bool recursive);
 
         [DllImport ("usdi")] public static extern int           usdiPrimGetNumAttributes(Schema schema);
         [DllImport ("usdi")] public static extern Attribute     usdiPrimGetAttribute(Schema schema, int i);
@@ -528,15 +529,6 @@ namespace UTJ
         [DllImport ("usdi")] public static extern void          usdiMeshAssignRootBone(Mesh mesh, ref MeshData dst, string v);
         [DllImport ("usdi")] public static extern void          usdiMeshAssignBones(Mesh mesh, ref MeshData dst, string[] v, int n);
 
-        public static string[] usdiMeshGetBoneNames(Mesh mesh, ref MeshData src)
-        {
-            string[] ret = new string[src.num_bones];
-            for (int i = 0; i < src.num_bones; ++i)
-            {
-                ret[i] = S(usdiIndexStringArray(src.bones, i));
-            }
-            return ret;
-        }
 
         public class AssetRef
         {
@@ -776,8 +768,25 @@ namespace UTJ
             return c;
         }
 
-        public static string S(IntPtr cstring) { return Marshal.PtrToStringAnsi(cstring); }
-        public static IntPtr GetArrayPtr(Array v) { return v == null ? IntPtr.Zero : Marshal.UnsafeAddrOfPinnedArrayElement(v, 0); }
+        public static string S(IntPtr cstring)
+        {
+            return Marshal.PtrToStringAnsi(cstring);
+        }
+        public static string[] SA(IntPtr cstringarray)
+        {
+            var ret = new List<string>();
+            for (int i = 0; ; ++i)
+            {
+                var s = usdi.usdiIndexStringArray(cstringarray, i);
+                if(s == IntPtr.Zero) { break; }
+                ret.Add(S(s));
+            }
+            return ret.ToArray();
+        }
+        public static IntPtr GetArrayPtr(Array v)
+        {
+            return v == null ? IntPtr.Zero : Marshal.UnsafeAddrOfPinnedArrayElement(v, 0);
+        }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void InitializePluginPass1()

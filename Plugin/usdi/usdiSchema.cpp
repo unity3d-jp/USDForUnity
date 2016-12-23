@@ -4,6 +4,7 @@
 #include "usdiSchema.h"
 #include "usdiContext.h"
 #include "usdiContext.i"
+#include "usdiUtils.h"
 
 namespace usdi {
 
@@ -184,6 +185,17 @@ Attribute* Schema::createAttribute(const char *name, AttributeType type, Attribu
 Schema* Schema::getParent() const       { return m_parent; }
 int     Schema::getNumChildren() const  { return (int)m_children.size(); }
 Schema* Schema::getChild(int i) const   { return m_children[i]; }
+Schema* Schema::findChild(const char * path, bool recursive) const
+{
+    auto ret = FindSchema(m_children, path);
+    if (!ret && recursive) {
+        for (auto child : m_children) {
+            ret = child->findChild(path, recursive);
+            if (ret) { break; }
+        }
+    }
+    return ret;
+}
 
 
 // reference & instance interface

@@ -403,6 +403,7 @@ void Mesh::updateSample(Time t_)
         for (size_t i = 0; i < sample.bones.size(); ++i) {
             sample.bones_[i] = sample.bones[i].GetText();
         }
+        sample.bones_.push_back(nullptr);
     }
     if (m_attr_root_bone && sample.root_bone.IsEmpty()) {
         m_attr_root_bone->getImmediate(&sample.root_bone, t_);
@@ -489,7 +490,7 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
     dst.max_bone_weights = sample.max_bone_weights;
     dst.bones = (char**)&sample.bones_[0];
     dst.root_bone = (char*)sample.root_bone.GetText();
-    dst.num_bones = (int)sample.bones_.size();
+    dst.num_bones = (int)sample.bones.size();
 
     if (copy) {
         if (dst.points && !sample.points.empty()) {
@@ -865,6 +866,7 @@ void Mesh::assignBones(MeshData& dst, const char **v, int n)
         sample.bones[i] = TfToken(v[i]);
         sample.bones_[i] = sample.bones[i].GetText();
     }
+    sample.bones_.push_back(nullptr);
     dst.bones = (char**)sample.bones_.data();
     dst.num_bones = n;
 }

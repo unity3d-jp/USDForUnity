@@ -71,7 +71,7 @@ void TestExportSkinnedMesh(const char *filename, int cseg, int hseg)
                 { 0.0f,-4.0f, 0.0f, 1.0f }
             } },
         };
-        char *bones[5] {
+        const char *bones[5] {
             "/SkinnedMeshRoot/Bone0",
             "/SkinnedMeshRoot/Bone0/Bone1",
             "/SkinnedMeshRoot/Bone0/Bone1/Bone2",
@@ -150,8 +150,8 @@ void TestExportSkinnedMesh(const char *filename, int cseg, int hseg)
             usdi::MeshData data;
             data.num_bones = 5;
             data.max_bone_weights = 4;
-            data.bones = bones;
-            data.root_bone = bones[0];
+            data.bones = (char**)bones;
+            data.root_bone = (char*)bones[0];
             data.bindposes = bindposes;
 
 

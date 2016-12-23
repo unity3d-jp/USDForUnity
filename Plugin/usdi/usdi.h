@@ -311,7 +311,7 @@ usdiAPI void             usdiGetExportSettings(usdi::Context *ctx, usdi::ExportS
 usdiAPI usdi::Schema*    usdiGetRoot(usdi::Context *ctx);
 usdiAPI int              usdiGetNumMasters(usdi::Context *ctx);
 usdiAPI usdi::Schema*    usdiGetMaster(usdi::Context *ctx, int i);
-usdiAPI usdi::Schema*    usdiFindSchema(usdi::Context *ctx, const char *prim_path);
+usdiAPI usdi::Schema*    usdiFindSchema(usdi::Context *ctx, const char *path_or_name);
 
 usdiAPI usdi::Schema*    usdiCreateOverride(usdi::Context *ctx, const char *prim_path);
 usdiAPI usdi::Xform*     usdiCreateXform(usdi::Context *ctx, usdi::Schema *parent, const char *name);
@@ -347,6 +347,7 @@ usdiAPI bool             usdiPrimSetPayload(usdi::Schema *schema, const char *as
 usdiAPI usdi::Schema*    usdiPrimGetParent(usdi::Schema *schema);
 usdiAPI int              usdiPrimGetNumChildren(usdi::Schema *schema);
 usdiAPI usdi::Schema*    usdiPrimGetChild(usdi::Schema *schema, int i);
+usdiAPI usdi::Schema*    usdiPrimFindChild(usdi::Schema *schema, const char *path_or_name, bool recursive = true);
 
 usdiAPI int              usdiPrimGetNumAttributes(usdi::Schema *schema);
 usdiAPI usdi::Attribute* usdiPrimGetAttribute(usdi::Schema *schema, int i);

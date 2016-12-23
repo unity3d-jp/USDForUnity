@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using System.IO;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -58,57 +59,99 @@ namespace UTJ
                 m_umesh = new Mesh();
                 m_umesh.MarkDynamic();
             }
+
+            var meshData = m_parent.meshData;
+            if (meshData.num_bones > 0)
+            {
+                var tmp = usdi.MeshData.default_value;
+                m_bindposes = new Matrix4x4[m_parent.meshData.num_bones];
+                tmp.bindposes = usdi.GetArrayPtr(m_bindposes);
+                usdi.usdiMeshReadSample(m_parent.nativeMeshPtr, ref tmp, usdi.defaultTime, true);
+            }
         }
 
         void usdiSetupBones(ref usdi.MeshData meshData)
         {
-            if(m_nth > 0)
+            var renderer = m_renderer as SkinnedMeshRenderer;
+            if (renderer == null) { return; }
+
+            if (m_nth > 0)
             {
                 m_bindposes = m_parent.submeshes[0].bindposes;
                 m_rootBone = m_parent.submeshes[0].rootBone;
                 m_bones = m_parent.submeshes[0].bones;
-                return;
-            }
-
-            var boneNames = usdi.usdiMeshGetBoneNames(m_parent.nativeMeshPtr, ref meshData);
-            if (m_parent.isInstance)
-            {
-                // todo:
-            }
-
-            {
-                var tmp = usdi.MeshData.default_value;
-                m_bindposes = new Matrix4x4[meshData.num_bones];
-                tmp.bindposes = usdi.GetArrayPtr(m_bindposes);
-                usdi.usdiMeshReadSample(m_parent.nativeMeshPtr, ref tmp, usdi.defaultTime, true);
-            }
-
-            m_bones = new Transform[boneNames.Length];
-            for (int i = 0; i < boneNames.Length; ++i)
-            {
-                var schema = m_stream.usdiFindSchema(boneNames[i]);
-                if (schema == null)
-                {
-                    Debug.LogError("bone not found: " + boneNames[i]);
-                    continue;
-                }
-                if (schema.gameObject == null)
-                {
-                    Debug.LogError("bone don't have GameObject: " + boneNames[i]);
-                    continue;
-                }
-                m_bones[i] = schema.gameObject.GetComponent<Transform>();
-            }
-
-            if (meshData.root_bone != IntPtr.Zero)
-            {
-                var rootBone = m_stream.usdiFindSchema(usdi.S(meshData.root_bone));
-                m_rootBone = rootBone.gameObject.GetComponent<Transform>();
             }
             else
             {
-                m_rootBone = m_bones[0]; // maybe incorrect
+                {
+                    var tmp = usdi.MeshData.default_value;
+                    m_bindposes = new Matrix4x4[m_parent.meshData.num_bones];
+                    tmp.bindposes = usdi.GetArrayPtr(m_bindposes);
+                    usdi.usdiMeshReadSample(m_parent.nativeMeshPtr, ref tmp, usdi.defaultTime, true);
+                }
+
+                var rootBoneName = usdi.S(meshData.root_bone);
+                var boneNames = usdi.SA(meshData.bones);
+
+                if (m_parent.isInstance)
+                {
+                    // remap bone names
+
+                    var root = m_parent.nativeSchemaPtr;
+                    for (;;) {
+                        root = usdi.usdiPrimGetParent(root);
+                        if(!usdi.usdiPrimGetMaster(root))
+                        {
+                            break;
+                        }
+                    }
+
+                    var r = usdi.usdiPrimFindChild(root, Path.GetFileName(rootBoneName), true);
+                    if (r)
+                    {
+                        rootBoneName = usdi.usdiPrimGetPathS(r);
+                    }
+
+                    for (int i = 0; i < boneNames.Length; ++i)
+                    {
+                        var c = usdi.usdiPrimFindChild(root, Path.GetFileName(boneNames[i]), true);
+                        if (c)
+                        {
+                            boneNames[i] = usdi.usdiPrimGetPathS(c);
+                        }
+                    }
+                }
+
+                m_bones = new Transform[boneNames.Length];
+                for (int i = 0; i < boneNames.Length; ++i)
+                {
+                    var schema = m_stream.usdiFindSchema(boneNames[i]);
+                    if (schema == null)
+                    {
+                        Debug.LogError("bone not found: " + boneNames[i]);
+                        continue;
+                    }
+                    if (schema.gameObject == null)
+                    {
+                        Debug.LogError("bone don't have GameObject: " + boneNames[i]);
+                        continue;
+                    }
+                    m_bones[i] = schema.gameObject.GetComponent<Transform>();
+                }
+
+                if (meshData.root_bone != IntPtr.Zero)
+                {
+                    var rootBone = m_stream.usdiFindSchema(rootBoneName);
+                    m_rootBone = rootBone.gameObject.GetComponent<Transform>();
+                }
+                else
+                {
+                    m_rootBone = m_bones[0]; // maybe incorrect
+                }
             }
+
+            renderer.bones = m_bones;
+            renderer.rootBone = m_rootBone;
         }
 
         Mesh usdiShareOrCreateMesh()
@@ -161,8 +204,8 @@ namespace UTJ
                 // setup SkinnedMeshRenderer
 
                 var renderer = usdi.GetOrAddComponent<SkinnedMeshRenderer>(go, ref assignDefaultMaterial);
-                usdiSetupBones(ref meshData);
                 m_renderer = renderer;
+                usdiSetupBones(ref meshData);
 
                 if (renderer.sharedMesh != null && m_parent.master == null)
                 {
@@ -364,12 +407,6 @@ namespace UTJ
 
             m_umesh.boneWeights = m_weights;
             m_umesh.bindposes = m_bindposes;
-            var renderer = m_renderer as SkinnedMeshRenderer;
-            if (renderer != null)
-            {
-                renderer.bones = m_bones;
-                renderer.rootBone = m_rootBone;
-            }
         }
 
         public void usdiUploadMeshData(bool directVBUpdate, bool topology, bool skinning)

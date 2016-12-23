@@ -45,6 +45,7 @@ public:
     Schema*         getParent() const;
     int             getNumChildren() const;
     Schema*         getChild(int i) const;
+    Schema*         findChild(const char *path, bool recursive) const;
 
     // reference & instance interface
 

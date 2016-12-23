@@ -6,6 +6,7 @@
 #include "usdiMesh.h"
 #include "usdiPoints.h"
 #include "usdiContext.h"
+#include "usdiUtils.h"
 
 void mDetachAllThreads();
 
@@ -217,12 +218,8 @@ Schema* Context::getMaster(int i) const
 
 Schema* Context::findSchema(const char *path) const
 {
-    // obviously this is very slow. I need to improve this if this method is called very often.
-    for (auto& n : m_schemas) {
-        if (strcmp(n->getPath(), path) == 0) {
-            return n.get();
-        }
-    }
+    if (auto *p = FindSchema(m_masters, path)) { return p; }
+    if (auto *p = FindSchema(m_schemas, path)) { return p; }
     return nullptr;
 }
 

@@ -6,9 +6,6 @@
 
 namespace usdi {
 
-// workaround to use comma in macros...
-#define Comma ,
-
 #define EachAttributeTypes(Body)\
     Body(bool, AttributeType::Bool, SdfValueTypeNames->Bool, TAttribute<bool>)\
     Body(byte, AttributeType::Byte, SdfValueTypeNames->UChar, TAttribute<byte>)\
@@ -427,7 +424,7 @@ public:
         for (size_t i = 0; i < m_sample.size(); ++i) {
             m_pointers[i] = cstr(m_sample[i]);
         }
-        m_pointers.push_back(nullptr);
+        m_pointers.push_back(nullptr); // add null terminator for convenience
     }
 
     bool readSample(AttributeData& dst, Time t, bool copy) override
@@ -466,6 +463,7 @@ private:
 
 
 template<class Dst, class Src> inline void TAssign(Dst& dst, const Src& src) { dst = Dst(src); }
+// force make convertible GfVec2[hfd] <-> GfVec3[hfd] <-> GfVec4[hfd]
 #define V2(Dst, Src) template<> inline void TAssign(Dst& dst, const Src& src) { dst = Dst(src[0], src[1]); }
 V2(GfVec2h, GfVec3h) V2(GfVec2h, GfVec3f) V2(GfVec2h, GfVec3d) V2(GfVec2h, GfVec4h) V2(GfVec2h, GfVec4f) V2(GfVec2h, GfVec4d)
 V2(GfVec2f, GfVec3h) V2(GfVec2f, GfVec3f) V2(GfVec2f, GfVec3d) V2(GfVec2f, GfVec4h) V2(GfVec2f, GfVec4f) V2(GfVec2f, GfVec4d)

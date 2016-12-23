@@ -150,11 +150,11 @@ usdiAPI usdi::Schema* usdiGetMaster(usdi::Context *ctx, int i)
     if (!ctx) return nullptr;
     return ctx->getMaster(i);
 }
-usdiAPI usdi::Schema* usdiFindSchema(usdi::Context *ctx, const char *prim_path)
+usdiAPI usdi::Schema* usdiFindSchema(usdi::Context *ctx, const char *path_or_name)
 {
     usdiTraceFunc();
     if (!ctx) return nullptr;
-    return ctx->findSchema(prim_path);
+    return ctx->findSchema(path_or_name);
 }
 
 usdiAPI usdi::Schema* usdiCreateOverride(usdi::Context *ctx, const char *prim_path)
@@ -338,6 +338,12 @@ usdiAPI usdi::Schema* usdiPrimGetChild(usdi::Schema *schema, int i)
     if (!schema) return nullptr;
     return schema->getChild(i);
 
+}
+usdiAPI usdi::Schema* usdiPrimFindChild(usdi::Schema * schema, const char *path_or_name, bool recursive)
+{
+    usdiTraceFunc();
+    if (!schema) return nullptr;
+    return schema->findChild(path_or_name, recursive);
 }
 usdiAPI int usdiPrimGetNumAttributes(usdi::Schema *schema)
 {
