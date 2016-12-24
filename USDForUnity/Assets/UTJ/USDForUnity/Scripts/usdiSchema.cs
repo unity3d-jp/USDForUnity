@@ -10,15 +10,15 @@ namespace UTJ
     public class usdiSchema
     {
         #region fields
-        [SerializeField] protected GameObject m_go;
-        [SerializeField] protected bool m_goAssigned = false;
-        [SerializeField] protected string m_primPath;
-        [SerializeField] protected string m_primTypeName;
+        protected GameObject m_go;
+        protected bool m_goAssigned = false;
+        protected string m_primPath;
+        protected string m_primTypeName;
         protected usdiSchema m_master;
         protected usdiStream m_stream;
         protected usdi.Schema m_schema;
         protected usdi.VariantSets m_variantSets;
-        [SerializeField] protected int[] m_variantSelections;
+        [SerializeField] protected int[] m_variantSelection;
         [SerializeField] usdi.ImportSettings m_isettings = usdi.ImportSettings.default_value;
         #endregion
 
@@ -49,7 +49,7 @@ namespace UTJ
         }
         public int[] variantSelections
         {
-            get { return m_variantSelections; }
+            get { return m_variantSelection; }
         }
         public string primPath
         {
@@ -73,13 +73,10 @@ namespace UTJ
         #region impl
         public virtual bool usdiSetVariantSelection(int iset, int ival)
         {
-            if (iset < 0 || iset >= m_variantSets.Count) { return false; }
-            if (m_variantSelections[iset] == ival) { return false; }
-
             if (usdi.usdiPrimSetVariantSelection(m_schema, iset, ival))
             {
-                m_variantSelections[iset] = ival;
-                m_stream.usdiSetVariantSelection(m_primPath, m_variantSelections);
+                m_variantSelection[iset] = ival;
+                m_stream.usdiSetVariantSelection(m_primPath, m_variantSelection);
                 return true;
             }
             return false;
@@ -88,10 +85,10 @@ namespace UTJ
         protected void usdiSyncVarinatSets()
         {
             m_variantSets = usdi.usdiPrimGetVariantSets(m_schema);
-            m_variantSelections = new int[m_variantSets.Count];
+            m_variantSelection = new int[m_variantSets.Count];
             for (int i = 0; i < m_variantSets.Count; ++i)
             {
-                m_variantSelections[i] = usdi.usdiPrimGetVariantSelection(m_schema, i);
+                m_variantSelection[i] = usdi.usdiPrimGetVariantSelection(m_schema, i);
             }
         }
 

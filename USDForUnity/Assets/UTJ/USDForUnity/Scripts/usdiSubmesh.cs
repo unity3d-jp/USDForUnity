@@ -13,13 +13,13 @@ namespace UTJ
     public class usdiSubmesh
     {
         #region fields
-        [SerializeField] usdiStream m_stream;
-        [SerializeField] usdiMesh m_parent;
-        [SerializeField] int m_nth;
-        [SerializeField] Mesh m_umesh;
+        usdiStream m_stream;
+        usdiMesh m_parent;
+        int m_nth;
+        Mesh m_umesh;
 
-        [SerializeField] Transform m_trans; // null in master nodes
-        [SerializeField] Renderer m_renderer; // null in master nodes
+        Transform m_trans; // null in master nodes
+        Renderer m_renderer; // null in master nodes
 
         usdi.Schema m_schema;
         bool m_setupRequierd = true;
@@ -49,29 +49,15 @@ namespace UTJ
 
 
         #region impl
-        public void usdiSetupMesh()
+        void usdiSetupBones(ref usdi.MeshData meshData)
         {
-            if (!m_setupRequierd) { return; }
-            m_setupRequierd = false;
-
-            if (m_umesh == null)
-            {
-                m_umesh = new Mesh();
-                m_umesh.MarkDynamic();
-            }
-
-            var meshData = m_parent.meshData;
-            if (meshData.num_bones > 0)
             {
                 var tmp = usdi.MeshData.default_value;
                 m_bindposes = new Matrix4x4[m_parent.meshData.num_bones];
                 tmp.bindposes = usdi.GetArrayPtr(m_bindposes);
                 usdi.usdiMeshReadSample(m_parent.nativeMeshPtr, ref tmp, usdi.defaultTime, true);
             }
-        }
 
-        void usdiSetupBones(ref usdi.MeshData meshData)
-        {
             var renderer = m_renderer as SkinnedMeshRenderer;
             if (renderer == null) { return; }
 
@@ -83,13 +69,6 @@ namespace UTJ
             }
             else
             {
-                {
-                    var tmp = usdi.MeshData.default_value;
-                    m_bindposes = new Matrix4x4[m_parent.meshData.num_bones];
-                    tmp.bindposes = usdi.GetArrayPtr(m_bindposes);
-                    usdi.usdiMeshReadSample(m_parent.nativeMeshPtr, ref tmp, usdi.defaultTime, true);
-                }
-
                 var rootBoneName = usdi.S(meshData.root_bone);
                 var boneNames = usdi.SA(meshData.bones);
 
@@ -165,6 +144,21 @@ namespace UTJ
             {
                 return new Mesh();
             }
+        }
+
+        public void usdiSetupMesh()
+        {
+            if (!m_setupRequierd) { return; }
+            m_setupRequierd = false;
+
+            if (m_umesh == null)
+            {
+                m_umesh = new Mesh();
+                m_umesh.MarkDynamic();
+            }
+
+            var meshData = m_parent.meshData;
+            usdiSetupBones(ref meshData);
         }
 
         public void usdiSetupComponents()

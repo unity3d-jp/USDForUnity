@@ -8,35 +8,8 @@ using UnityEditor;
 
 namespace UTJ
 {
-    [Serializable]
-    public class SerializableDictionary<K, V> : Dictionary<K, V>, ISerializationCallbackReceiver
-    {
-        [SerializeField] K[] m_keys;
-        [SerializeField] V[] m_values;
-
-        public void OnBeforeSerialize()
-        {
-            m_keys = Keys.ToArray();
-            m_values = Values.ToArray();
-        }
-        public void OnAfterDeserialize()
-        {
-            if (m_keys != null && m_values != null && m_keys.Length == m_values.Length)
-            {
-                int n = m_keys.Length;
-                for (int i = 0; i < n; ++i)
-                {
-                    this[m_keys[i]] = m_values[i];
-                }
-            }
-            m_keys = null;
-            m_values = null;
-        }
-    }
-
-
     [ExecuteInEditMode]
-    public class usdiStream : MonoBehaviour
+    public class usdiStream : MonoBehaviour, ISerializationCallbackReceiver
     {
         #region types
         // just for serialize int[][] (Unity doesn't serialize array of arrays)
@@ -63,7 +36,10 @@ namespace UTJ
         [SerializeField] bool m_directVBUpdate = true;
         [SerializeField] bool m_deferredUpdate = true;
 
-        [SerializeField] SerializableDictionary<string, VariantSelection> m_variantSelections = new SerializableDictionary<string, VariantSelection>();
+        [HideInInspector][SerializeField] string[] m_variantSelections_keys;
+        [HideInInspector][SerializeField] VariantSelection[] m_variantSelections_values;
+        Dictionary<string, VariantSelection> m_variantSelections = new Dictionary<string, VariantSelection>();
+
         List<usdiSchema> m_schemas = new List<usdiSchema>();
         Dictionary<string, usdiSchema> m_schemaLUT = new Dictionary<string, usdiSchema>();
 
@@ -126,6 +102,28 @@ namespace UTJ
 
 
         #region impl
+        public void OnBeforeSerialize()
+        {
+            m_variantSelections_keys = m_variantSelections.Keys.ToArray();
+            m_variantSelections_values = m_variantSelections.Values.ToArray();
+        }
+        public void OnAfterDeserialize()
+        {
+            if (m_variantSelections_keys != null &&
+                m_variantSelections_values != null &&
+                m_variantSelections_keys.Length == m_variantSelections_values.Length)
+            {
+                int n = m_variantSelections_keys.Length;
+                for (int i = 0; i < n; ++i)
+                {
+                    m_variantSelections[m_variantSelections_keys[i]] = m_variantSelections_values[i];
+                }
+            }
+            m_variantSelections_keys = null;
+            m_variantSelections_values = null;
+        }
+
+
         public void usdiSetVariantSelection(string primPath, int[] selection)
         {
             m_variantSelections[primPath] = new VariantSelection { selections = selection };
@@ -445,6 +443,16 @@ namespace UTJ
             m_ctx = default(usdi.Context);
 
             usdiLog("usdiStream: unloaded " + m_path.GetFullPath());
+        }
+
+        public bool usdiSave()
+        {
+            return usdi.usdiSave(m_ctx);
+        }
+
+        public bool usdiSaveAs(string path)
+        {
+            return usdi.usdiSaveAs(m_ctx, path);
         }
 
         public void usdiDetach()
