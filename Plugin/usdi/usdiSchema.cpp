@@ -207,6 +207,7 @@ Schema* Schema::getInstance(int i) const{ return m_instances[i]; }
 bool    Schema::isInstance() const      { return m_master != nullptr || m_prim.IsInstance(); }
 bool    Schema::isInstanceable() const  { return m_prim.IsInstanceable(); }
 bool    Schema::isMaster() const        { return m_prim.IsMaster(); }
+bool    Schema::isInMaster() const      { return m_prim.IsInMaster(); }
 void    Schema::setInstanceable(bool v) { m_prim.SetInstanceable(v); }
 
 bool Schema::addReference(const char *asset_path, const char *prim_path)

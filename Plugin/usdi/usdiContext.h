@@ -23,6 +23,8 @@ public:
 
     UsdStageRefPtr      getUsdStage() const;
     Schema*             getRoot() const;
+    int                 getNumSchemas() const;
+    Schema*             getSchema(int i) const;
     int                 getNumMasters() const;
     Schema*             getMaster(int i) const;
     Schema*             findSchema(const char *path) const;

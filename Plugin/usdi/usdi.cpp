@@ -138,6 +138,18 @@ usdiAPI usdi::Schema* usdiGetRoot(usdi::Context *ctx)
     if (!ctx) return nullptr;
     return ctx->getRoot();
 }
+usdiAPI int usdiGetNumSchemas(usdi::Context *ctx)
+{
+    usdiTraceFunc();
+    if (!ctx) return 0;
+    return ctx->getNumSchemas();
+}
+usdiAPI usdi::Schema* usdiGetSchema(usdi::Context *ctx, int i)
+{
+    usdiTraceFunc();
+    if (!ctx) return nullptr;
+    return ctx->getSchema(i);
+}
 usdiAPI int usdiGetNumMasters(usdi::Context *ctx)
 {
     usdiTraceFunc();
@@ -281,6 +293,12 @@ usdiAPI bool usdiPrimIsMaster(usdi::Schema *schema)
     usdiTraceFunc();
     if (!schema) { return false; }
     return schema->isMaster();
+}
+usdiAPI bool usdiPrimIsInMaster(usdi::Schema *schema)
+{
+    usdiTraceFunc();
+    if (!schema) { return false; }
+    return schema->isInMaster();
 }
 usdiAPI void usdiPrimSetInstanceable(usdi::Schema *schema, bool v)
 {

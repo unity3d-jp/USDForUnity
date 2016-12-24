@@ -55,6 +55,7 @@ public:
     bool            isInstance() const;
     bool            isInstanceable() const;
     bool            isMaster() const;
+    bool            isInMaster() const;
     void            setInstanceable(bool v);
     // asset_path can be null. in this case, local reference is created.
     bool            addReference(const char *asset_path, const char *prim_path);

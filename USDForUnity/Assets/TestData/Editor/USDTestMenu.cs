@@ -15,7 +15,7 @@ public class USDTestMenu
         if (path == null || path == "") { return; }
 
         var root = new GameObject("root").GetComponent<Transform>();
-        var opt = new usdi.ImportSettings();
+        var opt = usdi.ImportSettings.default_value;
 
         int N1 = 14;
         int N2 = 22;

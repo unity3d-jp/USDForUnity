@@ -13,6 +13,10 @@ namespace UTJ
             DrawDefaultInspector();
 
             var t = target as usdiStream;
+            if (GUILayout.Button("Precompute Normals / Tangents"))
+            {
+                usdiPrecomputeNormalsWindow.Open(t);
+            }
             if (GUILayout.Button("Rebuild Tree"))
             {
                 t.usdiReload();
@@ -22,10 +26,6 @@ namespace UTJ
             {
                 t.recordUndo = true;
                 t.usdiDetach();
-            }
-            if (GUILayout.Button("Make Prefab"))
-            {
-                t.usdiMakePrefab();
             }
         }
 

@@ -63,6 +63,14 @@ namespace UTJ
         {
             get { return m_master != null; }
         }
+        public bool isMaster
+        {
+            get { return usdi.usdiPrimIsMaster(m_schema); }
+        }
+        public bool isInMaster
+        {
+            get { return usdi.usdiPrimIsInMaster(m_schema); }
+        }
         public usdiSchema master
         {
             get { return m_master; }

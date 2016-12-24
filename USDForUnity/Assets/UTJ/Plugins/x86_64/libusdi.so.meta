@@ -1,6 +1,6 @@
 fileFormatVersion: 2
-guid: a7adf2329acd20243af684750ea87ad4
-timeCreated: 1473158875
+guid: 97666ccf4ed0a4f8ba77b2e91b8e8e71
+timeCreated: 1481812669
 licenseType: Pro
 PluginImporter:
   serializedVersion: 2
@@ -16,13 +16,13 @@ PluginImporter:
         enabled: 0
         settings:
           Exclude Editor: 0
-          Exclude Linux: 0
+          Exclude Linux: 1
           Exclude Linux64: 0
           Exclude LinuxUniversal: 0
-          Exclude OSXIntel: 0
-          Exclude OSXIntel64: 0
-          Exclude OSXUniversal: 0
-          Exclude Win: 1
+          Exclude OSXIntel: 1
+          Exclude OSXIntel64: 1
+          Exclude OSXUniversal: 1
+          Exclude Win: 0
           Exclude Win64: 0
     data:
       first:
@@ -31,7 +31,7 @@ PluginImporter:
         enabled: 0
         settings:
           CPU: x86_64
-          OS: Windows
+          OS: Linux
     data:
       first:
         '': data
@@ -49,7 +49,7 @@ PluginImporter:
           Exclude Linux64: 0
           Exclude LinuxUniversal: 0
           Exclude OSXIntel: 1
-          Exclude OSXIntel64: 0
+          Exclude OSXIntel64: 1
           Exclude OSXUniversal: 1
           Exclude Win: 1
           Exclude Win64: 0
@@ -61,7 +61,7 @@ PluginImporter:
         settings:
           CPU: x86_64
           DefaultValueInitialized: true
-          OS: Windows
+          OS: Linux
     data:
       first:
         Facebook: Win
@@ -80,7 +80,7 @@ PluginImporter:
       first:
         Standalone: Linux
       second:
-        enabled: 1
+        enabled: 0
         settings:
           CPU: None
     data:
@@ -96,33 +96,33 @@ PluginImporter:
       second:
         enabled: 1
         settings:
-          CPU: AnyCPU
+          CPU: x86_64
     data:
       first:
         Standalone: OSXIntel
       second:
-        enabled: 1
+        enabled: 0
         settings:
           CPU: None
     data:
       first:
         Standalone: OSXIntel64
       second:
-        enabled: 1
+        enabled: 0
         settings:
-          CPU: AnyCPU
+          CPU: None
     data:
       first:
         Standalone: OSXUniversal
       second:
-        enabled: 1
+        enabled: 0
         settings:
-          CPU: AnyCPU
+          CPU: None
     data:
       first:
         Standalone: Win
       second:
-        enabled: 0
+        enabled: 1
         settings:
           CPU: None
     data:

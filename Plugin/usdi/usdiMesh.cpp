@@ -767,6 +767,10 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
 
 bool Mesh::preComputeNormals(bool gen_tangents, bool overwrite)
 {
+    if (isMaster() || isInMaster() || isInstance()) {
+        return false;
+    }
+
     auto attr_indices = m_mesh.GetFaceVertexIndicesAttr();
     auto attr_counts = m_mesh.GetFaceVertexCountsAttr();
     auto attr_points = m_mesh.GetPointsAttr();
@@ -792,7 +796,8 @@ bool Mesh::preComputeNormals(bool gen_tangents, bool overwrite)
     }
 
     std::vector<double> times;
-    if (!attr_points.GetTimeSamples(&times)) {
+    attr_points.GetTimeSamples(&times);
+    if (times.empty()) {
         times.push_back(usdiDefaultTime());
     }
     int n = (int)times.size();

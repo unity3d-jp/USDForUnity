@@ -196,25 +196,12 @@ void Context::setExportSettings(const ExportSettings& v)
 
 
 
-UsdStageRefPtr Context::getUsdStage() const
-{
-    return m_stage;
-}
-
-Schema* Context::getRoot() const
-{
-    return m_root;
-}
-
-int Context::getNumMasters() const
-{
-    return (int)m_masters.size();
-}
-
-Schema* Context::getMaster(int i) const
-{
-    return m_masters[i];
-}
+UsdStageRefPtr  Context::getUsdStage() const    { return m_stage; }
+Schema*         Context::getRoot() const        { return m_root; }
+int             Context::getNumSchemas() const  { return (int)m_schemas.size(); }
+Schema*         Context::getSchema(int i) const { return m_schemas[i].get(); }
+int             Context::getNumMasters() const  { return (int)m_masters.size(); }
+Schema*         Context::getMaster(int i) const { return m_masters[i]; }
 
 Schema* Context::findSchema(const char *path) const
 {

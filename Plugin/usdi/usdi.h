@@ -309,6 +309,8 @@ usdiAPI void             usdiSetExportSettings(usdi::Context *ctx, const usdi::E
 usdiAPI void             usdiGetExportSettings(usdi::Context *ctx, usdi::ExportSettings *v);
 
 usdiAPI usdi::Schema*    usdiGetRoot(usdi::Context *ctx);
+usdiAPI int              usdiGetNumSchemas(usdi::Context *ctx);
+usdiAPI usdi::Schema*    usdiGetSchema(usdi::Context *ctx, int i);
 usdiAPI int              usdiGetNumMasters(usdi::Context *ctx);
 usdiAPI usdi::Schema*    usdiGetMaster(usdi::Context *ctx, int i);
 usdiAPI usdi::Schema*    usdiFindSchema(usdi::Context *ctx, const char *path_or_name);
@@ -335,6 +337,7 @@ usdiAPI usdi::Schema*    usdiPrimGetInstance(usdi::Schema *schema, int i);
 usdiAPI bool             usdiPrimIsInstance(usdi::Schema *schema);
 usdiAPI bool             usdiPrimIsInstanceable(usdi::Schema *schema);
 usdiAPI bool             usdiPrimIsMaster(usdi::Schema *schema);
+usdiAPI bool             usdiPrimIsInMaster(usdi::Schema *schema);
 usdiAPI void             usdiPrimSetInstanceable(usdi::Schema *schema, bool v);
 // create external reference if asset_path is valid, otherwise create internal reference
 usdiAPI bool             usdiPrimAddReference(usdi::Schema *schema, const char *asset_path, const char *prim_path);

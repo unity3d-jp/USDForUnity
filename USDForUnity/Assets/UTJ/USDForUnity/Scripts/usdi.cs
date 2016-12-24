@@ -121,7 +121,6 @@ namespace UTJ
             public bool payloadUnloaded { get { return (bits & 0x10) != 0; } }
         }
 
-        [Serializable]
         public class VariantSets
         {
             public string[] setNames;
@@ -428,6 +427,8 @@ namespace UTJ
         [DllImport ("usdi")] public static extern Points        usdiCreatePoints(Context ctx, Schema parent, string name);
 
         [DllImport ("usdi")] public static extern Schema        usdiGetRoot(Context ctx);
+        [DllImport ("usdi")] public static extern int           usdiGetNumSchemas(Context ctx);
+        [DllImport ("usdi")] public static extern Schema        usdiGetSchema(Context ctx, int i);
         [DllImport ("usdi")] public static extern int           usdiGetNumMasters(Context ctx);
         [DllImport ("usdi")] public static extern Schema        usdiGetMaster(Context ctx, int i);
         [DllImport ("usdi")] public static extern Schema        usdiFindSchema(Context ctx, string path_or_name);
@@ -442,6 +443,10 @@ namespace UTJ
         [DllImport ("usdi")] public static extern IntPtr        usdiPrimGetName(Schema schema);
         [DllImport ("usdi")] public static extern IntPtr        usdiPrimGetUsdTypeName(Schema schema);
 
+        
+        [DllImport ("usdi")] public static extern Bool          usdiPrimIsInstance(Schema schema);
+        [DllImport ("usdi")] public static extern Bool          usdiPrimIsMaster(Schema schema);
+        [DllImport ("usdi")] public static extern Bool          usdiPrimIsInMaster(Schema schema);
         [DllImport ("usdi")] public static extern Schema        usdiPrimGetMaster(Schema schema);
         [DllImport ("usdi")] public static extern int           usdiPrimGetNumInstances(Schema schema);
         [DllImport ("usdi")] public static extern Schema        usdiPrimGetInstance(Schema schema, int i);
@@ -470,6 +475,24 @@ namespace UTJ
         [DllImport ("usdi")] public static extern void          usdiPrimUpdateSample(Schema schema, double t);
         [DllImport ("usdi")] public static extern IntPtr        usdiPrimGetUserData(Schema schema);
         [DllImport ("usdi")] public static extern void          usdiPrimSetUserData(Schema schema, IntPtr data);
+
+        public static void usdiEachSchemas(Context ctx, Action<Schema> act)
+        {
+            var n = usdiGetNumSchemas(ctx);
+            for (int i = 0; i < n; ++i)
+            {
+                act.Invoke(usdiGetSchema(ctx, i));
+            }
+        }
+
+        public static void usdiEachMasters(Context ctx, Action<Schema> act)
+        {
+            var n = usdiGetNumMasters(ctx);
+            for (int i = 0; i < n; ++i)
+            {
+                act.Invoke(usdiGetMaster(ctx, i));
+            }
+        }
 
         public static VariantSets usdiPrimGetVariantSets(Schema schema)
         {
