@@ -29,6 +29,7 @@ struct MeshSample
     VtArray<int>     offsets;
     VtArray<int>     indices;
     VtArray<int>     indices_triangulated;
+    VtArray<int>     indices_flattened_triangulated;
 
     VtArray<float>      bone_weights;
     VtArray<int>        bone_indices;

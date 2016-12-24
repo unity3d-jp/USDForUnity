@@ -10,7 +10,7 @@ void InvertX(float4 *dst, size_t num);
 void Scale(float3 *dst, float s, size_t num);
 void ComputeBounds(const float3 *p, size_t num, float3& o_min, float3& o_max);
 void Normalize(float3 *dst, size_t num);
-void CalculateNormals(float3 *dst, const float3 *p, const int *indices, size_t num_points, size_t num_indices);
+void GenerateNormals(float3 *dst, const float3 *p, const int *indices, size_t num_points, size_t num_indices);
 bool CalculateTangents(
     float4 *dst, const float3 *p, const float3 *n, const float2 *t,
     const int *counts, const int *offsets, const int *indices, size_t num_points, size_t num_faces);
@@ -71,7 +71,7 @@ template<class VertexT>
 void Interleave(VertexT *dst, const typename VertexT::source_t& src, size_t num);
 
 template<class DataArray, class IndexArray>
-void CopyWithIndices(DataArray& dst, const DataArray& src, const IndexArray& indices, size_t beg, size_t end, bool expand);
+void CopyWithIndices(DataArray& dst, const DataArray& src, const IndexArray& indices, size_t beg, size_t end);
 
 
 
@@ -92,32 +92,26 @@ void ComputeBounds_ISPC(const float3 *p, size_t num, float3& o_min, float3& o_ma
 void Normalize_Generic(float3 *dst, size_t num);
 void Normalize_ISPC(float3 *dst, size_t num);
 
-void CalculateNormals_Generic(float3 *dst, const float3 *p, const int *indices, size_t num_points, size_t num_indices);
-void CalculateNormals_ISPC(float3 *dst, const float3 *p, const int *indices, size_t num_points, size_t num_indices);
+void GenerateNormals_Generic(float3 *dst, const float3 *p, const int *indices, size_t num_points, size_t num_indices);
+void GenerateNormals_ISPC(float3 *dst, const float3 *p, const int *indices, size_t num_points, size_t num_indices);
 
 template<class VertexT> void Interleave_Generic(VertexT *dst, const typename VertexT::source_t& src, size_t num);
+
 
 // ------------------------------------------------------------
 // impl
 // ------------------------------------------------------------
 
 template<class DataArray, class IndexArray>
-inline void CopyWithIndices(DataArray& dst, const DataArray& src, const IndexArray& indices, size_t beg, size_t end, bool expand)
+inline void CopyWithIndices(DataArray& dst, const DataArray& src, const IndexArray& indices, size_t beg, size_t end)
 {
     if (src.empty()) { return; }
 
     size_t size = end - beg;
     dst.resize(size);
 
-    if (expand) {
-        for (int i = 0; i < size; ++i) {
-            dst[i] = src[indices[beg + i]];
-        }
-    }
-    else {
-        for (int i = 0; i < size; ++i) {
-            dst[i] = src[beg + i];
-        }
+    for (int i = 0; i < size; ++i) {
+        dst[i] = src[indices[beg + i]];
     }
 }
 

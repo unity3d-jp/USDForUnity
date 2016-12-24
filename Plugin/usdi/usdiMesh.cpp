@@ -317,7 +317,7 @@ void Mesh::updateSample(Time t_)
     // calculate normals if needed
     if (update_normals) {
         sample.normals.resize(sample.points.size());
-        CalculateNormals((float3*)sample.normals.data(), (const float3*)sample.points.cdata(), sample.indices_triangulated.cdata(),
+        GenerateNormals((float3*)sample.normals.data(), (const float3*)sample.points.cdata(), sample.indices_triangulated.cdata(),
             sample.points.size(), sample.indices_triangulated.size());
     }
 
@@ -438,6 +438,19 @@ void Mesh::updateSample(Time t_)
             submeshes.resize(m_num_current_submeshes);
         }
 
+        bool flattened_points = sample.points.size() == m_num_indices;
+        bool flattened_normals = sample.normals.size() == m_num_indices;
+        bool flattened_tangents = sample.tangents.size() == m_num_indices;
+        bool flattened_uv = sample.uvs.size() == m_num_indices;
+        bool flattened_weights = sample.weights4.size() == m_num_indices || sample.weights8.size() == m_num_indices;
+        if ((flattened_points || flattened_normals || flattened_tangents || flattened_uv || flattened_weights) &&
+            (sample.indices_flattened_triangulated.size() != sample.indices_triangulated.size() || update_indices))
+        {
+            sample.indices_flattened_triangulated.resize(m_num_indices_triangulated);
+            TriangulateIndices(sample.indices_flattened_triangulated, sample.counts, nullptr, conf.swap_faces);
+        }
+
+        // split meshes and flatten vertices
         for (int nth = 0; nth < m_num_current_submeshes; ++nth) {
             auto& sms = submeshes[nth];
             int ibegin = usdiMaxVertices * nth;
@@ -447,21 +460,18 @@ void Mesh::updateSample(Time t_)
             sms.indices.resize(isize);
             for (int i = 0; i < isize; ++i) { sms.indices[i] = i; }
 
-            bool expanded_points = sample.points.size() != m_num_indices;
-            bool expanded_normals = sample.normals.size() != m_num_indices;
-            bool expanded_tangents = sample.tangents.size() != m_num_indices;
-            bool expand_uv = sample.uvs.size() != m_num_indices;
-            bool expand_weights = sample.weights4.size() != m_num_indices || sample.weights8.size() != m_num_indices;
-            CopyWithIndices(sms.points, sample.points, sample.indices_triangulated, ibegin, iend, expanded_points);
-            CopyWithIndices(sms.normals, sample.normals, sample.indices_triangulated, ibegin, iend, expanded_normals);
-            CopyWithIndices(sms.tangents, sample.tangents, sample.indices_triangulated, ibegin, iend, expanded_tangents);
-            CopyWithIndices(sms.uvs, sample.uvs, sample.indices_triangulated, ibegin, iend, expand_uv);
+#define Sel(C) C ? sample.indices_flattened_triangulated : sample.indices_triangulated
+            CopyWithIndices(sms.points, sample.points, Sel(flattened_points), ibegin, iend);
+            CopyWithIndices(sms.normals, sample.normals, Sel(flattened_normals), ibegin, iend);
+            CopyWithIndices(sms.tangents, sample.tangents, Sel(flattened_tangents), ibegin, iend);
+            CopyWithIndices(sms.uvs, sample.uvs, Sel(flattened_uv), ibegin, iend);
             if (!sample.weights4.empty()) {
-                CopyWithIndices(sms.weights4, sample.weights4, sample.indices_triangulated, ibegin, iend, expand_weights);
+                CopyWithIndices(sms.weights4, sample.weights4, Sel(flattened_weights), ibegin, iend);
             }
             if (!sample.weights8.empty()) {
-                CopyWithIndices(sms.weights8, sample.weights8, sample.indices_triangulated, ibegin, iend, expand_weights);
+                CopyWithIndices(sms.weights8, sample.weights8, Sel(flattened_weights), ibegin, iend);
             }
+#undef Sel
 
             ComputeBounds((float3*)sms.points.cdata(), sms.points.size(), sms.bounds_min, sms.bounds_max);
             sms.center = (sms.bounds_min + sms.bounds_max) * 0.5f;
@@ -821,7 +831,7 @@ bool Mesh::preComputeNormals(bool gen_tangents, bool overwrite)
         // compute normals
         attr_points.Get(&points, t);
         normals.resize(points.size());
-        CalculateNormals((float3*)normals.data(), (const float3*)points.cdata(), indices_triangulated.cdata(), points.size(), indices_triangulated.size());
+        GenerateNormals((float3*)normals.data(), (const float3*)points.cdata(), indices_triangulated.cdata(), points.size(), indices_triangulated.size());
 
         // compute tangents
         if (gen_tangents) {

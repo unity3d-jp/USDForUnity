@@ -48,7 +48,7 @@ void Normalize_Generic(float3 *dst, size_t num)
     }
 }
 
-void CalculateNormals_Generic(float3 *dst, const float3 *p, const int *indices, size_t num_points, size_t num_indices)
+void GenerateNormals_Generic(float3 *dst, const float3 *p, const int *indices, size_t num_points, size_t num_indices)
 {
     memset(dst, 0, sizeof(float3)*num_points);
 
@@ -207,7 +207,7 @@ void Normalize_ISPC(float3 *dst, size_t num)
     ispc::Normalize((ispc::float3*)dst, (int)num);
 }
 
-void CalculateNormals_ISPC(float3 *dst, const float3 *p, const int *indices, size_t num_points, size_t num_indices)
+void GenerateNormals_ISPC(float3 *dst, const float3 *p, const int *indices, size_t num_points, size_t num_indices)
 {
     memset(dst, 0, sizeof(float3)*num_points);
 
@@ -261,12 +261,12 @@ void Normalize(float3 *dst, size_t num)
     Forward(Normalize, dst, num);
 }
 
-void CalculateNormals(float3 *dst, const float3 *p, const int *indices, size_t num_points, size_t num_indices)
+void GenerateNormals(float3 *dst, const float3 *p, const int *indices, size_t num_points, size_t num_indices)
 {
     if(num_indices % 3 != 0) {
         //usdiLogWarning("CalculateNormals(): num_indices % 3 != 0\n");
     }
-    Forward(CalculateNormals, dst, p, indices, num_points, num_indices);
+    Forward(GenerateNormals, dst, p, indices, num_points, num_indices);
 }
 
 template<class VertexT>

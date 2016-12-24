@@ -188,7 +188,7 @@ static void Test_Normalize()
 }
 
 
-static void Test_CalculateNormals()
+static void Test_GenerateNormals()
 {
     auto points = GenerateTestData(NumTestData - (NumTestData % 3), 0.1f, 1.0f);
     std::vector<int> indices;
@@ -204,12 +204,12 @@ static void Test_CalculateNormals()
 
     for (int i = 0; i < NumTry; ++i) {
         auto start = now();
-        CalculateNormals_Generic(normals1.data(), points.data(), indices.data(), points.size(), indices.size());
+        GenerateNormals_Generic(normals1.data(), points.data(), indices.data(), points.size(), indices.size());
         elapsed1 += now() - start;
 
 #ifdef muEnableISPC
         start = now();
-        CalculateNormals_ISPC(normals2.data(), points.data(), indices.data(), points.size(), indices.size());
+        GenerateNormals_ISPC(normals2.data(), points.data(), indices.data(), points.size(), indices.size());
         elapsed2 += now() - start;
 #endif // muEnableISPC
 
@@ -217,7 +217,7 @@ static void Test_CalculateNormals()
         if (!result) { break; }
     }
 
-    printf("Test_CalculateNormals: %s\n", result ? "succeeded" : "failed");
+    printf("Test_GenerateNormals: %s\n", result ? "succeeded" : "failed");
     printf("    CalculateNormals_Generic(): avg. %f ms\n", float(elapsed1 / NumTry) / 1000000.0f);
     printf("    CalculateNormals_ISPC(): avg. %f ms\n", float(elapsed2 / NumTry) / 1000000.0f);
     printf("\n");
@@ -229,5 +229,5 @@ void MeshUtilsTest()
     Test_Scale();
     Test_ComputeBounds();
     Test_Normalize();
-    Test_CalculateNormals();
+    Test_GenerateNormals();
 }
