@@ -765,9 +765,9 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
 
 
 
-bool Mesh::preComputeNormals(bool gen_tangents, bool overwrite)
+bool Mesh::precomputeNormals(bool gen_tangents, bool overwrite)
 {
-    if (isMaster() || isInMaster() || isInstance()) {
+    if (!isEditable()) {
         return false;
     }
 
@@ -778,12 +778,18 @@ bool Mesh::preComputeNormals(bool gen_tangents, bool overwrite)
     auto attr_uv = m_attr_uv ? m_attr_uv->getUSDAttribute() : UsdAttribute();
     auto attr_tangents = m_attr_tangents ? m_attr_tangents->getUSDAttribute() : UsdAttribute();
 
-    if (!overwrite && attr_normals.HasValue()) {
-        return false;
-    }
     if (!attr_indices.HasValue() || !attr_counts.HasValue() || !attr_points.HasValue()) {
         return false;
     }
+    if (!overwrite) {
+        if (attr_normals.HasValue() &&
+            (!gen_tangents || (attr_tangents && attr_tangents.HasValue())))
+        {
+            return false;
+        }
+    }
+
+    bool gen_normals = overwrite || !attr_normals.HasValue();
 
     if (!attr_uv) {
         // computing tangents require uv but this Mesh doesn't have it.
@@ -833,12 +839,17 @@ bool Mesh::preComputeNormals(bool gen_tangents, bool overwrite)
         indices_triangulated.resize(num_indices_triangulated);
         TriangulateIndices(indices_triangulated, counts, &indices, false);
 
-        // compute normals
+        // generate normals
         attr_points.Get(&points, t);
-        normals.resize(points.size());
-        GenerateNormals((float3*)normals.data(), (const float3*)points.cdata(), indices_triangulated.cdata(), points.size(), indices_triangulated.size());
+        if (gen_normals) {
+            normals.resize(points.size());
+            GenerateNormals((float3*)normals.data(), (const float3*)points.cdata(), indices_triangulated.cdata(), points.size(), indices_triangulated.size());
+        }
+        else {
+            attr_normals.Get(&normals, t);
+        }
 
-        // compute tangents
+        // generate tangents
         if (gen_tangents) {
             attr_uv.Get(&uv, t);
             tangents.resize(points.size());
@@ -854,7 +865,9 @@ bool Mesh::preComputeNormals(bool gen_tangents, bool overwrite)
         auto& normals = _normals[i];
         auto& tangents = _tangents[i];
 
-        attr_normals.Set(normals, t);
+        if (gen_normals) {
+            attr_normals.Set(normals, t);
+        }
         if (gen_tangents) {
             attr_tangents.Set(tangents, t);
         }

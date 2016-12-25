@@ -52,6 +52,7 @@ public:
     Schema*         getMaster() const;
     int             getNumInstances() const;
     Schema*         getInstance(int i) const;
+    bool            isEditable() const;
     bool            isInstance() const;
     bool            isInstanceable() const;
     bool            isMaster() const;
@@ -69,6 +70,7 @@ public:
 
     // variant interface
 
+    bool            hasVariants() const;
     int             getNumVariantSets() const;
     const char*     getVariantSetName(int iset) const;
     int             getNumVariants(int iset) const;
@@ -82,6 +84,7 @@ public:
     int             findVariant(int iset, const char *name) const;
     bool            beginEditVariant(const char *set, const char *variant);
     void            endEditVariant();
+    void            editVariants(const std::function<void ()>& body); // edit current variant
 
 
     UpdateFlags     getUpdateFlags() const;

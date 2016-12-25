@@ -47,6 +47,9 @@ public:
     void                notifyForceUpdate();
     void                updateAllSamples(Time t);
 
+    using precomputeNormalsCallback = std::function<void(Mesh*, bool)>;
+    void                precomputeNormalsAll(bool gen_tangents, bool overwrite, const precomputeNormalsCallback& cb);
+
 private:
     void    addSchema(Schema *schema);
     void    applyImportConfig();
@@ -55,6 +58,7 @@ private:
     using SchemaPtr = std::unique_ptr<Schema>;
     using Schemas = std::vector<SchemaPtr>;
     using Masters = std::vector<Schema*>;
+    using EditTargets = std::vector<UsdEditTarget>;
 
     UsdStageRefPtr  m_stage;
     Schemas         m_schemas;
@@ -67,7 +71,7 @@ private:
     int             m_id_seed = 0;
     double          m_start_time = 0.0;
     double          m_end_time = 0.0;
-    UsdEditTarget   m_edit_target;
+    EditTargets     m_edit_targets;
 };
 
 } // namespace usdi

@@ -204,6 +204,10 @@ Schema* Schema::getMaster() const       { return m_master; }
 int     Schema::getNumInstances() const { return (int)m_instances.size(); }
 Schema* Schema::getInstance(int i) const{ return m_instances[i]; }
 
+bool Schema::isEditable() const
+{
+    return !isInstance() && !isMaster() && !isInMaster();
+}
 bool    Schema::isInstance() const      { return m_master != nullptr || m_prim.IsInstance(); }
 bool    Schema::isInstanceable() const  { return m_prim.IsInstanceable(); }
 bool    Schema::isMaster() const        { return m_prim.IsMaster(); }
@@ -245,6 +249,11 @@ bool Schema::setPayload(const char *asset_path, const char *prim_path)
 
 
 // variant interface
+
+bool Schema::hasVariants() const
+{
+    return m_prim.HasVariantSets();
+}
 
 int Schema::getNumVariantSets() const
 {
@@ -353,17 +362,55 @@ int Schema::findVariant(int iset, const char *name) const
 
 bool Schema::beginEditVariant(const char *set, const char *variant)
 {
-    auto vset = m_prim.GetVariantSets().FindOrCreate(set);
-    vset.FindOrCreateVariant(variant);
-    vset.SetVariantSelection(variant);
-    syncVariantSets();
-    m_ctx->beginEdit(vset.GetVariantEditTarget());
-    return true;
+    auto vset = m_prim.GetVariantSets().GetVariantSet(set);
+    if (!variant) {
+        vset.ClearVariantSelection();
+        return false;
+    }
+    else {
+        vset.FindOrCreateVariant(variant);
+        vset.SetVariantSelection(variant);
+        syncVariantSets();
+        m_ctx->beginEdit(vset.GetVariantEditTarget());
+        return true;
+    }
 }
 
 void Schema::endEditVariant()
 {
     m_ctx->endEdit();
+}
+
+void Schema::editVariants(const std::function<void()>& body)
+{
+    if (!isEditable()) {
+        body();
+        return;
+    }
+
+    std::vector<UsdEditTarget> edit_targets;
+    std::vector<std::string> vset_names;
+
+    // get current edit targets
+    auto vsets = m_prim.GetVariantSets();
+    vsets.GetNames(&vset_names);
+    for (auto& n : vset_names) {
+        auto s = vsets.GetVariantSelection(n);
+        if (!s.empty()) {
+            auto set = vsets.GetVariantSet(n);
+            edit_targets.push_back(set.GetVariantEditTarget());
+        }
+    }
+
+    // do edit
+    for (auto& e : edit_targets) {
+        m_ctx->beginEdit(e);
+    }
+    body();
+    for (auto& e : edit_targets) {
+        e; // unused
+        m_ctx->endEdit();
+    }
 }
 
 
@@ -475,7 +522,9 @@ std::string Schema::makePath(const char *name_)
     if (m_parent) {
         path += m_parent->getPath();
     }
-    path += "/";
+    if (path.empty() || path.back() != '/') {
+        path += "/";
+    }
     path += name;
 
     usdiLogTrace("Schema::makePath(): %s\n", path.c_str());

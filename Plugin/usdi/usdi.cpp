@@ -228,6 +228,17 @@ usdiAPI void usdiRebuildSchemaTree(usdi::Context *ctx)
     if (!ctx) return;
     ctx->rebuildSchemaTree();
 }
+usdiAPI void usdiPreComputeNormalsAll(usdi::Context *ctx, bool gen_tangents, bool overwrite, usdiPreComputeNormalsCallback cb)
+{
+    usdiTraceFunc();
+    if (!ctx) return;
+
+    usdi::Context::precomputeNormalsCallback callback;
+    if (cb) {
+        callback = [cb](usdi::Mesh *m, bool done) { cb(m, done); };
+    }
+    ctx->precomputeNormalsAll(gen_tangents, overwrite, callback);
+}
 
 
 // Schema interface
@@ -276,6 +287,12 @@ usdiAPI usdi::Schema* usdiPrimGetInstance(usdi::Schema *schema, int i)
     return schema->getInstance(i);
 }
 
+usdiAPI bool usdiPrimIsEditable(usdi::Schema * schema)
+{
+    usdiTraceFunc();
+    if (!schema) { return false; }
+    return schema->isEditable();
+}
 usdiAPI bool usdiPrimIsInstance(usdi::Schema *schema)
 {
     usdiTraceFunc();
@@ -580,7 +597,7 @@ usdiAPI bool usdiMeshPreComputeNormals(usdi::Mesh *mesh, bool gen_tangents, bool
 {
     usdiTraceFunc();
     if (!mesh) return false;
-    return mesh->preComputeNormals(gen_tangents, overwrite);
+    return mesh->precomputeNormals(gen_tangents, overwrite);
 }
 
 

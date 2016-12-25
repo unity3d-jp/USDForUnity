@@ -324,6 +324,8 @@ usdiAPI usdi::Points*    usdiCreatePoints(usdi::Context *ctx, usdi::Schema *pare
 usdiAPI void             usdiNotifyForceUpdate(usdi::Context *ctx);
 usdiAPI void             usdiUpdateAllSamples(usdi::Context *ctx, usdi::Time t);
 usdiAPI void             usdiRebuildSchemaTree(usdi::Context *ctx);
+using usdiPreComputeNormalsCallback = void (usdiSTDCall*)(usdi::Mesh *mesh, bool done);
+usdiAPI void             usdiPreComputeNormalsAll(usdi::Context *ctx, bool gen_tangents, bool overwrite = false, usdiPreComputeNormalsCallback cb = nullptr);
 
 // Prim interface
 usdiAPI int              usdiPrimGetID(usdi::Schema *schema);
@@ -334,6 +336,7 @@ usdiAPI const char*      usdiPrimGetUsdTypeName(usdi::Schema *schema);
 usdiAPI usdi::Schema*    usdiPrimGetMaster(usdi::Schema *schema);
 usdiAPI int              usdiPrimGetNumInstances(usdi::Schema *schema);
 usdiAPI usdi::Schema*    usdiPrimGetInstance(usdi::Schema *schema, int i);
+usdiAPI bool             usdiPrimIsEditable(usdi::Schema *schema);
 usdiAPI bool             usdiPrimIsInstance(usdi::Schema *schema);
 usdiAPI bool             usdiPrimIsInstanceable(usdi::Schema *schema);
 usdiAPI bool             usdiPrimIsMaster(usdi::Schema *schema);

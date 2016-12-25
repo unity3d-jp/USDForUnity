@@ -59,6 +59,10 @@ namespace UTJ
         {
             get { return m_primTypeName; }
         }
+        public bool isEditable
+        {
+            get { return usdi.usdiPrimIsEditable(m_schema); }
+        }
         public bool isInstance
         {
             get { return m_master != null; }

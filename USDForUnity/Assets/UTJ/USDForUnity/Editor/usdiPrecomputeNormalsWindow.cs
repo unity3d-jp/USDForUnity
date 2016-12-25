@@ -35,31 +35,50 @@ namespace UTJ
             usdiStream stream = null;
 
             int ndone = 0;
-            Action<usdi.Mesh> body = (usdi.Mesh mesh) => {
-                if (mesh && !usdi.usdiPrimIsMaster(mesh) && !usdi.usdiPrimIsInMaster(mesh) && !usdi.usdiPrimIsInstance(mesh))
-                {
-                    usdi.usdiMeshPreComputeNormals(mesh, m_genTangents, m_overwrite);
-                    Debug.Log("Precompute done: " + usdi.usdiPrimGetPathS(mesh));
-                    ++ndone;
-                }
-            };
 
             if (m_stream != null)
             {
                 stream = m_stream;
-                usdi.usdiEachSchemas(m_stream.usdiContext, (s) =>
-                {
-                    // todo: show progress
-                    body.Invoke(usdi.usdiAsMesh(s));
+                var meshes = new List<usdi.Mesh>();
+                var results = new List<bool>();
+                usdi.usdiPreComputeNormalsAll(m_stream.usdiContext, m_genTangents, m_overwrite, (usdi.Mesh mesh, bool done)=> {
+                    meshes.Add(mesh);
+                    results.Add(done);
+                    if(done)
+                    {
+                        ++ndone;
+                    }
                 });
+                for (int i = 0; i < meshes.Count; ++i)
+                {
+                    var mesh = meshes[i];
+                    if(results[i])
+                    {
+                        Debug.Log("Precompute done: " + usdi.usdiPrimGetPathS(mesh));
+                    }
+                    else
+                    {
+                        Debug.Log("Precompute skipped: " + usdi.usdiPrimGetPathS(mesh));
+                    }
+                }
             }
             else if(m_mesh != null)
             {
                 stream = m_mesh.stream;
-                body.Invoke(m_mesh.nativeMeshPtr);
+                var mesh = m_mesh.nativeMeshPtr;
+                var ret = usdi.usdiMeshPreComputeNormals(mesh, m_genTangents, m_overwrite);
+                if (ret)
+                {
+                    Debug.Log("Precompute done: " + usdi.usdiPrimGetPathS(mesh));
+                    ++ndone;
+                }
+                else
+                {
+                    Debug.Log("Precompute skipped: " + usdi.usdiPrimGetPathS(mesh));
+                }
             }
 
-            if(stream != null && ndone > 0)
+            if (stream != null && ndone > 0)
             {
                 stream.usdiSave();
                 stream.usdiReload();

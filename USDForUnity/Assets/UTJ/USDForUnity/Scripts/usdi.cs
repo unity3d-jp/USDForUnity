@@ -436,6 +436,8 @@ namespace UTJ
         [DllImport ("usdi")] public static extern void          usdiNotifyForceUpdate(Context ctx);
         [DllImport ("usdi")] public static extern void          usdiUpdateAllSamples(Context ctx, double t);
         [DllImport ("usdi")] public static extern void          usdiRebuildSchemaTree(Context ctx);
+        public delegate void usdiPreComputeNormalsCallback(Mesh mesh, bool done);
+        [DllImport ("usdi")] public static extern void          usdiPreComputeNormalsAll(Context ctx, Bool gen_tangents, Bool overwrite, usdiPreComputeNormalsCallback cb = null);
 
         // Prim interface
         [DllImport ("usdi")] public static extern int           usdiPrimGetID(Schema schema);
@@ -444,6 +446,7 @@ namespace UTJ
         [DllImport ("usdi")] public static extern IntPtr        usdiPrimGetUsdTypeName(Schema schema);
 
         
+        [DllImport ("usdi")] public static extern Bool          usdiPrimIsEditable(Schema schema);
         [DllImport ("usdi")] public static extern Bool          usdiPrimIsInstance(Schema schema);
         [DllImport ("usdi")] public static extern Bool          usdiPrimIsMaster(Schema schema);
         [DllImport ("usdi")] public static extern Bool          usdiPrimIsInMaster(Schema schema);
@@ -545,8 +548,8 @@ namespace UTJ
         [DllImport ("usdi")] public static extern IntPtr        usdiAttrGetName(Attribute attr);
         [DllImport ("usdi")] public static extern IntPtr        usdiAttrGetTypeName(Attribute attr);
         [DllImport ("usdi")] public static extern void          usdiAttrGetSummary(Attribute attr, ref AttributeSummary dst);
-        [DllImport ("usdi")] public static extern bool          usdiAttrReadSample(Attribute attr, ref AttributeData dst, double t, Bool copy);
-        [DllImport ("usdi")] public static extern bool          usdiAttrWriteSample(Attribute attr, ref AttributeData src, double t);
+        [DllImport ("usdi")] public static extern Bool          usdiAttrReadSample(Attribute attr, ref AttributeData dst, double t, Bool copy);
+        [DllImport ("usdi")] public static extern Bool usdiAttrWriteSample(Attribute attr, ref AttributeData src, double t);
 
         [DllImport ("usdi")] public static extern IntPtr        usdiIndexStringArray(IntPtr v, int i);
         [DllImport ("usdi")] public static extern void          usdiMeshAssignRootBone(Mesh mesh, ref MeshData dst, string v);
@@ -621,7 +624,7 @@ namespace UTJ
         public delegate void usdiMonoDelegate(IntPtr arg);
         [DllImport("usdi")] public static extern void usdiTaskDestroy(IntPtr task);
         [DllImport("usdi")] public static extern void usdiTaskRun(IntPtr task);
-        [DllImport("usdi")] public static extern bool usdiTaskIsRunning(IntPtr task);
+        [DllImport("usdi")] public static extern Bool usdiTaskIsRunning(IntPtr task);
         [DllImport("usdi")] public static extern void usdiTaskWait(IntPtr task);
 
         [DllImport("usdi")] public static extern IntPtr usdiTaskCreateMonoDelegate(usdiMonoDelegate func, IntPtr arg, string dbg_name);

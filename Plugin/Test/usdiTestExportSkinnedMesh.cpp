@@ -259,6 +259,9 @@ void TestExportSkinnedMesh(const char *filename, int cseg, int hseg)
         usdiPrimAddReference(ref, nullptr, "/SkinnedMeshRoot");
     }
 
+    //usdiRebuildSchemaTree(ctx);
+    //usdiPreComputeNormalsAll(ctx, true);
+
     usdiSave(ctx);
     usdiDestroyContext(ctx);
 }

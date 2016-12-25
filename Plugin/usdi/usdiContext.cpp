@@ -98,6 +98,7 @@ bool Context::createStage(const char *identifier)
     m_stage = UsdStage::CreateNew(identifier);
     if (m_stage) {
         usdiLogInfo("Context::createStage(): succeeded to create %s\n", identifier);
+        rebuildSchemaTree();
     }
     else {
         usdiLogInfo("Context::createStage(): failed to create %s\n", identifier);
@@ -315,12 +316,16 @@ void Context::flatten()
 
 void Context::beginEdit(const UsdEditTarget& t)
 {
-    m_edit_target = m_stage->GetEditTarget();
+    m_edit_targets.push_back(m_stage->GetEditTarget());
     m_stage->SetEditTarget(t);
 }
 void Context::endEdit()
 {
-    m_stage->SetEditTarget(m_edit_target);
+    if (!m_edit_targets.empty()) {
+        auto t = m_edit_targets.back();
+        m_stage->SetEditTarget(t);
+        m_edit_targets.pop_back();
+    }
 }
 
 void Context::rebuildSchemaTree()
@@ -371,6 +376,26 @@ void Context::updateAllSamples(Time t)
         }
     });
 #endif
+}
+
+static void precomputeNormalsAllImpl(Schema *schema, bool gen_tangents, bool overwrite, const Context::precomputeNormalsCallback& cb)
+{
+    if (!schema) { return; }
+
+    schema->eachChild([&](Schema *s) {
+        s->editVariants([&]() {
+            auto *mesh = dynamic_cast<Mesh*>(s);
+            if (mesh && mesh->isEditable()) {
+                bool done = mesh->precomputeNormals(gen_tangents, overwrite);
+                if (cb) { cb(mesh, done); }
+            }
+            precomputeNormalsAllImpl(s, gen_tangents, overwrite, cb);
+        });
+    });
+}
+void Context::precomputeNormalsAll(bool gen_tangents, bool overwrite, const precomputeNormalsCallback& cb)
+{
+    precomputeNormalsAllImpl(getRoot(), gen_tangents, overwrite, cb);
 }
 
 } // namespace usdi

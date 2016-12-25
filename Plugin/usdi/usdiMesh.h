@@ -65,7 +65,7 @@ public:
     bool                writeSample(const MeshData& src, Time t);
 
     // true if normals are generated (don't care about tangents)
-    bool                preComputeNormals(bool gen_tangents, bool overwrite = false);
+    bool                precomputeNormals(bool gen_tangents, bool overwrite = false);
 
     // ugly workaround for C# (C# strings are need to be copied on C++ side)
     void                assignRootBone(MeshData& dst, const char *v);
