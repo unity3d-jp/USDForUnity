@@ -782,20 +782,23 @@ bool Mesh::precomputeNormals(bool gen_tangents, bool overwrite)
     if (!attr_indices.HasValue() || !attr_counts.HasValue() || !attr_points.HasValue()) {
         return false;
     }
-    if (!overwrite) {
-        if (attr_normals.HasValue() &&
-            (!gen_tangents || (attr_tangents && attr_tangents.HasValue())))
-        {
-            return false;
+
+    bool gen_normals = overwrite || !attr_normals.HasValue();
+    if (gen_tangents) {
+        if (!attr_uv) {
+            // generating tangents require uv
+            gen_tangents = false;
+        }
+        else if (!overwrite && attr_tangents && attr_tangents.HasValue()) {
+            // no need to update
+            gen_tangents = false;
         }
     }
 
-    bool gen_normals = overwrite || !attr_normals.HasValue();
-
-    if (!attr_uv) {
-        // computing tangents require uv but this Mesh doesn't have it.
-        gen_tangents = false;
+    if (!gen_normals && !gen_tangents) {
+        return false;
     }
+
     if (gen_tangents && !attr_tangents) {
         // create tangents attributes if needed
         CreateAttributeIfNeeded(m_attr_tangents, usdiTangentAttrName, AttributeType::Float4Array);

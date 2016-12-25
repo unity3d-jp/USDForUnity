@@ -164,8 +164,8 @@ namespace UTJ
                         scale = 1.0f,
                         loadAllPayloads = true,
                         triangulate = true,
-                        swapHandedness = true,
-                        swapFaces = true,
+                        swapHandedness = false,
+                        swapFaces = false,
                         splitMesh = true,
                         doubleBuffering = true,
                     };

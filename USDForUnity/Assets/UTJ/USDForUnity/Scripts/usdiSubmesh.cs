@@ -13,8 +13,6 @@ namespace UTJ
     public class usdiSubmesh
     {
         #region fields
-        usdiStream m_stream;
-        usdiMesh m_parent;
         int m_nth;
         Mesh m_umesh;
 
@@ -49,13 +47,13 @@ namespace UTJ
 
 
         #region impl
-        void usdiSetupBones(ref usdi.MeshData meshData)
+        void usdiSetupBones(usdiMesh parent, ref usdi.MeshData meshData)
         {
             {
                 var tmp = usdi.MeshData.default_value;
-                m_bindposes = new Matrix4x4[m_parent.meshData.num_bones];
+                m_bindposes = new Matrix4x4[parent.meshData.num_bones];
                 tmp.bindposes = usdi.GetArrayPtr(m_bindposes);
-                usdi.usdiMeshReadSample(m_parent.nativeMeshPtr, ref tmp, usdi.defaultTime, true);
+                usdi.usdiMeshReadSample(parent.nativeMeshPtr, ref tmp, usdi.defaultTime, true);
             }
 
             var renderer = m_renderer as SkinnedMeshRenderer;
@@ -63,20 +61,20 @@ namespace UTJ
 
             if (m_nth > 0)
             {
-                m_bindposes = m_parent.submeshes[0].bindposes;
-                m_rootBone = m_parent.submeshes[0].rootBone;
-                m_bones = m_parent.submeshes[0].bones;
+                m_bindposes = parent.submeshes[0].bindposes;
+                m_rootBone = parent.submeshes[0].rootBone;
+                m_bones = parent.submeshes[0].bones;
             }
             else
             {
                 var rootBoneName = usdi.S(meshData.root_bone);
                 var boneNames = usdi.SA(meshData.bones);
 
-                if (m_parent.isInstance)
+                if (parent.isInstance)
                 {
                     // remap bone names
 
-                    var root = m_parent.nativeSchemaPtr;
+                    var root = parent.nativeSchemaPtr;
                     for (;;) {
                         root = usdi.usdiPrimGetParent(root);
                         if(!usdi.usdiPrimGetMaster(root))
@@ -104,7 +102,7 @@ namespace UTJ
                 m_bones = new Transform[boneNames.Length];
                 for (int i = 0; i < boneNames.Length; ++i)
                 {
-                    var schema = m_stream.usdiFindSchema(boneNames[i]);
+                    var schema = parent.stream.usdiFindSchema(boneNames[i]);
                     if (schema == null)
                     {
                         Debug.LogError("bone not found: " + boneNames[i]);
@@ -120,7 +118,7 @@ namespace UTJ
 
                 if (meshData.root_bone != IntPtr.Zero)
                 {
-                    var rootBone = m_stream.usdiFindSchema(rootBoneName);
+                    var rootBone = parent.stream.usdiFindSchema(rootBoneName);
                     m_rootBone = rootBone.gameObject.GetComponent<Transform>();
                 }
                 else
@@ -133,9 +131,9 @@ namespace UTJ
             renderer.rootBone = m_rootBone;
         }
 
-        Mesh usdiShareOrCreateMesh()
+        Mesh usdiShareOrCreateMesh(usdiMesh parent)
         {
-            var master = m_parent.master as usdiMesh;
+            var master = parent.master as usdiMesh;
             if (master != null)
             {
                 return master.submeshes[m_nth].mesh;
@@ -146,7 +144,7 @@ namespace UTJ
             }
         }
 
-        public void usdiSetupMesh()
+        public void usdiSetupMesh(usdiMesh parent)
         {
             if (!m_setupRequierd) { return; }
             m_setupRequierd = false;
@@ -157,11 +155,11 @@ namespace UTJ
                 m_umesh.MarkDynamic();
             }
 
-            var meshData = m_parent.meshData;
-            usdiSetupBones(ref meshData);
+            var meshData = parent.meshData;
+            usdiSetupBones(parent, ref meshData);
         }
 
-        public void usdiSetupComponents()
+        public void usdiSetupComponents(usdiMesh parent)
         {
             if (!m_setupRequierd) { return; }
             m_setupRequierd = false;
@@ -169,12 +167,12 @@ namespace UTJ
             GameObject go;
             if(m_nth == 0)
             {
-                go = m_parent.gameObject;
+                go = parent.gameObject;
             }
             else
             {
                 string name = "Submesh[" + m_nth + "]";
-                var ptrans = m_parent.GetComponent<Transform>();
+                var ptrans = parent.GetComponent<Transform>();
                 var child = ptrans.FindChild(name);
                 if (child != null)
                 {
@@ -183,14 +181,14 @@ namespace UTJ
                 else
                 {
                     go = new GameObject(name);
-                    go.GetComponent<Transform>().SetParent(m_parent.GetComponent<Transform>(), false);
+                    go.GetComponent<Transform>().SetParent(parent.GetComponent<Transform>(), false);
                 }
             }
 
             m_trans = go.GetComponent<Transform>();
 
-            var meshSummary = m_parent.meshSummary;
-            var meshData = m_parent.meshData;
+            var meshSummary = parent.meshSummary;
+            var meshData = parent.meshData;
             bool assignDefaultMaterial = false;
 
             if (meshSummary.num_bones > 0)
@@ -199,15 +197,15 @@ namespace UTJ
 
                 var renderer = usdi.GetOrAddComponent<SkinnedMeshRenderer>(go, ref assignDefaultMaterial);
                 m_renderer = renderer;
-                usdiSetupBones(ref meshData);
+                usdiSetupBones(parent, ref meshData);
 
-                if (renderer.sharedMesh != null && m_parent.master == null)
+                if (renderer.sharedMesh != null && parent.master == null)
                 {
                     m_umesh = renderer.sharedMesh;
                 }
                 else
                 {
-                    m_umesh = usdiShareOrCreateMesh();
+                    m_umesh = usdiShareOrCreateMesh(parent);
                     renderer.sharedMesh = m_umesh;
                 }
                 m_umesh.MarkDynamic();
@@ -217,13 +215,13 @@ namespace UTJ
                 // setup MeshFilter and MeshRenderer
 
                 var meshFilter = usdi.GetOrAddComponent<MeshFilter>(go);
-                if (meshFilter.sharedMesh != null && m_parent.master == null)
+                if (meshFilter.sharedMesh != null && parent.master == null)
                 {
                     m_umesh = meshFilter.sharedMesh;
                 }
                 else
                 {
-                    m_umesh = usdiShareOrCreateMesh();
+                    m_umesh = usdiShareOrCreateMesh(parent);
                     meshFilter.sharedMesh = m_umesh;
                 }
                 m_umesh.MarkDynamic();
@@ -380,8 +378,6 @@ namespace UTJ
 
         public void usdiOnLoad(usdiMesh parent, int nth)
         {
-            m_stream = parent.stream;
-            m_parent = parent;
             m_schema = parent.nativeSchemaPtr;
             m_nth = nth;
         }
@@ -394,16 +390,11 @@ namespace UTJ
 
         void usdiUpdateSkinningData()
         {
-            if (m_stream.importSettings.swapHandedness)
-            {
-                Debug.LogWarning("Swap Handedness import option is enabled. This may cause broken skinning animation.");
-            }
-
             m_umesh.boneWeights = m_weights;
             m_umesh.bindposes = m_bindposes;
         }
 
-        public void usdiUploadMeshData(bool directVBUpdate, bool topology, bool skinning)
+        public void usdiUploadMeshData(bool directVBUpdate, bool topology, bool skinning, bool getVB)
         {
             if (directVBUpdate && m_VB != IntPtr.Zero)
             {
@@ -438,7 +429,7 @@ namespace UTJ
                 m_umesh.UploadMeshData(false);
 
 #if UNITY_5_5_OR_NEWER
-                if (m_stream.directVBUpdate && usdi.usdiIsVtxCmdAvailable())
+                if (getVB && usdi.usdiIsVtxCmdAvailable())
                 {
                     m_VB = m_umesh.GetNativeVertexBufferPtr(0);
                     m_IB = m_umesh.GetNativeIndexBufferPtr();

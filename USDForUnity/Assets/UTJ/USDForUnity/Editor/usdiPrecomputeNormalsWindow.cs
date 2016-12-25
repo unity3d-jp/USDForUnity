@@ -9,8 +9,8 @@ namespace UTJ
     {
         public usdiStream m_stream;
         public usdiMesh m_mesh;
-        bool m_genTangents = true;
-        bool m_overwrite = false;
+        static bool s_genTangents = true;
+        static bool s_overwrite = false;
 
         public static void Open(usdiStream stream)
         {
@@ -41,7 +41,7 @@ namespace UTJ
                 stream = m_stream;
                 var meshes = new List<usdi.Mesh>();
                 var results = new List<bool>();
-                usdi.usdiPreComputeNormalsAll(m_stream.usdiContext, m_genTangents, m_overwrite, (usdi.Mesh mesh, bool done)=> {
+                usdi.usdiPreComputeNormalsAll(m_stream.usdiContext, s_genTangents, s_overwrite, (usdi.Mesh mesh, bool done)=> {
                     meshes.Add(mesh);
                     results.Add(done);
                     if(done)
@@ -66,7 +66,7 @@ namespace UTJ
             {
                 stream = m_mesh.stream;
                 var mesh = m_mesh.nativeMeshPtr;
-                var ret = usdi.usdiMeshPreComputeNormals(mesh, m_genTangents, m_overwrite);
+                var ret = usdi.usdiMeshPreComputeNormals(mesh, s_genTangents, s_overwrite);
                 if (ret)
                 {
                     Debug.Log("Precompute done: " + usdi.usdiPrimGetPathS(mesh));
@@ -99,8 +99,8 @@ namespace UTJ
 
             EditorGUILayout.Space();
 
-            m_genTangents = EditorGUILayout.Toggle("Generate Tangents", m_genTangents);
-            m_overwrite = EditorGUILayout.Toggle("Overwrite", m_overwrite);
+            s_genTangents = EditorGUILayout.Toggle("Generate Tangents", s_genTangents);
+            s_overwrite = EditorGUILayout.Toggle("Overwrite", s_overwrite);
 
             GUILayout.Space(10.0f);
 

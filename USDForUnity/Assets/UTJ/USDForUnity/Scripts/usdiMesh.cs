@@ -24,7 +24,7 @@ namespace UTJ
         bool m_updateIndicesRequired;
         bool m_updateVerticesRequired;
         bool m_updateSkinningRequired;
-        bool m_directVBUpdate; // for Unity 5.5 or later
+        bool m_kickVBUpdate; // for Unity 5.5 or later
         double m_timeRead; // accessed from worker thread
         usdi.Task m_asyncRead;
         #endregion
@@ -51,10 +51,6 @@ namespace UTJ
         public List<usdiSubmesh> submeshes
         {
             get { return m_submeshes; }
-        }
-        public bool directVBUpdate
-        {
-            get { return m_directVBUpdate; }
         }
         #endregion
 
@@ -86,11 +82,15 @@ namespace UTJ
 
             if (isInstance)
             {
-
+                // 
             }
             else
             {
                 m_allocateMeshDataRequired = true;
+                if (m_meshSummary.num_bones > 0 && m_stream.importSettings.swapHandedness)
+                {
+                    Debug.LogWarning("Swap Handedness import option is enabled. This may cause broken skinning animation.");
+                }
             }
         }
 
@@ -198,7 +198,7 @@ namespace UTJ
             }
 
             // todo: update heterogenous mesh when possible
-            m_directVBUpdate =
+            m_kickVBUpdate =
 #if UNITY_5_5_OR_NEWER
                 m_stream.directVBUpdate && !m_allocateMeshDataRequired &&
                 m_meshSummary.topology_variance == usdi.TopologyVariance.Homogenous;
@@ -213,7 +213,7 @@ namespace UTJ
 
             if (m_updateVerticesRequired)
             {
-                if (m_directVBUpdate)
+                if (m_kickVBUpdate)
                 {
                     usdi.usdiMeshReadSample(m_mesh, ref m_meshData, m_timeRead, false);
                     // kick VB update task in usdiUpdate()
@@ -245,7 +245,7 @@ namespace UTJ
             int num_submeshes = m_meshData.num_submeshes == 0 ? 1 : m_meshData.num_submeshes;
             for (int i = 0; i < num_submeshes; ++i)
             {
-                m_submeshes[i].usdiUploadMeshData(m_directVBUpdate, topology, skinning);
+                m_submeshes[i].usdiUploadMeshData(m_kickVBUpdate, topology, skinning, m_stream.directVBUpdate);
             }
         }
 
@@ -266,14 +266,14 @@ namespace UTJ
             {
                 for (int i = 0; i < num_submeshes; ++i)
                 {
-                    m_submeshes[i].usdiSetupComponents();
+                    m_submeshes[i].usdiSetupComponents(this);
                 }
             }
             else
             {
                 for (int i = 0; i < num_submeshes; ++i)
                 {
-                    m_submeshes[i].usdiSetupMesh();
+                    m_submeshes[i].usdiSetupMesh(this);
                 }
             }
 
@@ -313,7 +313,7 @@ namespace UTJ
             }
             else if(m_updateVerticesRequired)
             {
-                if (m_directVBUpdate)
+                if (m_kickVBUpdate)
                 {
                     if (m_meshData.num_submeshes == 0)
                     {

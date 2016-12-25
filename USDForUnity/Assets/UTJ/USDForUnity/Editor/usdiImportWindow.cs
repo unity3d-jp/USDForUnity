@@ -8,10 +8,10 @@ namespace UTJ
     public class usdiImportWindow : EditorWindow
     {
         public string m_path;
-        usdi.ImportSettings m_importOptions = usdi.ImportSettings.default_value;
-        double m_initialTime = 0.0;
-        bool m_forceSingleThread = false;
-        bool m_directVBUpdate = true;
+        static usdi.ImportSettings s_importOptions = usdi.ImportSettings.default_value;
+        static double s_initialTime = 0.0;
+        static bool s_forceSingleThread = false;
+        static bool s_directVBUpdate = true;
 
         public static void Open(string path)
         {
@@ -34,26 +34,26 @@ namespace UTJ
 
         void OnGUI()
         {
-            m_importOptions.interpolation = (usdi.InterpolationType)EditorGUILayout.EnumPopup("Interpolation", (Enum)m_importOptions.interpolation);
-            m_importOptions.normalCalculation = (usdi.NormalCalculationType)EditorGUILayout.EnumPopup("Normal Calculation", (Enum)m_importOptions.normalCalculation);
-            m_importOptions.tangentCalculation = (usdi.TangentCalculationType)EditorGUILayout.EnumPopup("Tangent Calculation", (Enum)m_importOptions.tangentCalculation);
-            m_importOptions.scale = EditorGUILayout.FloatField("Scale", m_importOptions.scale);
-            m_importOptions.swapHandedness = EditorGUILayout.Toggle("Swap Handedness", m_importOptions.swapHandedness);
-            m_importOptions.swapFaces = EditorGUILayout.Toggle("Swap Faces", m_importOptions.swapFaces);
+            s_importOptions.interpolation = (usdi.InterpolationType)EditorGUILayout.EnumPopup("Interpolation", (Enum)s_importOptions.interpolation);
+            s_importOptions.normalCalculation = (usdi.NormalCalculationType)EditorGUILayout.EnumPopup("Normal Calculation", (Enum)s_importOptions.normalCalculation);
+            s_importOptions.tangentCalculation = (usdi.TangentCalculationType)EditorGUILayout.EnumPopup("Tangent Calculation", (Enum)s_importOptions.tangentCalculation);
+            s_importOptions.scale = EditorGUILayout.FloatField("Scale", s_importOptions.scale);
+            s_importOptions.swapHandedness = EditorGUILayout.Toggle("Swap Handedness", s_importOptions.swapHandedness);
+            s_importOptions.swapFaces = EditorGUILayout.Toggle("Swap Faces", s_importOptions.swapFaces);
             EditorGUILayout.Space();
-            m_initialTime = EditorGUILayout.FloatField("Initial Time", (float)m_initialTime);
-            m_forceSingleThread = EditorGUILayout.Toggle("Force Single Thread", m_forceSingleThread);
-            m_directVBUpdate = EditorGUILayout.Toggle("Direct VB Update", m_directVBUpdate);
+            s_initialTime = EditorGUILayout.FloatField("Initial Time", (float)s_initialTime);
+            s_forceSingleThread = EditorGUILayout.Toggle("Force Single Thread", s_forceSingleThread);
+            s_directVBUpdate = EditorGUILayout.Toggle("Direct VB Update", s_directVBUpdate);
 
             GUILayout.Space(10.0f);
 
             if (GUILayout.Button("Import"))
             {
                 var usd = InstanciateUSD(m_path, (stream) => {
-                    stream.importSettings = m_importOptions;
-                    stream.playTime = m_initialTime;
-                    stream.forceSingleThread = m_forceSingleThread;
-                    stream.directVBUpdate = m_directVBUpdate;
+                    stream.importSettings = s_importOptions;
+                    stream.playTime = s_initialTime;
+                    stream.forceSingleThread = s_forceSingleThread;
+                    stream.directVBUpdate = s_directVBUpdate;
                 });
                 Selection.activeGameObject = usd.gameObject;
                 Close();
