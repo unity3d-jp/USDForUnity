@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="MeshUtilsTest.cpp" />
     <ClCompile Include="usdiTestExport.cpp" />
     <ClCompile Include="usdiTestExportHighMesh.cpp" />
@@ -27,6 +28,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Mesh.h" />
     <ClInclude Include="usdiTests.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

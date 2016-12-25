@@ -1,23 +1,12 @@
-#include <type_traits>
 #include <cstdio>
 #include <cmath>
 #include <vector>
 #include <algorithm>
-#include <future>
 #include <tbb/tbb.h>
-#include "../usdi/usdi.h"
+#include "Mesh.h"
 
-using usdi::float2;
-using usdi::float3;
-using usdi::float4;
-using usdi::quatf;
-using usdi::float3x3;
-using usdi::float4x4;
 using usdi::Weights4;
-using usdi::Weights8;
-
-const float DegToRad = 3.1415926535897932384626433832795f / 180.0f;
-
+#define DegToRad (3.1415926535897932384626433832795f / 180.0f)
 
 void TestExportSkinnedMesh(const char *filename, int cseg, int hseg)
 {
@@ -85,47 +74,38 @@ void TestExportSkinnedMesh(const char *filename, int cseg, int hseg)
         std::vector<float2> uv, uv2;
         std::vector<Weights4> weights, weights2;
 
-        auto Generate = [&](int cseg, int hseg)
+        auto Cylinder = [&](int cseg, int hseg)
         {
             const float radius = 0.2f;
             const float height = 5.0f;
 
-            // vertices
-            points.resize(cseg * hseg);
-            weights.resize(points.size());
-            uv.resize(points.size());
+            GenerateCylinderMesh(counts, indices, points, uv, radius, height, cseg, hseg);
 
-            for (int ih = 0; ih < hseg; ++ih) {
-                float y = (float(ih) / float(hseg - 1)) * height;
-                Weights4 w;
-                w.indices[0] = std::min<int>((int)y, 4);
+            size_t n = points.size();
+            weights.resize(n);
+            Weights4 w;
+            for (size_t i = 0; i < n; ++i) {
+                const auto& p = points[i];
+                w.indices[0] = std::min<int>((int)p.y, 4);
                 w.weight[0] = 1.0f;
-
-                for (int ic = 0; ic < cseg; ++ic) {
-                    int i = cseg * ih + ic;
-                    float ang = ((360.0f / cseg) * ic) * DegToRad;
-                    float3 pos{ std::cos(ang) * radius, y, std::sin(ang) * radius };
-                    float2 t{ float(ic) / float(cseg - 1), float(ih) / float(hseg - 1), };
-
-                    points[i] = pos;
-                    uv[i] = t;
-                    weights[i] = w;
-                }
+                weights[i] = w;
             }
+        };
 
-            // topology
-            int nfaces = cseg * (hseg - 1);
-            int nindices = nfaces * 4;
-            counts.resize(nfaces, 4);
-            indices.resize(nindices);
-            for (int ih = 0; ih < hseg - 1; ++ih) {
-                for (int ic = 0; ic < cseg; ++ic) {
-                    auto *dst = &indices[(ih * cseg + ic) * 4];
-                    dst[0] = cseg * ih + ic;
-                    dst[1] = cseg * (ih + 1) + ic;
-                    dst[2] = cseg * (ih + 1) + ((ic + 1) % cseg);
-                    dst[3] = cseg * ih + ((ic + 1) % cseg);
-                }
+        auto Sphere = [&](int iter)
+        {
+            const float radius = 0.5f;
+
+            GenerateIcoSphereMesh(counts, indices, points, uv, radius, 0);
+
+            size_t n = points.size();
+            weights.resize(n);
+            Weights4 w;
+            for (size_t i = 0; i < n; ++i) {
+                points[i].y += 5.0f;
+                w.indices[0] = 4;
+                w.weight[0] = 1.0f;
+                weights[i] = w;
             }
         };
 
@@ -155,7 +135,8 @@ void TestExportSkinnedMesh(const char *filename, int cseg, int hseg)
             data.bindposes = bindposes;
 
 
-            Generate(3, hseg);
+            usdiPrimBeginEditVariant(xf, "Shape", "Triangular");
+            Cylinder(3, hseg);
             Expand();
             data.num_counts = counts.size();
             data.num_indices = indices2.size();
@@ -165,15 +146,14 @@ void TestExportSkinnedMesh(const char *filename, int cseg, int hseg)
             data.points = points2.data();
             data.uvs = uv2.data();
             data.weights4 = weights2.data();
-
-            usdiPrimBeginEditVariant(xf, "Shape", "Triangular");
             mesh = usdiCreateMesh(ctx, xf, "Triangular");
             usdiMeshWriteSample(mesh, &data);
             usdiMeshPreComputeNormals(mesh, false);
             usdiPrimEndEditVariant(xf);
 
 
-            Generate(4, hseg);
+            usdiPrimBeginEditVariant(xf, "Shape", "Square");
+            Cylinder(4, hseg);
             Expand();
             data.num_counts = counts.size();
             data.num_indices = indices2.size();
@@ -183,15 +163,14 @@ void TestExportSkinnedMesh(const char *filename, int cseg, int hseg)
             data.points = points2.data();
             data.uvs = uv2.data();
             data.weights4 = weights2.data();
-
-            usdiPrimBeginEditVariant(xf, "Shape", "Square");
             mesh = usdiCreateMesh(ctx, xf, "Square");
             usdiMeshWriteSample(mesh, &data);
             usdiMeshPreComputeNormals(mesh, false);
             usdiPrimEndEditVariant(xf);
 
 
-            Generate(cseg, hseg);
+            usdiPrimBeginEditVariant(xf, "Shape", "Cylinder");
+            Cylinder(cseg, hseg);
             data.num_counts = counts.size();
             data.num_indices = indices.size();
             data.num_points = points.size();
@@ -200,11 +179,24 @@ void TestExportSkinnedMesh(const char *filename, int cseg, int hseg)
             data.points = points.data();
             data.uvs = uv.data();
             data.weights4 = weights.data();
-
-            usdiPrimBeginEditVariant(xf, "Shape", "Cylinder");
             mesh = usdiCreateMesh(ctx, xf, "Cylinder");
             usdiMeshWriteSample(mesh, &data);
             usdiMeshPreComputeNormals(mesh, false);
+            {
+                Sphere(0);
+                Expand();
+                data.num_counts = counts.size();
+                data.num_indices = indices2.size();
+                data.num_points = points2.size();
+                data.counts = counts.data();
+                data.indices = indices2.data();
+                data.points = points2.data();
+                data.uvs = nullptr;
+                data.weights4 = weights2.data();
+                mesh = usdiCreateMesh(ctx, mesh, "Sphere");
+                usdiMeshWriteSample(mesh, &data);
+                usdiMeshPreComputeNormals(mesh, false);
+            }
             usdiPrimEndEditVariant(xf);
         }
 

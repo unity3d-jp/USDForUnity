@@ -66,14 +66,4 @@
 
 #include "etc/Platform.h"
 
-namespace usdi {
-    class Context;
-    class Attribute;
-    class Schema;
-    class Xform;
-    class Camera;
-    class Mesh;
-    class Points;
-} // namespace usdi
-
 #pragma warning(disable:4201)

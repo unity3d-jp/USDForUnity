@@ -36,6 +36,14 @@
 #include "MeshUtils/muVector.h"
 namespace usdi {
     using namespace mu;
+
+    class Context;
+    class Attribute;
+    class Schema;
+    class Xform;
+    class Camera;
+    class Mesh;
+    class Points;
 } // namespace usdi
 
 #include "usdi.h"

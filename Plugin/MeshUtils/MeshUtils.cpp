@@ -48,28 +48,33 @@ void Normalize_Generic(float3 *dst, size_t num)
     }
 }
 
-void GenerateNormals_Generic(float3 *dst, const float3 *p, const int *indices, size_t num_points, size_t num_indices)
+void GenerateNormals_Generic(
+    float3 *dst, const float3 *p,
+    const int *counts, const int *offsets, const int *indices, size_t num_points, size_t num_faces)
 {
     memset(dst, 0, sizeof(float3)*num_points);
 
-    for (size_t i = 0; i < num_indices; i += 3)
+    for (size_t fi = 0; fi < num_faces; ++fi)
     {
-        int i0 = indices[i + 0];
-        int i1 = indices[i + 1];
-        int i2 = indices[i + 2];
+        int count = counts[fi];
+        const int *face = &indices[offsets[fi]];
+        int i0 = face[0];
+        int i1 = face[1];
+        int i2 = face[2];
         float3 p0 = p[i0];
         float3 p1 = p[i1];
         float3 p2 = p[i2];
         float3 n = cross(p1 - p0, p2 - p0);
-        dst[i0] += n;
-        dst[i1] += n;
-        dst[i2] += n;
+        for (int ci = 0; ci < count; ++ci) {
+            dst[face[ci]] += n;
+        }
     }
 
     for (size_t i = 0; i < num_points; ++i) {
         dst[i] = normalize(dst[i]);
     }
 }
+
 
 
 struct TSpaceContext
@@ -127,7 +132,7 @@ struct TSpaceContext
     }
 };
 
-bool CalculateTangents(
+bool GenerateTangents(
     float4 *dst, const float3 *p, const float3 *n, const float2 *t,
     const int *counts, const int *offsets, const int *indices, size_t num_points, size_t num_faces)
 {
@@ -207,22 +212,26 @@ void Normalize_ISPC(float3 *dst, size_t num)
     ispc::Normalize((ispc::float3*)dst, (int)num);
 }
 
-void GenerateNormals_ISPC(float3 *dst, const float3 *p, const int *indices, size_t num_points, size_t num_indices)
+void GenerateNormals_ISPC(
+    float3 *dst, const float3 *p,
+    const int *counts, const int *offsets, const int *indices, size_t num_points, size_t num_faces)
 {
     memset(dst, 0, sizeof(float3)*num_points);
 
-    for (size_t i = 0; i < num_indices; i += 3)
+    for (size_t fi = 0; fi < num_faces; ++fi)
     {
-        int i0 = indices[i + 0];
-        int i1 = indices[i + 1];
-        int i2 = indices[i + 2];
+        int count = counts[fi];
+        const int *face = &indices[offsets[fi]];
+        int i0 = face[0];
+        int i1 = face[1];
+        int i2 = face[2];
         float3 p0 = p[i0];
         float3 p1 = p[i1];
         float3 p2 = p[i2];
         float3 n = cross(p1 - p0, p2 - p0);
-        dst[i0] += n;
-        dst[i1] += n;
-        dst[i2] += n;
+        for (int ci = 0; ci < count; ++ci) {
+            dst[face[ci]] += n;
+        }
     }
 
     ispc::Normalize((ispc::float3*)dst, (int)num_points);
@@ -261,12 +270,11 @@ void Normalize(float3 *dst, size_t num)
     Forward(Normalize, dst, num);
 }
 
-void GenerateNormals(float3 *dst, const float3 *p, const int *indices, size_t num_points, size_t num_indices)
+void GenerateNormals(
+    float3 *dst, const float3 *p,
+    const int *counts, const int *offsets, const int *indices, size_t num_points, size_t num_faces)
 {
-    if(num_indices % 3 != 0) {
-        //usdiLogWarning("CalculateNormals(): num_indices % 3 != 0\n");
-    }
-    Forward(GenerateNormals, dst, p, indices, num_points, num_indices);
+    Forward(GenerateNormals, dst, p, counts, offsets, indices, num_points, num_faces);
 }
 
 template<class VertexT>

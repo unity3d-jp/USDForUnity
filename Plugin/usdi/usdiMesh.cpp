@@ -256,8 +256,8 @@ void Mesh::updateSample(Time t_)
     }
 
     // normals
-    bool update_normals = conf.normal_calculation == NormalCalculationType::Always;
-    if (!update_normals) {
+    bool gen_normals = conf.normal_calculation == NormalCalculationType::Always;
+    if (!gen_normals) {
         if (m_mesh.GetNormalsAttr().Get(&sample.normals, t)) {
             if (conf.swap_handedness) {
                 InvertX((float3*)sample.normals.data(), sample.normals.size());
@@ -265,7 +265,7 @@ void Mesh::updateSample(Time t_)
         }
         else {
             if (conf.normal_calculation == NormalCalculationType::WhenMissing) {
-                update_normals = true;
+                gen_normals = true;
             }
             else {
                 // no normal data is present and no recalculation is required.
@@ -277,8 +277,8 @@ void Mesh::updateSample(Time t_)
     }
 
     // tangents
-    bool update_tangents = conf.tangent_calculation == NormalCalculationType::Always;
-    if (!update_tangents) {
+    bool gen_tangents = conf.tangent_calculation == NormalCalculationType::Always;
+    if (!gen_tangents) {
         if (m_attr_tangents && m_attr_tangents->getImmediate(&sample.tangents, t_)) {
             if (conf.swap_handedness) {
                 InvertX((float4*)sample.tangents.data(), sample.tangents.size());
@@ -286,7 +286,7 @@ void Mesh::updateSample(Time t_)
         }
         else {
             if (m_attr_uv && conf.tangent_calculation == TangentCalculationType::WhenMissing) {
-                update_tangents = true;
+                gen_tangents = true;
             }
             else {
                 // nothing to do here
@@ -304,7 +304,7 @@ void Mesh::updateSample(Time t_)
         m_update_flag_prev.variant_set_changed;
     if (update_indices) {
         CountIndices(sample.counts, sample.offsets, m_num_indices, m_num_indices_triangulated);
-        if (conf.triangulate || update_normals) {
+        if (conf.triangulate || gen_normals) {
             sample.indices_triangulated.resize(m_num_indices_triangulated);
             TriangulateIndices(sample.indices_triangulated, sample.counts, &sample.indices, conf.swap_faces);
         }
@@ -314,24 +314,25 @@ void Mesh::updateSample(Time t_)
         sample.offsets = m_sample[0].offsets;
     }
 
-    // calculate normals if needed
-    if (update_normals) {
+    // normals
+    if (gen_normals) {
         sample.normals.resize(sample.points.size());
-        GenerateNormals((float3*)sample.normals.data(), (const float3*)sample.points.cdata(), sample.indices_triangulated.cdata(),
-            sample.points.size(), sample.indices_triangulated.size());
+        GenerateNormals((float3*)sample.normals.data(), (const float3*)sample.points.cdata(),
+            sample.counts.cdata(), sample.offsets.cdata(), sample.indices.cdata(),
+            sample.points.size(), sample.counts.size());
     }
 
-    // calculate tangents if needed
-    if (update_tangents) {
+    // tangents
+    if (gen_tangents) {
         sample.tangents.resize(sample.points.size());
-        CalculateTangents((float4*)sample.tangents.data(),
+        GenerateTangents((float4*)sample.tangents.data(),
             (const float3*)sample.points.cdata(), (const float3*)sample.normals.cdata(), (const float2*)sample.uvs.cdata(),
             sample.counts.cdata(), sample.offsets.cdata(), sample.indices.cdata(),
             sample.points.size(), sample.counts.size());
     }
 
     // bone & weights
-    // assume these are constant (get values only once)
+    // * assume these are constant
     if (m_attr_bone_weights && m_attr_bone_indices && (sample.weights4.empty() || sample.weights8.empty())) {
         if (m_attr_max_bone_weights) {
             m_attr_max_bone_weights->getImmediate(&sample.max_bone_weights, t_);
@@ -843,7 +844,9 @@ bool Mesh::precomputeNormals(bool gen_tangents, bool overwrite)
         attr_points.Get(&points, t);
         if (gen_normals) {
             normals.resize(points.size());
-            GenerateNormals((float3*)normals.data(), (const float3*)points.cdata(), indices_triangulated.cdata(), points.size(), indices_triangulated.size());
+            GenerateNormals((float3*)normals.data(), (const float3*)points.cdata(),
+                counts.cdata(), offsets.cdata(), indices.cdata(),
+                points.size(), counts.size());
         }
         else {
             attr_normals.Get(&normals, t);
@@ -853,7 +856,7 @@ bool Mesh::precomputeNormals(bool gen_tangents, bool overwrite)
         if (gen_tangents) {
             attr_uv.Get(&uv, t);
             tangents.resize(points.size());
-            CalculateTangents((float4*)tangents.data(),
+            GenerateTangents((float4*)tangents.data(),
                 (const float3*)points.cdata(), (const float3*)normals.cdata(), (const float2*)uv.cdata(),
                 counts.cdata(), offsets.cdata(), indices.cdata(),
                 points.size(), counts.size());

@@ -1,8 +1,7 @@
 #include <cstdio>
 #include <vector>
 #include <chrono>
-#include "MeshUtils/MeshUtils.h"
-#include "usdi/usdi.h"
+#include "Mesh.h"
 using namespace mu;
 
 // force to align 0x20 for AVX functions
@@ -48,23 +47,27 @@ static ns now()
 }
 
 
-static std::vector<float3> GenerateTestData(size_t num, float cycle, float scale)
+static std::vector<float3> GenerateFloat3Array(size_t num, float cycle, float scale)
 {
-    std::vector<float3> ret;
+    std::vector<float3> ret(num);
     for (size_t i = 0; i < num; ++i) {
-        ret.push_back({ std::cos(cycle*i*0.3f)*scale, std::sin(cycle*i*0.7f)*scale, std::sin(cycle*i*1.1f)*scale});
+        ret[i] = {
+            std::cos(cycle*i*0.3f) * scale * 0.5f,
+            0.0f,
+            std::sin(cycle*i*1.1f) * scale * 0.5f
+        };
     }
     return ret;
 }
 
 
 
-#define NumTestData (1024*1024*8)
-#define NumTry 8
+#define NumTestData (1024*1024)
+#define NumTry 16
 
 static void Test_InvertX()
 {
-    auto data1 = GenerateTestData(NumTestData, 0.1f, 1.0f);
+    auto data1 = GenerateFloat3Array(NumTestData, 0.1f, 1.0f);
     auto data2 = data1;
 
     ns elapsed1 = 0;
@@ -95,7 +98,7 @@ static void Test_InvertX()
 
 static void Test_Scale()
 {
-    auto data1 = GenerateTestData(NumTestData, 0.1f, 1.0f);
+    auto data1 = GenerateFloat3Array(NumTestData, 0.1f, 1.0f);
     auto data2 = data1;
     auto scale = 12.345f;
 
@@ -127,7 +130,7 @@ static void Test_Scale()
 
 static void Test_ComputeBounds()
 {
-    auto data = GenerateTestData(NumTestData, 0.1f, 1.0f);
+    auto data = GenerateFloat3Array(NumTestData, 0.1f, 1.0f);
     float3 bounds1[2];
     float3 bounds2[2];
 
@@ -159,7 +162,7 @@ static void Test_ComputeBounds()
 
 static void Test_Normalize()
 {
-    auto data1 = GenerateTestData(NumTestData, 0.1f, 1.0f);
+    auto data1 = GenerateFloat3Array(NumTestData, 0.1f, 1.0f);
     auto data2 = data1;
 
     ns elapsed1 = 0;
@@ -190,10 +193,14 @@ static void Test_Normalize()
 
 static void Test_GenerateNormals()
 {
-    auto points = GenerateTestData(NumTestData - (NumTestData % 3), 0.1f, 1.0f);
+    std::vector<int> counts;
+    std::vector<int> offsets;
     std::vector<int> indices;
-    indices.resize(points.size());
-    for (size_t i = 0; i < indices.size(); ++i) { indices[i] = (int)i; }
+    std::vector<float3> points;
+    std::vector<float2> uv;
+    std::vector<float3> normals;
+    GenerateWaveMesh(counts, indices, points, uv, 1.0f, 0.5f, 1024, 0.0);
+    GenerateOffsets(offsets, counts);
 
     ns elapsed1 = 0;
     ns elapsed2 = 0;
@@ -204,12 +211,12 @@ static void Test_GenerateNormals()
 
     for (int i = 0; i < NumTry; ++i) {
         auto start = now();
-        GenerateNormals_Generic(normals1.data(), points.data(), indices.data(), points.size(), indices.size());
+        GenerateNormals_Generic(normals1.data(), points.data(), counts.data(), offsets.data(), indices.data(), points.size(), counts.size());
         elapsed1 += now() - start;
 
 #ifdef muEnableISPC
         start = now();
-        GenerateNormals_ISPC(normals2.data(), points.data(), indices.data(), points.size(), indices.size());
+        GenerateNormals_ISPC(normals2.data(), points.data(), counts.data(), offsets.data(), indices.data(), points.size(), counts.size());
         elapsed2 += now() - start;
 #endif // muEnableISPC
 

@@ -10,8 +10,10 @@ void InvertX(float4 *dst, size_t num);
 void Scale(float3 *dst, float s, size_t num);
 void ComputeBounds(const float3 *p, size_t num, float3& o_min, float3& o_max);
 void Normalize(float3 *dst, size_t num);
-void GenerateNormals(float3 *dst, const float3 *p, const int *indices, size_t num_points, size_t num_indices);
-bool CalculateTangents(
+void GenerateNormals(
+    float3 *dst, const float3 *p,
+    const int *counts, const int *offsets, const int *indices, size_t num_points, size_t num_faces);
+bool GenerateTangents(
     float4 *dst, const float3 *p, const float3 *n, const float2 *t,
     const int *counts, const int *offsets, const int *indices, size_t num_points, size_t num_faces);
 
@@ -92,8 +94,12 @@ void ComputeBounds_ISPC(const float3 *p, size_t num, float3& o_min, float3& o_ma
 void Normalize_Generic(float3 *dst, size_t num);
 void Normalize_ISPC(float3 *dst, size_t num);
 
-void GenerateNormals_Generic(float3 *dst, const float3 *p, const int *indices, size_t num_points, size_t num_indices);
-void GenerateNormals_ISPC(float3 *dst, const float3 *p, const int *indices, size_t num_points, size_t num_indices);
+void GenerateNormals_Generic(
+    float3 *dst, const float3 *p,
+    const int *counts, const int *offsets, const int *indices, size_t num_points, size_t num_faces);
+void GenerateNormals_ISPC(
+    float3 *dst, const float3 *p,
+    const int *counts, const int *offsets, const int *indices, size_t num_points, size_t num_faces);
 
 template<class VertexT> void Interleave_Generic(VertexT *dst, const typename VertexT::source_t& src, size_t num);
 
