@@ -9,9 +9,11 @@ namespace UTJ
     {
         public string m_path;
         static usdi.ImportSettings s_importOptions = usdi.ImportSettings.default_value;
+        static usdiTimeUnit s_timeUnit = new usdiTimeUnit();
         static double s_initialTime = 0.0;
         static bool s_forceSingleThread = false;
         static bool s_directVBUpdate = true;
+
 
         public static void Open(string path)
         {
@@ -41,9 +43,11 @@ namespace UTJ
             s_importOptions.swapHandedness = EditorGUILayout.Toggle("Swap Handedness", s_importOptions.swapHandedness);
             s_importOptions.swapFaces = EditorGUILayout.Toggle("Swap Faces", s_importOptions.swapFaces);
             EditorGUILayout.Space();
+
+            s_timeUnit.type = (usdiTimeUnit.Types)EditorGUILayout.EnumPopup("Time Unit", (Enum)s_timeUnit.type);
             s_initialTime = EditorGUILayout.FloatField("Initial Time", (float)s_initialTime);
-            s_forceSingleThread = EditorGUILayout.Toggle("Force Single Thread", s_forceSingleThread);
-            s_directVBUpdate = EditorGUILayout.Toggle("Direct VB Update", s_directVBUpdate);
+            //s_forceSingleThread = EditorGUILayout.Toggle("Force Single Thread", s_forceSingleThread);
+            //s_directVBUpdate = EditorGUILayout.Toggle("Direct VB Update", s_directVBUpdate);
 
             GUILayout.Space(10.0f);
 
@@ -51,6 +55,7 @@ namespace UTJ
             {
                 var usd = InstanciateUSD(m_path, (stream) => {
                     stream.importSettings = s_importOptions;
+                    stream.timeUnit = s_timeUnit;
                     stream.playTime = s_initialTime;
                     stream.forceSingleThread = s_forceSingleThread;
                     stream.directVBUpdate = s_directVBUpdate;

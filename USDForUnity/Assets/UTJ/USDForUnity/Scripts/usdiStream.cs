@@ -24,8 +24,8 @@ namespace UTJ
         #region fields
         [SerializeField] DataPath m_path;
         [SerializeField] usdi.ImportSettings m_importSettings = new usdi.ImportSettings();
+        [SerializeField] usdiTimeUnit m_timeUnit = new usdiTimeUnit();
         [SerializeField] double m_time;
-        [SerializeField] double m_timeScale = 1.0;
 
         [Header("Debug")]
 #if UNITY_EDITOR
@@ -72,10 +72,10 @@ namespace UTJ
             get { return m_time; }
             set { m_time = value; }
         }
-        public double timeScale
+        public usdiTimeUnit timeUnit
         {
-            get { return m_timeScale; }
-            set { m_timeScale = value; }
+            get { return m_timeUnit; }
+            set { m_timeUnit = value; }
         }
         public bool directVBUpdate
         {
@@ -680,7 +680,7 @@ namespace UTJ
             if (EditorApplication.isPlaying)
 #endif
             {
-                m_time += Time.deltaTime * m_timeScale;
+                m_time += Time.deltaTime * m_timeUnit.scale;
             }
 
             if (m_deferredUpdate
