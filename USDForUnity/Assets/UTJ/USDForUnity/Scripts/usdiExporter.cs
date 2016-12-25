@@ -628,40 +628,39 @@ namespace UTJ
         #region fields
         [Header("USD")]
 
-        public string m_outputPath;
-        public float m_scale = 1.0f;
-        public bool m_swapHandedness = true;
-        public bool m_swapFaces = true;
+        [SerializeField] string m_outputPath;
+        [SerializeField] usdiTimeUnit m_timeUnit = new usdiTimeUnit();
+        [SerializeField] float m_scale = 1.0f;
+        [SerializeField] bool m_swapHandedness = true;
+        [SerializeField] bool m_swapFaces = true;
 
         [Header("Capture Components")]
 
-        public Scope m_scope = Scope.EntireScene;
-        public bool m_ignoreDisabled = true;
+        [SerializeField] Scope m_scope = Scope.EntireScene;
+        [SerializeField] bool m_ignoreDisabled = true;
         [Space(8)]
-        public bool m_captureMeshRenderer = true;
-        public bool m_captureSkinnedMeshRenderer = true;
-        public bool m_captureParticleSystem = true;
-        public bool m_captureCamera = true;
-        public bool m_customCapturer = true;
+        [SerializeField] bool m_captureMeshRenderer = true;
+        [SerializeField] bool m_captureSkinnedMeshRenderer = true;
+        [SerializeField] bool m_captureParticleSystem = true;
+        [SerializeField] bool m_captureCamera = true;
+        [SerializeField] bool m_customCapturer = true;
         [Space(8)]
-        public SkinnedMeshCaptureMode m_captureSkinnedMeshAs = SkinnedMeshCaptureMode.VertexCache;
-        public bool m_captureMeshNormals = true;
-        public bool m_captureMeshTangents = true;
-        public bool m_captureMeshUVs = true;
+        [SerializeField] SkinnedMeshCaptureMode m_captureSkinnedMeshAs = SkinnedMeshCaptureMode.VertexCache;
+        [SerializeField] bool m_captureMeshNormals = true;
+        [SerializeField] bool m_captureMeshTangents = true;
+        [SerializeField] bool m_captureMeshUVs = true;
 
         [Header("Capture Setting")]
 
-        [Tooltip("Flush to file at every N frames. 0=never")]
-        public int m_flushEveryNthFrames = 0;
         [Tooltip("Start capture on start.")]
-        public bool m_captureOnStart = false;
+        [SerializeField] bool m_captureOnStart = false;
         [Tooltip("Automatically end capture when reached Max Capture Frame. 0=Infinite")]
-        public int m_maxCaptureFrame = 0;
+        [SerializeField] int m_maxCaptureFrame = 0;
 
         [Header("Debug")]
 #if UNITY_EDITOR
-        public bool m_forceSingleThread;
-        public bool m_detailedLog;
+        [SerializeField] bool m_forceSingleThread;
+        [SerializeField] bool m_detailedLog;
 #endif
 
         usdi.Context m_ctx;
@@ -1043,13 +1042,16 @@ namespace UTJ
                 m_asyncFlush.Run();
             }
 
-            m_time += Time.deltaTime;
             ++m_frameCount;
-
-            // flush to file when needed
-            if (m_flushEveryNthFrames > 0 && m_frameCount % m_flushEveryNthFrames == 0)
+            switch(m_timeUnit.type)
             {
-                FlushUSD();
+                case usdiTimeUnit.Types.Frame_30FPS:
+                case usdiTimeUnit.Types.Frame_60FPS:
+                    m_time = m_frameCount;
+                    break;
+                default:
+                    m_time += Time.deltaTime * m_timeUnit.scale;
+                    break;
             }
 
             m_elapsed = Time.realtimeSinceStartup - begin_time;
@@ -1098,6 +1100,18 @@ namespace UTJ
         void OnEnable()
         {
             UpdateOutputPath();
+
+            switch (m_timeUnit.type)
+            {
+                case usdiTimeUnit.Types.Frame_30FPS:
+                    Time.maximumDeltaTime = (1.0f / 30.0f);
+                    Time.captureFramerate = 30;
+                    break;
+                case usdiTimeUnit.Types.Frame_60FPS:
+                    Time.maximumDeltaTime = (1.0f / 60.0f);
+                    Time.captureFramerate = 60;
+                    break;
+            }
         }
 
         void OnDisable()

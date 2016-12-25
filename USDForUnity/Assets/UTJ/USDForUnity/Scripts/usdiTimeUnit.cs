@@ -32,9 +32,9 @@ namespace UTJ
             set { m_scale = value; m_type = Types.FreeScale; }
         }
 
-        public usdiTimeUnit()
+        public usdiTimeUnit(Types t = Types.Frame_30FPS)
         {
-            type = Types.Frame_30FPS;
+            type = t;
         }
 
         public static float Adjust(Types t, float s)
