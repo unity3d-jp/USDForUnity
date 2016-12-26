@@ -420,7 +420,7 @@ void Schema::notifyForceUpdate()
 
 void Schema::notifyImportConfigChanged()
 {
-    m_update_flag_next.import_config_updated = 1;
+    m_update_flag_next.import_settings_updated = 1;
 }
 
 UpdateFlags Schema::getUpdateFlags() const { return m_update_flag; }
@@ -455,40 +455,47 @@ void Schema::updateSample(Time t)
     m_time_prev = t;
 }
 
-const ImportSettings& Schema::getImportSettings() const
+void Schema::setOverrideImportSettings(bool v)
 {
-    return m_isettings_overridden ? m_isettings : m_ctx->getImportSettings();
+    if (m_isettings_override != v) {
+        m_isettings_override = v;
+        m_update_flag_next.import_settings_updated = 1;
+    }
+    m_isettings_override = v;
 }
 bool Schema::isImportSettingsOverridden() const
-{
-    return m_isettings_overridden;
+{ 
+    return m_isettings_override;
 }
-void Schema::setImportSettings(const ImportSettings& settings, bool over)
+const ImportSettings& Schema::getImportSettings() const
 {
-    if (m_isettings_overridden != over) {
-        m_isettings_overridden = over;
-        m_update_flag_next.import_config_updated = 1;
-    }
-    if (m_isettings_overridden) {
-        if (m_isettings != settings) {
-            m_isettings = settings;
-            m_update_flag_next.import_config_updated = 1;
+    return m_isettings_override ? m_isettings : m_ctx->getImportSettings();
+}
+void Schema::setImportSettings(const ImportSettings& v)
+{
+    if (m_isettings != v) {
+        m_isettings = v;
+        if (m_isettings_override) {
+            m_update_flag_next.import_settings_updated = 1;
         }
     }
 }
 
-const ExportSettings& Schema::getExportSettings() const
+void Schema::setOverrideExportSettings(bool v)
 {
-    return m_esettings_overridden ? m_esettings : m_ctx->getExportSettings();
+    m_esettings_override = v;
 }
 bool Schema::isExportSettingsOverridden() const
 {
-    return m_esettings_overridden;
+    return m_esettings_override;
 }
-void Schema::setExportSettings(const ExportSettings& settings, bool over)
+const ExportSettings& Schema::getExportSettings() const
 {
-    m_esettings = settings;
-    m_esettings_overridden = over;
+    return m_esettings_override ? m_esettings : m_ctx->getExportSettings();
+}
+void Schema::setExportSettings(const ExportSettings& v)
+{
+    m_esettings = v;
 }
 
 

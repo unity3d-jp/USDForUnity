@@ -137,8 +137,6 @@ namespace UTJ
         [Serializable]
         public struct ImportSettings
         {
-            public const int Size = 0x14;
-
             public InterpolationType interpolation;
             public NormalCalculationType normalCalculation;
             public TangentCalculationType tangentCalculation;
@@ -177,9 +175,9 @@ namespace UTJ
         public struct ExportSettings
         {
             public float scale;
-            public Bool swap_handedness;
-            public Bool swap_faces;
-            public Bool instanceable_by_default;
+            public Bool swapHandedness;
+            public Bool swapFaces;
+            public Bool instanceableByDefault;
 
             public static ExportSettings default_value
             {
@@ -188,9 +186,9 @@ namespace UTJ
                     return new ExportSettings
                     {
                         scale = 1.0f,
-                        swap_handedness = true,
-                        swap_faces = true,
-                        instanceable_by_default = false,
+                        swapHandedness = true,
+                        swapFaces = true,
+                        instanceableByDefault = false,
                     };
                 }
             }
@@ -436,7 +434,7 @@ namespace UTJ
         [DllImport ("usdi")] public static extern void          usdiNotifyForceUpdate(Context ctx);
         [DllImport ("usdi")] public static extern void          usdiUpdateAllSamples(Context ctx, double t);
         [DllImport ("usdi")] public static extern void          usdiRebuildSchemaTree(Context ctx);
-        public delegate void usdiPreComputeNormalsCallback(Mesh mesh, bool done);
+        public delegate void usdiPreComputeNormalsCallback(Mesh mesh, Bool done);
         [DllImport ("usdi")] public static extern void          usdiPreComputeNormalsAll(Context ctx, Bool gen_tangents, Bool overwrite, usdiPreComputeNormalsCallback cb = null);
 
         // Prim interface
@@ -445,7 +443,16 @@ namespace UTJ
         [DllImport ("usdi")] public static extern IntPtr        usdiPrimGetName(Schema schema);
         [DllImport ("usdi")] public static extern IntPtr        usdiPrimGetUsdTypeName(Schema schema);
 
-        
+        [DllImport ("usdi")] public static extern Bool          usdiPrimIsImportSettingsOverriden(Schema schema);
+        [DllImport ("usdi")] public static extern void          usdiPrimSetOverrideImportSettings(Schema schema, Bool v);
+        [DllImport ("usdi")] public static extern void          usdiPrimGetImportSettings(Schema schema, ref ImportSettings dst);
+        [DllImport ("usdi")] public static extern void          usdiPrimSetImportSettings(Schema schema, ref ImportSettings v);
+        [DllImport ("usdi")] public static extern Bool          usdiPrimIsExportSettingsOverriden(Schema schema);
+        [DllImport ("usdi")] public static extern void          usdiPrimSetOverrideExportSettings(Schema schema, Bool v);
+        [DllImport ("usdi")] public static extern void          usdiPrimGetExportSettings(Schema schema, ref ExportSettings dst);
+        [DllImport ("usdi")] public static extern void          usdiPrimSetExportSettings(Schema schema, ref ExportSettings v);
+
+
         [DllImport ("usdi")] public static extern Bool          usdiPrimIsEditable(Schema schema);
         [DllImport ("usdi")] public static extern Bool          usdiPrimIsInstance(Schema schema);
         [DllImport ("usdi")] public static extern Bool          usdiPrimIsMaster(Schema schema);

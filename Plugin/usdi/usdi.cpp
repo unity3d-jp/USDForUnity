@@ -268,6 +268,57 @@ usdiAPI const char* usdiPrimGetUsdTypeName(usdi::Schema *schema)
     return schema->getUsdTypeName();
 }
 
+// import / export settings
+usdiAPI bool usdiPrimIsImportSettingsOverriden(usdi::Schema *schema)
+{
+    usdiTraceFunc();
+    if (!schema) { return false; }
+    return schema->isImportSettingsOverridden();
+}
+usdiAPI void usdiPrimSetOverrideImportSettings(usdi::Schema *schema, bool v)
+{
+    usdiTraceFunc();
+    if (!schema) { return; }
+    schema->setOverrideImportSettings(v);
+}
+usdiAPI void usdiPrimGetImportSettings(usdi::Schema *schema, usdi::ImportSettings *dst)
+{
+    usdiTraceFunc();
+    if (!schema || dst) { return; }
+    *dst = schema->getImportSettings();
+}
+usdiAPI void usdiPrimSetImportSettings(usdi::Schema *schema, const usdi::ImportSettings *v)
+{
+    usdiTraceFunc();
+    if (!schema || v) { return; }
+    schema->setImportSettings(*v);
+}
+usdiAPI bool usdiPrimIsExportSettingsOverriden(usdi::Schema *schema)
+{
+    usdiTraceFunc();
+    if (!schema) { return false; }
+    return schema->isExportSettingsOverridden();
+}
+usdiAPI void usdiPrimSetOverrideExportSettings(usdi::Schema *schema, bool v)
+{
+    usdiTraceFunc();
+    if (!schema) { return; }
+    schema->setOverrideExportSettings(v);
+}
+usdiAPI void usdiPrimGetExportSettings(usdi::Schema *schema, usdi::ExportSettings *dst)
+{
+    usdiTraceFunc();
+    if (!schema || !dst) { return; }
+    *dst = schema->getExportSettings();
+}
+usdiAPI void usdiPrimSetExportSettings(usdi::Schema *schema, const usdi::ExportSettings *v)
+{
+    usdiTraceFunc();
+    if (!schema || v) { return; }
+    schema->setExportSettings(*v);
+}
+
+// master / instance
 usdiAPI usdi::Schema* usdiPrimGetMaster(usdi::Schema *schema)
 {
     usdiTraceFunc();
@@ -323,13 +374,14 @@ usdiAPI void usdiPrimSetInstanceable(usdi::Schema *schema, bool v)
     if (!schema) { return; }
     schema->setInstanceable(v);
 }
+
+// reference / payload
 usdiAPI bool usdiPrimAddReference(usdi::Schema *schema, const char *asset_path, const char *prim_path)
 {
     usdiTraceFunc();
     if (!schema) { return false; }
     return schema->addReference(asset_path, prim_path);
 }
-
 usdiAPI bool usdiPrimHasPayload(usdi::Schema *schema)
 {
     usdiTraceFunc();
@@ -355,6 +407,7 @@ usdiAPI bool usdiPrimSetPayload(usdi::Schema *schema, const char *asset_path, co
     return schema->setPayload(asset_path, prim_path);
 }
 
+// parent / chind
 usdiAPI usdi::Schema* usdiPrimGetParent(usdi::Schema *schema)
 {
     usdiTraceFunc();

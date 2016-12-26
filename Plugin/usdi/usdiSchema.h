@@ -91,12 +91,15 @@ public:
     UpdateFlags     getUpdateFlagsPrev() const;
     virtual void    updateSample(Time t);
 
-    const ImportSettings&   getImportSettings() const;
+    void                    setOverrideImportSettings(bool v);
     bool                    isImportSettingsOverridden() const;
-    void                    setImportSettings(const ImportSettings& conf, bool over);
-    const ExportSettings&   getExportSettings() const;
+    const ImportSettings&   getImportSettings() const;
+    void                    setImportSettings(const ImportSettings& conf);
+
+    void                    setOverrideExportSettings(bool v);
     bool                    isExportSettingsOverridden() const;
-    void                    setExportSettings(const ExportSettings& conf, bool over);
+    const ExportSettings&   getExportSettings() const;
+    void                    setExportSettings(const ExportSettings& conf);
 
     void*           getUserData() const;
     void            setUserData(void *v);
@@ -181,11 +184,10 @@ protected:
     UpdateFlags     m_update_flag_prev;
     UpdateFlags     m_update_flag_next;
 
+    bool            m_isettings_override = false;
     ImportSettings  m_isettings;
-    bool            m_isettings_overridden = false;
-
+    bool            m_esettings_override = false;
     ExportSettings  m_esettings;
-    bool            m_esettings_overridden = false;
 
     void            *m_userdata = nullptr;
 };

@@ -41,7 +41,7 @@ namespace UTJ
                 stream = m_stream;
                 var meshes = new List<usdi.Mesh>();
                 var results = new List<bool>();
-                usdi.usdiPreComputeNormalsAll(m_stream.usdiContext, s_genTangents, s_overwrite, (usdi.Mesh mesh, bool done)=> {
+                usdi.usdiPreComputeNormalsAll(m_stream.usdiContext, s_genTangents, s_overwrite, (usdi.Mesh mesh, Bool done)=> {
                     meshes.Add(mesh);
                     results.Add(done);
                     if(done)

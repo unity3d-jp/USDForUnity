@@ -90,7 +90,7 @@ enum class TopologyVariance
 union UpdateFlags {
     struct {
         uint sample_updated : 1;
-        uint import_config_updated : 1;
+        uint import_settings_updated : 1;
         uint variant_set_changed : 1;
         uint payload_loaded : 1;
         uint payload_unloaded : 1;
@@ -334,6 +334,15 @@ usdiAPI int              usdiPrimGetID(usdi::Schema *schema);
 usdiAPI const char*      usdiPrimGetPath(usdi::Schema *schema);
 usdiAPI const char*      usdiPrimGetName(usdi::Schema *schema);
 usdiAPI const char*      usdiPrimGetUsdTypeName(usdi::Schema *schema);
+
+usdiAPI bool             usdiPrimIsImportSettingsOverriden(usdi::Schema *schema);
+usdiAPI void             usdiPrimSetOverrideImportSettings(usdi::Schema *schema, bool v);
+usdiAPI void             usdiPrimGetImportSettings(usdi::Schema *schema, usdi::ImportSettings *dst);
+usdiAPI void             usdiPrimSetImportSettings(usdi::Schema *schema, const usdi::ImportSettings *v);
+usdiAPI bool             usdiPrimIsExportSettingsOverriden(usdi::Schema *schema);
+usdiAPI void             usdiPrimSetOverrideExportSettings(usdi::Schema *schema, bool v);
+usdiAPI void             usdiPrimGetExportSettings(usdi::Schema *schema, usdi::ExportSettings *dst);
+usdiAPI void             usdiPrimSetExportSettings(usdi::Schema *schema, const usdi::ExportSettings *v);
 
 usdiAPI usdi::Schema*    usdiPrimGetMaster(usdi::Schema *schema);
 usdiAPI int              usdiPrimGetNumInstances(usdi::Schema *schema);
