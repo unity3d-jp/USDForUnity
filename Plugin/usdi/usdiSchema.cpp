@@ -461,7 +461,6 @@ void Schema::setOverrideImportSettings(bool v)
         m_isettings_override = v;
         m_update_flag_next.import_settings_updated = 1;
     }
-    m_isettings_override = v;
 }
 bool Schema::isImportSettingsOverridden() const
 { 

@@ -921,8 +921,8 @@ namespace UTJ
         {
             usdi.ExportSettings conf = usdi.ExportSettings.default_value;
             conf.scale = m_scale;
-            conf.swap_handedness = m_swapHandedness;
-            conf.swap_faces = m_swapFaces;
+            conf.swapHandedness = m_swapHandedness;
+            conf.swapFaces = m_swapFaces;
             usdi.usdiSetExportSettings(m_ctx, ref conf);
         }
 

@@ -19,7 +19,8 @@ namespace UTJ
         protected usdi.Schema m_schema;
         protected usdi.VariantSets m_variantSets;
         [SerializeField] protected int[] m_variantSelection;
-        [SerializeField] usdi.ImportSettings m_isettings = usdi.ImportSettings.default_value;
+        [SerializeField] bool m_overrideImportSettings;
+        [SerializeField] usdi.ImportSettings m_importSettings = usdi.ImportSettings.default_value;
         #endregion
 
 
@@ -50,6 +51,16 @@ namespace UTJ
         public int[] variantSelections
         {
             get { return m_variantSelection; }
+        }
+        public bool overrideImportSettings
+        {
+            get { return m_overrideImportSettings; }
+            set { m_overrideImportSettings = value; }
+        }
+        public usdi.ImportSettings importSettings
+        {
+            get { return m_importSettings; }
+            set { m_importSettings = value; }
         }
         public string primPath
         {
@@ -104,6 +115,20 @@ namespace UTJ
             }
         }
 
+        public void usdiApplyImportSettings()
+        {
+            usdi.usdiPrimSetOverrideImportSettings(m_schema, m_overrideImportSettings);
+            if (m_overrideImportSettings)
+            {
+                usdi.usdiPrimSetImportSettings(m_schema, ref m_importSettings);
+                m_stream.usdiSetImportSettings(primPath, ref m_importSettings);
+            }
+            else
+            {
+                m_stream.usdiDeleteImportSettings(primPath);
+            }
+        }
+
         protected virtual usdiIElement usdiSetupSchemaComponent()
         {
             return GetOrAddComponent<usdiElement>();
@@ -128,8 +153,15 @@ namespace UTJ
             m_primPath = usdi.usdiPrimGetPathS(m_schema);
             m_primTypeName = usdi.usdiPrimGetUsdTypeNameS(m_schema);
             m_master = m_stream.usdiFindSchema(usdi.usdiPrimGetMaster(m_schema));
+
+            m_overrideImportSettings = usdi.usdiPrimIsImportSettingsOverriden(m_schema);
+            if(m_overrideImportSettings)
+            {
+                usdi.usdiPrimGetImportSettings(m_schema, ref m_importSettings);
+            }
+
             usdiSyncVarinatSets();
-            if(m_goAssigned)
+            if (m_goAssigned)
             {
                 var c = usdiSetupSchemaComponent();
                 c.schema = this;

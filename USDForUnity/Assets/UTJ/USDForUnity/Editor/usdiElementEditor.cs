@@ -12,6 +12,7 @@ namespace UTJ
             //DrawDefaultInspector();
 
             var component = target as usdiIElement;
+            var so = serializedObject;
             var schema = component.schema;
             if(schema == null) { return; }
 
@@ -30,6 +31,7 @@ namespace UTJ
             var vsets = schema.variantSets;
             if (vsets != null && vsets.Count > 0)
             {
+                EditorGUILayout.Space();
                 EditorGUILayout.LabelField("Variant Sets", EditorStyles.boldLabel);
 
                 var selections = schema.variantSelections;
@@ -44,15 +46,50 @@ namespace UTJ
                     if (EditorGUI.EndChangeCheck())
                     {
                         schema.stream.recordUndo = true;
-                        var objects_to_recotd = new UnityEngine.Object[] { component, schema.stream };
-                        Undo.RecordObjects(objects_to_recotd, "Changed Variant Set");
+                        Undo.RecordObject(schema.stream, "Changed Variant Set");
                         schema.usdiSetVariantSelection(i, ivar);
-                        foreach(var o in objects_to_recotd)
-                        {
-                            EditorUtility.SetDirty(o);
-                        }
+                        EditorUtility.SetDirty(schema.stream);
                         schema.stream.recordUndo = false;
                     }
+                }
+            }
+
+            // per-object import settings
+            {
+                EditorGUILayout.Space();
+                EditorGUILayout.LabelField("Per-object Import Settings", EditorStyles.boldLabel);
+
+                bool changed = false;
+                EditorGUI.BeginChangeCheck();
+                schema.overrideImportSettings = EditorGUILayout.Toggle("Override Import Settings", schema.overrideImportSettings);
+                if (EditorGUI.EndChangeCheck())
+                {
+                    changed = true;
+                }
+
+                if (schema.overrideImportSettings)
+                {
+                    EditorGUI.indentLevel = 1;
+                    EditorGUI.BeginChangeCheck();
+                    EditorGUILayout.PropertyField(so.FindProperty("m_schema.m_importSettings.interpolation"));
+                    EditorGUILayout.PropertyField(so.FindProperty("m_schema.m_importSettings.normalCalculation"));
+                    EditorGUILayout.PropertyField(so.FindProperty("m_schema.m_importSettings.tangentCalculation"));
+                    EditorGUILayout.PropertyField(so.FindProperty("m_schema.m_importSettings.scale"));
+                    EditorGUILayout.PropertyField(so.FindProperty("m_schema.m_importSettings.swapHandedness"));
+                    EditorGUILayout.PropertyField(so.FindProperty("m_schema.m_importSettings.swapFaces"));
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        so.ApplyModifiedProperties();
+                        changed = true;
+                    }
+                    EditorGUI.indentLevel = 0;
+                }
+
+                if(changed)
+                {
+                    Undo.RecordObject(schema.stream, "Changed Import Settings");
+                    schema.usdiApplyImportSettings();
+                    EditorUtility.SetDirty(schema.stream);
                 }
             }
         }

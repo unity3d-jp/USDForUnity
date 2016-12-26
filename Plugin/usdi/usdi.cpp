@@ -284,13 +284,13 @@ usdiAPI void usdiPrimSetOverrideImportSettings(usdi::Schema *schema, bool v)
 usdiAPI void usdiPrimGetImportSettings(usdi::Schema *schema, usdi::ImportSettings *dst)
 {
     usdiTraceFunc();
-    if (!schema || dst) { return; }
+    if (!schema || !dst) { return; }
     *dst = schema->getImportSettings();
 }
 usdiAPI void usdiPrimSetImportSettings(usdi::Schema *schema, const usdi::ImportSettings *v)
 {
     usdiTraceFunc();
-    if (!schema || v) { return; }
+    if (!schema || !v) { return; }
     schema->setImportSettings(*v);
 }
 usdiAPI bool usdiPrimIsExportSettingsOverriden(usdi::Schema *schema)
@@ -314,7 +314,7 @@ usdiAPI void usdiPrimGetExportSettings(usdi::Schema *schema, usdi::ExportSetting
 usdiAPI void usdiPrimSetExportSettings(usdi::Schema *schema, const usdi::ExportSettings *v)
 {
     usdiTraceFunc();
-    if (!schema || v) { return; }
+    if (!schema || !v) { return; }
     schema->setExportSettings(*v);
 }
 

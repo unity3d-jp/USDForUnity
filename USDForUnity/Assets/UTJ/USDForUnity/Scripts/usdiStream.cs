@@ -38,7 +38,10 @@ namespace UTJ
 
         [HideInInspector][SerializeField] string[] m_variantSelections_keys;
         [HideInInspector][SerializeField] VariantSelection[] m_variantSelections_values;
+        [HideInInspector][SerializeField] string[] m_perObjectSettings_keys;
+        [HideInInspector][SerializeField] usdi.ImportSettings[] m_perObjectSettings_values;
         Dictionary<string, VariantSelection> m_variantSelections = new Dictionary<string, VariantSelection>();
+        Dictionary<string, usdi.ImportSettings> m_perObjectSettings = new Dictionary<string, usdi.ImportSettings>();
 
         List<usdiSchema> m_schemas = new List<usdiSchema>();
         Dictionary<string, usdiSchema> m_schemaLUT = new Dictionary<string, usdiSchema>();
@@ -106,9 +109,13 @@ namespace UTJ
         {
             m_variantSelections_keys = m_variantSelections.Keys.ToArray();
             m_variantSelections_values = m_variantSelections.Values.ToArray();
+
+            m_perObjectSettings_keys = m_perObjectSettings.Keys.ToArray();
+            m_perObjectSettings_values = m_perObjectSettings.Values.ToArray();
         }
         public void OnAfterDeserialize()
         {
+            // variant selections
             if (m_variantSelections_keys != null &&
                 m_variantSelections_values != null &&
                 m_variantSelections_keys.Length == m_variantSelections_values.Length)
@@ -121,6 +128,20 @@ namespace UTJ
             }
             m_variantSelections_keys = null;
             m_variantSelections_values = null;
+
+            // per-object import settings
+            if (m_perObjectSettings_keys != null &&
+                m_perObjectSettings_values != null &&
+                m_perObjectSettings_keys.Length == m_perObjectSettings_values.Length)
+            {
+                int n = m_perObjectSettings_keys.Length;
+                for (int i = 0; i < n; ++i)
+                {
+                    m_perObjectSettings[m_perObjectSettings_keys[i]] = m_perObjectSettings_values[i];
+                }
+            }
+            m_perObjectSettings_keys = null;
+            m_perObjectSettings_values = null;
         }
 
 
@@ -128,6 +149,17 @@ namespace UTJ
         {
             m_variantSelections[primPath] = new VariantSelection { selections = selection };
             usdiReload();
+        }
+
+        public void usdiSetImportSettings(string primPath, ref usdi.ImportSettings settings)
+        {
+            m_perObjectSettings[primPath] = settings;
+            usdiNotifyForceUpdate();
+        }
+        public void usdiDeleteImportSettings(string primPath)
+        {
+            m_perObjectSettings.Remove(primPath);
+            usdiNotifyForceUpdate();
         }
 
         public void usdiNotifyForceUpdate()
@@ -341,9 +373,22 @@ namespace UTJ
         }
 
 
-        void usdiApplyImportConfig()
+        void usdiApplyImportConfig(bool all)
         {
             usdi.usdiSetImportSettings(m_ctx, ref m_importSettings);
+            if(all)
+            {
+                foreach(var v in m_perObjectSettings)
+                {
+                    var s = usdi.usdiFindSchema(m_ctx, v.Key);
+                    if(s)
+                    {
+                        var tmp = v.Value;
+                        usdi.usdiPrimSetOverrideImportSettings(s, true);
+                        usdi.usdiPrimSetImportSettings(s, ref tmp);
+                    }
+                }
+            }
         }
 
         bool usdiApplyVarianceSelections()
@@ -377,7 +422,6 @@ namespace UTJ
             m_path = path;
             m_path.readOnly = true;
             m_ctx = usdi.usdiCreateContext();
-            usdiApplyImportConfig();
 
             var fullpath = m_path.GetFullPath();
             if (!usdi.usdiOpen(m_ctx, fullpath))
@@ -393,6 +437,7 @@ namespace UTJ
             {
                 usdi.usdiRebuildSchemaTree(m_ctx);
             }
+            usdiApplyImportConfig(true);
 
             usdiConstructTrees();
 
@@ -411,8 +456,8 @@ namespace UTJ
 
             usdiWaitAsyncUpdateTask();
 
-            usdiApplyImportConfig();
             usdiApplyVarianceSelections();
+            usdiApplyImportConfig(true);
             usdi.usdiRebuildSchemaTree(m_ctx);
 
             usdiConstructTrees();
@@ -480,7 +525,7 @@ namespace UTJ
         // possibly called from non-main thread
         void usdiAsyncUpdate(double t)
         {
-            usdiApplyImportConfig();
+            usdiApplyImportConfig(false);
 
             // skip if update is not needed
             if(m_updateRequired)
