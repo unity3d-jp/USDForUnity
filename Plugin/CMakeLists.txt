@@ -219,6 +219,8 @@ IF(NOT USDI_ENABLE_OSX_BUNDLE)
 
     # deploy
     ADD_CUSTOM_TARGET(deploy ALL
+        COMMAND rm -rf ${PLUGINS_DIR}/$<TARGET_FILE_NAME:usdi>
+        COMMAND rm -rf ${PLUGINS_DIR}/$<TARGET_FILE_NAME:usdiRT>
         COMMAND cp $<TARGET_FILE:usdi> ${PLUGINS_DIR}
         COMMAND cp $<TARGET_FILE:usdiRT> ${PLUGINS_DIR}
         DEPENDS usdi

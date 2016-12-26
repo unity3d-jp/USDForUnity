@@ -23,8 +23,8 @@ Schema::Schema(Context *ctx, Schema *parent, Schema *master, const std::string& 
 Schema::Schema(Context *ctx, Schema *parent, const UsdPrim& p)
     : m_ctx(ctx)
     , m_parent(parent)
-    , m_prim(p)
     , m_id(ctx->generateID())
+    , m_prim(p)
 {
     init();
 }
@@ -408,7 +408,6 @@ void Schema::editVariants(const std::function<void()>& body)
     }
     body();
     for (auto& e : edit_targets) {
-        e; // unused
         m_ctx->endEdit();
     }
 }

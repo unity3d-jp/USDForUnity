@@ -223,8 +223,8 @@ void VertexCommandManager::wait()
 tbb::task_group Task::s_task_group;
 
 Task::Task(const std::function<void()>& f, const char *n)
-    : m_func(f)
-    , m_dbg_name(n)
+    : m_dbg_name(n)
+    , m_func(f)
 {
 }
 

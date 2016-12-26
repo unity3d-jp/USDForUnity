@@ -148,8 +148,8 @@ void mImageCache::rebind() { m_rep = mGetDomain().findImage(m_name).get(); }
 mClassCache::mClassCache(mImage& img, const char *ns, const char *name)
     : mClass(nullptr)
     , m_image(&img)
-    , m_namespace(ns)
     , m_name(name)
+    , m_namespace(ns)
 {
     mRegisterCache(this);
 }

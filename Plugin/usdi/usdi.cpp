@@ -469,13 +469,13 @@ usdiAPI void usdiPrimEndEditVariant(usdi::Schema *schema)
 usdiAPI usdi::UpdateFlags usdiPrimGetUpdateFlags(usdi::Schema *schema)
 {
     usdiTraceFunc();
-    if (!schema) { return{ 0 }; }
+    if (!schema) { return{ {0} }; }
     return schema->getUpdateFlags();
 }
 usdiAPI usdi::UpdateFlags usdiPrimGetUpdateFlagsPrev(usdi::Schema *schema)
 {
     usdiTraceFunc();
-    if (!schema) { return{ 0 }; }
+    if (!schema) { return{ {0} }; }
     return schema->getUpdateFlagsPrev();
 }
 
