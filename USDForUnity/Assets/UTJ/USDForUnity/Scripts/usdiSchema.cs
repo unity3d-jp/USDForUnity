@@ -105,13 +105,22 @@ namespace UTJ
             return false;
         }
 
-        protected void usdiSyncVarinatSets()
+        public void usdiSyncVarinatSets()
         {
             m_variantSets = usdi.usdiPrimGetVariantSets(m_schema);
             m_variantSelection = new int[m_variantSets.Count];
             for (int i = 0; i < m_variantSets.Count; ++i)
             {
                 m_variantSelection[i] = usdi.usdiPrimGetVariantSelection(m_schema, i);
+            }
+        }
+
+        public void usdiSyncImportSettings()
+        {
+            m_overrideImportSettings = usdi.usdiPrimIsImportSettingsOverriden(m_schema);
+            if (m_overrideImportSettings)
+            {
+                usdi.usdiPrimGetImportSettings(m_schema, ref m_importSettings);
             }
         }
 
@@ -154,13 +163,8 @@ namespace UTJ
             m_primTypeName = usdi.usdiPrimGetUsdTypeNameS(m_schema);
             m_master = m_stream.usdiFindSchema(usdi.usdiPrimGetMaster(m_schema));
 
-            m_overrideImportSettings = usdi.usdiPrimIsImportSettingsOverriden(m_schema);
-            if(m_overrideImportSettings)
-            {
-                usdi.usdiPrimGetImportSettings(m_schema, ref m_importSettings);
-            }
-
             usdiSyncVarinatSets();
+            usdiSyncImportSettings();
             if (m_goAssigned)
             {
                 var c = usdiSetupSchemaComponent();

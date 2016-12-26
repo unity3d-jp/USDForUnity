@@ -408,10 +408,10 @@ void Schema::editVariants(const std::function<void()>& body)
     }
     body();
     for (auto& e : edit_targets) {
+        e; // unused
         m_ctx->endEdit();
     }
 }
-
 
 void Schema::notifyForceUpdate()
 {
@@ -457,44 +457,84 @@ void Schema::updateSample(Time t)
 
 void Schema::setOverrideImportSettings(bool v)
 {
-    if (m_isettings_override != v) {
-        m_isettings_override = v;
-        m_update_flag_next.import_settings_updated = 1;
+    if (m_master) {
+        m_master->setOverrideImportSettings(v);
+    }
+    else {
+        if (m_isettings_override != v) {
+            m_isettings_override = v;
+            m_update_flag_next.import_settings_updated = 1;
+        }
     }
 }
 bool Schema::isImportSettingsOverridden() const
 { 
-    return m_isettings_override;
+    if (m_master) {
+        return m_master->isImportSettingsOverridden();
+    }
+    else {
+        return m_isettings_override;
+    }
 }
 const ImportSettings& Schema::getImportSettings() const
 {
-    return m_isettings_override ? m_isettings : m_ctx->getImportSettings();
+    if (m_master) {
+        return m_master->getImportSettings();
+    }
+    else {
+        return m_isettings_override ? m_isettings : m_ctx->getImportSettings();
+    }
 }
 void Schema::setImportSettings(const ImportSettings& v)
 {
-    if (m_isettings != v) {
-        m_isettings = v;
-        if (m_isettings_override) {
-            m_update_flag_next.import_settings_updated = 1;
+    if (m_master) {
+        m_master->setImportSettings(v);
+    }
+    else {
+        if (m_isettings != v) {
+            m_isettings = v;
+            if (m_isettings_override) {
+                m_update_flag_next.import_settings_updated = 1;
+            }
         }
     }
 }
 
 void Schema::setOverrideExportSettings(bool v)
 {
-    m_esettings_override = v;
+    if (m_master) {
+        m_master->setOverrideExportSettings(v);
+    }
+    else {
+        m_esettings_override = v;
+    }
 }
 bool Schema::isExportSettingsOverridden() const
 {
-    return m_esettings_override;
+    if (m_master) {
+        return m_master->isExportSettingsOverridden();
+    }
+    else {
+        return m_esettings_override;
+    }
 }
 const ExportSettings& Schema::getExportSettings() const
 {
-    return m_esettings_override ? m_esettings : m_ctx->getExportSettings();
+    if (m_master) {
+        return m_master->getExportSettings();
+    }
+    else {
+        return m_esettings_override ? m_esettings : m_ctx->getExportSettings();
+    }
 }
 void Schema::setExportSettings(const ExportSettings& v)
 {
-    m_esettings = v;
+    if (m_master) {
+        m_master->setExportSettings(v);
+    }
+    else {
+        m_esettings = v;
+    }
 }
 
 

@@ -215,7 +215,7 @@ void TestExportSkinnedMesh(const char *filename, int cseg, int hseg)
             data.position.y = 1.0f;
 
             for (int i = 0; i < 200; ++i) {
-                usdi::Time t = (1.0 / 30) * i;
+                usdi::Time t = i;
                 float3 axis{ 1.0f, 0.0f, 0.0f };
                 float angle = 20.0f * DegToRad * std::cos(float(i*5) * DegToRad);
                 data.rotation = {

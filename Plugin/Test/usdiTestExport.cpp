@@ -43,7 +43,7 @@ static void AddAttribute(usdi::Schema *schema, const char *name, usdi::Attribute
     data.data = (void*)v;
     data.num_elements = N;
     for (int i = 0; i < N; ++i) {
-        usdi::Time t = 1.0 / 30.0 * i;
+        usdi::Time t = i;
         usdiAttrWriteSample(attr, &data, t);
     }
 }
@@ -134,7 +134,7 @@ void TestExport(const char *filename)
     {
         auto *xf = usdiCreateXform(ctx, root, "Child");
         for (int i = 0; i < 5; ++i) {
-            usdi::Time t = (1.0 / 30.0) * i;
+            usdi::Time t = i;
             usdi::XformData data;
             data.position.x = 0.2f * i;
             usdiXformWriteSample(xf, &data, t);
@@ -182,7 +182,7 @@ void TestExport(const char *filename)
             data.num_indices = std::extent<decltype(indices)>::value;
 
             for (int i = 0; i < 5; ++i) {
-                usdi::Time t = (1.0 / 30.0) * i;
+                usdi::Time t = i;
                 usdiMeshWriteSample(mesh, &data, t);
             }
         }
@@ -214,7 +214,7 @@ void TestExport(const char *filename)
         data.num_indices = std::extent<decltype(indices)>::value;
 
         for (int i = 0; i < 5; ++i) {
-            usdi::Time t = (1.0 / 30.0) * i;
+            usdi::Time t = i;
             usdiMeshWriteSample(mesh2, &data, t);
         }
         usdiMeshPreComputeNormals(mesh2, true);
@@ -236,7 +236,7 @@ void TestExport(const char *filename)
         usdiPrimBeginEditVariant(xf, "VariantSet0", "Variant0-0");
         xf = usdiAsXform(usdiFindSchema(ctx, "/TestVariants"));
         for (int i = 0; i < 5; ++i) {
-            usdi::Time t = (1.0 / 30.0) * i;
+            usdi::Time t = i;
             usdi::XformData data;
             data.position.x = 0.2f * i;
             usdiXformWriteSample(xf, &data, t);
@@ -247,7 +247,7 @@ void TestExport(const char *filename)
         usdiPrimBeginEditVariant(xf, "VariantSet1", "Variant1-1");
         xf = usdiAsXform(usdiFindSchema(ctx, "/TestVariants"));
         for (int i = 0; i < 5; ++i) {
-            usdi::Time t = (1.0 / 30.0) * i;
+            usdi::Time t = i;
             usdi::XformData data;
             data.position.y = 0.4f * i;
             usdiXformWriteSample(xf, &data, t);

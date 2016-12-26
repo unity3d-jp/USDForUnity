@@ -33,7 +33,7 @@ void TestExportHighMesh(const char *filename, int frame_count)
         usdi::Time t = 0.0;
 
         tbb::parallel_for(0, frame_count, [&counts, &indices, &points, &uv](int i) {
-            usdi::Time t = 1.0 / 30.0 * i;
+            usdi::Time t = i;
             int resolution = 8;
             if (i < 30)      { resolution = 8; }
             else if (i < 60) { resolution = 16; }
@@ -46,7 +46,7 @@ void TestExportHighMesh(const char *filename, int frame_count)
         for (int i = 0; i < frame_count; ++i) {
             auto& vertices = points[i];
 
-            usdi::Time t = 1.0 / 30.0 * i;
+            usdi::Time t = i;
             usdi::MeshData data;
             data.counts = counts[i].data();
             data.num_counts = counts[i].size();

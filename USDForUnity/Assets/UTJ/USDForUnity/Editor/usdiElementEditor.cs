@@ -12,7 +12,6 @@ namespace UTJ
             //DrawDefaultInspector();
 
             var component = target as usdiIElement;
-            var so = serializedObject;
             var schema = component.schema;
             if(schema == null) { return; }
 
@@ -56,6 +55,8 @@ namespace UTJ
 
             // per-object import settings
             {
+                schema.usdiSyncImportSettings();
+
                 EditorGUILayout.Space();
                 EditorGUILayout.LabelField("Per-object Import Settings", EditorStyles.boldLabel);
 
@@ -71,15 +72,18 @@ namespace UTJ
                 {
                     EditorGUI.indentLevel = 1;
                     EditorGUI.BeginChangeCheck();
-                    EditorGUILayout.PropertyField(so.FindProperty("m_schema.m_importSettings.interpolation"));
-                    EditorGUILayout.PropertyField(so.FindProperty("m_schema.m_importSettings.normalCalculation"));
-                    EditorGUILayout.PropertyField(so.FindProperty("m_schema.m_importSettings.tangentCalculation"));
-                    EditorGUILayout.PropertyField(so.FindProperty("m_schema.m_importSettings.scale"));
-                    EditorGUILayout.PropertyField(so.FindProperty("m_schema.m_importSettings.swapHandedness"));
-                    EditorGUILayout.PropertyField(so.FindProperty("m_schema.m_importSettings.swapFaces"));
+
+                    usdi.ImportSettings tmp = schema.importSettings;
+                    tmp.interpolation = (usdi.InterpolationType)EditorGUILayout.EnumPopup("Interpolation", (Enum)tmp.interpolation);
+                    tmp.normalCalculation = (usdi.NormalCalculationType)EditorGUILayout.EnumPopup("Normal Calculation", (Enum)tmp.normalCalculation);
+                    tmp.tangentCalculation = (usdi.TangentCalculationType)EditorGUILayout.EnumPopup("Tangent Calculation", (Enum)tmp.tangentCalculation);
+                    tmp.scale = EditorGUILayout.FloatField("Scale", tmp.scale);
+                    tmp.swapHandedness = EditorGUILayout.Toggle("Swap Handedness", tmp.swapHandedness);
+                    tmp.swapFaces = EditorGUILayout.Toggle("Swap Faces", tmp.swapFaces);
+
                     if (EditorGUI.EndChangeCheck())
                     {
-                        so.ApplyModifiedProperties();
+                        schema.importSettings = tmp;
                         changed = true;
                     }
                     EditorGUI.indentLevel = 0;
