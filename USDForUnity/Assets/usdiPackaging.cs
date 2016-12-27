@@ -10,10 +10,10 @@ public class usdiPackaging
     {
         string[] files = new string[]
         {
-"Assets/UTJ/USDForUnity",
-"Assets/UTJ/Misc",
-"Assets/UTJ/Plugins",
-"Assets/StreamingAssets/UTJ/USDForUnity",
+"Assets/UTJ",
+"Assets/USDExamples",
+"Assets/StreamingAssets/USDForUnity",
+"Assets/StreamingAssets/USDExamples",
         };
         AssetDatabase.ExportPackage(files, "USDForUnity.unitypackage", ExportPackageOptions.Recurse);
     }

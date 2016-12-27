@@ -13,6 +13,8 @@ using usdi::float4;
 using usdi::quatf;
 using usdi::float4x4;
 
+#define DegToRad (3.1415926535897932384626433832795f / 180.0f)
+
 void GenerateOffsets(std::vector<int>& dst, const std::vector<int>& counts);
 
 void GenerateWaveMesh(
@@ -22,7 +24,7 @@ void GenerateWaveMesh(
     std::vector<float2> &uv,
     float size, float height,
     const int resolution,
-    usdi::Time t);
+    float angle);
 
 void GenerateCylinderMesh(
     std::vector<int>& counts,

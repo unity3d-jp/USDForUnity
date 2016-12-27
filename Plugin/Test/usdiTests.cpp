@@ -16,7 +16,7 @@ testsAPI void TestMain(int argc, char *argv[])
     TestExport("TestExport.usda");
     TestExport("TestExport.usdc");
     TestExportHighMesh("HighMesh.usda", 1);
-    TestExportHighMesh("HighMesh.usdc", 200);
+    TestExportHighMesh("HighMesh.usdc", 180);
     TestExportSkinnedMesh("SkinnedMesh.usda", 6, 5);
     TestExportSkinnedMesh("SkinnedMesh.usdc", 32, 128);
     TestExportSkinnedMesh("SkinnedHighMesh.usdc", 128, 512);

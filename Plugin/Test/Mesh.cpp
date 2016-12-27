@@ -5,8 +5,6 @@
 #include <algorithm>
 #include "Mesh.h"
 
-#define DegToRad (3.1415926535897932384626433832795f / 180.0f)
-
 void GenerateOffsets(std::vector<int>& dst, const std::vector<int>& counts)
 {
     size_t n = counts.size();
@@ -25,7 +23,7 @@ void GenerateWaveMesh(
     std::vector<float2> &uv,
     float size, float height,
     const int resolution,
-    usdi::Time t)
+    float angle)
 {
     const int num_faces = (resolution - 1) * (resolution - 1);
     const int num_indices = num_faces * 4;
@@ -45,7 +43,7 @@ void GenerateWaveMesh(
 
             float3& v = points[i];
             v.x = pos.x * size;
-            v.y = std::sin(d * 10.0f + t * 5.0f) * std::max<float>(1.0 - d, 0.0f) * height;
+            v.y = std::sin(d * 10.0f + angle) * std::max<float>(1.0 - d, 0.0f) * height;
             v.z = pos.y * size;
 
             float2& t = uv[i];

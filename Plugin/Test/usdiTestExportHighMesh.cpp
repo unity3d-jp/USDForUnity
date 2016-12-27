@@ -32,7 +32,7 @@ void TestExportHighMesh(const char *filename, int frame_count)
 
         usdi::Time t = 0.0;
 
-        tbb::parallel_for(0, frame_count, [&counts, &indices, &points, &uv](int i) {
+        tbb::parallel_for(0, frame_count, [frame_count, &counts, &indices, &points, &uv](int i) {
             usdi::Time t = i;
             int resolution = 8;
             if (i < 30)      { resolution = 8; }
@@ -40,8 +40,8 @@ void TestExportHighMesh(const char *filename, int frame_count)
             else if (i < 90) { resolution = 32; }
             else if (i < 120) { resolution = 64; }
             else if (i < 150) { resolution = 128; }
-            else if (i < 180) { resolution = 256; }
-            GenerateWaveMesh(counts[i], indices[i], points[i], uv[i], 1.0f, 0.5f, resolution, t);
+            else { resolution = 256; }
+            GenerateWaveMesh(counts[i], indices[i], points[i], uv[i], 1.0f, 0.5f, resolution, (360.0 * 5 * DegToRad / frame_count) * i);
         });
         for (int i = 0; i < frame_count; ++i) {
             auto& vertices = points[i];

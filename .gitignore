@@ -40,3 +40,5 @@ USDForUnity/*.csproj
 bin/
 
 MeshUtilsCore.h
+/USDForUnity/Assets/UTJ/Plugins/x86_64/usdi.bundle/Contents/MacOS/usdi
+/USDForUnity/Assets/UTJ/Plugins/x86_64/usdiRT.bundle/Contents/MacOS/usdiRT
