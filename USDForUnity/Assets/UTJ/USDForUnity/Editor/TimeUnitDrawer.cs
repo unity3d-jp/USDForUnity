@@ -4,8 +4,8 @@ using System.Collections;
 
 namespace UTJ
 {
-    [CustomPropertyDrawer(typeof(usdiTimeUnit))]
-    class usdiTimeUnitDrawer : PropertyDrawer
+    [CustomPropertyDrawer(typeof(TimeUnit))]
+    class TimeUnitDrawer : PropertyDrawer
     {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
@@ -22,15 +22,15 @@ namespace UTJ
 
             EditorGUI.BeginChangeCheck();
             EditorGUI.PropertyField(typeRect, typeProperty, GUIContent.none);
-            var type = (usdiTimeUnit.Types)typeProperty.enumValueIndex;
-            if (type == usdiTimeUnit.Types.FreeScale)
+            var type = (TimeUnit.Types)typeProperty.enumValueIndex;
+            if (type == TimeUnit.Types.FreeScale)
             {
                 EditorGUI.PropertyField(scaleRect, scaleProperty, GUIContent.none);
             }
             if (EditorGUI.EndChangeCheck())
             {
                 var scale = scaleProperty.floatValue;
-                scaleProperty.floatValue = usdiTimeUnit.Adjust(type, scale);
+                scaleProperty.floatValue = TimeUnit.Adjust(type, scale);
             }
 
 

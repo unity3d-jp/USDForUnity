@@ -4,14 +4,14 @@ using UnityEngine;
 
 namespace UTJ
 {
-    [CustomEditor(typeof(usdiIElement))]
-    public class usdiElementEditor : Editor
+    [CustomEditor(typeof(UsdIComponent))]
+    public class UsdIComponentEditor : Editor
     {
         public override void OnInspectorGUI()
         {
             //DrawDefaultInspector();
 
-            var component = target as usdiIElement;
+            var component = target as UsdIComponent;
             var schema = component.schema;
             if(schema == null) { return; }
 
@@ -100,8 +100,8 @@ namespace UTJ
     }
 
 
-    [CustomEditor(typeof(usdiElement))]
-    public class usdiSchemaEditor : usdiElementEditor
+    [CustomEditor(typeof(UsdComponent))]
+    public class UsdComponentEditor : UsdIComponentEditor
     {
         public override void OnInspectorGUI()
         {

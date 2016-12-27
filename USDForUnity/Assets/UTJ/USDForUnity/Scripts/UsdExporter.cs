@@ -14,7 +14,7 @@ namespace UTJ
 {
     [ExecuteInEditMode]
     [AddComponentMenu("USD/Exporter")]
-    public class usdiExporter : MonoBehaviour
+    public class UsdExporter : MonoBehaviour
     {
         #region impl
 
@@ -25,11 +25,11 @@ namespace UTJ
 
         public abstract class ComponentCapturer
         {
-            protected usdiExporter m_exporter;
+            protected UsdExporter m_exporter;
             protected ComponentCapturer m_parent;
             protected usdi.Schema m_usd;
 
-            public usdiExporter exporter { get { return m_exporter; } }
+            public UsdExporter exporter { get { return m_exporter; } }
             public usdi.Context ctx { get { return m_exporter.m_ctx; } }
             public ComponentCapturer parent { get { return m_parent; } }
             public usdi.Schema usd { get { return m_usd; } }
@@ -37,7 +37,7 @@ namespace UTJ
             public abstract void Capture(double t); // called from main thread
             public abstract void Flush(double t); // called from worker thread
 
-            protected ComponentCapturer(usdiExporter exporter, ComponentCapturer parent)
+            protected ComponentCapturer(UsdExporter exporter, ComponentCapturer parent)
             {
                 m_exporter = exporter;
                 m_parent = parent;
@@ -46,7 +46,7 @@ namespace UTJ
 
         public class RootCapturer : ComponentCapturer
         {
-            public RootCapturer(usdiExporter exporter, usdi.Schema usd)
+            public RootCapturer(UsdExporter exporter, usdi.Schema usd)
                 : base(exporter, null)
             {
                 m_usd = usd;
@@ -82,7 +82,7 @@ namespace UTJ
                 set { m_scale = value; }
             }
 
-            public TransformCapturer(usdiExporter exporter, ComponentCapturer parent, Transform target, bool create_usd_node = true)
+            public TransformCapturer(UsdExporter exporter, ComponentCapturer parent, Transform target, bool create_usd_node = true)
                 : base(exporter, parent)
             {
                 m_target = target;
@@ -96,7 +96,7 @@ namespace UTJ
                     m_captureEveryFrame = false;
                 }
 
-                var config = target.GetComponent<usdiTransformExportConfig>();
+                var config = target.GetComponent<UsdTransformExportSettings>();
                 if (config)
                 {
                     m_captureEveryFrame = config.m_captureEveryFrame;
@@ -143,7 +143,7 @@ namespace UTJ
             usdi.CameraData m_data = usdi.CameraData.default_value;
             int m_count = 0;
 
-            public CameraCapturer(usdiExporter exporter, ComponentCapturer parent, Camera target)
+            public CameraCapturer(UsdExporter exporter, ComponentCapturer parent, Camera target)
                 : base(exporter, parent, target.GetComponent<Transform>(), false)
             {
                 m_usd = usdi.usdiCreateCamera(ctx, parent.usd, CreateName(target));
@@ -328,18 +328,18 @@ namespace UTJ
                 return false;
             }
 
-            public MeshCapturer(usdiExporter exporter, ComponentCapturer parent, MeshRenderer target)
+            public MeshCapturer(UsdExporter exporter, ComponentCapturer parent, MeshRenderer target)
                 : base(exporter, parent, target.GetComponent<Transform>(), false)
             {
                 m_usd = usdi.usdiCreateMesh(ctx, parent.usd, CreateName(target));
                 m_target = target;
                 m_buffer = new MeshBuffer();
 
-                m_captureNormals = exporter.m_captureMeshNormals;
-                m_captureTangents = exporter.m_captureMeshTangents;
-                m_captureUVs = exporter.m_captureMeshUVs;
+                m_captureNormals = exporter.m_meshNormals;
+                m_captureTangents = exporter.m_meshTangents;
+                m_captureUVs = exporter.m_meshUVs;
 
-                var conf = target.GetComponent<usdiMeshExportConfig>();
+                var conf = target.GetComponent<UsdMeshExportSettings>();
                 if (conf != null)
                 {
                     m_captureNormals = conf.m_captureNormals;
@@ -405,7 +405,7 @@ namespace UTJ
                 return mesh != null && mesh.isReadable;
             }
 
-            public SkinnedMeshCapturer(usdiExporter exporter, ComponentCapturer parent, SkinnedMeshRenderer target)
+            public SkinnedMeshCapturer(UsdExporter exporter, ComponentCapturer parent, SkinnedMeshRenderer target)
                 : base(exporter, parent, target.GetComponent<Transform>(), false)
             {
                 m_usd = usdi.usdiCreateMesh(ctx, parent.usd, CreateName(target));
@@ -417,13 +417,13 @@ namespace UTJ
                     base.scale = false;
                 }
 
-                m_captureNormals = exporter.m_captureMeshNormals;
-                m_captureTangents = exporter.m_captureMeshTangents;
-                m_captureUVs = exporter.m_captureMeshUVs;
-                m_captureBones = exporter.m_captureSkinnedMeshAs == SkinnedMeshCaptureMode.BoneAndWeights;
+                m_captureNormals = exporter.m_meshNormals;
+                m_captureTangents = exporter.m_meshTangents;
+                m_captureUVs = exporter.m_meshUVs;
+                m_captureBones = exporter.m_skinnedMeshFormat == SkinnedMeshFormat.BoneAndWeights;
                 m_captureEveryFrame = !m_captureBones;
 
-                var conf = target.GetComponent<usdiMeshExportConfig>();
+                var conf = target.GetComponent<UsdMeshExportSettings>();
                 if (conf != null)
                 {
                     m_captureNormals = conf.m_captureNormals;
@@ -510,13 +510,13 @@ namespace UTJ
             bool m_captureRotations = true;
 
 
-            public ParticleCapturer(usdiExporter exporter, ComponentCapturer parent, ParticleSystem target)
+            public ParticleCapturer(UsdExporter exporter, ComponentCapturer parent, ParticleSystem target)
                 : base(exporter, parent, target.GetComponent<Transform>(), false)
             {
                 m_usd = usdi.usdiCreatePoints(ctx, parent.usd, CreateName(target));
                 m_target = target;
 
-                var config = target.GetComponent<usdiParticleExportConfig>();
+                var config = target.GetComponent<UsdParticleExportSettings>();
                 if (config != null)
                 {
                     m_captureRotations = config.m_captureRotations;
@@ -595,9 +595,9 @@ namespace UTJ
 
         public class CustomCapturerHandler : TransformCapturer
         {
-            usdiCustomComponentCapturer m_target;
+            UsdCustomComponentCapturer m_target;
 
-            public CustomCapturerHandler(usdiExporter exporter, ComponentCapturer parent, usdiCustomComponentCapturer target)
+            public CustomCapturerHandler(UsdExporter exporter, ComponentCapturer parent, UsdCustomComponentCapturer target)
                 : base(exporter, parent, target.GetComponent<Transform>(), false)
             {
                 m_target = target;
@@ -636,7 +636,7 @@ namespace UTJ
             CurrentBranch,
         }
 
-        public enum SkinnedMeshCaptureMode
+        public enum SkinnedMeshFormat
         {
             VertexCache,
             BoneAndWeights,
@@ -646,7 +646,7 @@ namespace UTJ
         [Header("USD")]
 
         [SerializeField] string m_outputPath;
-        [SerializeField] usdiTimeUnit m_timeUnit = new usdiTimeUnit();
+        [SerializeField] TimeUnit m_timeUnit = new TimeUnit();
         [SerializeField] float m_scale = 1.0f;
         [SerializeField] bool m_swapHandedness = true;
         [SerializeField] bool m_swapFaces = true;
@@ -662,10 +662,10 @@ namespace UTJ
         [SerializeField] bool m_captureCamera = true;
         [SerializeField] bool m_customCapturer = true;
         [Space(8)]
-        [SerializeField] SkinnedMeshCaptureMode m_captureSkinnedMeshAs = SkinnedMeshCaptureMode.VertexCache;
-        [SerializeField] bool m_captureMeshNormals = true;
-        [SerializeField] bool m_captureMeshTangents = true;
-        [SerializeField] bool m_captureMeshUVs = true;
+        [SerializeField] SkinnedMeshFormat m_skinnedMeshFormat = SkinnedMeshFormat.VertexCache;
+        [SerializeField] bool m_meshNormals = true;
+        [SerializeField] bool m_meshTangents = true;
+        [SerializeField] bool m_meshUVs = true;
 
         [Header("Capture Setting")]
 
@@ -843,9 +843,9 @@ namespace UTJ
             {
                 node.capturer = new ParticleCapturer(this, parent_capturer, node.trans.GetComponent<ParticleSystem>());
             }
-            else if (node.componentType == typeof(usdiCustomComponentCapturer))
+            else if (node.componentType == typeof(UsdCustomComponentCapturer))
             {
-                node.capturer = new CustomCapturerHandler(this, parent_capturer, node.trans.GetComponent<usdiCustomComponentCapturer>());
+                node.capturer = new CustomCapturerHandler(this, parent_capturer, node.trans.GetComponent<UsdCustomComponentCapturer>());
             }
             else
             {
@@ -905,7 +905,7 @@ namespace UTJ
                     node.componentType = t.GetType();
 
                     // capture bones as well
-                    if (m_captureSkinnedMeshAs == SkinnedMeshCaptureMode.BoneAndWeights)
+                    if (m_skinnedMeshFormat == SkinnedMeshFormat.BoneAndWeights)
                     {
                         if (t.rootBone != null)
                         {
@@ -932,11 +932,11 @@ namespace UTJ
             }
             if (m_customCapturer)
             {
-                foreach (var t in GetTargets<usdiCustomComponentCapturer>())
+                foreach (var t in GetTargets<UsdCustomComponentCapturer>())
                 {
                     if (ShouldBeIgnored(t)) { continue; }
                     var node = ConstructTree(t.GetComponent<Transform>());
-                    node.componentType = typeof(usdiCustomComponentCapturer);
+                    node.componentType = typeof(UsdCustomComponentCapturer);
                 }
             }
 
@@ -1081,8 +1081,8 @@ namespace UTJ
             ++m_frameCount;
             switch(m_timeUnit.type)
             {
-                case usdiTimeUnit.Types.Frame_30FPS:
-                case usdiTimeUnit.Types.Frame_60FPS:
+                case TimeUnit.Types.Frame_30FPS:
+                case TimeUnit.Types.Frame_60FPS:
                     m_time = m_frameCount;
                     break;
                 default:
@@ -1139,10 +1139,10 @@ namespace UTJ
 
             switch (m_timeUnit.type)
             {
-                case usdiTimeUnit.Types.Frame_30FPS:
+                case TimeUnit.Types.Frame_30FPS:
                     Time.captureFramerate = 30;
                     break;
-                case usdiTimeUnit.Types.Frame_60FPS:
+                case TimeUnit.Types.Frame_60FPS:
                     Time.captureFramerate = 60;
                     break;
                 default:

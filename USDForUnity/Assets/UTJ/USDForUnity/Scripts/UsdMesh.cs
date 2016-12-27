@@ -10,10 +10,10 @@ namespace UTJ
 {
 
     [Serializable]
-    public class usdiMesh : usdiXform
+    public class UsdMesh : UsdXform
     {
         #region fields
-        [SerializeField] List<usdiSubmesh> m_submeshes = new List<usdiSubmesh>();
+        [SerializeField] List<UsdSubmesh> m_submeshes = new List<UsdSubmesh>();
 
         usdi.Mesh m_mesh;
         usdi.MeshData m_meshData;
@@ -48,7 +48,7 @@ namespace UTJ
         {
             get { return m_submeshData; }
         }
-        public List<usdiSubmesh> submeshes
+        public List<UsdSubmesh> submeshes
         {
             get { return m_submeshes; }
         }
@@ -56,17 +56,17 @@ namespace UTJ
 
 
         #region impl
-        usdiSubmesh usdiAddSubmesh()
+        UsdSubmesh usdiAddSubmesh()
         {
-            var sm = new usdiSubmesh();
+            var sm = new UsdSubmesh();
             sm.usdiOnLoad(this, m_submeshes.Count);
             m_submeshes.Add(sm);
             return sm;
         }
 
-        protected override usdiIElement usdiSetupSchemaComponent()
+        protected override UsdIComponent usdiSetupSchemaComponent()
         {
-            return GetOrAddComponent<usdiMeshElement>();
+            return GetOrAddComponent<UsdMeshComponent>();
         }
 
         public override void usdiOnLoad()

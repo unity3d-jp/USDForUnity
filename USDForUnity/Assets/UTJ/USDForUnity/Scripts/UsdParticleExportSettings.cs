@@ -10,7 +10,7 @@ namespace UTJ
 {
 
     [AddComponentMenu("USD/Particle Export Config")]
-    public class usdiParticleExportConfig : MonoBehaviour
+    public class UsdParticleExportSettings : MonoBehaviour
     {
         #region fields
         public bool m_captureRotations = true;

@@ -5,25 +5,25 @@ using UnityEngine;
 
 namespace UTJ
 {
-    public class usdiPrecomputeNormalsWindow : EditorWindow
+    public class UsdPrecomputeNormalsWindow : EditorWindow
     {
-        public usdiStream m_stream;
-        public usdiMesh m_mesh;
+        public UsdStream m_stream;
+        public UsdMesh m_mesh;
         static bool s_genTangents = true;
         static bool s_overwrite = false;
 
-        public static void Open(usdiStream stream)
+        public static void Open(UsdStream stream)
         {
-            var window = (usdiPrecomputeNormalsWindow)EditorWindow.GetWindow(typeof(usdiPrecomputeNormalsWindow));
+            var window = (UsdPrecomputeNormalsWindow)EditorWindow.GetWindow(typeof(UsdPrecomputeNormalsWindow));
             window.titleContent = new GUIContent("Precompute");
             window.m_stream = stream;
             window.m_mesh = null;
             window.Show();
         }
 
-        public static void Open(usdiMesh stream)
+        public static void Open(UsdMesh stream)
         {
-            var window = (usdiPrecomputeNormalsWindow)EditorWindow.GetWindow(typeof(usdiPrecomputeNormalsWindow));
+            var window = (UsdPrecomputeNormalsWindow)EditorWindow.GetWindow(typeof(UsdPrecomputeNormalsWindow));
             window.titleContent = new GUIContent("Precompute");
             window.m_stream = null;
             window.m_mesh = stream;
@@ -32,7 +32,7 @@ namespace UTJ
 
         void Generate()
         {
-            usdiStream stream = null;
+            UsdStream stream = null;
 
             int ndone = 0;
 

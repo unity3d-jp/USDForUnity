@@ -5,7 +5,7 @@ namespace UTJ
 {
 
     [Serializable]
-    public class usdiCamera : usdiXform
+    public class UsdCamera : UsdXform
     {
         public enum AspectRatioMode
         {
@@ -36,9 +36,9 @@ namespace UTJ
 
 
         #region impl
-        protected override usdiIElement usdiSetupSchemaComponent()
+        protected override UsdIComponent usdiSetupSchemaComponent()
         {
-            return GetOrAddComponent<usdiCameraElement>();
+            return GetOrAddComponent<UsdCameraComponent>();
         }
 
         public override void usdiOnLoad()

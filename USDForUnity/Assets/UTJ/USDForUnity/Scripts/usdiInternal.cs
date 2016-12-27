@@ -27,7 +27,7 @@ namespace UTJ
     {
         IntPtr m_rep;
 
-        public usdiStreamUpdater(usdi.Context usd, usdiStream stream) { m_rep = _Ctor(usd, stream); }
+        public usdiStreamUpdater(usdi.Context usd, UsdStream stream) { m_rep = _Ctor(usd, stream); }
         ~usdiStreamUpdater() { _Dtor(m_rep); }
 
         override public void SetConfig(ref Config config) { _SetConfig(m_rep, ref config); }
@@ -39,7 +39,7 @@ namespace UTJ
 
 #region internal
         [MethodImpl(MethodImplOptions.InternalCall)]
-        private static extern IntPtr _Ctor(usdi.Context usd, usdiStream stream);
+        private static extern IntPtr _Ctor(usdi.Context usd, UsdStream stream);
         [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern void _Dtor(IntPtr rep);
         [MethodImpl(MethodImplOptions.InternalCall)]
@@ -230,7 +230,7 @@ namespace UTJ
         Transform m_trans;
 
 
-        public usdiStreamUpdaterM(usdi.Context usd, usdiStream stream)
+        public usdiStreamUpdaterM(usdi.Context usd, UsdStream stream)
         {
             m_trans = stream.GetComponent<Transform>();
         }

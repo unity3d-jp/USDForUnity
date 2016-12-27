@@ -9,7 +9,7 @@ using UnityEditor;
 namespace UTJ
 {
     [ExecuteInEditMode]
-    public class usdiStream : MonoBehaviour, ISerializationCallbackReceiver
+    public class UsdStream : MonoBehaviour, ISerializationCallbackReceiver
     {
         #region types
         // just for serialize int[][] (Unity doesn't serialize array of arrays)
@@ -24,7 +24,7 @@ namespace UTJ
         #region fields
         [SerializeField] DataPath m_path;
         [SerializeField] usdi.ImportSettings m_importSettings = new usdi.ImportSettings();
-        [SerializeField] usdiTimeUnit m_timeUnit = new usdiTimeUnit();
+        [SerializeField] TimeUnit m_timeUnit = new TimeUnit();
         [SerializeField] double m_time;
 
         [Header("Debug")]
@@ -43,8 +43,8 @@ namespace UTJ
         Dictionary<string, VariantSelection> m_variantSelections = new Dictionary<string, VariantSelection>();
         Dictionary<string, usdi.ImportSettings> m_perObjectSettings = new Dictionary<string, usdi.ImportSettings>();
 
-        List<usdiSchema> m_schemas = new List<usdiSchema>();
-        Dictionary<string, usdiSchema> m_schemaLUT = new Dictionary<string, usdiSchema>();
+        List<UsdSchema> m_schemas = new List<UsdSchema>();
+        Dictionary<string, UsdSchema> m_schemaLUT = new Dictionary<string, UsdSchema>();
 
         usdi.Context m_ctx;
         bool m_updateRequired;
@@ -75,7 +75,7 @@ namespace UTJ
             get { return m_time; }
             set { m_time = value; }
         }
-        public usdiTimeUnit timeUnit
+        public TimeUnit timeUnit
         {
             get { return m_timeUnit; }
             set { m_timeUnit = value; }
@@ -172,7 +172,7 @@ namespace UTJ
             m_updateElementsListRequired = true;
         }
 
-        public usdiSchema usdiFindSchema(string primPath)
+        public UsdSchema usdiFindSchema(string primPath)
         {
             if(m_schemaLUT.ContainsKey(primPath))
             {
@@ -180,7 +180,7 @@ namespace UTJ
             }
             return null;
         }
-        public usdiSchema usdiFindSchema(usdi.Schema s)
+        public UsdSchema usdiFindSchema(usdi.Schema s)
         {
             return usdiFindSchema(usdi.usdiPrimGetPathS(s));
         }
@@ -196,40 +196,40 @@ namespace UTJ
 #endif
         }
 
-        usdiSchema usdiCreateNode(usdi.Schema schema)
+        UsdSchema usdiCreateNode(usdi.Schema schema)
         {
-            usdiSchema ret = null;
+            UsdSchema ret = null;
             if (ret == null)
             {
                 var s = usdi.usdiAsPoints(schema);
-                if (s) ret = new usdiPoints();
+                if (s) ret = new UsdPoints();
             }
             if (ret == null)
             {
                 var s = usdi.usdiAsMesh(schema);
-                if (s) ret = new usdiMesh();
+                if (s) ret = new UsdMesh();
             }
             if (ret == null)
             {
                 var s = usdi.usdiAsCamera(schema);
-                if (s) ret = new usdiCamera();
+                if (s) ret = new UsdCamera();
             }
             if (ret == null)
             {
                 // Xform must be latter because some schemas are subclass of Xform
                 var s = usdi.usdiAsXform(schema);
-                if (s) ret = new usdiXform();
+                if (s) ret = new UsdXform();
             }
             if (ret == null)
             {
-                ret = new usdiSchema();
+                ret = new UsdSchema();
             }
             ret.nativeSchemaPtr = schema;
             ret.stream = this;
             return ret;
         }
 
-        usdiSchema usdiFindOrCreateNode(Transform parent, usdi.Schema schema, ref bool created)
+        UsdSchema usdiFindOrCreateNode(Transform parent, usdi.Schema schema, ref bool created)
         {
             GameObject go = null;
 
@@ -250,13 +250,13 @@ namespace UTJ
             }
 
             // create USD node
-            usdiSchema ret = usdiCreateNode(schema);
+            UsdSchema ret = usdiCreateNode(schema);
             ret.gameObject = go;
 
             return ret;
         }
 
-        void usdiConstructTree(Transform parent, usdi.Schema schema, Action<usdiSchema> node_handler)
+        void usdiConstructTree(Transform parent, usdi.Schema schema, Action<UsdSchema> node_handler)
         {
             if(!schema) { return; }
 
@@ -276,7 +276,7 @@ namespace UTJ
             }
         }
 
-        void usdiConstructMasterTree(usdi.Schema schema, Action<usdiSchema> node_handler)
+        void usdiConstructMasterTree(usdi.Schema schema, Action<UsdSchema> node_handler)
         {
             if (!schema) { return; }
 
@@ -299,7 +299,7 @@ namespace UTJ
                 var e = kvp.Value;
                 if (e.gameObject != null)
                 {
-                    var c = e.gameObject.GetComponent<usdiIElement>();
+                    var c = e.gameObject.GetComponent<UsdIComponent>();
                     if(c != null)
                     {
                         c.schema = null;
@@ -308,8 +308,8 @@ namespace UTJ
                 }
             }
 
-            m_schemas = new List<usdiSchema>();
-            m_schemaLUT = new Dictionary<string, usdiSchema>();
+            m_schemas = new List<UsdSchema>();
+            m_schemaLUT = new Dictionary<string, UsdSchema>();
 
             // construct master tree
             {
@@ -347,7 +347,7 @@ namespace UTJ
             {
                 if(go != null)
                 {
-                    var c = go.GetComponent<usdiIElement>();
+                    var c = go.GetComponent<UsdIComponent>();
                     if (c != null && c.schema == null)
                     {
                         DestroyImmediate(go);
@@ -512,7 +512,7 @@ namespace UTJ
                     var go = s.gameObject;
                     if(go != null)
                     {
-                        var component = go.GetComponent<usdiIElement>();
+                        var component = go.GetComponent<UsdIComponent>();
                         if (component != null)
                         {
                             Undo.DestroyObjectImmediate(component);
@@ -529,7 +529,7 @@ namespace UTJ
                     var go = s.gameObject;
                     if (go != null)
                     {
-                        var component = go.GetComponent<usdiIElement>();
+                        var component = go.GetComponent<UsdIComponent>();
                         if (component != null)
                         {
                             DestroyImmediate(component);

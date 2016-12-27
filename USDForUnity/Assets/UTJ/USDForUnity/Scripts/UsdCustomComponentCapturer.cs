@@ -9,7 +9,7 @@ using UnityEditor;
 
 namespace UTJ
 {
-    public abstract class usdiCustomComponentCapturer : MonoBehaviour
+    public abstract class UsdCustomComponentCapturer : MonoBehaviour
     {
         #region impl
         public abstract void CreateUSDObject(usdi.Context ctx, usdi.Schema parent);

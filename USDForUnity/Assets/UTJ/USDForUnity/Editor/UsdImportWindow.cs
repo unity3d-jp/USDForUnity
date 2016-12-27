@@ -5,11 +5,11 @@ using UnityEngine;
 
 namespace UTJ
 {
-    public class usdiImportWindow : EditorWindow
+    public class UsdImportWindow : EditorWindow
     {
         public string m_path;
         static usdi.ImportSettings s_importOptions = usdi.ImportSettings.default_value;
-        static usdiTimeUnit s_timeUnit = new usdiTimeUnit();
+        static TimeUnit s_timeUnit = new TimeUnit();
         static double s_initialTime = 0.0;
         static bool s_forceSingleThread = false;
         static bool s_directVBUpdate = true;
@@ -17,18 +17,18 @@ namespace UTJ
 
         public static void Open(string path)
         {
-            usdiImportWindow window = (usdiImportWindow)EditorWindow.GetWindow(typeof(usdiImportWindow));
+            UsdImportWindow window = (UsdImportWindow)EditorWindow.GetWindow(typeof(UsdImportWindow));
             window.titleContent = new GUIContent("Import Settings");
             window.m_path = path;
             window.Show();
         }
 
-        public static usdiStream InstanciateUSD(string path, Action<usdiStream> modifier)
+        public static UsdStream InstanciateUSD(string path, Action<UsdStream> modifier)
         {
             var go = new GameObject();
             go.name = Path.GetFileNameWithoutExtension(path);
 
-            var usd = go.AddComponent<usdiStream>();
+            var usd = go.AddComponent<UsdStream>();
             modifier.Invoke(usd);
             usd.Load(path);
             return usd;
@@ -44,7 +44,7 @@ namespace UTJ
             s_importOptions.swapFaces = EditorGUILayout.Toggle("Swap Faces", s_importOptions.swapFaces);
             EditorGUILayout.Space();
 
-            s_timeUnit.type = (usdiTimeUnit.Types)EditorGUILayout.EnumPopup("Time Unit", (Enum)s_timeUnit.type);
+            s_timeUnit.type = (TimeUnit.Types)EditorGUILayout.EnumPopup("Time Unit", (Enum)s_timeUnit.type);
             s_initialTime = EditorGUILayout.FloatField("Initial Time", (float)s_initialTime);
             //s_forceSingleThread = EditorGUILayout.Toggle("Force Single Thread", s_forceSingleThread);
             //s_directVBUpdate = EditorGUILayout.Toggle("Direct VB Update", s_directVBUpdate);

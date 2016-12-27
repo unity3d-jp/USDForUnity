@@ -4,20 +4,20 @@ using UnityEngine;
 
 namespace UTJ
 {
-    [CustomEditor(typeof(usdiMeshElement))]
-    public class usdiMeshEditor : usdiElementEditor
+    [CustomEditor(typeof(UsdMeshComponent))]
+    public class UsdMeshEditor : UsdIComponentEditor
     {
         public override void OnInspectorGUI()
         {
             base.OnInspectorGUI();
 
-            var t = target as usdiMeshElement;
+            var t = target as UsdMeshComponent;
             if(!t.schema.isInstance && !t.schema.isMaster && !t.schema.isInMaster)
             {
                 EditorGUILayout.Space();
                 if (GUILayout.Button("Precompute Normals / Tangents"))
                 {
-                    usdiPrecomputeNormalsWindow.Open(t.schema as usdiMesh);
+                    UsdPrecomputeNormalsWindow.Open(t.schema as UsdMesh);
                 }
             }
         }

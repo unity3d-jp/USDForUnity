@@ -7,15 +7,15 @@ using UnityEditor;
 
 namespace UTJ
 {
-    public class usdiXformElement : usdiIElement
+    public class UsdCameraComponent : UsdIComponent
     {
         [SerializeField]
-        usdiXform m_schema;
+        UsdCamera m_schema;
 
-        public override usdiSchema schema
+        public override UsdSchema schema
         {
             get { return m_schema; }
-            set { m_schema = value as usdiXform; }
+            set { m_schema = value as UsdCamera; }
         }
     }
 }

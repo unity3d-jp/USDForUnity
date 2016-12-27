@@ -7,15 +7,15 @@ using UnityEditor;
 namespace UTJ
 {
     [Serializable]
-    public class usdiSchema
+    public class UsdSchema
     {
         #region fields
         protected GameObject m_go;
         protected bool m_goAssigned = false;
         protected string m_primPath;
         protected string m_primTypeName;
-        protected usdiSchema m_master;
-        protected usdiStream m_stream;
+        protected UsdSchema m_master;
+        protected UsdStream m_stream;
         protected usdi.Schema m_schema;
         protected usdi.VariantSets m_variantSets;
         [SerializeField] protected int[] m_variantSelection;
@@ -34,7 +34,7 @@ namespace UTJ
                 m_goAssigned = m_go != null;
             }
         }
-        public usdiStream stream
+        public UsdStream stream
         {
             get { return m_stream; }
             set { m_stream = value; }
@@ -86,7 +86,7 @@ namespace UTJ
         {
             get { return usdi.usdiPrimIsInMaster(m_schema); }
         }
-        public usdiSchema master
+        public UsdSchema master
         {
             get { return m_master; }
         }
@@ -138,9 +138,9 @@ namespace UTJ
             }
         }
 
-        protected virtual usdiIElement usdiSetupSchemaComponent()
+        protected virtual UsdIComponent usdiSetupSchemaComponent()
         {
-            return GetOrAddComponent<usdiElement>();
+            return GetOrAddComponent<UsdComponent>();
         }
 
         public void usdiDestroy()

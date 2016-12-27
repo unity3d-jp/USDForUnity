@@ -7,7 +7,7 @@ using UnityEditor;
 namespace UTJ
 {
     [Serializable]
-    public class usdiTimeUnit
+    public class TimeUnit
     {
         public enum Types
         {
@@ -32,7 +32,7 @@ namespace UTJ
             set { m_scale = value; m_type = Types.FreeScale; }
         }
 
-        public usdiTimeUnit(Types t = Types.Frame_30FPS)
+        public TimeUnit(Types t = Types.Frame_30FPS)
         {
             type = t;
         }

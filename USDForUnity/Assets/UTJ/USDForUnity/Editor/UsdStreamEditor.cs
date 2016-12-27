@@ -5,19 +5,19 @@ using UnityEngine;
 
 namespace UTJ
 {
-    [CustomEditor(typeof(usdiStream))]
-    public class usdiStreamEditor : Editor
+    [CustomEditor(typeof(UsdStream))]
+    public class UsdStreamEditor : Editor
     {
         public override void OnInspectorGUI()
         {
             DrawDefaultInspector();
 
-            var t = target as usdiStream;
+            var t = target as UsdStream;
 
             EditorGUILayout.Space();
             if (GUILayout.Button("Precompute Normals / Tangents"))
             {
-                usdiPrecomputeNormalsWindow.Open(t);
+                UsdPrecomputeNormalsWindow.Open(t);
             }
 
             EditorGUILayout.Space();

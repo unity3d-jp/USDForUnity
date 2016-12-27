@@ -8,9 +8,9 @@ using UnityEditor;
 namespace UTJ
 {
 
-    public abstract class usdiIElement : MonoBehaviour
+    public abstract class UsdIComponent : MonoBehaviour
     {
-        public abstract usdiSchema schema
+        public abstract UsdSchema schema
         {
             get;
             set;
@@ -46,11 +46,11 @@ namespace UTJ
         }
     }
 
-    public class usdiElement : usdiIElement
+    public class UsdComponent : UsdIComponent
     {
-        [SerializeField] usdiSchema m_schema;
+        [SerializeField] UsdSchema m_schema;
 
-        public override usdiSchema schema
+        public override UsdSchema schema
         {
             get { return m_schema; }
             set { m_schema = value; }

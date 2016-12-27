@@ -5,7 +5,7 @@ namespace UTJ
 {
 
     [Serializable]
-    public class usdiPoints : usdiXform
+    public class UsdPoints : UsdXform
     {
         #region fields
         usdi.Points     m_points;
@@ -40,9 +40,9 @@ namespace UTJ
 
 
         #region impl
-        protected override usdiIElement usdiSetupSchemaComponent()
+        protected override UsdIComponent usdiSetupSchemaComponent()
         {
-            return GetOrAddComponent<usdiPointsElement>();
+            return GetOrAddComponent<UsdPointsComponent>();
         }
 
         public override void usdiOnLoad()

@@ -10,7 +10,7 @@ namespace UTJ
 {
 
     [AddComponentMenu("USD/Transform Export Config")]
-    public class usdiTransformExportConfig : MonoBehaviour
+    public class UsdTransformExportSettings : MonoBehaviour
     {
         #region fields
         public bool m_captureEveryFrame = true;

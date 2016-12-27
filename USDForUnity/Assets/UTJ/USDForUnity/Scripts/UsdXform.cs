@@ -5,7 +5,7 @@ namespace UTJ
 {
 
     [Serializable]
-    public class usdiXform : usdiSchema
+    public class UsdXform : UsdSchema
     {
         #region fields
         [SerializeField] protected Transform m_trans;
@@ -23,9 +23,9 @@ namespace UTJ
         #endregion
 
         #region impl
-        protected override usdiIElement usdiSetupSchemaComponent()
+        protected override UsdIComponent usdiSetupSchemaComponent()
         {
-            return GetOrAddComponent<usdiXformElement>();
+            return GetOrAddComponent<UsdXformComponent>();
         }
 
         public override void usdiOnLoad()

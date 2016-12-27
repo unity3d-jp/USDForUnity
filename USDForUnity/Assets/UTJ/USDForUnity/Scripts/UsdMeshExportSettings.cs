@@ -10,7 +10,7 @@ namespace UTJ
 {
 
     [AddComponentMenu("USD/Mesh Export Config")]
-    public class usdiMeshExportConfig : MonoBehaviour
+    public class UsdMeshExportSettings : MonoBehaviour
     {
         #region fields
         public bool m_captureNormals = true;

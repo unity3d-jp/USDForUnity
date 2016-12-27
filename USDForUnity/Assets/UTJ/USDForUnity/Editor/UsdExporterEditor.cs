@@ -4,8 +4,8 @@ using UnityEngine;
 
 namespace UTJ
 {
-    [CustomEditor(typeof(usdiExporter))]
-    public class usdiExporterEditor : Editor
+    [CustomEditor(typeof(UsdExporter))]
+    public class UsdExporterEditor : Editor
     {
         public override void OnInspectorGUI()
         {
@@ -14,7 +14,7 @@ namespace UTJ
             GUILayout.Space(10);
             EditorGUILayout.LabelField("Capture Control", EditorStyles.boldLabel);
 
-            var t = target as usdiExporter;
+            var t = target as UsdExporter;
 
             if (t.isRecording)
             {

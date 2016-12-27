@@ -10,7 +10,7 @@ namespace UTJ
 {
 
     [Serializable]
-    public class usdiSubmesh
+    public class UsdSubmesh
     {
         #region fields
         int m_nth;
@@ -47,7 +47,7 @@ namespace UTJ
 
 
         #region impl
-        void usdiSetupBones(usdiMesh parent, ref usdi.MeshData meshData)
+        void usdiSetupBones(UsdMesh parent, ref usdi.MeshData meshData)
         {
             {
                 var tmp = usdi.MeshData.default_value;
@@ -131,9 +131,9 @@ namespace UTJ
             renderer.rootBone = m_rootBone;
         }
 
-        Mesh usdiShareOrCreateMesh(usdiMesh parent)
+        Mesh usdiShareOrCreateMesh(UsdMesh parent)
         {
-            var master = parent.master as usdiMesh;
+            var master = parent.master as UsdMesh;
             if (master != null)
             {
                 return master.submeshes[m_nth].mesh;
@@ -144,7 +144,7 @@ namespace UTJ
             }
         }
 
-        public void usdiSetupMesh(usdiMesh parent)
+        public void usdiSetupMesh(UsdMesh parent)
         {
             if (!m_setupRequierd) { return; }
             m_setupRequierd = false;
@@ -159,7 +159,7 @@ namespace UTJ
             usdiSetupBones(parent, ref meshData);
         }
 
-        public void usdiSetupComponents(usdiMesh parent)
+        public void usdiSetupComponents(UsdMesh parent)
         {
             if (!m_setupRequierd) { return; }
             m_setupRequierd = false;
@@ -376,7 +376,7 @@ namespace UTJ
             }
         }
 
-        public void usdiOnLoad(usdiMesh parent, int nth)
+        public void usdiOnLoad(UsdMesh parent, int nth)
         {
             m_schema = parent.nativeSchemaPtr;
             m_nth = nth;
