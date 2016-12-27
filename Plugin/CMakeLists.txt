@@ -18,7 +18,7 @@ OPTION(USDI_ENABLE_UNITY_EXTENSION "Generate Unity extensions. This is must to u
 OPTION(USDI_ENABLE_ISPC "Use Intel ISPC to generate SIMDified code. It can significantly boost performance." ON)
 OPTION(USDI_ENABLE_GRAPHICS_INTERFACE "Use OpenGL or Direct3D to update vertex buffers directry. It can significantly boost performance." ON)
 OPTION(USDI_ENABLE_MONO_BINDING "Generate mono bindings to access C# objects from C++ directly. It can boost performance." ON)
-OPTION(USDI_ENABLE_DEBUG "Enable debug functionalities." OFF)
+OPTION(USDI_ENABLE_DEBUG "Enable debug functionalities." ON)
 OPTION(USDI_ENABLE_TESTS "Build tests." ON)
 
 

@@ -6,5 +6,5 @@ IF NOT EXIST "External/USD" (
     cd ..
     xcopy /EYF External\python27\lib\*.dll ..\USDForUnity\Assets\UTJ\Plugins\x86_64
     xcopy /EYF External\tbb\lib\*.dll ..\USDForUnity\Assets\UTJ\Plugins\x86_64
-    xcopy /EYF External\USD\lib\*.dll ..\USDForUnity\Assets\StreamingAssets\UTJ\USDForUnity\plugins_win64\lib
+    xcopy /EYF External\USD\lib\*.dll ..\USDForUnity\Assets\StreamingAssets\USDForUnity\plugins_win64\lib
 )

@@ -317,6 +317,17 @@ namespace UTJ
             bool m_captureEveryFrameIndices = false;
             int m_count = 0;
 
+            public static bool canCapture(MeshRenderer target)
+            {
+                var mfilter = target.GetComponent<MeshFilter>();
+                if(mfilter != null)
+                {
+                    var mesh = mfilter.sharedMesh;
+                    return mesh != null && mesh.isReadable;
+                }
+                return false;
+            }
+
             public MeshCapturer(usdiExporter exporter, ComponentCapturer parent, MeshRenderer target)
                 : base(exporter, parent, target.GetComponent<Transform>(), false)
             {
@@ -387,6 +398,12 @@ namespace UTJ
             bool m_captureEveryFrameUV = false;
             bool m_captureEveryFrameIndices = false;
             int m_count = 0;
+
+            public static bool canCapture(SkinnedMeshRenderer target)
+            {
+                var mesh = target.sharedMesh;
+                return mesh != null && mesh.isReadable;
+            }
 
             public SkinnedMeshCapturer(usdiExporter exporter, ComponentCapturer parent, SkinnedMeshRenderer target)
                 : base(exporter, parent, target.GetComponent<Transform>(), false)
@@ -791,26 +808,36 @@ namespace UTJ
             node.parent = parent;
             var parent_capturer = parent == null ? m_root : parent.capturer;
 
-
-            if (node.componentType == null)
-            {
-                node.capturer = new TransformCapturer(this, parent_capturer, node.trans);
-            }
-            else if (node.componentType == typeof(Transform))
-            {
-                node.capturer = new TransformCapturer(this, parent_capturer, node.trans.GetComponent<Transform>());
-            }
-            else if (node.componentType == typeof(Camera))
+            bool fallback = false;
+            if (node.componentType == typeof(Camera))
             {
                 node.capturer = new CameraCapturer(this, parent_capturer, node.trans.GetComponent<Camera>());
             }
             else if (node.componentType == typeof(MeshRenderer))
             {
-                node.capturer = new MeshCapturer(this, parent_capturer, node.trans.GetComponent<MeshRenderer>());
+                var renderer = node.trans.GetComponent<MeshRenderer>();
+                if (MeshCapturer.canCapture(renderer))
+                {
+                    node.capturer = new MeshCapturer(this, parent_capturer, renderer);
+                }
+                else
+                {
+                    Debug.LogWarning("Mesh \"" + renderer.name + "\" is not readable and be skipped");
+                    fallback = true;
+                }
             }
             else if (node.componentType == typeof(SkinnedMeshRenderer))
             {
-                node.capturer = new SkinnedMeshCapturer(this, parent_capturer, node.trans.GetComponent<SkinnedMeshRenderer>());
+                var renderer = node.trans.GetComponent<SkinnedMeshRenderer>();
+                if (SkinnedMeshCapturer.canCapture(renderer))
+                {
+                    node.capturer = new SkinnedMeshCapturer(this, parent_capturer, renderer);
+                }
+                else
+                {
+                    Debug.LogWarning("SkinnedMesh \"" + renderer.name + "\" is not readable and be skipped");
+                    fallback = true;
+                }
             }
             else if (node.componentType == typeof(ParticleSystem))
             {
@@ -819,6 +846,15 @@ namespace UTJ
             else if (node.componentType == typeof(usdiCustomComponentCapturer))
             {
                 node.capturer = new CustomCapturerHandler(this, parent_capturer, node.trans.GetComponent<usdiCustomComponentCapturer>());
+            }
+            else
+            {
+                fallback = true;
+            }
+
+            if(fallback)
+            {
+                node.capturer = new TransformCapturer(this, parent_capturer, node.trans.GetComponent<Transform>());
             }
 
             if (node.capturer != null)
@@ -939,7 +975,7 @@ namespace UTJ
             m_ctx = usdi.usdiCreateContext();
             if (!usdi.usdiCreateStage(m_ctx, m_outputPath))
             {
-                Debug.Log("usdiExporter: failed to create " + m_outputPath);
+                Debug.LogError("usdiExporter: failed to create " + m_outputPath);
                 usdi.usdiDestroyContext(m_ctx);
                 m_ctx = default(usdi.Context);
                 return false;
