@@ -15,7 +15,7 @@ namespace UTJ
         public static void Open(usdiStream stream)
         {
             var window = (usdiPrecomputeNormalsWindow)EditorWindow.GetWindow(typeof(usdiPrecomputeNormalsWindow));
-            window.titleContent = new GUIContent("Precompute Normals");
+            window.titleContent = new GUIContent("Precompute");
             window.m_stream = stream;
             window.m_mesh = null;
             window.Show();
@@ -24,7 +24,7 @@ namespace UTJ
         public static void Open(usdiMesh stream)
         {
             var window = (usdiPrecomputeNormalsWindow)EditorWindow.GetWindow(typeof(usdiPrecomputeNormalsWindow));
-            window.titleContent = new GUIContent("Precompute Normals");
+            window.titleContent = new GUIContent("Precompute");
             window.m_stream = null;
             window.m_mesh = stream;
             window.Show();
@@ -95,12 +95,12 @@ namespace UTJ
             {
                 EditorGUILayout.LabelField("Precompute Generate normals / tangents of " + m_mesh.primPath + ".");
             }
-            EditorGUILayout.LabelField("* Precompute tangents requires UVs and is very slow.");
+            EditorGUILayout.LabelField("Precompute tangents requires UVs and may take some time to complete.");
 
             EditorGUILayout.Space();
 
             s_genTangents = EditorGUILayout.Toggle("Generate Tangents", s_genTangents);
-            s_overwrite = EditorGUILayout.Toggle("Overwrite", s_overwrite);
+            s_overwrite = EditorGUILayout.Toggle("Overwrite Existing Data", s_overwrite);
 
             GUILayout.Space(10.0f);
 

@@ -507,11 +507,35 @@ namespace UTJ
             if(recordUndo)
             {
                 recordUndo = false;
+                foreach(var s in m_schemas)
+                {
+                    var go = s.gameObject;
+                    if(go != null)
+                    {
+                        var component = go.GetComponent<usdiIElement>();
+                        if (component != null)
+                        {
+                            Undo.DestroyObjectImmediate(component);
+                        }
+                    }
+                }
                 Undo.DestroyObjectImmediate(this);
             }
             else
 #endif
             {
+                foreach (var s in m_schemas)
+                {
+                    var go = s.gameObject;
+                    if (go != null)
+                    {
+                        var component = go.GetComponent<usdiIElement>();
+                        if (component != null)
+                        {
+                            DestroyImmediate(component);
+                        }
+                    }
+                }
                 DestroyImmediate(this);
             }
         }

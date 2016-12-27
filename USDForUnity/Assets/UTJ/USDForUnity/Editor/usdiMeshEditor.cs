@@ -14,6 +14,7 @@ namespace UTJ
             var t = target as usdiMeshElement;
             if(!t.schema.isInstance && !t.schema.isMaster && !t.schema.isInMaster)
             {
+                EditorGUILayout.Space();
                 if (GUILayout.Button("Precompute Normals / Tangents"))
                 {
                     usdiPrecomputeNormalsWindow.Open(t.schema as usdiMesh);

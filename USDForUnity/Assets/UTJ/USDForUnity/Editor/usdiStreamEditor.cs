@@ -13,15 +13,21 @@ namespace UTJ
             DrawDefaultInspector();
 
             var t = target as usdiStream;
+
+            EditorGUILayout.Space();
             if (GUILayout.Button("Precompute Normals / Tangents"))
             {
                 usdiPrecomputeNormalsWindow.Open(t);
             }
+
+            EditorGUILayout.Space();
             if (GUILayout.Button("Rebuild Tree"))
             {
                 t.usdiReload();
                 EditorUtility.SetDirty(t);
             }
+
+            EditorGUILayout.Space();
             if (GUILayout.Button("Detach USD Components"))
             {
                 t.recordUndo = true;
