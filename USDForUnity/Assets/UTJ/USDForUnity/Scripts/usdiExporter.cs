@@ -1104,12 +1104,13 @@ namespace UTJ
             switch (m_timeUnit.type)
             {
                 case usdiTimeUnit.Types.Frame_30FPS:
-                    Time.maximumDeltaTime = (1.0f / 30.0f);
                     Time.captureFramerate = 30;
                     break;
                 case usdiTimeUnit.Types.Frame_60FPS:
-                    Time.maximumDeltaTime = (1.0f / 60.0f);
                     Time.captureFramerate = 60;
+                    break;
+                default:
+                    Time.captureFramerate = 0;
                     break;
             }
         }
