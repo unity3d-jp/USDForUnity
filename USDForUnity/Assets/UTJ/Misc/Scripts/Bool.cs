@@ -11,7 +11,5 @@ namespace UTJ
         [SerializeField] byte v;
         public static implicit operator bool(Bool v) { return v.v != 0; }
         public static implicit operator Bool(bool v) { Bool r; r.v = v ? (byte)1 : (byte)0; return r; }
-
-        public static Bool True { get { Bool r; r.v = (byte)1; return r; } }
     }
 }

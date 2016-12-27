@@ -94,15 +94,10 @@ namespace UTJ
 
 
         #region impl
-        public virtual bool usdiSetVariantSelection(int iset, int ival)
+        public virtual void usdiSetVariantSelection(int iset, int ival)
         {
-            if (usdi.usdiPrimSetVariantSelection(m_schema, iset, ival))
-            {
-                m_variantSelection[iset] = ival;
-                m_stream.usdiSetVariantSelection(m_primPath, m_variantSelection);
-                return true;
-            }
-            return false;
+            m_variantSelection[iset] = ival;
+            usdiApplyVariantSets();
         }
 
         public void usdiSyncVarinatSets()
@@ -112,6 +107,16 @@ namespace UTJ
             for (int i = 0; i < m_variantSets.Count; ++i)
             {
                 m_variantSelection[i] = usdi.usdiPrimGetVariantSelection(m_schema, i);
+            }
+        }
+        public void usdiApplyVariantSets()
+        {
+            for (int si = 0; si < m_variantSelection.Length; ++si)
+            {
+                if (usdi.usdiPrimSetVariantSelection(m_schema, si, m_variantSelection[si]))
+                {
+                    m_stream.usdiSetVariantSelection(m_primPath, m_variantSelection);
+                }
             }
         }
 
@@ -126,6 +131,8 @@ namespace UTJ
 
         public void usdiApplyImportSettings()
         {
+            if (!m_schema) return;
+
             usdi.usdiPrimSetOverrideImportSettings(m_schema, m_overrideImportSettings);
             if (m_overrideImportSettings)
             {
@@ -141,20 +148,6 @@ namespace UTJ
         protected virtual UsdIComponent usdiSetupSchemaComponent()
         {
             return GetOrAddComponent<UsdComponent>();
-        }
-
-        public void usdiDestroy()
-        {
-#if UNITY_EDITOR
-            if(m_stream.recordUndo)
-            {
-                Undo.DestroyObjectImmediate(m_go);
-            }
-            else
-#endif
-            {
-                GameObject.DestroyImmediate(m_go);
-            }
         }
 
         public virtual void usdiOnLoad()

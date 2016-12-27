@@ -33,7 +33,7 @@ namespace UTJ
                 EditorGUILayout.Space();
                 EditorGUILayout.LabelField("Variant Sets", EditorStyles.boldLabel);
 
-                var selections = schema.variantSelections;
+                var selections = (int[])schema.variantSelections.Clone();
                 for (int i = 0; i < vsets.Count; ++i)
                 {
                     var names = vsets.variantNames[i];
@@ -44,11 +44,9 @@ namespace UTJ
                     var ivar = EditorGUILayout.Popup(vsets.setNames[i], selection, names);
                     if (EditorGUI.EndChangeCheck())
                     {
-                        schema.stream.recordUndo = true;
-                        Undo.RecordObject(schema.stream, "Changed Variant Set");
+                        Undo.RecordObject(component, "Changed Variant Set");
                         schema.usdiSetVariantSelection(i, ivar);
-                        EditorUtility.SetDirty(schema.stream);
-                        schema.stream.recordUndo = false;
+                        EditorUtility.SetDirty(component);
                     }
                 }
             }
@@ -61,8 +59,11 @@ namespace UTJ
                 EditorGUILayout.LabelField("Per-object Import Settings", EditorStyles.boldLabel);
 
                 bool changed = false;
+                var overrideImportSettings = schema.overrideImportSettings;
+                var importSettings = schema.importSettings;
+
                 EditorGUI.BeginChangeCheck();
-                schema.overrideImportSettings = EditorGUILayout.Toggle("Override Import Settings", schema.overrideImportSettings);
+                overrideImportSettings = EditorGUILayout.Toggle("Override Import Settings", schema.overrideImportSettings);
                 if (EditorGUI.EndChangeCheck())
                 {
                     changed = true;
@@ -73,17 +74,15 @@ namespace UTJ
                     EditorGUI.indentLevel = 1;
                     EditorGUI.BeginChangeCheck();
 
-                    usdi.ImportSettings tmp = schema.importSettings;
-                    tmp.interpolation = (usdi.InterpolationType)EditorGUILayout.EnumPopup("Interpolation", (Enum)tmp.interpolation);
-                    tmp.normalCalculation = (usdi.NormalCalculationType)EditorGUILayout.EnumPopup("Normal Calculation", (Enum)tmp.normalCalculation);
-                    tmp.tangentCalculation = (usdi.TangentCalculationType)EditorGUILayout.EnumPopup("Tangent Calculation", (Enum)tmp.tangentCalculation);
-                    tmp.scale = EditorGUILayout.FloatField("Scale", tmp.scale);
-                    tmp.swapHandedness = EditorGUILayout.Toggle("Swap Handedness", tmp.swapHandedness);
-                    tmp.swapFaces = EditorGUILayout.Toggle("Swap Faces", tmp.swapFaces);
+                    importSettings.interpolation = (usdi.InterpolationType)EditorGUILayout.EnumPopup("Interpolation", (Enum)importSettings.interpolation);
+                    importSettings.normalCalculation = (usdi.NormalCalculationType)EditorGUILayout.EnumPopup("Normal Calculation", (Enum)importSettings.normalCalculation);
+                    importSettings.tangentCalculation = (usdi.TangentCalculationType)EditorGUILayout.EnumPopup("Tangent Calculation", (Enum)importSettings.tangentCalculation);
+                    importSettings.scale = EditorGUILayout.FloatField("Scale", importSettings.scale);
+                    importSettings.swapHandedness = EditorGUILayout.Toggle("Swap Handedness", importSettings.swapHandedness);
+                    importSettings.swapFaces = EditorGUILayout.Toggle("Swap Faces", importSettings.swapFaces);
 
                     if (EditorGUI.EndChangeCheck())
                     {
-                        schema.importSettings = tmp;
                         changed = true;
                     }
                     EditorGUI.indentLevel = 0;
@@ -91,9 +90,11 @@ namespace UTJ
 
                 if(changed)
                 {
-                    Undo.RecordObject(schema.stream, "Changed Import Settings");
+                    Undo.RecordObject(component, "Changed Import Settings");
+                    schema.overrideImportSettings = overrideImportSettings;
+                    schema.importSettings = importSettings;
                     schema.usdiApplyImportSettings();
-                    EditorUtility.SetDirty(schema.stream);
+                    EditorUtility.SetDirty(component);
                 }
             }
         }

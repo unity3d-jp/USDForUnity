@@ -19,14 +19,13 @@ namespace UTJ
 #if UNITY_EDITOR
         void OnValidate()
         {
+            if(!usdi.pluginInitialized) return;
+
             var s = schema;
             if (s != null)
             {
-                var stream = s.stream;
-                if(stream != null)
-                {
-                    stream.usdiNotifyForceUpdate();
-                }
+                s.usdiApplyImportSettings();
+                s.usdiApplyVariantSets();
             }
         }
 #endif
@@ -38,10 +37,6 @@ namespace UTJ
             {
                 s.usdiSync();
                 s.gameObject = null;
-                if(s.stream != null)
-                {
-                    s.stream.usdiNotifyUpdateElementsList();
-                }
             }
         }
     }

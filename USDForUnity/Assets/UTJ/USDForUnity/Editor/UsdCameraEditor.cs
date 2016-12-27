@@ -23,7 +23,7 @@ namespace UTJ
             {
                 Undo.RecordObject(component, "Changed Aspect  Ratio Mode");
                 schema.aspectRatioMode = arm;
-                schema.stream.usdiNotifyForceUpdate();
+                schema.stream.usdiRequestForceUpdate();
                 EditorUtility.SetDirty(component);
             }
         }

@@ -30,8 +30,7 @@ namespace UTJ
             EditorGUILayout.Space();
             if (GUILayout.Button("Detach USD Components"))
             {
-                t.recordUndo = true;
-                t.usdiDetach();
+                t.usdiDetachUsdComponents();
             }
         }
 

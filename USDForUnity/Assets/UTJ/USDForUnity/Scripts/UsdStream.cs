@@ -47,12 +47,10 @@ namespace UTJ
         Dictionary<string, UsdSchema> m_schemaLUT = new Dictionary<string, UsdSchema>();
 
         usdi.Context m_ctx;
-        bool m_updateRequired;
-        bool m_updateElementsListRequired;
-        bool m_reloadRequired;
+        bool m_requestForceUpdate;
+        bool m_requestReload;
         double m_prevUpdateTime = Double.NaN;
         usdi.Task m_asyncUpdate;
-        bool m_recordUndo;
         #endregion
 
 
@@ -88,11 +86,6 @@ namespace UTJ
         public bool deferredUpdate
         {
             get { return m_deferredUpdate; }
-        }
-        public bool recordUndo
-        {
-            get { return m_recordUndo; }
-            set { m_recordUndo = value; }
         }
 #if UNITY_EDITOR
         public bool forceSingleThread
@@ -148,28 +141,27 @@ namespace UTJ
         public void usdiSetVariantSelection(string primPath, int[] selection)
         {
             m_variantSelections[primPath] = new VariantSelection { selections = selection };
-            usdiReload();
+            usdiRequestReload();
         }
 
         public void usdiSetImportSettings(string primPath, ref usdi.ImportSettings settings)
         {
             m_perObjectSettings[primPath] = settings;
-            usdiNotifyForceUpdate();
+            usdiRequestForceUpdate();
         }
         public void usdiDeleteImportSettings(string primPath)
         {
             m_perObjectSettings.Remove(primPath);
-            usdiNotifyForceUpdate();
+            usdiRequestForceUpdate();
         }
 
-        public void usdiNotifyForceUpdate()
+        public void usdiRequestForceUpdate()
         {
-            m_updateRequired = true;
+            m_requestForceUpdate = true;
         }
-
-        public void usdiNotifyUpdateElementsList()
+        public void usdiRequestReload()
         {
-            m_updateElementsListRequired = true;
+            m_requestReload = true;
         }
 
         public UsdSchema usdiFindSchema(string primPath)
@@ -350,26 +342,14 @@ namespace UTJ
                     var c = go.GetComponent<UsdIComponent>();
                     if (c != null && c.schema == null)
                     {
+#if UNITY_EDITOR
+                        Undo.DestroyObjectImmediate(go);
+#else
                         DestroyImmediate(go);
+#endif
                     }
                 }
             }
-        }
-
-        void usdiUpdateElementsList()
-        {
-            // delete elements that doesn't exist in USD tree
-            int c = m_schemas.Count;
-            for (int i = 0; i < c; ++i)
-            {
-                if (!m_schemas[i].nativeSchemaPtr)
-                {
-                    m_schemaLUT.Remove(m_schemas[i].primPath);
-                    m_schemas[i].usdiDestroy();
-                    m_schemas[i] = null;
-                }
-            }
-            m_schemas.RemoveAll(e => e == null);
         }
 
 
@@ -442,7 +422,7 @@ namespace UTJ
             usdiConstructTrees();
 
             // fill sample data with initial time
-            m_updateRequired = true;
+            m_requestForceUpdate = true;
             usdiAsyncUpdate(m_time);
             usdiUpdate(m_time);
 
@@ -463,7 +443,7 @@ namespace UTJ
             usdiConstructTrees();
 
             // fill sample data with initial time
-            m_updateRequired = true;
+            m_requestForceUpdate = true;
             usdiAsyncUpdate(m_time);
             usdiUpdate(m_time);
 
@@ -500,44 +480,30 @@ namespace UTJ
             return usdi.usdiSaveAs(m_ctx, path);
         }
 
-        public void usdiDetach()
+        public void usdiDetachUsdComponents()
         {
-            int c = m_schemas.Count;
+            Action<UnityEngine.Object> deleter = (UnityEngine.Object o) => {
 #if UNITY_EDITOR
-            if(recordUndo)
-            {
-                recordUndo = false;
-                foreach(var s in m_schemas)
-                {
-                    var go = s.gameObject;
-                    if(go != null)
-                    {
-                        var component = go.GetComponent<UsdIComponent>();
-                        if (component != null)
-                        {
-                            Undo.DestroyObjectImmediate(component);
-                        }
-                    }
-                }
-                Undo.DestroyObjectImmediate(this);
-            }
-            else
+                Undo.DestroyObjectImmediate(o);
+#else
+                DestroyImmediate(o);
 #endif
+            };
+
+            int c = m_schemas.Count;
+            foreach (var s in m_schemas)
             {
-                foreach (var s in m_schemas)
+                var go = s.gameObject;
+                if (go != null)
                 {
-                    var go = s.gameObject;
-                    if (go != null)
+                    var component = go.GetComponent<UsdIComponent>();
+                    if (component != null)
                     {
-                        var component = go.GetComponent<UsdIComponent>();
-                        if (component != null)
-                        {
-                            DestroyImmediate(component);
-                        }
+                        deleter(component);
                     }
                 }
-                DestroyImmediate(this);
             }
+            deleter(this);
         }
 
         public void usdiMakePrefab()
@@ -552,7 +518,7 @@ namespace UTJ
             usdiApplyImportConfig(false);
 
             // skip if update is not needed
-            if(m_updateRequired)
+            if(m_requestForceUpdate)
             {
                 usdi.usdiNotifyForceUpdate(m_ctx);
             }
@@ -571,8 +537,8 @@ namespace UTJ
 
         void usdiUpdate(double t)
         {
-            if (!m_updateRequired && t == m_prevUpdateTime) { return; }
-            m_updateRequired = false;
+            if (!m_requestForceUpdate && t == m_prevUpdateTime) { return; }
+            m_requestForceUpdate = false;
 
             // update all elements
             int c = m_schemas.Count;
@@ -644,10 +610,10 @@ namespace UTJ
         {
             return usdiLoad(path);
         }
-        #endregion
+#endregion
 
 
-        #region callbacks
+#region callbacks
         void OnApplicationQuit()
         {
             usdi.FinalizePlugin();
@@ -686,7 +652,7 @@ namespace UTJ
 #if UNITY_EDITOR
         void OnValidate()
         {
-            usdiNotifyForceUpdate();
+            usdiRequestForceUpdate();
         }
 #endif
 
@@ -711,16 +677,10 @@ namespace UTJ
 
             if(!m_ctx) { return; }
 
-            if (m_reloadRequired)
+            if (m_requestReload)
             {
                 usdiReload();
-                m_reloadRequired = false;
-                m_updateElementsListRequired = false;
-            }
-            if (m_updateElementsListRequired)
-            {
-                usdiUpdateElementsList();
-                m_updateElementsListRequired = false;
+                m_requestReload = false;
             }
 
             if (!m_deferredUpdate
@@ -761,7 +721,7 @@ namespace UTJ
                 usdiKickAsyncUpdateTask();
             }
         }
-        #endregion
+#endregion
     }
 
 }

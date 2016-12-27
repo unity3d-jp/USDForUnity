@@ -529,36 +529,36 @@ namespace UTJ
         public static string usdiPrimGetUsdTypeNameS(Schema schema) { return S(usdiPrimGetUsdTypeName(schema)); }
 
         // Xform interface
-        [DllImport ("usdi")] public static extern Xform         usdiAsXform(Schema schema);
-        [DllImport ("usdi")] public static extern Bool          usdiXformReadSample(Xform xf, ref XformData dst, double t);
-        [DllImport ("usdi")] public static extern Bool          usdiXformWriteSample(Xform xf, ref XformData src, double t);
+        [DllImport ("usdi")] public static extern Xform     usdiAsXform(Schema schema);
+        [DllImport ("usdi")] public static extern Bool      usdiXformReadSample(Xform xf, ref XformData dst, double t);
+        [DllImport ("usdi")] public static extern Bool      usdiXformWriteSample(Xform xf, ref XformData src, double t);
 
         // Camera interface
-        [DllImport ("usdi")] public static extern Camera        usdiAsCamera(Schema schema);
-        [DllImport ("usdi")] public static extern Bool          usdiCameraReadSample(Camera cam, ref CameraData dst, double t);
-        [DllImport ("usdi")] public static extern Bool          usdiCameraWriteSample(Camera cam, ref CameraData src, double t);
+        [DllImport ("usdi")] public static extern Camera    usdiAsCamera(Schema schema);
+        [DllImport ("usdi")] public static extern Bool      usdiCameraReadSample(Camera cam, ref CameraData dst, double t);
+        [DllImport ("usdi")] public static extern Bool      usdiCameraWriteSample(Camera cam, ref CameraData src, double t);
 
         // Mesh interface
-        [DllImport ("usdi")] public static extern Mesh          usdiAsMesh(Schema schema);
-        [DllImport ("usdi")] public static extern void          usdiMeshGetSummary(Mesh mesh, ref MeshSummary dst);
-        [DllImport ("usdi")] public static extern Bool          usdiMeshReadSample(Mesh mesh, ref MeshData dst, double t, Bool copy);
-        [DllImport ("usdi")] public static extern Bool          usdiMeshWriteSample(Mesh mesh, ref MeshData src, double t);
-        [DllImport ("usdi")] public static extern Bool          usdiMeshPreComputeNormals(Mesh mesh, Bool gen_tangents, Bool overwrite);
+        [DllImport ("usdi")] public static extern Mesh      usdiAsMesh(Schema schema);
+        [DllImport ("usdi")] public static extern void      usdiMeshGetSummary(Mesh mesh, ref MeshSummary dst);
+        [DllImport ("usdi")] public static extern Bool      usdiMeshReadSample(Mesh mesh, ref MeshData dst, double t, Bool copy);
+        [DllImport ("usdi")] public static extern Bool      usdiMeshWriteSample(Mesh mesh, ref MeshData src, double t);
+        [DllImport ("usdi")] public static extern Bool      usdiMeshPreComputeNormals(Mesh mesh, Bool gen_tangents, Bool overwrite);
 
         // Points interface
-        [DllImport ("usdi")] public static extern Points        usdiAsPoints(Schema schema);
-        [DllImport ("usdi")] public static extern void          usdiPointsGetSummary(Points points, ref PointsSummary dst);
-        [DllImport ("usdi")] public static extern Bool          usdiPointsReadSample(Points points, ref PointsData dst, double t, Bool copy);
-        [DllImport ("usdi")] public static extern Bool          usdiPointsWriteSample(Points points, ref PointsData src, double t);
+        [DllImport ("usdi")] public static extern Points    usdiAsPoints(Schema schema);
+        [DllImport ("usdi")] public static extern void      usdiPointsGetSummary(Points points, ref PointsSummary dst);
+        [DllImport ("usdi")] public static extern Bool      usdiPointsReadSample(Points points, ref PointsData dst, double t, Bool copy);
+        [DllImport ("usdi")] public static extern Bool      usdiPointsWriteSample(Points points, ref PointsData src, double t);
 
         // Attribute interface
-        [DllImport ("usdi")] public static extern IntPtr        usdiAttrGetName(Attribute attr);
-        [DllImport ("usdi")] public static extern IntPtr        usdiAttrGetTypeName(Attribute attr);
-        [DllImport ("usdi")] public static extern void          usdiAttrGetSummary(Attribute attr, ref AttributeSummary dst);
-        [DllImport ("usdi")] public static extern Bool          usdiAttrReadSample(Attribute attr, ref AttributeData dst, double t, Bool copy);
-        [DllImport ("usdi")] public static extern Bool usdiAttrWriteSample(Attribute attr, ref AttributeData src, double t);
+        [DllImport ("usdi")] public static extern IntPtr    usdiAttrGetName(Attribute attr);
+        [DllImport ("usdi")] public static extern IntPtr    usdiAttrGetTypeName(Attribute attr);
+        [DllImport ("usdi")] public static extern void      usdiAttrGetSummary(Attribute attr, ref AttributeSummary dst);
+        [DllImport ("usdi")] public static extern Bool      usdiAttrReadSample(Attribute attr, ref AttributeData dst, double t, Bool copy);
+        [DllImport ("usdi")] public static extern Bool      usdiAttrWriteSample(Attribute attr, ref AttributeData src, double t);
 
-        [DllImport ("usdi")] public static extern IntPtr        usdiIndexStringArray(IntPtr v, int i);
+        [DllImport ("usdi")] public static extern IntPtr    usdiIndexStringArray(IntPtr v, int i);
         [DllImport ("usdi")] public static extern void          usdiMeshAssignRootBone(Mesh mesh, ref MeshData dst, string v);
         [DllImport ("usdi")] public static extern void          usdiMeshAssignBones(Mesh mesh, ref MeshData dst, string[] v, int n);
 
@@ -843,6 +843,8 @@ namespace UTJ
             usdi.AddDLLSearchPath(GetModulePath());
         }
 
+        public static bool pluginInitialized = false;
+
         // separate pass because loading usdi.dll will fail in InitializePluginPass1()
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void InitializePluginPass2()
@@ -861,6 +863,7 @@ namespace UTJ
                 TransformNotfyChange = TransformNotfyChangeImpl;
                 MeshAssignBounds = MeshAssignBoundsImpl;
             }
+            pluginInitialized = true;
         }
 
         public static void FinalizePlugin()
