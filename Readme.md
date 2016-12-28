@@ -13,11 +13,11 @@ This plugin allow you to import **USD or Alembic** scene to Unity and export Uni
 
 ### Usage
 - Import this package: [USDForUnity.unitypackage](Packages/USDForUnity.unitypackage)  
- - On Linux, you need to build the plugin from source.
-- Assets -> Import USD or Alembic menu will appear after the package is imported.
+ - On Linux, you need to build the plugin from source
+- Assets -> "Import USD or Alembic" and select file
 
-<img src="Documents/ImportMenu.png" style="height:300px;">
-<img src="Documents/ImportSettings.png" style="height:300px;">  
+<img src="Documents/ImportMenu.png" height="300px">
+<img src="Documents/ImportSettings.png" height="300px">  
 
 
 Some of USD's features are supported, some of others are not.
@@ -25,7 +25,7 @@ Some of USD's features are supported, some of others are not.
 - Animation can be interpolated, which was not supported by [AlembicImporter](https://github.com/unity3d-jp/AlembicImporter).
 - Normals and tangents can be generated on the fly. But generating tangent is very very slow and not recommended to do it at runtime.
  - You can precompute normals and tangents via "Precompute normals / tangents" button. It precomputes normlals (+ tangents) and store them into USD file.
-- Variant is supported. It can be switched via inspector.
+- Variant is supported. You can switch variant sets and variants via inspector.
 - Reference & instance is supported. Mesh data is shared among instances that have same master.
 - Payload is supported. All payloads will be loaded when the scene is loaded.
 - Subdivision is **not** supported. It is planned but unlikely to come soon.
@@ -52,8 +52,9 @@ Custom attributes in Mesh schema that this plugin uses:
     float2[] primvars:uv
     float4[] tangents
 ```
-- You can build this plugin from source by just open Plugin/usdi.sln with VisualStudio2015 and build it. Pre-built USD is included in this repository (It is based on [our fork](https://github.com/unity3d-jp/USD/tree/i-saint_experiments) that includes some bug fixes and optimizations for Windows).  
-There is cmake build file (Plugin/CMakeLists.txt) for non-Windows build. In this case you must build USD by yourself, but building this plugin is straightforward as required libraries are almost same as USD. I confirmed it works on Mac and Ubuntu 16 (Unity for Linux is [here](https://forum.unity3d.com/threads/unity-on-linux-release-notes-and-known-issues.350256/)).
+- You can build this plugin from source.  
+ - Windows: Just open Plugin/usdi.sln with VisualStudio2015 and build. Pre-built USD libraries are included in this repository (It is based on [our fork](https://github.com/unity3d-jp/USD/tree/i-saint_experiments) that includes some bug fixes and optimizations for Windows).  
+ - non-Windows: There is cmake build file (Plugin/CMakeLists.txt). In this case you must build USD by yourself, but building this plugin is straightforward as required libraries are almost same as USD. I confirmed it works on Mac and Ubuntu 16 (Unity for Linux is [here](https://forum.unity3d.com/threads/unity-on-linux-release-notes-and-known-issues.350256/)).
 
 ## License
 [MIT](USDForUnity/Assets/StreamingAssets/USDForUnity/License.txt)
