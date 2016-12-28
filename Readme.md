@@ -12,7 +12,7 @@ This plugin allow you to import **USD or Alembic** scene to Unity and export Uni
 
 
 ### Usage
-- Import this package: [USDForUnity.unitypackage](Packages/USDForUnity.unitypackage)  
+- Import this package: [USDForUnity.unitypackage](https://github.com/unity3d-jp/USDForUnity/releases/download/0.7.0/USDForUnity.unitypackage)  
  - On Linux, you need to build the plugin from source
 - Assets -> "Import USD or Alembic" and select file
 
