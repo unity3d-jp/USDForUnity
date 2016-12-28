@@ -24,7 +24,7 @@ Some of USD's features are supported, some of others are not.
 - Xform, Camera and Mesh schemas are supported. Mesh topology can be dynamic.
 - Animation can be interpolated, which was not supported by [AlembicImporter](https://github.com/unity3d-jp/AlembicImporter).
 - Normals and tangents can be generated on the fly. But generating tangent is very very slow and not recommended to do it at runtime.
- - You can precompute normals and tangents via "Precompute normals / tangents" button. It precomputes normlals (+ tangents) and store them into USD file.
+ - You can precompute normals and tangents via "Precompute normals / tangents" button. It precomputes normals (+ tangents) and store them into USD file.
 - Variant is supported. You can switch variant sets and variants via inspector.
 - Reference & instance is supported. Mesh data is shared among instances that have same master.
 - Payload is supported. All payloads will be loaded when the scene is loaded.
