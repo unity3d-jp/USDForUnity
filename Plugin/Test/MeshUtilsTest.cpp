@@ -15,12 +15,12 @@ void operator delete(void *addr) throw()
 }
 
 template<class T>
-inline bool near_equal(const std::vector<T>& a, const std::vector<T>& b)
+inline bool near_equal(const std::vector<T>& a, const std::vector<T>& b, float epsilon = muDefaultEpsilon)
 {
     if (a.size() != b.size()) { return false; }
 
     for (size_t i = 0; i < a.size(); ++i) {
-        if (!near_equal(a[i], b[i])) {
+        if (!near_equal(a[i], b[i], epsilon)) {
             return false;
         }
     }
@@ -28,10 +28,10 @@ inline bool near_equal(const std::vector<T>& a, const std::vector<T>& b)
 }
 
 template<class T, size_t S>
-inline bool near_equal(const T (&a)[S], const T (&b)[S])
+inline bool near_equal(const T (&a)[S], const T (&b)[S], float epsilon = muDefaultEpsilon)
 {
     for (size_t i = 0; i < S; ++i) {
-        if (!near_equal(a[i], b[i])) {
+        if (!near_equal(a[i], b[i], epsilon)) {
             return false;
         }
     }
@@ -63,7 +63,46 @@ static std::vector<float3> GenerateFloat3Array(size_t num, float cycle, float sc
 
 
 #define NumTestData (1024*1024)
-#define NumTry 16
+#define NumTry 8
+
+static void Test_HalfConversion()
+{
+    std::vector<float> src(NumTestData);
+    std::vector<half> dst_h1(NumTestData);
+    std::vector<half> dst_h2(NumTestData);
+    std::vector<float> dst_f1(NumTestData);
+    std::vector<float> dst_f2(NumTestData);
+
+    ns elapsed1 = 0;
+    ns elapsed2 = 0;
+    bool result = false;
+
+    for (int i = 0; i < NumTestData; ++i) {
+        src[i] = (float)i / NumTestData;
+    }
+
+    for (int i = 0; i < NumTry; ++i) {
+        auto start = now();
+        FloatToHalf_Generic(dst_h1.data(), src.data(), src.size());
+        HalfToFloat_Generic(dst_f1.data(), dst_h1.data(), src.size());
+        elapsed1 += now() - start;
+
+#ifdef muEnableISPC
+        start = now();
+        FloatToHalf_ISPC(dst_h2.data(), src.data(), src.size());
+        HalfToFloat_ISPC(dst_f2.data(), dst_h2.data(), src.size());
+        elapsed2 += now() - start;
+#endif // muEnableISPC
+
+        result = near_equal(dst_f1, dst_f2, 0.01f);
+        if (!result) { break; }
+    }
+
+    printf("Test_HalfConversion: %s\n", result ? "succeeded" : "failed");
+    printf("    FloatToHalf & HalfToFloat Generic: avg. %f ms\n", float(elapsed1 / NumTry) / 1000000.0f);
+    printf("    FloatToHalf & HalfToFloat ISPC: avg. %f ms\n", float(elapsed2 / NumTry) / 1000000.0f);
+    printf("\n");
+}
 
 static void Test_InvertX()
 {
@@ -232,6 +271,7 @@ static void Test_GenerateNormals()
 
 void MeshUtilsTest()
 {
+    Test_HalfConversion();
     Test_InvertX();
     Test_Scale();
     Test_ComputeBounds();

@@ -2,7 +2,24 @@
 #include "MeshUtils.h"
 #include "mikktspace.h"
 
+#ifdef _WIN32
+    #pragma comment(lib, "half.lib")
+#endif
+
 namespace mu {
+
+void FloatToHalf_Generic(half *dst, const float *src, size_t num)
+{
+    for (size_t i = 0; i < num; ++i) {
+        dst[i] = src[i];
+    }
+}
+void HalfToFloat_Generic(float *dst, const half *src, size_t num)
+{
+    for (size_t i = 0; i < num; ++i) {
+        dst[i] = src[i];
+    }
+}
 
 void InvertX_Generic(float3 *dst, size_t num)
 {
@@ -187,6 +204,15 @@ void Interleave_Generic(VertexT *dst, const typename VertexT::source_t& src, siz
 #ifdef muEnableISPC
 #include "MeshUtilsCore.h"
 
+void FloatToHalf_ISPC(half *dst, const float *src, size_t num)
+{
+    ispc::FloatToHalf((uint16_t*)dst, src, (int)num);
+}
+void HalfToFloat_ISPC(float *dst, const half *src, size_t num)
+{
+    ispc::HalfToFloat(dst, (const uint16_t*)src, (int)num);
+}
+
 void InvertX_ISPC(float3 *dst, size_t num)
 {
     ispc::InvertXF3((ispc::float3*)dst, (int)num);
@@ -245,6 +271,15 @@ void GenerateNormals_ISPC(
 #else
     #define Forward(Name, ...) Name##_Generic(__VA_ARGS__)
 #endif
+
+void FloatToHalf(half *dst, const float *src, size_t num)
+{
+    Forward(FloatToHalf, dst, src, num);
+}
+void HalfToFloat(float *dst, const half *src, size_t num)
+{
+    Forward(HalfToFloat, dst, src, num);
+}
 
 void InvertX(float3 *dst, size_t num)
 {

@@ -144,6 +144,9 @@
     <ClInclude Include="usdi\etc\Allocator.h">
       <Filter>usdi\etc</Filter>
     </ClInclude>
+    <ClInclude Include="usdi\usdiVectorConversion.h">
+      <Filter>usdi</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />

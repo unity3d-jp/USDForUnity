@@ -1,6 +1,9 @@
 #pragma once
 
 #include <cmath>
+#include "half.h"
+
+#define muDefaultEpsilon 0.00001f
 
 namespace mu {
 
@@ -43,18 +46,25 @@ struct float4x4
 };
 
 
-inline bool near_equal(float a, float b)
+inline bool near_equal(float a, float b, float epsilon = muDefaultEpsilon)
 {
-    const float epsilon = 0.00001f;
     return std::abs(a - b) < epsilon;
 }
-inline bool near_equal(const float3& a, const float3& b)
+inline bool near_equal(const float2& a, const float2& b, float e = muDefaultEpsilon)
 {
-    return near_equal(a.x, b.x) && near_equal(a.y, b.y) && near_equal(a.z, b.z);
+    return near_equal(a.x, b.x, e) && near_equal(a.y, b.y, e);
 }
-inline bool near_equal(const quatf& a, const quatf& b)
+inline bool near_equal(const float3& a, const float3& b, float e = muDefaultEpsilon)
 {
-    return near_equal(a.x, b.x) && near_equal(a.y, b.y) && near_equal(a.z, b.z) && near_equal(a.w, b.w);
+    return near_equal(a.x, b.x, e) && near_equal(a.y, b.y, e) && near_equal(a.z, b.z, e);
+}
+inline bool near_equal(const float4& a, const float4& b, float e = muDefaultEpsilon)
+{
+    return near_equal(a.x, b.x, e) && near_equal(a.y, b.y, e) && near_equal(a.z, b.z, e) && near_equal(a.w, b.w, e);
+}
+inline bool near_equal(const quatf& a, const quatf& b, float e = muDefaultEpsilon)
+{
+    return near_equal(a.x, b.x, e) && near_equal(a.y, b.y, e) && near_equal(a.z, b.z, e) && near_equal(a.w, b.w, e);
 }
 
 template<class Int>

@@ -35,6 +35,7 @@
     <ClInclude Include="usdi\usdiPoints.h" />
     <ClInclude Include="usdi\usdiSchema.h" />
     <ClInclude Include="usdi\usdiUtils.h" />
+    <ClInclude Include="usdi\usdiVectorConversion.h" />
     <ClInclude Include="usdi\usdiXform.h" />
   </ItemGroup>
   <ItemGroup>

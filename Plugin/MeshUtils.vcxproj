@@ -118,12 +118,12 @@ copy $(IntDir)%(Filename).h %(RelativeDir)</Command>
     <OutDir>$(SolutionDir)_out\$(ProjectName)_$(Platform)_$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)_tmp\$(ProjectName)_$(Platform)_$(Configuration)\</IntDir>
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)External\d3d12\include;$(SolutionDir)External\Unity\include;$(SolutionDir)External\Vulkan\include;$(SolutionDir)External\glew\include;$(SolutionDir)GraphicsInterface;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)External\d3d12\include;$(SolutionDir)External\Unity\include;$(SolutionDir)External\Vulkan\include;$(SolutionDir)External\glew\include;$(SolutionDir)GraphicsInterface;$(SolutionDir)External\OpenEXR\include\OpenEXR;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)external\lib\x86;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)External\d3d12\include;$(SolutionDir)External\Unity\include;$(SolutionDir)External\Vulkan\include;$(SolutionDir)External\glew\include;$(SolutionDir)GraphicsInterface;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)External\d3d12\include;$(SolutionDir)External\Unity\include;$(SolutionDir)External\Vulkan\include;$(SolutionDir)External\glew\include;$(SolutionDir)GraphicsInterface;$(SolutionDir)External\OpenEXR\include\OpenEXR;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)external\lib\x86_64;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
     <OutDir>$(SolutionDir)_out\$(ProjectName)_$(Platform)_$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)_tmp\$(ProjectName)_$(Platform)_$(Configuration)\</IntDir>
@@ -144,12 +144,12 @@ copy $(IntDir)%(Filename).h %(RelativeDir)</Command>
     <OutDir>$(SolutionDir)_out\$(ProjectName)_$(Platform)_$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)_tmp\$(ProjectName)_$(Platform)_$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)External\d3d12\include;$(SolutionDir)External\Unity\include;$(SolutionDir)External\Vulkan\include;$(SolutionDir)External\glew\include;$(SolutionDir)GraphicsInterface;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)External\d3d12\include;$(SolutionDir)External\Unity\include;$(SolutionDir)External\Vulkan\include;$(SolutionDir)External\glew\include;$(SolutionDir)GraphicsInterface;$(SolutionDir)External\OpenEXR\include\OpenEXR;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)external\lib\x86;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Master|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)External\d3d12\include;$(SolutionDir)External\Unity\include;$(SolutionDir)External\Vulkan\include;$(SolutionDir)External\glew\include;$(SolutionDir)GraphicsInterface;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)External\d3d12\include;$(SolutionDir)External\Unity\include;$(SolutionDir)External\Vulkan\include;$(SolutionDir)External\glew\include;$(SolutionDir)GraphicsInterface;$(SolutionDir)External\OpenEXR\include\OpenEXR;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)external\lib\x86_64;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
     <OutDir>$(SolutionDir)_out\$(ProjectName)_$(Platform)_$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)_tmp\$(ProjectName)_$(Platform)_$(Configuration)\</IntDir>

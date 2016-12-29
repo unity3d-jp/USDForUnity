@@ -42,6 +42,16 @@ export void FloatToHalf(
     }
 }
 
+export void HalfToFloat(
+    uniform float dst[],
+    uniform const half src[],
+    uniform const int num)
+{
+    foreach(i=0 ... num) {
+        dst[i] = half_to_float(src[i]);
+    }
+}
+
 
 // invert every x elements of float3 array
 export void InvertXF3(uniform float3 dst[], uniform const int num)

@@ -3,6 +3,7 @@
 #include "usdiContext.h"
 #include "usdiSchema.h"
 #include "usdiAttribute.h"
+#include "usdiVectorConversion.h"
 
 namespace usdi {
 
@@ -462,34 +463,6 @@ private:
 };
 
 
-template<class Dst, class Src> inline void TAssign(Dst& dst, const Src& src) { dst = Dst(src); }
-// force make convertible GfVec2[hfd] <-> GfVec3[hfd] <-> GfVec4[hfd]
-#define V2(Dst, Src) template<> inline void TAssign(Dst& dst, const Src& src) { dst = Dst(src[0], src[1]); }
-V2(GfVec2h, GfVec3h) V2(GfVec2h, GfVec3f) V2(GfVec2h, GfVec3d) V2(GfVec2h, GfVec4h) V2(GfVec2h, GfVec4f) V2(GfVec2h, GfVec4d)
-V2(GfVec2f, GfVec3h) V2(GfVec2f, GfVec3f) V2(GfVec2f, GfVec3d) V2(GfVec2f, GfVec4h) V2(GfVec2f, GfVec4f) V2(GfVec2f, GfVec4d)
-V2(GfVec2d, GfVec3h) V2(GfVec2d, GfVec3f) V2(GfVec2d, GfVec3d) V2(GfVec2d, GfVec4h) V2(GfVec2d, GfVec4f) V2(GfVec2d, GfVec4d)
-#undef V2
-#define V3(Dst, Src) template<> inline void TAssign(Dst& dst, const Src& src) { dst = Dst(src[0], src[1], 0); }
-V3(GfVec3h, GfVec2h) V3(GfVec3h, GfVec2f) V3(GfVec3h, GfVec2d)
-V3(GfVec3f, GfVec2h) V3(GfVec3f, GfVec2f) V3(GfVec3f, GfVec2d)
-V3(GfVec3d, GfVec2h) V3(GfVec3d, GfVec2f) V3(GfVec3d, GfVec2d)
-#undef V3
-#define V3(Dst, Src) template<> inline void TAssign(Dst& dst, const Src& src) { dst = Dst(src[0], src[1], src[2]); }
-V3(GfVec3h, GfVec4h) V3(GfVec3h, GfVec4f) V3(GfVec3h, GfVec4d)
-V3(GfVec3f, GfVec4h) V3(GfVec3f, GfVec4f) V3(GfVec3f, GfVec4d)
-V3(GfVec3d, GfVec4h) V3(GfVec3d, GfVec4f) V3(GfVec3d, GfVec4d)
-#undef V3
-#define V4(Dst, Src) template<> inline void TAssign(Dst& dst, const Src& src) { dst = Dst(src[0], src[1], 0, 0); }
-V4(GfVec4h, GfVec2h) V4(GfVec4h, GfVec2f) V4(GfVec4h, GfVec2d)
-V4(GfVec4f, GfVec2h) V4(GfVec4f, GfVec2f) V4(GfVec4f, GfVec2d)
-V4(GfVec4d, GfVec2h) V4(GfVec4d, GfVec2f) V4(GfVec4d, GfVec2d)
-#undef V4
-#define V4(Dst, Src) template<> inline void TAssign(Dst& dst, const Src& src) { dst = Dst(src[0], src[1], src[2], 0); }
-V4(GfVec4h, GfVec3h) V4(GfVec4h, GfVec3f) V4(GfVec4h, GfVec3d)
-V4(GfVec4f, GfVec3h) V4(GfVec4f, GfVec3f) V4(GfVec4f, GfVec3d)
-V4(GfVec4d, GfVec3h) V4(GfVec4d, GfVec3f) V4(GfVec4d, GfVec3d)
-#undef V4
-
 
 template<class T, class InT>
 class TConverterAttribute : public Attribute
@@ -516,7 +489,7 @@ public:
         if (t == m_time_prev) { return; }
         m_time_prev = t;
         m_usdattr.Get(&m_tmp, t);
-        TAssign(m_sample, m_tmp);
+        VAssign(m_sample, m_tmp);
     }
 
     bool readSample(AttributeData& dst, Time t, bool copy) override
@@ -537,7 +510,7 @@ public:
 
     bool writeSample(const AttributeData& src, Time t) override
     {
-        TAssign(m_tmp, *(const T*)src.data);
+        VAssign(m_tmp, *(const T*)src.data);
         m_usdattr.Set(m_tmp, t);
         return true;
     }
@@ -545,47 +518,19 @@ public:
     bool getImmediate(void *dst, Time t) override
     {
         m_usdattr.Get(&m_tmp, t);
-        TAssign(*(external_t*)dst, m_tmp);
+        VAssign(*(external_t*)dst, m_tmp);
         return true;
     }
 
     bool setImmediate(const void *src, Time t) override
     {
-        TAssign(m_tmp, *(const external_t*)src);
+        VAssign(m_tmp, *(const external_t*)src);
         return m_usdattr.Set(m_tmp, t);
     }
 
 private:
     internal_t m_tmp;
     external_t m_sample;
-};
-
-template<class T, class U>
-struct TConvert
-{
-    void operator()(VtArray<T>& dst, const VtArray<U>& src)
-    {
-        size_t n = src.size();
-        dst.resize(n);
-        for (size_t i = 0; i < n; ++i) { TAssign(dst[i], src[i]); }
-    }
-    void operator()(T* dst, size_t dst_len, const VtArray<T>& src)
-    {
-        size_t n = std::min<size_t>(dst_len, src.size());
-        for (size_t i = 0; i < n; ++i) { dst[i] = src[i]; }
-    }
-    void operator()(VtArray<U>& dst, const VtArray<T>& src)
-    {
-        size_t n = src.size();
-        dst.resize(n);
-        for (size_t i = 0; i < n; ++i) { TAssign(dst[i], src[i]); }
-    }
-    void operator()(VtArray<U>& dst, const T *src, size_t src_len)
-    {
-        size_t n = src_len;
-        dst.resize(n);
-        for (size_t i = 0; i < n; ++i) { TAssign(dst[i], src[i]); }
-    }
 };
 
 template<class T, class InT>
@@ -597,7 +542,7 @@ public:
     using external_v = T;
     using internal_t = VtArray<InT>;
     using external_t = VtArray<T>;
-    using Convert = TConvert<external_v, internal_v>;
+    using Convert = VConvert<external_v, internal_v>;
 
     TConverterAttribute(Attribute *src)
         : super(src->getParent(), src->getUSDAttribute())

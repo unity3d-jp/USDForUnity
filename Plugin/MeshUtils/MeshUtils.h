@@ -4,6 +4,8 @@
 
 namespace mu {
 
+void FloatToHalf(half *dst, const float *src, size_t num);
+void HalfToFloat(float *dst, const half *src, size_t num);
 
 void InvertX(float3 *dst, size_t num);
 void InvertX(float4 *dst, size_t num);
@@ -80,6 +82,11 @@ void CopyWithIndices(DataArray& dst, const DataArray& src, const IndexArray& ind
 // ------------------------------------------------------------
 // internal
 // ------------------------------------------------------------
+void FloatToHalf_Generic(half *dst, const float *src, size_t num);
+void FloatToHalf_ISPC(half *dst, const float *src, size_t num);
+void HalfToFloat_Generic(float *dst, const half *src, size_t num);
+void HalfToFloat_ISPC(float *dst, const half *src, size_t num);
+
 void InvertX_Generic(float3 *dst, size_t num);
 void InvertX_ISPC(float3 *dst, size_t num);
 void InvertX_Generic(float4 *dst, size_t num);
