@@ -88,6 +88,7 @@ class Task
 {
 public:
     Task(const std::function<void()>& f, const char *n = "");
+    ~Task();
     void run(bool async = true);
     bool isRunning();
     void wait();
@@ -95,11 +96,9 @@ public:
     usdiDefineCachedOperatorNew(Task, 256);
 
 private:
-    static tbb::task_group s_task_group;
-
     std::string m_dbg_name;
     std::function<void()> m_func;
-    tbb::spin_mutex m_mutex;
+    tbb::mutex m_mutex;
 };
 
 } // namespace usdi

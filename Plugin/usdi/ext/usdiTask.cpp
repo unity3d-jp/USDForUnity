@@ -220,7 +220,27 @@ void VertexCommandManager::wait()
 
 
 
-tbb::task_group Task::s_task_group;
+template<typename Body>
+class lambda_task : public tbb::task
+{
+private:
+    Body m_body;
+    tbb::task* execute() override
+    {
+        m_body();
+        return nullptr;
+    }
+public:
+    lambda_task(const Body& body) : m_body(body) {}
+};
+
+template<typename Body>
+inline tbb::task* launch(const Body& body)
+{
+    auto *ret = new(tbb::task::allocate_root()) lambda_task<Body>(body);
+    tbb::task::enqueue(*ret);
+    return ret;
+}
 
 Task::Task(const std::function<void()>& f, const char *n)
     : m_dbg_name(n)
@@ -228,19 +248,21 @@ Task::Task(const std::function<void()>& f, const char *n)
 {
 }
 
+Task::~Task()
+{
+}
+
 void Task::run(bool async)
 {
     if (async) {
         m_mutex.lock();
-        s_task_group.run([this]() {
+        launch([this]() {
             m_func();
             m_mutex.unlock();
         });
     }
     else {
-        m_mutex.lock();
         m_func();
-        m_mutex.unlock();
     }
 }
 
