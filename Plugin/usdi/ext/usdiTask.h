@@ -43,11 +43,12 @@ private:
 
     std::string m_dbg_name;
 
-    const float3 *m_src_points = nullptr;
-    const float3 *m_src_normals = nullptr;
-    const float2 *m_src_uvs = nullptr;
-    const float4 *m_src_tangents = nullptr;
-    const int    *m_src_indices = nullptr;
+    const float3 *m_points = nullptr;
+    const float3 *m_normals = nullptr;
+    const float4 *m_colors = nullptr;
+    const float2 *m_uvs = nullptr;
+    const float4 *m_tangents = nullptr;
+    const int    *m_indices = nullptr;
     int          m_num_points = 0;
     int          m_num_indices = 0;
 

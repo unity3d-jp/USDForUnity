@@ -283,8 +283,9 @@ namespace UTJ
             public int num_bones;
             public int max_bone_weights;
             public Bool has_normals;
-            public Bool has_tangents;
+            public Bool has_colors;
             public Bool has_uvs;
+            public Bool has_tangents;
             public Bool has_velocities;
 
             public static MeshSummary default_value { get { return default(MeshSummary); } }
@@ -294,8 +295,10 @@ namespace UTJ
         {
             public IntPtr   points;
             public IntPtr   normals;
-            public IntPtr   tangents;
+            public IntPtr   colors;
             public IntPtr   uvs;
+            public IntPtr   tangents;
+            public IntPtr   velocities;
             public IntPtr   indices; // always triangulated
             public IntPtr   weights;
             public int      num_points; // == num_indices
@@ -309,10 +312,11 @@ namespace UTJ
         public struct MeshData
         {
             public IntPtr   points;
-            public IntPtr   velocities;
             public IntPtr   normals;
-            public IntPtr   tangents;
+            public IntPtr   colors;
             public IntPtr   uvs;
+            public IntPtr   tangents;
+            public IntPtr   velocities;
             public IntPtr   counts;
             public IntPtr   indices;
             public IntPtr   indices_triangulated;

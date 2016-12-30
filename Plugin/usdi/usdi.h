@@ -183,8 +183,9 @@ struct MeshSummary
     uint                num_bones = 0;
     uint                max_bone_weights = 0; // should be 0 or 4 or 8
     bool                has_normals = false;
-    bool                has_tangents = false;
+    bool                has_colors = false;
     bool                has_uvs = false;
+    bool                has_tangents = false;
     bool                has_velocities = false;
 };
 
@@ -201,8 +202,10 @@ struct SubmeshData
 {
     float3      *points = nullptr;
     float3      *normals = nullptr;
-    float4      *tangents = nullptr;
+    float4      *colors = nullptr;
     float2      *uvs = nullptr;
+    float4      *tangents = nullptr;
+    float3      *velocities = nullptr;
     int         *indices = nullptr;
     union {
         Weights4 *weights4 = nullptr;
@@ -219,10 +222,11 @@ struct MeshData
     // these pointers can be null (in this case, just be ignored).
     // otherwise, if you pass to usdiMeshSampleReadData(), pointers must point valid memory block to store data.
     float3  *points = nullptr;
-    float3  *velocities = nullptr;
     float3  *normals = nullptr;
-    float4  *tangents = nullptr;
+    float4  *colors = nullptr;
     float2  *uvs = nullptr;
+    float4  *tangents = nullptr;
+    float3  *velocities = nullptr;
     int     *counts = nullptr;
     int     *indices = nullptr;
     int     *indices_triangulated = nullptr;

@@ -269,6 +269,77 @@ static void Test_GenerateNormals()
     printf("\n");
 }
 
+void Test_Interleave()
+{
+    float3 point = { 0.0f, 1.0f, 2.0f };
+    float3 normal = { 3.0f, 4.0f, 5.0f };
+    float4 color = { 6.0f, 7.0f, 8.0f, 9.0f };
+    float2 uv = { 10.0f, 11.0f };
+    float4 tangent = { 12.0f, 13.0f, 14.0f, 15.0f };
+
+    printf("Test_Interleave:\n");
+    {
+        vertex_v3n3 dst;
+        auto format = GuessVertexFormat(&point, &normal, nullptr, nullptr, nullptr);
+        auto size = GetVertexSize(format);
+        Interleave(&dst, format, 1, &point, &normal, nullptr, nullptr, nullptr);
+        bool result =
+            format == VertexFormat::V3N3 && size == sizeof(dst) &&
+            dst.p == point && dst.n == normal;
+        printf("    vertex_v3n3: %s\n", result ? "succeeded" : "failed");
+    }
+    {
+        vertex_v3n3c4 dst;
+        auto format = GuessVertexFormat(&point, &normal, &color, nullptr, nullptr);
+        auto size = GetVertexSize(format);
+        Interleave(&dst, format, 1, &point, &normal, &color, nullptr, nullptr);
+        bool result =
+            format == VertexFormat::V3N3C4 && size == sizeof(dst) &&
+            dst.p == point && dst.n == normal && dst.c == color;
+        printf("    vertex_v3n3c4: %s\n", result ? "succeeded" : "failed");
+    }
+    {
+        vertex_v3n3u2 dst;
+        auto format = GuessVertexFormat(&point, &normal, nullptr, &uv, nullptr);
+        auto size = GetVertexSize(format);
+        Interleave(&dst, format, 1, &point, &normal, nullptr, &uv, nullptr);
+        bool result =
+            format == VertexFormat::V3N3U2 && size == sizeof(dst) &&
+            dst.p == point && dst.n == normal && dst.u == uv;
+        printf("    vertex_v3n3u2: %s\n", result ? "succeeded" : "failed");
+    }
+    {
+        vertex_v3n3c4u2 dst;
+        auto format = GuessVertexFormat(&point, &normal, &color, &uv, nullptr);
+        auto size = GetVertexSize(format);
+        Interleave(&dst, format, 1, &point, &normal, &color, &uv, nullptr);
+        bool result =
+            format == VertexFormat::V3N3C4U2 && size == sizeof(dst) &&
+            dst.p == point && dst.n == normal&& dst.c == color && dst.u == uv;
+        printf("    vertex_v3n3c4u2: %s\n", result ? "succeeded" : "failed");
+    }
+    {
+        vertex_v3n3u2t4 dst;
+        auto format = GuessVertexFormat(&point, &normal, nullptr, &uv, &tangent);
+        auto size = GetVertexSize(format);
+        Interleave(&dst, format, 1, &point, &normal, nullptr, &uv, &tangent);
+        bool result =
+            format == VertexFormat::V3N3U2T4 && size == sizeof(dst) &&
+            dst.p == point && dst.n == normal && dst.u == uv && dst.t == tangent;
+        printf("    vertex_v3n3u2t4: %s\n", result ? "succeeded" : "failed");
+    }
+    {
+        vertex_v3n3c4u2t4 dst;
+        auto format = GuessVertexFormat(&point, &normal, &color, &uv, &tangent);
+        auto size = GetVertexSize(format);
+        Interleave(&dst, format, 1, &point, &normal, &color, &uv, &tangent);
+        bool result =
+            format == VertexFormat::V3N3C4U2T4 && size == sizeof(dst) &&
+            dst.p == point && dst.n == normal && dst.u == uv && dst.t == tangent;
+        printf("    vertex_v3n3c4u2t4: %s\n", result ? "succeeded" : "failed");
+    }
+}
+
 void MeshUtilsTest()
 {
     Test_HalfConversion();
@@ -277,4 +348,5 @@ void MeshUtilsTest()
     Test_ComputeBounds();
     Test_Normalize();
     Test_GenerateNormals();
+    Test_Interleave();
 }

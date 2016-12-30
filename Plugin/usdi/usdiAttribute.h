@@ -59,6 +59,7 @@ Attribute* CreateAttribute(Schema *parent, const char *name, AttributeType type)
 #define usdiUVAttrName              "primvars:uv"
 #define usdiUVAttrName2             "uv"
 #define usdiTangentAttrName         "tangents"
+#define usdiColorAttrName           "colors"
 #define usdiBoneWeightsAttrName     "boneWeights"
 #define usdiBoneIndicesAttrName     "boneIndices"
 #define usdiBindPosesAttrName       "bindposes"

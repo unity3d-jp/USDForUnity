@@ -23,6 +23,7 @@ namespace UTJ
         bool m_setupRequierd = true;
         Vector3[] m_points;
         Vector3[] m_normals;
+        Color[] m_colors;
         Vector2[] m_uvs;
         Vector4[] m_tangents;
         BoneWeight[] m_weights;
@@ -263,10 +264,10 @@ namespace UTJ
                 m_normals = new Vector3[meshData.num_points];
                 meshData.normals = usdi.GetArrayPtr(m_normals);
             }
-            if (summary.has_tangents)
+            if(summary.has_colors)
             {
-                m_tangents = new Vector4[meshData.num_points];
-                meshData.tangents = usdi.GetArrayPtr(m_tangents);
+                m_colors = new Color[meshData.num_points];
+                meshData.colors = usdi.GetArrayPtr(m_colors);
             }
             if (summary.has_uvs)
             {
@@ -299,10 +300,10 @@ namespace UTJ
                 m_normals = new Vector3[data.num_points];
                 data.normals = usdi.GetArrayPtr(m_normals);
             }
-            if (summary.has_tangents)
+            if (summary.has_colors)
             {
-                m_tangents = new Vector4[data.num_points];
-                data.tangents = usdi.GetArrayPtr(m_tangents);
+                m_colors = new Color[data.num_points];
+                data.colors = usdi.GetArrayPtr(m_colors);
             }
             if (summary.has_uvs)
             {
@@ -413,6 +414,7 @@ namespace UTJ
 
                 m_umesh.vertices = m_points;
                 if (m_normals != null) { m_umesh.normals = m_normals; }
+                if (m_colors != null) { m_umesh.colors = m_colors; }
                 if (m_uvs != null) { m_umesh.uv = m_uvs; }
                 if (m_tangents != null) { m_umesh.tangents = m_tangents; }
 

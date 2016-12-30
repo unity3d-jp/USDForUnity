@@ -12,37 +12,49 @@ struct float2
     float x, y;
     float& operator[](int i) { return ((float*)this)[i]; }
     const float& operator[](int i) const { return ((float*)this)[i]; }
+    bool operator==(const float2& v) const { return x == v.x && y == v.y; }
+    bool operator!=(const float2& v) const { return !((*this)==v); }
 };
 struct float3
 {
     float x, y, z;
     float& operator[](int i) { return ((float*)this)[i]; }
     const float& operator[](int i) const { return ((float*)this)[i]; }
+    bool operator==(const float3& v) const { return x == v.x && y == v.y && z == v.z; }
+    bool operator!=(const float3& v) const { return !((*this) == v); }
 };
 struct float4
 {
     float x, y, z, w;
     float& operator[](int i) { return ((float*)this)[i]; }
     const float& operator[](int i) const { return ((float*)this)[i]; }
+    bool operator==(const float4& v) const { return x == v.x && y == v.y && z == v.z && w == v.w; }
+    bool operator!=(const float4& v) const { return !((*this) == v); }
 };
 struct quatf
 {
     float x, y, z, w;
     float& operator[](int i) { return ((float*)this)[i]; }
     const float& operator[](int i) const { return ((float*)this)[i]; }
+    bool operator==(const quatf& v) const { return x == v.x && y == v.y && z == v.z && w == v.w; }
+    bool operator!=(const quatf& v) const { return !((*this) == v); }
 };
 
 struct float3x3
 {
-    float3 v[3];
-    float3& operator[](int i) { return v[i]; }
-    const float3& operator[](int i) const { return v[i]; }
+    float3 m[3];
+    float3& operator[](int i) { return m[i]; }
+    const float3& operator[](int i) const { return m[i]; }
+    bool operator==(const float3x3& v) const { return memcmp(m, v.m, sizeof(*this)) == 0; }
+    bool operator!=(const float3x3& v) const { return !((*this) == v); }
 };
 struct float4x4 
 {
-    float4 v[4];
-    float4& operator[](int i) { return v[i]; }
-    const float4& operator[](int i) const { return v[i]; }
+    float4 m[4];
+    float4& operator[](int i) { return m[i]; }
+    const float4& operator[](int i) const { return m[i]; }
+    bool operator==(const float4x4& v) const { return memcmp(m, v.m, sizeof(*this)) == 0; }
+    bool operator!=(const float4x4& v) const { return !((*this) == v); }
 };
 
 

@@ -137,6 +137,7 @@ Mesh::Mesh(Context *ctx, Schema *parent, const UsdPrim& prim)
     usdiLogTrace("Mesh::Mesh(): %s\n", getPath());
     if (!m_mesh) { usdiLogError("Mesh::Mesh(): m_mesh is invalid\n"); }
 
+    m_attr_colors = findAttribute(usdiColorAttrName, AttributeType::Float4Array);
     m_attr_uv = findAttribute(usdiUVAttrName, AttributeType::Float2Array);
     if (!m_attr_uv) { m_attr_uv = findAttribute(usdiUVAttrName2, AttributeType::Float2Array); }
     m_attr_tangents = findAttribute(usdiTangentAttrName, AttributeType::Float4Array);
@@ -172,6 +173,7 @@ const MeshSummary& Mesh::getSummary() const
         m_summary.has_normals =
             m_mesh.GetNormalsAttr().HasValue() ||
             settings.normal_calculation != NormalCalculationType::Never;
+        m_summary.has_colors = m_attr_colors && m_attr_colors->hasValue();
         m_summary.has_uvs = m_attr_uv && m_attr_uv->hasValue();
         m_summary.has_tangents =
             m_summary.has_normals && m_summary.has_uvs && (
@@ -241,6 +243,9 @@ void Mesh::updateSample(Time t_)
     m_mesh.GetVelocitiesAttr().Get(&sample.velocities, t);
     m_mesh.GetFaceVertexCountsAttr().Get(&sample.counts, t);
     m_mesh.GetFaceVertexIndicesAttr().Get(&sample.indices, t);
+    if (m_attr_colors) {
+        m_attr_colors->getImmediate(&sample.colors, t_);
+    }
     if (m_attr_uv) {
         m_attr_uv->getImmediate(&sample.uvs, t_);
     }
@@ -424,11 +429,18 @@ void Mesh::updateSample(Time t_)
 
     // submesh
 
+    VAFlags flattened;
+    flattened.points    = sample.points.size() == m_num_indices;
+    flattened.normals   = sample.normals.size() == m_num_indices;
+    flattened.colors    = sample.colors.size() == m_num_indices;
+    flattened.uvs       = sample.uvs.size() == m_num_indices;
+    flattened.tangents  = sample.tangents.size() == m_num_indices;
+    flattened.velocities= sample.velocities.size() == m_num_indices;
+    flattened.weights   = sample.weights4.size() == m_num_indices || sample.weights8.size() == m_num_indices;
+
     bool make_submesh =
-        (conf.split_mesh && sample.points.size() > usdiMaxVertices) ||
-        (!sample.normals.empty() && sample.points.size() != sample.normals.size()) ||
-        (!sample.tangents.empty() && sample.points.size() != sample.tangents.size()) ||
-        (!sample.uvs.empty() && sample.points.size() != sample.uvs.size());
+        flattened.any ||
+        (conf.split_mesh && sample.points.size() > usdiMaxVertices);
 
     if (!make_submesh) {
         m_num_current_submeshes = 0;
@@ -439,12 +451,7 @@ void Mesh::updateSample(Time t_)
             submeshes.resize(m_num_current_submeshes);
         }
 
-        bool flattened_points = sample.points.size() == m_num_indices;
-        bool flattened_normals = sample.normals.size() == m_num_indices;
-        bool flattened_tangents = sample.tangents.size() == m_num_indices;
-        bool flattened_uv = sample.uvs.size() == m_num_indices;
-        bool flattened_weights = sample.weights4.size() == m_num_indices || sample.weights8.size() == m_num_indices;
-        if ((flattened_points || flattened_normals || flattened_tangents || flattened_uv || flattened_weights) &&
+        if (flattened.any &&
             (sample.indices_flattened_triangulated.size() != sample.indices_triangulated.size() || update_indices))
         {
             sample.indices_flattened_triangulated.resize(m_num_indices_triangulated);
@@ -462,15 +469,17 @@ void Mesh::updateSample(Time t_)
             for (int i = 0; i < isize; ++i) { sms.indices[i] = i; }
 
 #define Sel(C) C ? sample.indices_flattened_triangulated : sample.indices_triangulated
-            CopyWithIndices(sms.points, sample.points, Sel(flattened_points), ibegin, iend);
-            CopyWithIndices(sms.normals, sample.normals, Sel(flattened_normals), ibegin, iend);
-            CopyWithIndices(sms.tangents, sample.tangents, Sel(flattened_tangents), ibegin, iend);
-            CopyWithIndices(sms.uvs, sample.uvs, Sel(flattened_uv), ibegin, iend);
+            CopyWithIndices(sms.points, sample.points, Sel(flattened.points), ibegin, iend);
+            CopyWithIndices(sms.normals, sample.normals, Sel(flattened.normals), ibegin, iend);
+            CopyWithIndices(sms.colors, sample.colors, Sel(flattened.colors), ibegin, iend);
+            CopyWithIndices(sms.uvs, sample.uvs, Sel(flattened.uvs), ibegin, iend);
+            CopyWithIndices(sms.tangents, sample.tangents, Sel(flattened.tangents), ibegin, iend);
+            CopyWithIndices(sms.velocities, sample.velocities, Sel(flattened.velocities), ibegin, iend);
             if (!sample.weights4.empty()) {
-                CopyWithIndices(sms.weights4, sample.weights4, Sel(flattened_weights), ibegin, iend);
+                CopyWithIndices(sms.weights4, sample.weights4, Sel(flattened.weights), ibegin, iend);
             }
             if (!sample.weights8.empty()) {
-                CopyWithIndices(sms.weights8, sample.weights8, Sel(flattened_weights), ibegin, iend);
+                CopyWithIndices(sms.weights8, sample.weights8, Sel(flattened.weights), ibegin, iend);
             }
 #undef Sel
 
@@ -507,17 +516,20 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
         if (dst.points && !sample.points.empty()) {
             memcpy(dst.points, sample.points.cdata(), sizeof(float3) * dst.num_points);
         }
-        if (dst.velocities && !sample.velocities.empty()) {
-            memcpy(dst.velocities, sample.velocities.cdata(), sizeof(float3) * dst.num_points);
-        }
         if (dst.normals && !sample.normals.empty()) {
             memcpy(dst.normals, sample.normals.cdata(), sizeof(float3) * dst.num_points);
+        }
+        if (dst.colors && !sample.colors.empty()) {
+            memcpy(dst.colors, sample.colors.cdata(), sizeof(float4) * dst.num_points);
+        }
+        if (dst.uvs && !sample.uvs.empty()) {
+            memcpy(dst.uvs, sample.uvs.cdata(), sizeof(float2) * dst.num_points);
         }
         if (dst.tangents && !sample.tangents.empty()) {
             memcpy(dst.tangents, sample.tangents.cdata(), sizeof(float4) * dst.num_points);
         }
-        if (dst.uvs && !sample.uvs.empty()) {
-            memcpy(dst.uvs, sample.uvs.cdata(), sizeof(float2) * dst.num_points);
+        if (dst.velocities && !sample.velocities.empty()) {
+            memcpy(dst.velocities, sample.velocities.cdata(), sizeof(float3) * dst.num_points);
         }
         if (dst.counts && !sample.counts.empty()) {
             memcpy(dst.counts, sample.counts.cdata(), sizeof(int) * dst.num_counts);
@@ -556,11 +568,17 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
                 if (sdst.normals && !ssrc.normals.empty()) {
                     memcpy(sdst.normals, ssrc.normals.cdata(), sizeof(float3) * sdst.num_points);
                 }
-                if (sdst.tangents && !ssrc.tangents.empty()) {
-                    memcpy(sdst.tangents, ssrc.tangents.cdata(), sizeof(float4) * sdst.num_points);
+                if (sdst.colors && !ssrc.colors.empty()) {
+                    memcpy(sdst.colors, ssrc.colors.cdata(), sizeof(float4) * sdst.num_points);
                 }
                 if (sdst.uvs && !ssrc.uvs.empty()) {
                     memcpy(sdst.uvs, ssrc.uvs.cdata(), sizeof(float2) * sdst.num_points);
+                }
+                if (sdst.tangents && !ssrc.tangents.empty()) {
+                    memcpy(sdst.tangents, ssrc.tangents.cdata(), sizeof(float4) * sdst.num_points);
+                }
+                if (sdst.velocities && !ssrc.velocities.empty()) {
+                    memcpy(sdst.velocities, ssrc.velocities.cdata(), sizeof(float3) * sdst.num_points);
                 }
 
                 if (sdst.weights4 && !ssrc.weights4.empty()) {
@@ -576,8 +594,9 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
         dst.points = (float3*)sample.points.cdata();
         dst.velocities = (float3*)sample.velocities.cdata();
         dst.normals = (float3*)sample.normals.cdata();
-        dst.tangents = (float4*)sample.tangents.cdata();
+        dst.colors = (float4*)sample.colors.cdata();
         dst.uvs = (float2*)sample.uvs.cdata();
+        dst.tangents = (float4*)sample.tangents.cdata();
         dst.counts = (int*)sample.counts.cdata();
         dst.indices = (int*)sample.indices.cdata();
         dst.indices_triangulated = (int*)sample.indices_triangulated.cdata();
@@ -595,18 +614,13 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
                 const auto& ssrc = submeshes[i];
                 auto& sdst = dst.submeshes[i];
                 sdst.num_points = (uint)ssrc.points.size();
-                if (sdst.indices && !ssrc.indices.empty()) {
-                    sdst.indices = (int*)ssrc.indices.cdata();
-                }
-                if (sdst.points && !ssrc.points.empty()) {
-                    sdst.points = (float3*)ssrc.points.cdata();
-                }
-                if (sdst.normals && !ssrc.normals.empty()) {
-                    sdst.normals = (float3*)ssrc.normals.cdata();
-                }
-                if (sdst.uvs && !ssrc.uvs.empty()) {
-                    sdst.uvs = (float2*)ssrc.uvs.cdata();
-                }
+                sdst.indices = (int*)ssrc.indices.cdata();
+                sdst.points = (float3*)ssrc.points.cdata();
+                sdst.normals = (float3*)ssrc.normals.cdata();
+                sdst.colors = (float4*)ssrc.colors.cdata();
+                sdst.uvs = (float2*)ssrc.uvs.cdata();
+                sdst.tangents = (float4*)ssrc.tangents.cdata();
+                sdst.velocities = (float3*)ssrc.velocities.cdata();
             }
         }
     }
@@ -685,6 +699,13 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
         }
         m_mesh.GetFaceVertexCountsAttr().Set(sample.counts, t);
         m_mesh.GetFaceVertexIndicesAttr().Set(sample.indices, t);
+    }
+
+    if (src.colors) {
+        sample.colors.assign((GfVec4f*)src.colors, (GfVec4f*)src.colors + src.num_points);
+
+        CreateAttributeIfNeeded(m_attr_colors, usdiColorAttrName, AttributeType::Float4Array);
+        m_attr_colors->setImmediate(&sample.colors, t_);
     }
 
     if (src.uvs) {
