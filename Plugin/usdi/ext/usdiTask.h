@@ -99,7 +99,7 @@ public:
 private:
     std::string m_dbg_name;
     std::function<void()> m_func;
-    tbb::mutex m_mutex;
+    tbb::spin_mutex m_mutex; // must be non-recursive mutex
 };
 
 } // namespace usdi
