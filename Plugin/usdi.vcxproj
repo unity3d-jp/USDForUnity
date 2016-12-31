@@ -23,6 +23,7 @@
     <ClInclude Include="usdi\ext\UnityEngineBinding.h" />
     <ClInclude Include="usdi\ext\usdiComponentUpdater.h" />
     <ClInclude Include="usdi\ext\usdiExt.h" />
+    <ClInclude Include="usdi\ext\usdiProgressReporter.h" />
     <ClInclude Include="usdi\ext\usdiTask.h" />
     <ClInclude Include="usdi\pch.h" />
     <ClInclude Include="usdi\usdiAttribute.h" />
@@ -48,6 +49,7 @@
     <ClCompile Include="usdi\ext\UnityEngineBinding.cpp" />
     <ClCompile Include="usdi\ext\usdiComponentUpdater.cpp" />
     <ClCompile Include="usdi\ext\usdiExt.cpp" />
+    <ClCompile Include="usdi\ext\usdiProgressReporter.cpp" />
     <ClCompile Include="usdi\ext\usdiTask.cpp" />
     <ClCompile Include="usdi\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

@@ -7,6 +7,7 @@ namespace usdi {
     typedef void(usdiSTDCall *MonoDelegate)(void*);
 
     class Task;
+    class IProgressReporter;
 } // namespace usdi
 
 extern "C" {
@@ -30,6 +31,10 @@ usdiAPI usdi::Task*     usdiTaskCreateMeshReadSample(usdi::Mesh *mesh, usdi::Mes
 usdiAPI usdi::Task*     usdiTaskCreatePointsReadSample(usdi::Points *points, usdi::PointsData *dst, const usdi::Time *t);
 usdiAPI usdi::Task*     usdiTaskCreateAttrReadSample(usdi::Attribute *attr, usdi::AttributeData *dst, const usdi::Time *t);
 usdiAPI usdi::Task*     usdiTaskCreateComposite(usdi::Task **tasks, int num);
+
+usdiAPI usdi::IProgressReporter* usdiProgressReporterCreate();
+usdiAPI void                     usdiProgressReporterDestroy(usdi::IProgressReporter *pr);
+usdiAPI void                     usdiProgressReporterWrite(usdi::IProgressReporter *pr, const char *message);
 
 // just for C#
 usdiAPI int             usdiMemcmp(const void *a, const void *b, int size);

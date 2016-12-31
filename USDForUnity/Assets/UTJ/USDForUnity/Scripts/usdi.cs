@@ -657,6 +657,11 @@ namespace UTJ
         [DllImport("usdi")] public static extern IntPtr usdiTaskCreateAttrReadSample(Attribute points, ref AttributeData dst, ref double t);
         [DllImport("usdi")] public static extern IntPtr usdiTaskCreateComposite(IntPtr tasks, int num);
 
+        [DllImport("usdi")] public static extern IntPtr usdiProgressReporterCreate();
+        [DllImport("usdi")] public static extern void usdiProgressReporterDestroy(IntPtr pr);
+        [DllImport("usdi")] public static extern void usdiProgressReporterWrite(IntPtr pr, string message);
+
+
         [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern void usdiUniTransformAssign(UnityEngine.Transform trans, ref XformData data);
         [MethodImpl(MethodImplOptions.InternalCall)]
@@ -792,6 +797,34 @@ namespace UTJ
                 m_handle = usdiTaskCreateComposite(GetArrayPtr(m_handles), m_handles.Length);
             }
         }
+
+        public class ProgressReporter
+        {
+            IntPtr m_handle;
+
+            public ProgressReporter()
+            {
+            }
+            ~ProgressReporter()
+            {
+                Close();
+            }
+            public void Open()
+            {
+                Close();
+                m_handle = usdiProgressReporterCreate();
+            }
+            public void Close()
+            {
+                usdiProgressReporterDestroy(m_handle);
+                m_handle = IntPtr.Zero;
+            }
+            public void Write(string message)
+            {
+                usdiProgressReporterWrite(m_handle, message);
+            }
+        }
+
 
 
         public static T GetOrAddComponent<T>(GameObject go) where T : Component

@@ -54,6 +54,7 @@ namespace UTJ
         bool m_keyframeReduction = true;
         float m_keyframeEpsilon = 0.0001f;
 
+        usdi.ProgressReporter m_reporter;
         Transform m_root;
         AnimationClip m_animClip;
         #endregion
@@ -81,15 +82,52 @@ namespace UTJ
         #region impl
         public UsdAssetConverter(Transform root)
         {
+            m_reporter = new usdi.ProgressReporter();
             m_root = root;
         }
 
         public bool Convert()
         {
+            m_reporter.Open();
             m_animClip = new AnimationClip();
             ConvertRecursive(m_root, "");
             AssetDatabase.CreateAsset(m_animClip, "Assets/" + m_assetName + ".anim");
+            m_reporter.Close();
             return true;
+        }
+
+        class CurveData
+        {
+            public AnimationCurve curve;
+            public Type type;
+            public string path;
+            public string field;
+            public int length { get { return curve.length; } }
+
+            public CurveData(Type t, string p, string f)
+            {
+                curve = new AnimationCurve();
+                type = t;
+                path = p;
+                field = f;
+            }
+
+            public void Set(AnimationClip clip)
+            {
+                if (curve.length == 0) return;
+                if(curve.length == 2)
+                {
+                    var k1 = curve[0];
+                    var k2 = curve[1];
+                    if (k1.value == k2.value &&
+                        k1.outTangent == 0.0f && k2.inTangent == 0.0f)
+                    {
+                        return;
+                    }
+                }
+
+                clip.SetCurve(path, type, field, curve);
+            }
         }
 
         void ConvertRecursive(Transform t, string path)
@@ -104,6 +142,7 @@ namespace UTJ
             var cmp = t.GetComponent<UsdIComponent>();
             if(cmp != null)
             {
+                m_reporter.Write("converting " + cmp.schema.primName + " ...\n");
                 var schema = cmp.schema.nativeSchemaPtr;
                 ConvertXform(usdi.usdiAsXform(schema), path);
                 ConvertCamera(usdi.usdiAsCamera(schema), path);
@@ -117,66 +156,57 @@ namespace UTJ
             }
         }
 
-        void ConvertXform(usdi.Xform xf, string name)
+        void ConvertXform(usdi.Xform xf, string path)
         {
             if (!xf) { return; }
 
-            var tx = new AnimationCurve();
-            var ty = new AnimationCurve();
-            var tz = new AnimationCurve();
-            var rx = new AnimationCurve();
-            var ry = new AnimationCurve();
-            var rz = new AnimationCurve();
-            var sx = new AnimationCurve();
-            var sy = new AnimationCurve();
-            var sz = new AnimationCurve();
+            var ttrans = typeof(Transform);
+            var cvs = new CurveData[]{
+                new CurveData(ttrans, path, "localPosition.x"),
+                new CurveData(ttrans, path, "localPosition.y"),
+                new CurveData(ttrans, path, "localPosition.z"),
+                new CurveData(ttrans, path, "localEulerAngles.x"),
+                new CurveData(ttrans, path, "localEulerAngles.y"),
+                new CurveData(ttrans, path, "localEulerAngles.z"),
+                new CurveData(ttrans, path, "localScale.x"),
+                new CurveData(ttrans, path, "localScale.y"),
+                new CurveData(ttrans, path, "localScale.z"),
+            };
 
             usdi.usdiXformEachSample(xf, (ref usdi.XformData data, double t_)=> {
                 float t = (float)t_;
                 if (data.flags.updatedPosition)
                 {
-                    tx.AddKey(t, data.position.x);
-                    ty.AddKey(t, data.position.y);
-                    tz.AddKey(t, data.position.z);
+                    cvs[0].curve.AddKey(t, data.position.x);
+                    cvs[1].curve.AddKey(t, data.position.y);
+                    cvs[2].curve.AddKey(t, data.position.z);
                 }
                 if (data.flags.updatedRotation)
                 {
                     var euler = data.rotation.eulerAngles;
-                    rx.AddKey(t, euler.x);
-                    ry.AddKey(t, euler.y);
-                    rz.AddKey(t, euler.z);
+                    cvs[3].curve.AddKey(t, euler.x);
+                    cvs[4].curve.AddKey(t, euler.y);
+                    cvs[5].curve.AddKey(t, euler.z);
                 }
                 if (data.flags.updatedScale)
                 {
-                    sx.AddKey(t, data.scale.x);
-                    sy.AddKey(t, data.scale.y);
-                    sz.AddKey(t, data.scale.z);
+                    cvs[6].curve.AddKey(t, data.scale.x);
+                    cvs[7].curve.AddKey(t, data.scale.y);
+                    cvs[8].curve.AddKey(t, data.scale.z);
                 }
             });
 
             if(m_keyframeReduction)
             {
-                AnimationCurveKeyReducer.DoReduction(tx, m_keyframeEpsilon);
-                AnimationCurveKeyReducer.DoReduction(ty, m_keyframeEpsilon);
-                AnimationCurveKeyReducer.DoReduction(tz, m_keyframeEpsilon);
-                AnimationCurveKeyReducer.DoReduction(rx, m_keyframeEpsilon);
-                AnimationCurveKeyReducer.DoReduction(ry, m_keyframeEpsilon);
-                AnimationCurveKeyReducer.DoReduction(rz, m_keyframeEpsilon);
-                AnimationCurveKeyReducer.DoReduction(sx, m_keyframeEpsilon);
-                AnimationCurveKeyReducer.DoReduction(sy, m_keyframeEpsilon);
-                AnimationCurveKeyReducer.DoReduction(sz, m_keyframeEpsilon);
+                foreach(var c in cvs)
+                {
+                    DoReduction(c);
+                }
             }
-
-            var ttransform = typeof(Transform);
-            if (tx.length > 0) m_animClip.SetCurve(name, ttransform, "localPosition.x", tx);
-            if (ty.length > 0) m_animClip.SetCurve(name, ttransform, "localPosition.y", ty);
-            if (tz.length > 0) m_animClip.SetCurve(name, ttransform, "localPosition.z", tz);
-            if (rx.length > 0) m_animClip.SetCurve(name, ttransform, "localEulerAngles.x", rx);
-            if (ry.length > 0) m_animClip.SetCurve(name, ttransform, "localEulerAngles.y", ry);
-            if (rz.length > 0) m_animClip.SetCurve(name, ttransform, "localEulerAngles.z", rz);
-            if (sx.length > 0) m_animClip.SetCurve(name, ttransform, "localScale.x", sx);
-            if (sy.length > 0) m_animClip.SetCurve(name, ttransform, "localScale.y", sy);
-            if (sz.length > 0) m_animClip.SetCurve(name, ttransform, "localScale.z", sz);
+            foreach (var c in cvs)
+            {
+                c.Set(m_animClip);
+            }
         }
 
         void ConvertCamera(usdi.Camera cam, string name)
@@ -187,6 +217,15 @@ namespace UTJ
         void ConvertMesh(usdi.Mesh mesh, string name)
         {
             if (!mesh) { return; }
+        }
+
+        void DoReduction(CurveData cv)
+        {
+            int before = cv.length;
+            AnimationCurveKeyReducer.DoReduction(cv.curve, m_keyframeEpsilon);
+            int after = cv.length;
+            m_reporter.Write("  key reduction: " + cv.field + " " + before + " -> " + after + "\n");
+
         }
         #endregion
     }

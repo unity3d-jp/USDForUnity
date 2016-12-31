@@ -13,6 +13,7 @@ namespace UTJ
         protected GameObject m_go;
         protected bool m_goAssigned = false;
         protected string m_primPath;
+        protected string m_primName;
         protected string m_primTypeName;
         protected UsdSchema m_master;
         protected UsdStream m_stream;
@@ -65,6 +66,10 @@ namespace UTJ
         public string primPath
         {
             get { return m_primPath; }
+        }
+        public string primName
+        {
+            get { return m_primName; }
         }
         public string primTypeName
         {
@@ -153,6 +158,7 @@ namespace UTJ
         public virtual void usdiOnLoad()
         {
             m_primPath = usdi.usdiPrimGetPathS(m_schema);
+            m_primName = usdi.usdiPrimGetNameS(m_schema);
             m_primTypeName = usdi.usdiPrimGetUsdTypeNameS(m_schema);
             m_master = m_stream.usdiFindSchema(usdi.usdiPrimGetMaster(m_schema));
 
