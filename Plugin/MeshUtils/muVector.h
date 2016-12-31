@@ -101,11 +101,19 @@ inline float3 operator-(const float3& l, const float3& r)
 }
 inline float3 operator*(const float3& l, float r)
 {
-    return{ l.x*r, l.y*r, l.z*r };
+    return{ l.x * r, l.y * r, l.z * r };
+}
+inline float3 operator*(const float3& l, const float3& r)
+{
+    return{ l.x * r.x, l.y * r.y, l.z * r.z };
 }
 inline float3 operator/(const float3& l, float r)
 {
     return{ l.x / r, l.y / r, l.z / r };
+}
+inline float3 operator/(const float3& l, const float3& r)
+{
+    return{ l.x / r.x, l.y / r.y, l.z / r.z };
 }
 
 inline float4 operator*(const float4& l, float r)
@@ -131,42 +139,40 @@ inline quatf operator*(const quatf& l, const quatf& r)
 
 inline float2& operator*=(float2& l, float r)
 {
-    l.x *= r;
-    l.y *= r;
+    l = l * r;
     return l;
 }
 
 inline float3& operator+=(float3& l, const float3& r)
 {
-    l.x += r.x;
-    l.y += r.y;
-    l.z += r.z;
+    l = l + r;
     return l;
 }
-
 inline float3& operator*=(float3& l, float r)
 {
-    l.x *= r;
-    l.y *= r;
-    l.z *= r;
+    l = l * r;
+    return l;
+}
+inline float3& operator*=(float3& l, const float3& r)
+{
+    l = l * r;
     return l;
 }
 
 inline float4& operator*=(float4& l, float r)
 {
-    l.x *= r;
-    l.y *= r;
-    l.z *= r;
-    l.w *= r;
+    l = l * r;
     return l;
 }
 
 inline quatf& operator*=(quatf& l, float r)
 {
-    l.x *= r;
-    l.y *= r;
-    l.z *= r;
-    l.w *= r;
+    l = l * r;
+    return l;
+}
+inline quatf& operator*=(quatf& l, const quatf& r)
+{
+    l = l * r;
     return l;
 }
 

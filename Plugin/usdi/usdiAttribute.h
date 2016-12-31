@@ -29,6 +29,8 @@ public:
     virtual Attribute*  findOrCreateConverter(AttributeType external_type);
     void                addConverter(Attribute *attr); // internal
 
+    std::vector<Time> getTimeSamples();
+
 protected:
     using AttributePtr = std::unique_ptr<Attribute>;
     using Attributes = std::vector<AttributePtr>;

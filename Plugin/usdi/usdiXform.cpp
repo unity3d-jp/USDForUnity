@@ -27,8 +27,8 @@ static quatf EulerToQuaternion(const float3& euler, UsdGeomXformOp::Type order)
     case UsdGeomXformOp::TypeRotateYXZ: return (qZ * qX) * qY;
     case UsdGeomXformOp::TypeRotateYZX: return (qX * qZ) * qY;
     case UsdGeomXformOp::TypeRotateZXY: return (qY * qX) * qZ;
-    case UsdGeomXformOp::TypeRotateZYX: return (qX * qY) * qZ;
-    default: return {0.0f, 0.0f, 0.0f, 1.0f};
+    case UsdGeomXformOp::TypeRotateZYX: 
+    default: return (qX * qY) * qZ;
     }
 }
 
@@ -89,6 +89,7 @@ Xform::Xform(Context *ctx, Schema *parent, const UsdPrim& prim)
 {
     usdiLogTrace("Xform::Xform(): %s\n", getPath());
     if (!m_xf) { usdiLogError("Xform::Xform(): m_xf is invalid\n"); }
+    interpretXformOps();
 }
 
 Xform::Xform(Context *ctx, Schema *parent, const char *name, const char *type)
@@ -102,6 +103,56 @@ Xform::Xform(Context *ctx, Schema *parent, const char *name, const char *type)
 Xform::~Xform()
 {
     usdiLogTrace("Xform::~Xform(): %s\n", getPath());
+}
+
+void Xform::interpretXformOps()
+{
+    bool reset_stack = false;
+    m_read_ops = m_xf.GetOrderedXformOps(&reset_stack);
+
+    const int T = 1;
+    const int R = 2;
+    const int S = 3;
+    const int Other = 4;
+
+    std::vector<int> optypes;
+    for (auto& op : m_read_ops) {
+        switch (op.GetOpType()) {
+        case UsdGeomXformOp::TypeTranslate: optypes.push_back(T); break;
+        case UsdGeomXformOp::TypeScale: optypes.push_back(S); break;
+        case UsdGeomXformOp::TypeRotateX:   // 
+        case UsdGeomXformOp::TypeRotateY:   // 
+        case UsdGeomXformOp::TypeRotateZ:   // 
+        case UsdGeomXformOp::TypeRotateXYZ: // 
+        case UsdGeomXformOp::TypeRotateXZY: // 
+        case UsdGeomXformOp::TypeRotateYXZ: // 
+        case UsdGeomXformOp::TypeRotateYZX: // 
+        case UsdGeomXformOp::TypeRotateZXY: // 
+        case UsdGeomXformOp::TypeRotateZYX: // fall through
+        case UsdGeomXformOp::TypeOrient:    optypes.push_back(R); break;
+        default: optypes.push_back(Other); break;
+        }
+    }
+
+    // determine is this Xform is TRS or not.
+    // if operation order matches /T*R*S*/, it is TRS
+    // e.g: Translate, RotateZ, rotateX, rotateY, Scale -> TRRRS -> TRS
+    optypes.erase(std::unique(optypes.begin(), optypes.end()), optypes.end());
+    if (optypes.empty() ||
+        optypes == std::vector<int>{T} ||
+        optypes == std::vector<int>{T, R} ||
+        optypes == std::vector<int>{T, S} ||
+        optypes == std::vector<int>{T, R, S} ||
+        optypes == std::vector<int>{R} ||
+        optypes == std::vector<int>{R, S} ||
+        optypes == std::vector<int>{S}
+    )
+    {
+        m_summary.type = XformSummary::Type::TRS;
+    }
+    else {
+        m_summary.type = XformSummary::Type::Matrix;
+    }
 }
 
 const XformSummary& Xform::getSummary() const
@@ -129,60 +180,53 @@ void Xform::updateSample(Time t_)
     auto& sample = m_sample;
     auto prev = sample;
 
-    if (m_read_ops.empty()) {
-        bool reset_stack = false;
-        m_read_ops = m_xf.GetOrderedXformOps(&reset_stack);
-
-        int translate = 0;
-        int rotation = 0;
-        int scale = 0;
-        int transform = 0;
-        for (auto& op : m_read_ops) {
-            switch (op.GetOpType()) {
-            case UsdGeomXformOp::TypeTranslate: ++translate; break;
-            case UsdGeomXformOp::TypeScale: ++scale; break;
-            case UsdGeomXformOp::TypeRotateXYZ: // 
-            case UsdGeomXformOp::TypeRotateXZY: // 
-            case UsdGeomXformOp::TypeRotateYXZ: // 
-            case UsdGeomXformOp::TypeRotateYZX: // 
-            case UsdGeomXformOp::TypeRotateZXY: // 
-            case UsdGeomXformOp::TypeRotateZYX: // fall through
-            case UsdGeomXformOp::TypeOrient:    ++rotation; break;
-            case UsdGeomXformOp::TypeTransform: ++transform; break;
-            default: break;
-            }
-        }
-
-        if (transform == 0 && translate <= 1 && rotation <= 1 && scale <= 1) {
-            m_summary.type = XformSummary::Type::TRS;
-        }
-        else {
-            m_summary.type = XformSummary::Type::Matrix;
-        }
-    }
-
     if (m_summary.type == XformSummary::Type::TRS) {
+        float3 translate{ 0.0f, 0.0f, 0.0f };
+        float3 scale{ 1.0f, 1.0f, 1.0f };
+        quatf rotation{ 0.0f, 0.0f, 0.0f, 1.0f };
+
         for (auto& op : m_read_ops) {
             switch (op.GetOpType()) {
             case UsdGeomXformOp::TypeTranslate:
             {
-                op.GetAs((GfVec3f*)&sample.position, t);
-                if (conf.swap_handedness) {
-                    sample.position.x *= -1.0f;
-                }
+                float3 tmp;
+                op.GetAs((GfVec3f*)&tmp, t);
+                translate += tmp;
                 break;
             }
             case UsdGeomXformOp::TypeScale:
             {
-                op.GetAs((GfVec3f*)&sample.scale, t);
+                float3 tmp;
+                op.GetAs((GfVec3f*)&tmp, t);
+                scale *= tmp;
                 break;
             }
             case UsdGeomXformOp::TypeOrient:
             {
-                op.GetAs((GfQuatf*)&sample.rotation, t);
-                if (conf.swap_handedness) {
-                    sample.rotation = swap_handedness(sample.rotation);
-                }
+                quatf tmp;
+                op.GetAs((GfQuatf*)&tmp, t);
+                rotation *= tmp;
+                break;
+            }
+            case UsdGeomXformOp::TypeRotateX:
+            {
+                float3 euler{0.0f, 0.0f, 0.0f};
+                op.GetAs(&euler.x, t);
+                rotation *= EulerToQuaternion(euler * Deg2Rad, op.GetOpType());
+                break;
+            }
+            case UsdGeomXformOp::TypeRotateY:
+            {
+                float3 euler{ 0.0f, 0.0f, 0.0f };
+                op.GetAs(&euler.y, t);
+                rotation *= EulerToQuaternion(euler * Deg2Rad, op.GetOpType());
+                break;
+            }
+            case UsdGeomXformOp::TypeRotateZ:
+            {
+                float3 euler{ 0.0f, 0.0f, 0.0f };
+                op.GetAs(&euler.z, t);
+                rotation *= EulerToQuaternion(euler * Deg2Rad, op.GetOpType());
                 break;
             }
             case UsdGeomXformOp::TypeRotateXYZ: // 
@@ -194,21 +238,21 @@ void Xform::updateSample(Time t_)
             {
                 float3 euler;
                 op.GetAs((GfVec3f*)&euler, t);
-                sample.rotation = EulerToQuaternion(euler * Deg2Rad, op.GetOpType());
-                if (conf.swap_handedness) {
-                    sample.rotation = swap_handedness(sample.rotation);
-                }
-                break;
-            }
-            case UsdGeomXformOp::TypeTransform:
-            {
-                // todo
+                rotation *= EulerToQuaternion(euler * Deg2Rad, op.GetOpType());
                 break;
             }
             default:
                 break;
             }
         }
+
+        if (conf.swap_handedness) {
+            translate.x *= -1.0f;
+            rotation = swap_handedness(sample.rotation);
+        }
+        sample.position = translate;
+        sample.rotation = rotation;
+        sample.scale = scale;
     }
     else {
         GfMatrix4d result;

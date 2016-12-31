@@ -18,8 +18,13 @@ public:
     bool                readSample(XformData& dst, Time t);
     bool                writeSample(const XformData& src, Time t);
 
+    using EachSampleCallback = std::function<void(const XformData& data, Time t)>;
+    int eachSample(const EachSampleCallback& cb);
+
 private:
     typedef std::vector<UsdGeomXformOp> UsdGeomXformOps;
+
+    void interpretXformOps();
 
     UsdGeomXformable    m_xf;
     UsdGeomXformOps     m_read_ops;

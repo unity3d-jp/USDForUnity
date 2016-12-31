@@ -155,6 +155,16 @@ void Attribute::addConverter(Attribute *attr)
     m_converters.push_back(AttributePtr(attr));
 }
 
+std::vector<Time> Attribute::getTimeSamples()
+{
+    std::vector<Time> ret;
+    if (m_usdattr) {
+        m_usdattr.GetTimeSamples(&ret);
+    }
+    return ret;
+}
+
+
 struct ConverterFactoryBase
 {
     using Creator = std::function<Attribute* (Attribute*)>;
