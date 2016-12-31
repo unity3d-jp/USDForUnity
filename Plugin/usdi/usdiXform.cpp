@@ -4,6 +4,7 @@
 #include "usdiXform.h"
 #include "usdiContext.h"
 #include "usdiContext.i"
+#include "usdiAttribute.h"
 
 //#define usdiSerializeRotationAsEuler
 
@@ -329,6 +330,77 @@ bool Xform::writeSample(const XformData& src_, Time t_)
 
     m_write_ops[2].Set((const GfVec3f&)src.scale, t);
     return true;
+}
+
+int Xform::eachSample(const EachSampleCallback & cb)
+{
+    if (getSummary().type == XformSummary::Type::TRS) {
+        // gather time samples
+        std::map<Time, int> times;
+        eachAttribute([&times](Attribute *a) {
+            if (strncmp(a->getName(), "xformOp:translate", 17) == 0) {
+                auto ts = a->getTimeSamples();
+                int flag = (int)XformData::Flags::UpdatedPosition;
+                if (ts.empty()) {
+                    times[usdiDefaultTime()] |= flag;
+                }
+                else
+                {
+                    for (auto& t : ts) { times[t] |= flag; }
+                }
+            }
+            else if (strncmp(a->getName(), "xformOp:scale", 13) == 0) {
+                auto ts = a->getTimeSamples();
+                int flag = (int)XformData::Flags::UpdatedScale;
+                if (ts.empty()) {
+                    times[usdiDefaultTime()] |= flag;
+                }
+                else {
+                    for (auto& t : ts) { times[t] |= flag; }
+                }
+            }
+            else if (strncmp(a->getName(), "xformOp:rotate", 14) == 0 || strncmp(a->getName(), "xformOp:orient", 14) == 0) {
+                auto ts = a->getTimeSamples();
+                int flag = (int)XformData::Flags::UpdatedRotation;
+                if (ts.empty()) {
+                    times[usdiDefaultTime()] |= flag;
+                }
+                else {
+                    for (auto& t : ts) { times[t] |= flag; }
+                }
+            }
+        });
+
+        XformData data;
+        for (const auto& t : times) {
+            readSample(data, t.first);
+            data.flags = t.second;;
+            cb(data, t.first);
+        }
+        return (int)times.size();
+    }
+    else {
+        // gather time samples
+        std::map<Time, int> times;
+        eachAttribute([&times](Attribute *a) {
+            if (strncmp(a->getName(), "xformOp:", 8) == 0) {
+                auto ts = a->getTimeSamples();
+                if (ts.empty()) {
+                    times[usdiDefaultTime()] = 0;
+                }
+                else {
+                    for (auto& t : ts) { times[t] = 0; }
+                }
+            }
+        });
+
+        XformData data;
+        for (const auto& t : times) {
+            readSample(data, t.first);
+            cb(data, t.first);
+        }
+        return (int)times.size();
+    }
 }
 
 } // namespace usdi

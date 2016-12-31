@@ -536,6 +536,8 @@ namespace UTJ
         [DllImport ("usdi")] public static extern Xform     usdiAsXform(Schema schema);
         [DllImport ("usdi")] public static extern Bool      usdiXformReadSample(Xform xf, ref XformData dst, double t);
         [DllImport ("usdi")] public static extern Bool      usdiXformWriteSample(Xform xf, ref XformData src, double t);
+        public delegate void usdiXformEachSampleCallback(ref XformData data, double t);
+        [DllImport ("usdi")] public static extern int       usdiXformEachSample(Xform xf, usdiXformEachSampleCallback cb);
 
         // Camera interface
         [DllImport ("usdi")] public static extern Camera    usdiAsCamera(Schema schema);

@@ -582,6 +582,13 @@ usdiAPI bool usdiXformWriteSample(usdi::Xform *xf, const usdi::XformData *src, u
     return xf->writeSample(*src, t);
 }
 
+usdiAPI int usdiXformEachSample(usdi::Xform * xf, usdiXformEachSampleCallback cb)
+{
+    usdiTraceFunc();
+    if (!xf || !cb) return 0;
+    return xf->eachSample([cb](const usdi::XformData& data, usdi::Time t) { cb(&data, t); });
+}
+
 
 // Camera interface
 

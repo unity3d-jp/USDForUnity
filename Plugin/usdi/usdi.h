@@ -399,6 +399,8 @@ usdiAPI usdi::Xform*     usdiAsXform(usdi::Schema *schema); // dynamic cast to X
 usdiAPI void             usdiXformGetSummary(usdi::Xform *xf, usdi::XformSummary *dst);
 usdiAPI bool             usdiXformReadSample(usdi::Xform *xf, usdi::XformData *dst, usdi::Time t);
 usdiAPI bool             usdiXformWriteSample(usdi::Xform *xf, const usdi::XformData *src, usdi::Time t = usdiDefaultTime());
+using usdiXformEachSampleCallback = void (usdiSTDCall*)(const usdi::XformData *data, usdi::Time t);
+usdiAPI int              usdiXformEachSample(usdi::Xform *xf, usdiXformEachSampleCallback cb);
 
 // Camera interface
 usdiAPI usdi::Camera*    usdiAsCamera(usdi::Schema *schema); // dynamic cast to Camera
