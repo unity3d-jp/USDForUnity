@@ -29,7 +29,17 @@ public:
     virtual Attribute*  findOrCreateConverter(AttributeType external_type);
     void                addConverter(Attribute *attr); // internal
 
+    // this is very slow. should not be used very often.
+    // (consider caching in such cases)
     std::vector<Time> getTimeSamples();
+
+    // Body: [](Time t) -> void
+    template<class Body>
+    void eachTime(const Body& body)
+    {
+        auto times = getTimeSamples();
+        for (auto& t : times) { body(t); }
+    }
 
 protected:
     using AttributePtr = std::unique_ptr<Attribute>;

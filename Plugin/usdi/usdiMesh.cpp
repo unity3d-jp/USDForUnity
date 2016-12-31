@@ -92,42 +92,6 @@ static inline void assign(Weights8& dst, const Weights4& src)
 }
 
 
-void SubmeshSample::clear()
-{
-    points.clear();
-    normals.clear();
-    uvs.clear();
-    indices.clear();
-    bounds_min = {}, bounds_max = {};
-    center = {}, extents = {};
-}
-
-void MeshSample::clear()
-{
-    points.clear();
-    velocities.clear();
-    normals.clear();
-    tangents.clear();
-    uvs.clear();
-    counts.clear();
-    offsets.clear();
-    indices.clear();
-    indices_triangulated.clear();
-
-    bone_weights.clear();
-    bone_indices.clear();
-    bones.clear();
-    bones_.clear();
-    root_bone = TfToken();
-    weights4.clear();
-    weights8.clear();
-    max_bone_weights = 0;
-
-    bounds_min = {}, bounds_max = {};
-    center = {}, extents = {};
-}
-
-
 RegisterSchemaHandler(Mesh)
 
 Mesh::Mesh(Context *ctx, Schema *parent, const UsdPrim& prim)
@@ -783,6 +747,46 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
 
     m_summary_needs_update = true;
     return ret;
+}
+
+int Mesh::eachSample(const SampleCallback & cb)
+{
+    static const char *attr_names[] = {
+        "faceVertexCounts",
+        "faceVertexIndices",
+        "normals",
+        "points",
+        "velocities",
+        usdiUVAttrName,
+        usdiUVAttrName2,
+        usdiTangentAttrName,
+        usdiColorAttrName,
+        usdiBoneWeightsAttrName,
+        usdiBoneIndicesAttrName,
+        usdiBindPosesAttrName,
+        usdiBonesAttrName,
+        usdiRootBoneAttrName,
+        usdiMaxBoneWeightAttrName,
+    };
+
+    std::map<Time, int> times;
+    for (auto *name : attr_names) {
+        if (auto *attr = findAttribute(name)) {
+            attr->eachTime([&times](Time t) {
+                times[t] = 0;
+            });
+        }
+    }
+    if (times.empty()) {
+        times[usdiDefaultTime()] = 0;
+    }
+
+    MeshData data;
+    for (const auto& t : times) {
+        readSample(data, t.first, false);
+        cb(data, t.first);
+    }
+    return (int)times.size();
 }
 
 

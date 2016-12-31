@@ -34,6 +34,12 @@ void InvertX_Generic(float4 *dst, size_t num)
     }
 }
 
+void Scale_Generic(float *dst, float s, size_t num)
+{
+    for (size_t i = 0; i < num; ++i) {
+        dst[i] *= s;
+    }
+}
 void Scale_Generic(float3 *dst, float s, size_t num)
 {
     for (size_t i = 0; i < num; ++i) {
@@ -295,6 +301,10 @@ void InvertX_ISPC(float4 *dst, size_t num)
     ispc::InvertXF4((ispc::float4*)dst, (int)num);
 }
 
+void Scale_ISPC(float *dst, float s, size_t num)
+{
+    ispc::ScaleF((float*)dst, s, (int)num * 1);
+}
 void Scale_ISPC(float3 *dst, float s, size_t num)
 {
     ispc::ScaleF((float*)dst, s, (int)num * 3);
@@ -363,6 +373,10 @@ void InvertX(float4 *dst, size_t num)
     Forward(InvertX, dst, num);
 }
 
+void Scale(float *dst, float s, size_t num)
+{
+    Forward(Scale, dst, s, num);
+}
 void Scale(float3 *dst, float s, size_t num)
 {
     Forward(Scale, dst, s, num);

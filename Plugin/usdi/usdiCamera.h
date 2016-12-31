@@ -18,6 +18,9 @@ public:
     bool                readSample(CameraData& dst, Time t);
     bool                writeSample(const CameraData& src, Time t);
 
+    using SampleCallback = std::function<void(const CameraData& data, Time t)>;
+    int eachSample(const SampleCallback& cb);
+
 private:
     UsdGeomCamera       m_cam;
     CameraData          m_sample;

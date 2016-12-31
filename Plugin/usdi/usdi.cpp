@@ -582,7 +582,7 @@ usdiAPI bool usdiXformWriteSample(usdi::Xform *xf, const usdi::XformData *src, u
     return xf->writeSample(*src, t);
 }
 
-usdiAPI int usdiXformEachSample(usdi::Xform * xf, usdiXformEachSampleCallback cb)
+usdiAPI int usdiXformEachSample(usdi::Xform * xf, usdiXformSampleCallback cb)
 {
     usdiTraceFunc();
     if (!xf || !cb) return 0;
@@ -619,6 +619,13 @@ usdiAPI bool usdiCameraWriteSample(usdi::Camera *cam, const usdi::CameraData *sr
     return cam->writeSample(*src, t);
 }
 
+usdiAPI int usdiCameraEachSample(usdi::Camera *cam, usdiCameraSampleCallback cb)
+{
+    usdiTraceFunc();
+    if (!cam || !cb) return 0;
+    return cam->eachSample([cb](const usdi::CameraData& data, usdi::Time t) { cb(&data, t); });
+}
+
 
 // Mesh interface
 
@@ -651,6 +658,13 @@ usdiAPI bool usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src, us
     if (!mesh || !src) return false;
     usdiVTuneScope("usdiMeshWriteSample");
     return mesh->writeSample(*src, t);
+}
+
+usdiAPI int usdiMeshEachSample(usdi::Mesh *mesh, usdiMeshSampleCallback cb)
+{
+    usdiTraceFunc();
+    if (!mesh || !cb) return 0;
+    return mesh->eachSample([cb](const usdi::MeshData& data, usdi::Time t) { cb(&data, t); });
 }
 
 usdiAPI bool usdiMeshPreComputeNormals(usdi::Mesh *mesh, bool gen_tangents, bool overwrite)
@@ -691,6 +705,13 @@ usdiAPI bool usdiPointsWriteSample(usdi::Points *points, const usdi::PointsData 
     if (!points || !src) return false;
     usdiVTuneScope("usdiPointsWriteSample");
     return points->writeSample(*src, t);
+}
+
+usdiAPI int usdiPointsEachSample(usdi::Points *points, usdiPointsSampleCallback cb)
+{
+    usdiTraceFunc();
+    if (!points || !cb) return 0;
+    return points->eachSample([cb](const usdi::PointsData& data, usdi::Time t) { cb(&data, t); });
 }
 
 

@@ -14,6 +14,7 @@ struct float2
     const float& operator[](int i) const { return ((float*)this)[i]; }
     bool operator==(const float2& v) const { return x == v.x && y == v.y; }
     bool operator!=(const float2& v) const { return !((*this)==v); }
+    static float2 zero() { return{ 0.0f, 0.0f }; }
 };
 struct float3
 {
@@ -22,6 +23,8 @@ struct float3
     const float& operator[](int i) const { return ((float*)this)[i]; }
     bool operator==(const float3& v) const { return x == v.x && y == v.y && z == v.z; }
     bool operator!=(const float3& v) const { return !((*this) == v); }
+    static float3 zero() { return{ 0.0f, 0.0f, 0.0f }; }
+    static float3 one() { return{ 1.0f, 1.0f, 1.0f }; }
 };
 struct float4
 {
@@ -30,6 +33,7 @@ struct float4
     const float& operator[](int i) const { return ((float*)this)[i]; }
     bool operator==(const float4& v) const { return x == v.x && y == v.y && z == v.z && w == v.w; }
     bool operator!=(const float4& v) const { return !((*this) == v); }
+    static float4 zero() { return{ 0.0f, 0.0f, 0.0f, 0.0f }; }
 };
 struct quatf
 {
@@ -38,6 +42,7 @@ struct quatf
     const float& operator[](int i) const { return ((float*)this)[i]; }
     bool operator==(const quatf& v) const { return x == v.x && y == v.y && z == v.z && w == v.w; }
     bool operator!=(const quatf& v) const { return !((*this) == v); }
+    static quatf identity() { return{ 0.0f, 0.0f, 0.0f, 1.0f }; }
 };
 
 struct float3x3
@@ -195,12 +200,30 @@ inline float3 cross(const float3& l, const float3& r)
         l.x * r.y - l.y * r.x };
 }
 
+inline quatf rotateX(float angle)
+{
+    float c = std::cos(angle * 0.5f);
+    float s = std::sin(angle * 0.5f);
+    return{ s, 0.0f, 0.0f, c };
+}
+inline quatf rotateY(float angle)
+{
+    float c = std::cos(angle * 0.5f);
+    float s = std::sin(angle * 0.5f);
+    return{ 0.0f, s, 0.0f, c };
+}
+inline quatf rotateZ(float angle)
+{
+    float c = std::cos(angle * 0.5f);
+    float s = std::sin(angle * 0.5f);
+    return{ 0.0f, 0.0f, s, c };
+}
 inline quatf rotate(const float3& axis, float angle)
 {
     return{
-        axis.x * std::sin(angle *0.5f),
-        axis.y * std::sin(angle *0.5f),
-        axis.z * std::sin(angle *0.5f),
+        axis.x * std::sin(angle * 0.5f),
+        axis.y * std::sin(angle * 0.5f),
+        axis.z * std::sin(angle * 0.5f),
         std::cos(angle * 0.5f)
     };
 }

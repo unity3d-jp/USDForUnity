@@ -266,6 +266,9 @@ struct PointsData
     // otherwise, if you pass to usdiMeshSampleReadData(), pointers must point valid memory block to store data.
     float3  *points = nullptr;
     float3  *velocities = nullptr;
+    float   *widths = nullptr;
+    int64_t *ids64 = nullptr;
+    int32_t *ids32 = nullptr;
 
     uint    num_points = 0;
 };
@@ -399,20 +402,24 @@ usdiAPI usdi::Xform*     usdiAsXform(usdi::Schema *schema); // dynamic cast to X
 usdiAPI void             usdiXformGetSummary(usdi::Xform *xf, usdi::XformSummary *dst);
 usdiAPI bool             usdiXformReadSample(usdi::Xform *xf, usdi::XformData *dst, usdi::Time t);
 usdiAPI bool             usdiXformWriteSample(usdi::Xform *xf, const usdi::XformData *src, usdi::Time t = usdiDefaultTime());
-using usdiXformEachSampleCallback = void (usdiSTDCall*)(const usdi::XformData *data, usdi::Time t);
-usdiAPI int              usdiXformEachSample(usdi::Xform *xf, usdiXformEachSampleCallback cb);
+using usdiXformSampleCallback = void (usdiSTDCall*)(const usdi::XformData *data, usdi::Time t);
+usdiAPI int              usdiXformEachSample(usdi::Xform *xf, usdiXformSampleCallback cb);
 
 // Camera interface
 usdiAPI usdi::Camera*    usdiAsCamera(usdi::Schema *schema); // dynamic cast to Camera
 usdiAPI void             usdiCameraGetSummary(usdi::Camera *cam, usdi::CameraSummary *dst);
 usdiAPI bool             usdiCameraReadSample(usdi::Camera *cam, usdi::CameraData *dst, usdi::Time t);
 usdiAPI bool             usdiCameraWriteSample(usdi::Camera *cam, const usdi::CameraData *src, usdi::Time t = usdiDefaultTime());
+using usdiCameraSampleCallback = void (usdiSTDCall*)(const usdi::CameraData *data, usdi::Time t);
+usdiAPI int              usdiCameraEachSample(usdi::Camera *cam, usdiCameraSampleCallback cb);
 
 // Mesh interface
 usdiAPI usdi::Mesh*      usdiAsMesh(usdi::Schema *schema); // dynamic cast to Mesh
 usdiAPI void             usdiMeshGetSummary(usdi::Mesh *mesh, usdi::MeshSummary *dst);
 usdiAPI bool             usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t, bool copy);
 usdiAPI bool             usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t = usdiDefaultTime());
+using usdiMeshSampleCallback = void (usdiSTDCall*)(const usdi::MeshData *data, usdi::Time t);
+usdiAPI int              usdiMeshEachSample(usdi::Mesh *mesh, usdiMeshSampleCallback cb);
 usdiAPI bool             usdiMeshPreComputeNormals(usdi::Mesh *mesh, bool gen_tangents, bool overwrite = false);
 
 // Points interface
@@ -420,6 +427,8 @@ usdiAPI usdi::Points*    usdiAsPoints(usdi::Schema *schema); // dynamic cast to 
 usdiAPI void             usdiPointsGetSummary(usdi::Points *points, usdi::PointsSummary *dst);
 usdiAPI bool             usdiPointsReadSample(usdi::Points *points, usdi::PointsData *dst, usdi::Time t, bool copy);
 usdiAPI bool             usdiPointsWriteSample(usdi::Points *points, const usdi::PointsData *src, usdi::Time t = usdiDefaultTime());
+using usdiPointsSampleCallback = void (usdiSTDCall*)(const usdi::PointsData *data, usdi::Time t);
+usdiAPI int              usdiPointsEachSample(usdi::Points *points, usdiPointsSampleCallback cb);
 
 // Attribute interface
 usdiAPI usdi::Schema*    usdiAttrGetParent(usdi::Attribute *attr);

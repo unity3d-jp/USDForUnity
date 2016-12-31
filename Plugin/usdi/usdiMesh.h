@@ -29,8 +29,6 @@ struct SubmeshSample
     VtArray<Weights8> weights8;
     float3           bounds_min = {}, bounds_max = {};
     float3           center = {}, extents = {};
-
-    void clear();
 };
 
 struct MeshSample
@@ -59,8 +57,6 @@ struct MeshSample
 
     float3           bounds_min = {}, bounds_max = {};
     float3           center = {}, extents = {};
-
-    void clear();
 };
 
 
@@ -79,6 +75,9 @@ public:
     const MeshSummary&  getSummary() const;
     bool                readSample(MeshData& dst, Time t, bool copy);
     bool                writeSample(const MeshData& src, Time t);
+
+    using SampleCallback = std::function<void(const MeshData& data, Time t)>;
+    int eachSample(const SampleCallback& cb);
 
     // true if normals are generated (don't care about tangents)
     bool                precomputeNormals(bool gen_tangents, bool overwrite = false);

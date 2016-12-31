@@ -12,15 +12,9 @@ namespace usdi {
 
 static quatf EulerToQuaternion(const float3& euler, UsdGeomXformOp::Type order)
 {
-    float cX = std::cos(euler.x / 2.0f);
-    float sX = std::sin(euler.x / 2.0f);
-    float cY = std::cos(euler.y / 2.0f);
-    float sY = std::sin(euler.y / 2.0f);
-    float cZ = std::cos(euler.z / 2.0f);
-    float sZ = std::sin(euler.z / 2.0f);
-    quatf qX = { sX, 0.0f, 0.0f, cX };
-    quatf qY = { 0.0f, sY, 0.0f, cY };
-    quatf qZ = { 0.0f, 0.0f, sZ, cZ };
+    quatf qX = rotateX(euler.x);
+    quatf qY = rotateY(euler.y);
+    quatf qZ = rotateZ(euler.z);
 
     switch (order) {
     case UsdGeomXformOp::TypeRotateXYZ: return (qZ * qY) * qX;
@@ -28,8 +22,10 @@ static quatf EulerToQuaternion(const float3& euler, UsdGeomXformOp::Type order)
     case UsdGeomXformOp::TypeRotateYXZ: return (qZ * qX) * qY;
     case UsdGeomXformOp::TypeRotateYZX: return (qX * qZ) * qY;
     case UsdGeomXformOp::TypeRotateZXY: return (qY * qX) * qZ;
-    case UsdGeomXformOp::TypeRotateZYX: 
-    default: return (qX * qY) * qZ;
+    case UsdGeomXformOp::TypeRotateZYX: return (qX * qY) * qZ;
+    default:
+        usdiLogError("EulerToQuaternion(): unknown operation\n");
+        return quatf::identity();
     }
 }
 
@@ -182,9 +178,9 @@ void Xform::updateSample(Time t_)
     auto prev = sample;
 
     if (m_summary.type == XformSummary::Type::TRS) {
-        float3 translate{ 0.0f, 0.0f, 0.0f };
-        float3 scale{ 1.0f, 1.0f, 1.0f };
-        quatf rotation{ 0.0f, 0.0f, 0.0f, 1.0f };
+        auto translate  = float3::zero();
+        auto scale      = float3::one();
+        auto rotation   = quatf::identity();
 
         for (auto& op : m_read_ops) {
             switch (op.GetOpType()) {
@@ -211,23 +207,23 @@ void Xform::updateSample(Time t_)
             }
             case UsdGeomXformOp::TypeRotateX:
             {
-                float3 euler{0.0f, 0.0f, 0.0f};
-                op.GetAs(&euler.x, t);
-                rotation *= EulerToQuaternion(euler * Deg2Rad, op.GetOpType());
+                float angle;
+                op.GetAs(&angle, t);
+                rotation *= rotateX(angle * Deg2Rad);
                 break;
             }
             case UsdGeomXformOp::TypeRotateY:
             {
-                float3 euler{ 0.0f, 0.0f, 0.0f };
-                op.GetAs(&euler.y, t);
-                rotation *= EulerToQuaternion(euler * Deg2Rad, op.GetOpType());
+                float angle;
+                op.GetAs(&angle, t);
+                rotation *= rotateY(angle * Deg2Rad);
                 break;
             }
             case UsdGeomXformOp::TypeRotateZ:
             {
-                float3 euler{ 0.0f, 0.0f, 0.0f };
-                op.GetAs(&euler.z, t);
-                rotation *= EulerToQuaternion(euler * Deg2Rad, op.GetOpType());
+                float angle;
+                op.GetAs(&angle, t);
+                rotation *= rotateZ(angle * Deg2Rad);
                 break;
             }
             case UsdGeomXformOp::TypeRotateXYZ: // 
@@ -332,7 +328,7 @@ bool Xform::writeSample(const XformData& src_, Time t_)
     return true;
 }
 
-int Xform::eachSample(const EachSampleCallback & cb)
+int Xform::eachSample(const SampleCallback & cb)
 {
     if (getSummary().type == XformSummary::Type::TRS) {
         // gather time samples
