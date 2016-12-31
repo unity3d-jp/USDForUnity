@@ -8,6 +8,7 @@ using UnityEditor;
 namespace UTJ
 {
 
+    [ExecuteInEditMode]
     public abstract class UsdIComponent : MonoBehaviour
     {
         public abstract UsdSchema schema
@@ -17,7 +18,7 @@ namespace UTJ
         }
 
 #if UNITY_EDITOR
-        void OnValidate()
+        public virtual void OnValidate()
         {
             if(!usdi.pluginInitialized) return;
 
@@ -41,6 +42,7 @@ namespace UTJ
         }
     }
 
+    [ExecuteInEditMode]
     public class UsdComponent : UsdIComponent
     {
         [SerializeField] UsdSchema m_schema;

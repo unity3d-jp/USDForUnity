@@ -40,6 +40,8 @@ namespace UTJ
 
 
         #region properties
+        public Transform transform { get { return m_trans; } }
+        public Renderer renderer { get { return m_renderer; } }
         public Mesh mesh { get { return m_umesh; } }
         public Matrix4x4[] bindposes { get { return m_bindposes; } }
         public Transform[] bones { get { return m_bones; } }
@@ -233,9 +235,21 @@ namespace UTJ
 #if UNITY_EDITOR
             if (assignDefaultMaterial)
             {
-                Material material = UnityEngine.Object.Instantiate(GetDefaultMaterial());
-                material.name = "Material_0";
-                m_renderer.sharedMaterial = material;
+                Material[] materials = null;
+                if (m_nth != 0)
+                {
+                    var s = parent.submeshes[0];
+                    if(s.renderer != null)
+                    {
+                        materials = s.renderer.sharedMaterials;
+                    }
+                }
+                if(materials == null)
+                {
+                    materials = new Material[] { UnityEngine.Object.Instantiate(GetDefaultMaterial()) };
+                    materials[0].name = "Material_0";
+                }
+                m_renderer.sharedMaterials = materials;
             }
 #endif
         }

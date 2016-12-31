@@ -7,6 +7,7 @@ using UnityEditor;
 
 namespace UTJ
 {
+    [ExecuteInEditMode]
     public class UsdCameraComponent : UsdIComponent
     {
         [SerializeField]

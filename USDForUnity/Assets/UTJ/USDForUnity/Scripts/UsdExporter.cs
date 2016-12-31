@@ -967,7 +967,7 @@ namespace UTJ
         {
             if (m_recording)
             {
-                Debug.Log("usdiExporter: already started");
+                Debug.Log("UsdExporter: already started");
                 return false;
             }
 
@@ -975,7 +975,7 @@ namespace UTJ
             m_ctx = usdi.usdiCreateContext();
             if (!usdi.usdiCreateStage(m_ctx, m_outputPath))
             {
-                Debug.LogError("usdiExporter: failed to create " + m_outputPath);
+                Debug.LogError("UsdExporter: failed to create " + m_outputPath);
                 usdi.usdiDestroyContext(m_ctx);
                 m_ctx = default(usdi.Context);
                 return false;
@@ -989,7 +989,7 @@ namespace UTJ
             //m_time = m_conf.startTime;
             m_frameCount = 0;
 
-            Debug.Log("usdiExporter: start " + m_outputPath);
+            Debug.Log("UsdExporter: start " + m_outputPath);
             return true;
         }
 
@@ -1005,7 +1005,7 @@ namespace UTJ
             m_time = 0.0f;
             m_frameCount = 0;
 
-            Debug.Log("usdiExporter: end: " + m_outputPath);
+            Debug.Log("UsdExporter: end: " + m_outputPath);
         }
 
         public void OneShot()
@@ -1072,7 +1072,7 @@ namespace UTJ
                         finally
                         {
                         }
-                    }, "usdiExporter: " + gameObject.name);
+                    }, "UsdExporter: " + gameObject.name);
                 }
                 m_timeFlush = m_time;
                 m_asyncFlush.Run();
@@ -1091,7 +1091,7 @@ namespace UTJ
             }
 
             m_elapsed = Time.realtimeSinceStartup - begin_time;
-            usdiLog("usdiExporter.ProcessCapture(): " + (m_elapsed * 1000.0f) + "ms");
+            usdiLog("UsdExporter.ProcessCapture(): " + (m_elapsed * 1000.0f) + "ms");
 
             if (m_maxCaptureFrame > 0 && m_frameCount >= m_maxCaptureFrame)
             {

@@ -408,7 +408,7 @@ namespace UTJ
             {
                 usdi.usdiDestroyContext(m_ctx);
                 m_ctx = default(usdi.Context);
-                usdiLog("usdiStream: failed to load " + fullpath);
+                usdiLog("UsdStream: failed to load " + fullpath);
                 return false;
             }
 
@@ -426,7 +426,7 @@ namespace UTJ
             usdiAsyncUpdate(m_time);
             usdiUpdate(m_time);
 
-            usdiLog("usdiStream: loaded " + fullpath);
+            usdiLog("UsdStream: loaded " + fullpath);
             return true;
         }
 
@@ -448,7 +448,7 @@ namespace UTJ
             usdiUpdate(m_time);
 
             var fullpath = m_path.GetFullPath();
-            usdiLog("usdiStream: reloaded " + fullpath);
+            usdiLog("UsdStream: reloaded " + fullpath);
         }
 
         public void usdiUnload()
@@ -467,7 +467,7 @@ namespace UTJ
             usdi.usdiDestroyContext(m_ctx);
             m_ctx = default(usdi.Context);
 
-            usdiLog("usdiStream: unloaded " + m_path.GetFullPath());
+            usdiLog("UsdStream: unloaded " + m_path.GetFullPath());
         }
 
         public bool usdiSave()
@@ -504,12 +504,6 @@ namespace UTJ
                 }
             }
             deleter(this);
-        }
-
-        public void usdiMakePrefab()
-        {
-            // todo
-            Debug.Log("not implemented yet");
         }
 
         // possibly called from non-main thread
@@ -573,7 +567,7 @@ namespace UTJ
                                 usdiAsyncUpdate(m_time);
                             }
                             finally { }
-                        }, "usdiStream: " + gameObject.name);
+                        }, "UsdStream: " + gameObject.name);
                 }
                 m_asyncUpdate.Run();
             }
