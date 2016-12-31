@@ -210,15 +210,17 @@ namespace UTJ
 
         public struct XformData
         {
-            public enum Flags
+            [Serializable]
+            public struct Flags
             {
-                UpdatedMask     = 0xf,
-                UpdatedPosition = 0x1,
-                UpdatedRotation = 0x2,
-                UpdatedScale    = 0x4,
-            };
+                public uint bits;
 
-            public int flags;
+                public bool updatedPosition { get { return (bits & 0x1) != 0; } }
+                public bool updatedRotation { get { return (bits & 0x2) != 0; } }
+                public bool updatedScale { get { return (bits & 0x4) != 0; } }
+            }
+
+            public Flags flags;
             public Vector3     position;
             public Quaternion  rotation;
             public Vector3     scale;
@@ -230,7 +232,7 @@ namespace UTJ
                 {
                     return new XformData
                     {
-                        flags = 0,
+                        flags = new Flags(),
                         position = Vector3.zero,
                         rotation = Quaternion.identity,
                         scale = Vector3.one,
@@ -655,15 +657,15 @@ namespace UTJ
 
         private static void TransformAssignImpl(UnityEngine.Transform trans, ref XformData data)
         {
-            if ((data.flags & (int)usdi.XformData.Flags.UpdatedPosition) != 0)
+            if (data.flags.updatedPosition)
             {
                 trans.localPosition = data.position;
             }
-            if ((data.flags & (int)usdi.XformData.Flags.UpdatedRotation) != 0)
+            if (data.flags.updatedRotation)
             {
                 trans.localRotation = data.rotation;
             }
-            if ((data.flags & (int)usdi.XformData.Flags.UpdatedScale) != 0)
+            if (data.flags.updatedScale)
             {
                 trans.localScale = data.scale;
             }

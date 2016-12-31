@@ -15,6 +15,13 @@ namespace UTJ
             var t = target as UsdStream;
 
             EditorGUILayout.Space();
+            if (GUILayout.Button("Convert To Asset"))
+            {
+                var converter = new UsdAssetConverter(t.GetComponent<Transform>(), "UsdAsset");
+                converter.Convert();
+            }
+
+            EditorGUILayout.Space();
             if (GUILayout.Button("Precompute Normals / Tangents"))
             {
                 UsdPrecomputeNormalsWindow.Open(t);
