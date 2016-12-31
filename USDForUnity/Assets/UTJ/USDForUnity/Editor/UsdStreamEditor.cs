@@ -17,8 +17,7 @@ namespace UTJ
             EditorGUILayout.Space();
             if (GUILayout.Button("Convert To Asset"))
             {
-                var converter = new UsdAssetConverter(t.GetComponent<Transform>(), "UsdAsset");
-                converter.Convert();
+                UsdAssetConverterWindow.Open(t.GetComponent<Transform>());
             }
 
             EditorGUILayout.Space();
