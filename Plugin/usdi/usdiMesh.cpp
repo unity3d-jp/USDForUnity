@@ -808,13 +808,18 @@ bool Mesh::precomputeNormals(bool gen_tangents, bool overwrite)
         return false;
     }
 
-    bool gen_normals = overwrite || !attr_normals.HasValue();
+    if (overwrite) {
+        if (attr_normals) attr_normals.Clear();
+        if (attr_tangents) attr_tangents.Clear();
+    }
+
+    bool gen_normals = !attr_normals.HasValue();
     if (gen_tangents) {
         if (!attr_uv) {
             // generating tangents require uv
             gen_tangents = false;
         }
-        else if (!overwrite && attr_tangents && attr_tangents.HasValue()) {
+        else if (attr_tangents && attr_tangents.HasValue()) {
             // no need to update
             gen_tangents = false;
         }
@@ -835,75 +840,79 @@ bool Mesh::precomputeNormals(bool gen_tangents, bool overwrite)
     if (times.empty()) {
         times.push_back(usdiDefaultTime());
     }
-    int n = (int)times.size();
 
-    std::vector<VtArray<int>> _indices(n);
-    std::vector<VtArray<int>> _indices_triangulated(n);
-    std::vector<VtArray<int>> _counts(n);
-    std::vector<VtArray<int>> _offsets(n);
-    std::vector<VtArray<GfVec3f>> _points(n);
-    std::vector<VtArray<GfVec3f>> _normals(n);
-    std::vector<VtArray<GfVec4f>> _tangents(n);
-    std::vector<VtArray<GfVec2f>> _uv(n);
-    std::vector<int> _num_indices(n);
-    std::vector<int> _num_indices_triangulated(n);
+    // run block_size tasks in parallel
+    int num_frames = (int)times.size();
+    const int block_size = 8;
+    const int num_blocks = ceildiv(num_frames, block_size);
 
-    tbb::parallel_for(0, (int)n, [&](int i) {
-        auto& t = times[i];
-        auto& indices = _indices[i];
-        auto& indices_triangulated = _indices_triangulated[i];
-        auto& counts = _counts[i];
-        auto& offsets = _offsets[i];
-        auto& points = _points[i];
-        auto& normals = _normals[i];
-        auto& tangents = _tangents[i];
-        auto& uv = _uv[i];
-        auto& num_indices = _num_indices[i];
-        auto& num_indices_triangulated = _num_indices_triangulated[i];
+    std::vector<VtArray<int>> _indices(block_size);
+    std::vector<VtArray<int>> _counts(block_size);
+    std::vector<VtArray<int>> _offsets(block_size);
+    std::vector<VtArray<GfVec3f>> _points(block_size);
+    std::vector<VtArray<GfVec3f>> _normals(block_size);
+    std::vector<VtArray<GfVec4f>> _tangents(block_size);
+    std::vector<VtArray<GfVec2f>> _uv(block_size);
+    std::vector<int> _num_indices(block_size);
 
-        // setup indices
-        attr_indices.Get(&indices, t);
-        attr_counts.Get(&counts, t);
-        CountIndices(counts, offsets, num_indices, num_indices_triangulated);
-        indices_triangulated.resize(num_indices_triangulated);
-        TriangulateIndices(indices_triangulated, counts, &indices, false);
+    for (int bi = 0; bi < num_blocks; ++bi) {
+        int bbegin = bi * block_size;
+        int bend = std::min<int>((bi + 1) * block_size, num_frames);
+        int bsize = bend - bbegin;
 
-        // generate normals
-        attr_points.Get(&points, t);
-        if (gen_normals) {
-            normals.resize(points.size());
-            GenerateNormals((float3*)normals.data(), (const float3*)points.cdata(),
-                counts.cdata(), offsets.cdata(), indices.cdata(),
-                points.size(), counts.size());
-        }
-        else {
-            attr_normals.Get(&normals, t);
-        }
+        tbb::parallel_for(0, bsize, [&](int i) {
+            auto& t = times[bbegin + i];
+            auto& indices = _indices[i];
+            auto& counts = _counts[i];
+            auto& offsets = _offsets[i];
+            auto& points = _points[i];
+            auto& normals = _normals[i];
+            auto& tangents = _tangents[i];
+            auto& uv = _uv[i];
+            auto& num_indices = _num_indices[i];
 
-        // generate tangents
-        if (gen_tangents) {
-            attr_uv.Get(&uv, t);
-            tangents.resize(points.size());
-            GenerateTangents((float4*)tangents.data(),
-                (const float3*)points.cdata(), (const float3*)normals.cdata(), (const float2*)uv.cdata(),
-                counts.cdata(), offsets.cdata(), indices.cdata(),
-                points.size(), counts.size());
-        }
-    });
+            // setup indices
+            attr_indices.Get(&indices, t);
+            attr_counts.Get(&counts, t);
+            int num_indices_triangulated;
+            CountIndices(counts, offsets, num_indices, num_indices_triangulated);
 
-    for (int i = 0; i < n; ++i) {
-        auto& t = times[i];
-        auto& normals = _normals[i];
-        auto& tangents = _tangents[i];
+            // generate normals
+            attr_points.Get(&points, t);
+            if (gen_normals) {
+                normals.resize(points.size());
+                GenerateNormals((float3*)normals.data(), (const float3*)points.cdata(),
+                    counts.cdata(), offsets.cdata(), indices.cdata(),
+                    points.size(), counts.size());
+            }
+            else {
+                attr_normals.Get(&normals, t);
+            }
 
-        if (gen_normals) {
-            attr_normals.Set(normals, t);
-        }
-        if (gen_tangents) {
-            attr_tangents.Set(tangents, t);
+            // generate tangents
+            if (gen_tangents) {
+                attr_uv.Get(&uv, t);
+                tangents.resize(points.size());
+                GenerateTangents((float4*)tangents.data(),
+                    (const float3*)points.cdata(), (const float3*)normals.cdata(), (const float2*)uv.cdata(),
+                    counts.cdata(), offsets.cdata(), indices.cdata(),
+                    points.size(), counts.size());
+            }
+        });
+
+        for (int i = 0; i < bsize; ++i) {
+            auto& t = times[bbegin + i];
+            auto& normals = _normals[i];
+            auto& tangents = _tangents[i];
+
+            if (gen_normals) {
+                attr_normals.Set(normals, t);
+            }
+            if (gen_tangents) {
+                attr_tangents.Set(tangents, t);
+            }
         }
     }
-
     return true;
 }
 

@@ -31,7 +31,29 @@ inline Schema* FindSchema(SchemaArray& schemas, const char *path)
 
 
 typedef RawVector<char> TempBuffer;
-
 TempBuffer& GetTemporaryBuffer();
+
+
+template<typename Body>
+class lambda_task : public tbb::task
+{
+private:
+    Body m_body;
+    tbb::task* execute() override
+    {
+        m_body();
+        return nullptr;
+    }
+public:
+    lambda_task(const Body& body) : m_body(body) {}
+};
+
+template<typename Body>
+inline tbb::task* launch(const Body& body)
+{
+    auto *ret = new(tbb::task::allocate_root()) lambda_task<Body>(body);
+    tbb::task::enqueue(*ret);
+    return ret;
+}
 
 } // namespace usdi

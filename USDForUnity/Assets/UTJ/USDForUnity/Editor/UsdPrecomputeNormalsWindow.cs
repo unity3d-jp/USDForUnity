@@ -32,12 +32,14 @@ namespace UTJ
 
         void Generate()
         {
+            usdi.ProgressReporter reporter = new usdi.ProgressReporter();
             UsdStream stream = null;
 
             int ndone = 0;
 
             if (m_stream != null)
             {
+                reporter.Open();
                 stream = m_stream;
                 var meshes = new List<usdi.Mesh>();
                 var results = new List<bool>();
@@ -47,6 +49,11 @@ namespace UTJ
                     if(done)
                     {
                         ++ndone;
+                        reporter.Write("done: " + usdi.usdiPrimGetNameS(mesh) + "\n");
+                    }
+                    else
+                    {
+                        reporter.Write("skipped: " + usdi.usdiPrimGetNameS(mesh) + "\n");
                     }
                 });
                 for (int i = 0; i < meshes.Count; ++i)
@@ -54,11 +61,11 @@ namespace UTJ
                     var mesh = meshes[i];
                     if(results[i])
                     {
-                        Debug.Log("Precompute done: " + usdi.usdiPrimGetPathS(mesh));
+                        Debug.Log("Precompute done: " + usdi.usdiPrimGetNameS(mesh));
                     }
                     else
                     {
-                        Debug.Log("Precompute skipped: " + usdi.usdiPrimGetPathS(mesh));
+                        Debug.Log("Precompute skipped: " + usdi.usdiPrimGetNameS(mesh));
                     }
                 }
             }
@@ -80,9 +87,12 @@ namespace UTJ
 
             if (stream != null && ndone > 0)
             {
+                reporter.Write("flushing to file ... ");
                 stream.usdiSave();
                 stream.usdiReload();
+                reporter.Write("done.\n");
             }
+            reporter.Close();
         }
 
         void OnGUI()
