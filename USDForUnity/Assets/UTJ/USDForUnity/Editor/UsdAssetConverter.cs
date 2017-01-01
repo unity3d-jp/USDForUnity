@@ -143,10 +143,11 @@ namespace UTJ
             if(cmp != null)
             {
                 m_reporter.Write("converting " + cmp.schema.primName + " ...\n");
-                var schema = cmp.schema.nativeSchemaPtr;
-                ConvertXform(usdi.usdiAsXform(schema), path);
-                ConvertCamera(usdi.usdiAsCamera(schema), path);
-                ConvertMesh(usdi.usdiAsMesh(schema), path);
+                var schema = cmp.schema;
+                ConvertXform(schema as UsdXform, path);
+                ConvertCamera(schema as UsdCamera, path);
+                ConvertMesh(schema as UsdMesh, path);
+                ConvertPoints(schema as UsdPoints, path);
             }
 
             int nchildren = t.childCount;
@@ -156,9 +157,9 @@ namespace UTJ
             }
         }
 
-        void ConvertXform(usdi.Xform xf, string path)
+        void ConvertXform(UsdXform xf, string path)
         {
-            if (!xf) { return; }
+            if (xf == null) { return; }
 
             var ttrans = typeof(Transform);
             var cvs = new CurveData[]{
@@ -173,7 +174,7 @@ namespace UTJ
                 new CurveData(ttrans, path, "localScale.z"),
             };
 
-            usdi.usdiXformEachSample(xf, (ref usdi.XformData data, double t_)=> {
+            usdi.usdiXformEachSample(xf.nativeXformPtr, (ref usdi.XformData data, double t_)=> {
                 float t = (float)t_;
                 if (data.flags.updatedPosition)
                 {
@@ -209,15 +210,56 @@ namespace UTJ
             }
         }
 
-        void ConvertCamera(usdi.Camera cam, string name)
+        void ConvertCamera(UsdCamera cam, string path)
         {
-            if (!cam) { return; }
+            if (cam == null) { return; }
+
+            var tcam = typeof(Camera);
+            var cvs = new CurveData[]{
+                new CurveData(tcam, path, "nearClipPlane"),
+                new CurveData(tcam, path, "farClipPlane"),
+                new CurveData(tcam, path, "fieldOfView"),
+                new CurveData(tcam, path, "aspect"),
+            };
+
+            usdi.usdiCameraEachSample(cam.nativeCameraPtr, (ref usdi.CameraData data, double t_) =>
+            {
+                float t = (float)t_;
+
+                cvs[0].curve.AddKey(t, data.near_clipping_plane);
+                cvs[1].curve.AddKey(t, data.far_clipping_plane);
+                cvs[2].curve.AddKey(t, data.field_of_view);
+                if (cam.aspectRatioMode == UsdCamera.AspectRatioMode.USD)
+                {
+                    cvs[3].curve.AddKey(t, data.aspect_ratio);
+                }
+            });
+
+            if (m_keyframeReduction)
+            {
+                foreach (var c in cvs)
+                {
+                    DoReduction(c);
+                }
+            }
+            foreach (var c in cvs)
+            {
+                c.Set(m_animClip);
+            }
         }
 
-        void ConvertMesh(usdi.Mesh mesh, string name)
+        void ConvertMesh(UsdMesh mesh, string path)
         {
-            if (!mesh) { return; }
+            if (mesh == null) { return; }
+            // todo
         }
+
+        void ConvertPoints(UsdPoints points, string path)
+        {
+            if (points == null) { return; }
+            // todo
+        }
+
 
         void DoReduction(CurveData cv)
         {
