@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <cstring>
 #include "half.h"
 
 #define muDefaultEpsilon 0.00001f

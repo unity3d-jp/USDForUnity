@@ -16,10 +16,14 @@
     #define usdiSTDCall
 #endif
 
+#include <cstdint>
+
 namespace usdi {
 
 using byte = unsigned char;
 using uint = unsigned int;
+using int32 = int;
+using int64 = long long;
 #ifndef usdiImpl
     // force make compatible
     class Context {};
