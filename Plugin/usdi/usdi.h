@@ -306,6 +306,8 @@ usdiAPI void             usdiAlignedFree(void *addr);
 usdiAPI void*            usdiFixedMalloc(size_t size);
 usdiAPI void             usdiFixedFree(size_t size, void *addr);
 
+usdiAPI void             usdiAddAssetSearchPath(const char *path);
+usdiAPI void             usdiClearAssetSearchPath();
 
 // Context interface
 usdiAPI usdi::Context*   usdiCreateContext();

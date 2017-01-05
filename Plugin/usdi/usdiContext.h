@@ -5,6 +5,9 @@ namespace usdi {
 class Context
 {
 public:
+    static void addAssetSearchPath(const char *path);
+    static void clearAssetSearchPath();
+
     Context();
     virtual ~Context();
 

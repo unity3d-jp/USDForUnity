@@ -67,6 +67,18 @@ usdiAPI void  usdiFixedFree(size_t size, void* addr)    { usdi::FixedFree(size, 
 
 // Context interface
 
+
+usdiAPI void usdiAddAssetSearchPath(const char *path)
+{
+    usdiTraceFunc();
+    usdi::Context::addAssetSearchPath(path);
+}
+usdiAPI void usdiClearAssetSearchPath()
+{
+    usdiTraceFunc();
+    usdi::Context::clearAssetSearchPath();
+}
+
 usdiAPI usdi::Context* usdiCreateContext()
 {
     usdiTraceFunc();

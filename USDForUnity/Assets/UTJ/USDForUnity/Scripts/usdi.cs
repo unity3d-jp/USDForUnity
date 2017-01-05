@@ -414,6 +414,9 @@ namespace UTJ
 
         [DllImport ("usdi")] public static extern IntPtr        usdiGetRenderEventFunc();
 
+        [DllImport ("usdi")] public static extern void          usdiAddAssetSearchPath(string path);
+        [DllImport ("usdi")] public static extern void          usdiClearAssetSearchPath();
+
         // Context interface
         [DllImport ("usdi")] public static extern Context       usdiCreateContext();
         [DllImport ("usdi")] public static extern void          usdiDestroyContext(Context ctx);

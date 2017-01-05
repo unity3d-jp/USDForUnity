@@ -120,32 +120,42 @@ void Context::applyImportConfig()
     }
 }
 
+void Context::addAssetSearchPath(const char *path)
+{
+    auto *search_paths_ = GetEnv(UsdSearchPathName);
+    std::string search_paths = search_paths_ ? search_paths_ : "";
+
+    fs::path fp{ path };
+    if (fp.has_extension()) {
+        fp.remove_filename();
+    }
+    auto str = fp.string();
+
+    if (search_paths.find(str.c_str(), 0, str.size()) == std::string::npos) {
+        if (!search_paths.empty()) {
+            search_paths += ":";
+        }
+        search_paths += str;
+        SetEnv(UsdSearchPathName, search_paths.c_str());
+    }
+}
+
+void Context::clearAssetSearchPath()
+{
+    SetEnv(UsdSearchPathName, "");
+}
+
 bool Context::open(const char *path)
 {
     initialize();
 
     usdiLogInfo( "Context::open(): %s\n", path);
 
-    {
-        // set USD's asset resolve paths
-
-        auto *search_paths_ = GetEnv(UsdSearchPathName);
-        std::string search_paths = search_paths_ ? search_paths_ : "";
-
-        fs::path fp{ path };
-        fp.remove_filename();
-        auto str = fp.string();
-
-        if (search_paths.find(str.c_str(), 0, str.size()) == std::string::npos) {
-            if (!search_paths.empty()) {
-                search_paths += ":";
-            }
-            search_paths += str;
-            SetEnv(UsdSearchPathName, search_paths.c_str());
-        }
-    }
+    // set USD's asset resolve paths
+    addAssetSearchPath(path);
 
     m_stage = UsdStage::Open(path);
+    clearAssetSearchPath();
     if (!m_stage) {
         // first try to open .abc often fails (likely Windows-only problem)
         // try again for workaround.
