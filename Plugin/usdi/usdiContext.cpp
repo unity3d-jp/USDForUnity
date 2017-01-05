@@ -7,6 +7,7 @@
 #include "usdiPoints.h"
 #include "usdiContext.h"
 #include "usdiUtils.h"
+#include "usdiRT/usdiRT.h"
 
 void mDetachAllThreads();
 
@@ -16,6 +17,15 @@ namespace usdi {
 void InitializeInternalMethods();
 void ClearInternalMethodsCache();
 #endif
+
+namespace fs =
+#ifdef usdiEnableBoostFilesystem
+    boost::filesystem;
+#else
+    std::experimental::filesystem;
+#endif
+
+#define UsdSearchPathName "PXR_AR_DEFAULT_SEARCH_PATH"
 
 static int g_ctx_count;
 
@@ -70,13 +80,6 @@ void Context::initialize()
 
 bool Context::createStage(const char *identifier)
 {
-    namespace fs =
-#ifdef usdiEnableBoostFilesystem
-        boost::filesystem;
-#else
-        std::experimental::filesystem;
-#endif
-
     initialize();
 
     FILE *f = fopen(identifier, "rb");
@@ -122,6 +125,25 @@ bool Context::open(const char *path)
     initialize();
 
     usdiLogInfo( "Context::open(): %s\n", path);
+
+    {
+        // set USD's asset resolve paths
+
+        auto *search_paths_ = GetEnv(UsdSearchPathName);
+        std::string search_paths = search_paths_ ? search_paths_ : "";
+
+        fs::path fp{ path };
+        fp.remove_filename();
+        auto str = fp.string();
+
+        if (search_paths.find(str.c_str(), 0, str.size()) == std::string::npos) {
+            if (!search_paths.empty()) {
+                search_paths += ":";
+            }
+            search_paths += str;
+            SetEnv(UsdSearchPathName, search_paths.c_str());
+        }
+    }
 
     m_stage = UsdStage::Open(path);
     if (!m_stage) {

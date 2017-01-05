@@ -111,6 +111,27 @@ rtAPI void SetEnv(const char *name, const char *value)
 #endif
 }
 
+rtAPI const char* GetEnv(const char *name)
+{
+#ifdef _WIN32
+    static std::string s_value;
+    {
+        auto n = ::GetEnvironmentVariableA(name, nullptr, 0);
+        if (n > 0) {
+            s_value.resize(n);
+            ::GetEnvironmentVariableA(name, &s_value[0], n);
+            s_value.pop_back(); // remove last '\0'
+            return s_value.c_str();
+        }
+        else {
+            return ::getenv(name);
+        }
+    }
+#else
+    ::getenv(name);
+#endif
+}
+
 #ifdef _WIN32
 
 rtAPI module_t  DLLLoad(const char *path) { return ::LoadLibraryA(path); }
