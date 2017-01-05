@@ -32,7 +32,10 @@ namespace UTJ
             m_converter.keyframeReduction = EditorGUILayout.Toggle("Keyframe Reduction", m_converter.keyframeReduction);
             if(m_converter.keyframeReduction)
             {
-                m_converter.keyframeEpsilon = EditorGUILayout.FloatField("  Keyframe Epsilon", m_converter.keyframeEpsilon);
+                m_converter.epsilon_Position = EditorGUILayout.FloatField("  Position Epsilon", m_converter.epsilon_Position);
+                m_converter.epsilon_Rotation = EditorGUILayout.FloatField("  Rotation Epsilon", m_converter.epsilon_Rotation);
+                m_converter.epsilon_Scale = EditorGUILayout.FloatField("  Scale Epsilon", m_converter.epsilon_Scale);
+                m_converter.epsilon_Camera = EditorGUILayout.FloatField("  Camera Epsilon", m_converter.epsilon_Camera);
             }
             EditorGUILayout.Space();
 
@@ -52,7 +55,10 @@ namespace UTJ
         #region fields
         string m_assetName = "UsdAsset";
         bool m_keyframeReduction = true;
-        float m_keyframeEpsilon = 0.0001f;
+        float m_epsilon_Position = 0.01f;
+        float m_epsilon_Rotation = 0.01f;
+        float m_epsilon_Scale = 0.01f;
+        float m_epsilon_Camera = 0.01f;
 
         usdi.ProgressReporter m_reporter;
         Transform m_root;
@@ -71,10 +77,25 @@ namespace UTJ
             get { return m_keyframeReduction; }
             set { m_keyframeReduction = value; }
         }
-        public float keyframeEpsilon
+        public float epsilon_Position
         {
-            get { return m_keyframeEpsilon; }
-            set { m_keyframeEpsilon = value; }
+            get { return m_epsilon_Position; }
+            set { m_epsilon_Position = value; }
+        }
+        public float epsilon_Rotation
+        {
+            get { return m_epsilon_Rotation; }
+            set { m_epsilon_Rotation = value; }
+        }
+        public float epsilon_Scale
+        {
+            get { return m_epsilon_Scale; }
+            set { m_epsilon_Scale = value; }
+        }
+        public float epsilon_Camera
+        {
+            get { return m_epsilon_Camera; }
+            set { m_epsilon_Camera = value; }
         }
         #endregion
 
@@ -102,14 +123,17 @@ namespace UTJ
             public Type type;
             public string path;
             public string field;
+            public float epsilon = 0.001f;
+
             public int length { get { return curve.length; } }
 
-            public CurveData(Type t, string p, string f)
+            public CurveData(Type t, string p, string f, float e)
             {
                 curve = new AnimationCurve();
                 type = t;
                 path = p;
                 field = f;
+                epsilon = e;
             }
 
             public void Set(AnimationClip clip)
@@ -163,15 +187,15 @@ namespace UTJ
 
             var ttrans = typeof(Transform);
             var cvs = new CurveData[]{
-                new CurveData(ttrans, path, "localPosition.x"),
-                new CurveData(ttrans, path, "localPosition.y"),
-                new CurveData(ttrans, path, "localPosition.z"),
-                new CurveData(ttrans, path, "localEulerAngles.x"),
-                new CurveData(ttrans, path, "localEulerAngles.y"),
-                new CurveData(ttrans, path, "localEulerAngles.z"),
-                new CurveData(ttrans, path, "localScale.x"),
-                new CurveData(ttrans, path, "localScale.y"),
-                new CurveData(ttrans, path, "localScale.z"),
+                new CurveData(ttrans, path, "localPosition.x", m_epsilon_Position),
+                new CurveData(ttrans, path, "localPosition.y", m_epsilon_Position),
+                new CurveData(ttrans, path, "localPosition.z", m_epsilon_Position),
+                new CurveData(ttrans, path, "localEulerAngles.x", m_epsilon_Rotation),
+                new CurveData(ttrans, path, "localEulerAngles.y", m_epsilon_Rotation),
+                new CurveData(ttrans, path, "localEulerAngles.z", m_epsilon_Rotation),
+                new CurveData(ttrans, path, "localScale.x", m_epsilon_Scale),
+                new CurveData(ttrans, path, "localScale.y", m_epsilon_Scale),
+                new CurveData(ttrans, path, "localScale.z", m_epsilon_Scale),
             };
 
             usdi.usdiXformEachSample(xf.nativeXformPtr, (ref usdi.XformData data, double t_)=> {
@@ -216,10 +240,10 @@ namespace UTJ
 
             var tcam = typeof(Camera);
             var cvs = new CurveData[]{
-                new CurveData(tcam, path, "nearClipPlane"),
-                new CurveData(tcam, path, "farClipPlane"),
-                new CurveData(tcam, path, "fieldOfView"),
-                new CurveData(tcam, path, "aspect"),
+                new CurveData(tcam, path, "nearClipPlane", epsilon_Camera),
+                new CurveData(tcam, path, "farClipPlane", epsilon_Camera),
+                new CurveData(tcam, path, "fieldOfView", epsilon_Camera),
+                new CurveData(tcam, path, "aspect", epsilon_Camera),
             };
 
             usdi.usdiCameraEachSample(cam.nativeCameraPtr, (ref usdi.CameraData data, double t_) =>
@@ -264,7 +288,7 @@ namespace UTJ
         void DoReduction(CurveData cv)
         {
             int before = cv.length;
-            AnimationCurveKeyReducer.DoReduction(cv.curve, m_keyframeEpsilon);
+            AnimationCurveKeyReducer.DoReduction(cv.curve, cv.epsilon);
             int after = cv.length;
             m_reporter.Write("  key reduction: " + cv.field + " " + before + " -> " + after + "\n");
 
