@@ -19,6 +19,7 @@ namespace UTJ
         protected UsdStream m_stream;
         protected usdi.Schema m_schema;
         protected usdi.VariantSets m_variantSets;
+        protected usdi.AssetRef[] m_referencingAssets;
         [SerializeField] protected int[] m_variantSelection;
         [SerializeField] bool m_overrideImportSettings;
         [SerializeField] usdi.ImportSettings m_importSettings = usdi.ImportSettings.default_value;
@@ -95,6 +96,10 @@ namespace UTJ
         {
             get { return m_master; }
         }
+        public usdi.AssetRef[] referencingAssets
+        {
+            get { return m_referencingAssets; }
+        }
         #endregion
 
 
@@ -164,6 +169,7 @@ namespace UTJ
 
             usdiSyncVarinatSets();
             usdiSyncImportSettings();
+            m_referencingAssets = usdi.usdiGetReferencingAssets(m_schema);
             if (m_goAssigned)
             {
                 var c = usdiSetupSchemaComponent();

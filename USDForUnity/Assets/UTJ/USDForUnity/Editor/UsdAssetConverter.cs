@@ -2,8 +2,9 @@ using System;
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
+using UnityEditor;
+using UnityEditor.Animations;
 
 namespace UTJ
 {
@@ -63,6 +64,8 @@ namespace UTJ
         usdi.ProgressReporter m_reporter;
         Transform m_root;
         AnimationClip m_animClip;
+        AnimatorController m_controller;
+        Animator m_animator;
         #endregion
 
 
@@ -111,8 +114,15 @@ namespace UTJ
         {
             m_reporter.Open();
             m_animClip = new AnimationClip();
-            ConvertRecursive(m_root, "");
+
+            int nchildren = m_root.childCount;
+            for (int i = 0; i < nchildren; ++i)
+            {
+                ConvertRecursive(m_root.GetChild(i), "");
+            }
+
             AssetDatabase.CreateAsset(m_animClip, "Assets/" + m_assetName + ".anim");
+            m_controller = AnimatorController.CreateAnimatorControllerAtPathWithClip("Assets/" + m_assetName + ".controller", m_animClip);
             m_reporter.Close();
             return true;
         }
@@ -187,15 +197,15 @@ namespace UTJ
 
             var ttrans = typeof(Transform);
             var cvs = new CurveData[]{
-                new CurveData(ttrans, path, "localPosition.x", m_epsilon_Position),
-                new CurveData(ttrans, path, "localPosition.y", m_epsilon_Position),
-                new CurveData(ttrans, path, "localPosition.z", m_epsilon_Position),
-                new CurveData(ttrans, path, "localEulerAngles.x", m_epsilon_Rotation),
-                new CurveData(ttrans, path, "localEulerAngles.y", m_epsilon_Rotation),
-                new CurveData(ttrans, path, "localEulerAngles.z", m_epsilon_Rotation),
-                new CurveData(ttrans, path, "localScale.x", m_epsilon_Scale),
-                new CurveData(ttrans, path, "localScale.y", m_epsilon_Scale),
-                new CurveData(ttrans, path, "localScale.z", m_epsilon_Scale),
+                new CurveData(ttrans, path, "m_LocalPosition.x", m_epsilon_Position),
+                new CurveData(ttrans, path, "m_LocalPosition.y", m_epsilon_Position),
+                new CurveData(ttrans, path, "m_LocalPosition.z", m_epsilon_Position),
+                new CurveData(ttrans, path, "m_LocalEulerAngles.x", m_epsilon_Rotation),
+                new CurveData(ttrans, path, "m_LocalEulerAngles.y", m_epsilon_Rotation),
+                new CurveData(ttrans, path, "m_LocalEulerAngles.z", m_epsilon_Rotation),
+                new CurveData(ttrans, path, "m_LocalScale.x", m_epsilon_Scale),
+                new CurveData(ttrans, path, "m_LocalScale.y", m_epsilon_Scale),
+                new CurveData(ttrans, path, "m_LocalScale.z", m_epsilon_Scale),
             };
 
             usdi.usdiXformEachSample(xf.nativeXformPtr, (ref usdi.XformData data, double t_)=> {
@@ -240,10 +250,9 @@ namespace UTJ
 
             var tcam = typeof(Camera);
             var cvs = new CurveData[]{
-                new CurveData(tcam, path, "nearClipPlane", epsilon_Camera),
-                new CurveData(tcam, path, "farClipPlane", epsilon_Camera),
-                new CurveData(tcam, path, "fieldOfView", epsilon_Camera),
-                new CurveData(tcam, path, "aspect", epsilon_Camera),
+                new CurveData(tcam, path, "near clip plane", epsilon_Camera),
+                new CurveData(tcam, path, "far clip plane", epsilon_Camera),
+                new CurveData(tcam, path, "field of view", epsilon_Camera),
             };
 
             usdi.usdiCameraEachSample(cam.nativeCameraPtr, (ref usdi.CameraData data, double t_) =>
@@ -253,10 +262,6 @@ namespace UTJ
                 cvs[0].curve.AddKey(t, data.near_clipping_plane);
                 cvs[1].curve.AddKey(t, data.far_clipping_plane);
                 cvs[2].curve.AddKey(t, data.field_of_view);
-                if (cam.aspectRatioMode == UsdCamera.AspectRatioMode.USD)
-                {
-                    cvs[3].curve.AddKey(t, data.aspect_ratio);
-                }
             });
 
             if (m_keyframeReduction)

@@ -381,7 +381,7 @@ public:
         updateSample(t);
 
         dst.num_elements = 1;
-        *(const char**)dst.data = cstr(m_sample);
+        (const char*&)dst.data = cstr(m_sample);
         return true;
     }
 
@@ -443,7 +443,7 @@ public:
         updateSample(t);
 
         dst.num_elements = (int)m_sample.size();
-        *(const char***)dst.data = m_pointers.data();
+        (const char**&)dst.data = m_pointers.data();
         return true;
     }
 
