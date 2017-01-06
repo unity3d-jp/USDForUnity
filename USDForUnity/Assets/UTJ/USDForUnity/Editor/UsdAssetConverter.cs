@@ -55,11 +55,12 @@ namespace UTJ
     {
         #region fields
         string m_assetName = "UsdAsset";
+        float m_rcpTimeScale = 1.0f;
         bool m_keyframeReduction = true;
-        float m_epsilon_Position = 0.01f;
-        float m_epsilon_Rotation = 0.01f;
-        float m_epsilon_Scale = 0.01f;
-        float m_epsilon_Camera = 0.01f;
+        float m_epsilon_Position = 0.0001f;
+        float m_epsilon_Rotation = 0.0001f;
+        float m_epsilon_Scale = 0.0001f;
+        float m_epsilon_Camera = 0.0001f;
 
         usdi.ProgressReporter m_reporter;
         Transform m_root;
@@ -74,6 +75,11 @@ namespace UTJ
         {
             get { return m_assetName; }
             set { m_assetName = value; }
+        }
+        public float timeScale
+        {
+            get { return m_rcpTimeScale; }
+            set { m_rcpTimeScale = value; }
         }
         public bool keyframeReduction
         {
@@ -123,6 +129,31 @@ namespace UTJ
 
             AssetDatabase.CreateAsset(m_animClip, "Assets/" + m_assetName + ".anim");
             m_controller = AnimatorController.CreateAnimatorControllerAtPathWithClip("Assets/" + m_assetName + ".controller", m_animClip);
+
+            var go = m_root.gameObject;
+            var animator = usdi.GetOrAddComponent<Animator>(go);
+            animator.runtimeAnimatorController = m_controller;
+            {
+                var usd = go.GetComponent<UsdStream>();
+                if(usd != null)
+                {
+                    usd.usdiDetachUsdComponents();
+                }
+                else
+                {
+                    var cmps = go.GetComponentsInChildren<UsdIComponent>();
+                    foreach(var c in cmps)
+                    {
+                        Undo.DestroyObjectImmediate(c);
+                    }
+                }
+            }
+
+            {
+                // todo: create mesh & material assets
+                //PrefabUtility.CreatePrefab("Assets/" + m_assetName + ".prefab", m_root.gameObject);
+            }
+
             m_reporter.Close();
             return true;
         }
@@ -178,6 +209,7 @@ namespace UTJ
             {
                 m_reporter.Write("converting " + cmp.schema.primName + " ...\n");
                 var schema = cmp.schema;
+                m_rcpTimeScale = 1.0f / schema.stream.timeUnit.scale;
                 ConvertXform(schema as UsdXform, path);
                 ConvertCamera(schema as UsdCamera, path);
                 ConvertMesh(schema as UsdMesh, path);
@@ -200,16 +232,17 @@ namespace UTJ
                 new CurveData(ttrans, path, "m_LocalPosition.x", m_epsilon_Position),
                 new CurveData(ttrans, path, "m_LocalPosition.y", m_epsilon_Position),
                 new CurveData(ttrans, path, "m_LocalPosition.z", m_epsilon_Position),
-                new CurveData(ttrans, path, "m_LocalEulerAngles.x", m_epsilon_Rotation),
-                new CurveData(ttrans, path, "m_LocalEulerAngles.y", m_epsilon_Rotation),
-                new CurveData(ttrans, path, "m_LocalEulerAngles.z", m_epsilon_Rotation),
+                new CurveData(ttrans, path, "m_LocalRotation.x", m_epsilon_Rotation),
+                new CurveData(ttrans, path, "m_LocalRotation.y", m_epsilon_Rotation),
+                new CurveData(ttrans, path, "m_LocalRotation.z", m_epsilon_Rotation),
+                new CurveData(ttrans, path, "m_LocalRotation.w", m_epsilon_Rotation),
                 new CurveData(ttrans, path, "m_LocalScale.x", m_epsilon_Scale),
                 new CurveData(ttrans, path, "m_LocalScale.y", m_epsilon_Scale),
                 new CurveData(ttrans, path, "m_LocalScale.z", m_epsilon_Scale),
             };
 
             usdi.usdiXformEachSample(xf.nativeXformPtr, (ref usdi.XformData data, double t_)=> {
-                float t = (float)t_;
+                float t = (float)t_ * m_rcpTimeScale;
                 if (data.flags.updatedPosition)
                 {
                     cvs[0].curve.AddKey(t, data.position.x);
@@ -218,16 +251,16 @@ namespace UTJ
                 }
                 if (data.flags.updatedRotation)
                 {
-                    var euler = data.rotation.eulerAngles;
-                    cvs[3].curve.AddKey(t, euler.x);
-                    cvs[4].curve.AddKey(t, euler.y);
-                    cvs[5].curve.AddKey(t, euler.z);
+                    cvs[3].curve.AddKey(t, data.rotation.x);
+                    cvs[4].curve.AddKey(t, data.rotation.y);
+                    cvs[5].curve.AddKey(t, data.rotation.z);
+                    cvs[6].curve.AddKey(t, data.rotation.w);
                 }
                 if (data.flags.updatedScale)
                 {
-                    cvs[6].curve.AddKey(t, data.scale.x);
-                    cvs[7].curve.AddKey(t, data.scale.y);
-                    cvs[8].curve.AddKey(t, data.scale.z);
+                    cvs[7].curve.AddKey(t, data.scale.x);
+                    cvs[8].curve.AddKey(t, data.scale.y);
+                    cvs[9].curve.AddKey(t, data.scale.z);
                 }
             });
 
@@ -257,8 +290,7 @@ namespace UTJ
 
             usdi.usdiCameraEachSample(cam.nativeCameraPtr, (ref usdi.CameraData data, double t_) =>
             {
-                float t = (float)t_;
-
+                float t = (float)t_ * m_rcpTimeScale;
                 cvs[0].curve.AddKey(t, data.near_clipping_plane);
                 cvs[1].curve.AddKey(t, data.far_clipping_plane);
                 cvs[2].curve.AddKey(t, data.field_of_view);
