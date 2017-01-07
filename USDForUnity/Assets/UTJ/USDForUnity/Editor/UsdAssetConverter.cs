@@ -180,17 +180,6 @@ namespace UTJ
             public void Set(AnimationClip clip)
             {
                 if (curve.length == 0) return;
-                if(curve.length == 2)
-                {
-                    var k1 = curve[0];
-                    var k2 = curve[1];
-                    if (k1.value == k2.value &&
-                        k1.outTangent == 0.0f && k2.inTangent == 0.0f)
-                    {
-                        return;
-                    }
-                }
-
                 clip.SetCurve(path, type, field, curve);
             }
         }
