@@ -62,6 +62,7 @@
 #include "pxr/base/gf/matrix3f.h"
 #include "pxr/base/gf/matrix4f.h"
 #include "pxr/usd/ar/resolver.h"
+#include "pxr/usd/sdf/fileFormat.h"
 #pragma warning(pop)
 
 #include "etc/Platform.h"

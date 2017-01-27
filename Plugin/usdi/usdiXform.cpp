@@ -298,11 +298,8 @@ bool Xform::writeSample(const XformData& src_, Time t_)
 
     if (m_write_ops.empty()) {
         m_write_ops.push_back(m_xf.AddTranslateOp(UsdGeomXformOp::PrecisionFloat));
-#ifdef usdiSerializeRotationAsEuler
-        m_write_ops.push_back(m_xf.AddRotateZXYOp(UsdGeomXformOp::PrecisionFloat));
-#else // usdiSerializeRotationAsEuler
         m_write_ops.push_back(m_xf.AddOrientOp(UsdGeomXformOp::PrecisionFloat));
-#endif // usdiSerializeRotationAsEuler
+        //m_write_ops.push_back(m_xf.AddRotateZXYOp(UsdGeomXformOp::PrecisionFloat));
         m_write_ops.push_back(m_xf.AddScaleOp(UsdGeomXformOp::PrecisionFloat));
     }
 
@@ -312,18 +309,8 @@ bool Xform::writeSample(const XformData& src_, Time t_)
     }
 
     m_write_ops[0].Set((const GfVec3f&)src.position, t);
-
-#ifdef usdiSerializeRotationAsEuler
-    {
-        float3 euler = QuaternionToEulerZXY(src.rotation) * Rad2Deg;
-        m_write_ops[1].Set((const GfVec3f&)euler, t);
-    }
-#else // usdiSerializeRotationAsEuler
-    {
-        m_write_ops[1].Set((const GfQuatf&)src.rotation, t);
-    }
-#endif // usdiSerializeRotationAsEuler
-
+    m_write_ops[1].Set((const GfQuatf&)src.rotation, t);
+    //m_write_ops[1].Set((const GfVec3f&)src.rotation_eular, t);
     m_write_ops[2].Set((const GfVec3f&)src.scale, t);
     return true;
 }

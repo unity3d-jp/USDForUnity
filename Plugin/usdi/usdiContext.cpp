@@ -8,6 +8,7 @@
 #include "usdiContext.h"
 #include "usdiUtils.h"
 #include "usdiRT/usdiRT.h"
+#include "etc/tls.h"
 
 void mDetachAllThreads();
 
@@ -144,6 +145,17 @@ void Context::clearAssetSearchPath()
 {
     SetEnv(UsdSearchPathName, "");
 }
+
+bool Context::convertUSDToAlembic(const char *src_usd, const char *dst_abc)
+{
+    if (auto stage = UsdStage::Open(src_usd)) {
+        if (auto layer = stage->GetRootLayer()) {
+            return SdfFileFormat::FindByExtension(".abc")->WriteToFile(boost::get_pointer(layer), dst_abc);
+        }
+    }
+    return false;
+}
+
 
 bool Context::open(const char *path)
 {
@@ -408,6 +420,56 @@ void Context::updateAllSamples(Time t)
         }
     });
 #endif
+}
+
+int Context::eachTimeSample(const TimeSampleCallback& cb)
+{
+    using Times = std::set<Time>;
+    tls<Times> times;
+
+    auto gather_times = [&times](Schema *s) {
+        if (s->getMaster() != nullptr) { return; }
+
+        auto& set = times.local();
+        if (Xform *xf = usdiAsXform(s)) {
+            xf->eachSample([&set](const XformData& data, Time t) {
+                set.insert(t);
+            });
+        }
+        if (Camera *cam = usdiAsCamera(s)) {
+            cam->eachSample([&set](const CameraData& data, Time t) {
+                set.insert(t);
+            });
+        }
+        if (Mesh *mesh = usdiAsMesh(s)) {
+            mesh->eachSample([&set](const MeshData& data, Time t) {
+                set.insert(t);
+            });
+        }
+        if (Points *points = usdiAsPoints(s)) {
+            points->eachSample([&set](const PointsData& data, Time t) {
+                set.insert(t);
+            });
+        }
+    };
+
+    size_t grain = std::max<size_t>(m_schemas.size() / 32, 1);
+    using range_t = tbb::blocked_range<size_t>;
+    tbb::parallel_for(range_t(0, m_schemas.size(), grain), [this, &gather_times](const range_t& r) {
+        for (size_t i = r.begin(); i != r.end(); ++i) {
+            gather_times(m_schemas[i].get());
+        }
+    });
+
+    Times merged;
+    times.each([&merged](Times& t) {
+        merged.insert(t.begin(), t.end());
+    });
+
+    for (Time t : merged) {
+        cb(t);
+    }
+    return 0;
 }
 
 static void precomputeNormalsAllImpl(Schema *schema, bool gen_tangents, bool overwrite, const Context::precomputeNormalsCallback& cb)

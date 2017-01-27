@@ -54,6 +54,8 @@ usdiAPI usdi::Time usdiDefaultTime()
 
 usdiAPI void usdiInitialize()
 {
+    // force load UsdAbc plugin
+    SdfFileFormat::FindByExtension(".abc");
 }
 
 usdiAPI void usdiFinalize()
@@ -250,6 +252,13 @@ usdiAPI void usdiPreComputeNormalsAll(usdi::Context *ctx, bool gen_tangents, boo
         callback = [cb](usdi::Mesh *m, bool done) { cb(m, done); };
     }
     ctx->precomputeNormalsAll(gen_tangents, overwrite, callback);
+}
+
+usdiAPI int usdiEachTimeSample(usdi::Context * ctx, usdiTimeSampleCallback cb)
+{
+    usdiTraceFunc();
+    if (!ctx) return 0;
+    return ctx->eachTimeSample([cb](usdi::Time t) { cb(t); });
 }
 
 
@@ -769,6 +778,11 @@ usdiAPI bool usdiAttrWriteSample(usdi::Attribute *attr, const usdi::AttributeDat
     usdiTraceFunc();
     if (!attr || !src) { return false; }
     return attr->writeSample(*src, t);
+}
+
+usdiAPI bool usdiConvertUSDToAlembic(const char *src_usd, const char *dst_abc)
+{
+    return usdi::Context::convertUSDToAlembic(src_usd, dst_abc);
 }
 
 } // extern "C"

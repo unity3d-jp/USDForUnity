@@ -410,6 +410,7 @@ namespace UTJ
 
         [DllImport("usdi")] public static extern void usdiInitialize();
         [DllImport("usdi")] public static extern void usdiFinalize();
+        [DllImport("usdi")] public static extern Bool usdiConvertUSDToAlembic(string usd_path, string abc_path);
 
 
         [DllImport ("usdi")] public static extern IntPtr        usdiGetRenderEventFunc();
@@ -922,6 +923,11 @@ namespace UTJ
         public static void FinalizePlugin()
         {
             usdi.usdiFinalize();
+        }
+
+        public static bool ConvertUSDToAlembic(string usd_path, string abc_path)
+        {
+            return usdi.usdiConvertUSDToAlembic(usd_path, abc_path);
         }
     }
 

@@ -22,8 +22,6 @@ namespace usdi {
 
 using byte = unsigned char;
 using uint = unsigned int;
-using int32 = int;
-using int64 = long long;
 #ifndef usdiImpl
     // force make compatible
     class Context {};
@@ -341,6 +339,8 @@ usdiAPI void             usdiUpdateAllSamples(usdi::Context *ctx, usdi::Time t);
 usdiAPI void             usdiRebuildSchemaTree(usdi::Context *ctx);
 using usdiPreComputeNormalsCallback = void (usdiSTDCall*)(usdi::Mesh *mesh, bool done);
 usdiAPI void             usdiPreComputeNormalsAll(usdi::Context *ctx, bool gen_tangents, bool overwrite = false, usdiPreComputeNormalsCallback cb = nullptr);
+using usdiTimeSampleCallback = void (usdiSTDCall*)(usdi::Time t);
+usdiAPI int              usdiEachTimeSample(usdi::Context *ctx, usdiTimeSampleCallback cb);
 
 // Prim interface
 usdiAPI int              usdiPrimGetID(usdi::Schema *schema);
@@ -443,5 +443,9 @@ usdiAPI const char*      usdiAttrGetTypeName(usdi::Attribute *attr);
 usdiAPI void             usdiAttrGetSummary(usdi::Attribute *attr, usdi::AttributeSummary *dst);
 usdiAPI bool             usdiAttrReadSample(usdi::Attribute *attr, usdi::AttributeData *dst, usdi::Time t, bool copy);
 usdiAPI bool             usdiAttrWriteSample(usdi::Attribute *attr, const usdi::AttributeData *src, usdi::Time t = usdiDefaultTime());
+
+// Alembic related
+usdiAPI bool             usdiConvertUSDToAlembic(const char *src_usd, const char *dst_abc);
+
 
 } // extern "C"

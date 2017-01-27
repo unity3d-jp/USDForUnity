@@ -13,7 +13,7 @@ class tls_base
 {
 public:
 #if _WIN32
-    typedef DWORD tls_key_t;
+    using tls_key_t = DWORD;
 #if WindowsStoreApp
     tls_base() { m_key = ::FlsAlloc(nullptr); }
     ~tls_base() { ::FlsFree(m_key); }
@@ -26,7 +26,7 @@ public:
     void* get_value() const { return (void *)::TlsGetValue(m_key); }
 #endif
 #else
-    typedef pthread_key_t tls_key_t;
+    using tls_key_t = pthread_key_t;
     tls_base() { pthread_key_create(&m_key, nullptr); }
     ~tls_base() { pthread_key_delete(m_key); }
     void set_value(void *value) { pthread_setspecific(m_key, value); }
@@ -73,7 +73,7 @@ public:
     }
 
     template<class Body>
-    void eachChild(const Body& body)
+    void each(const Body& body)
     {
         std::unique_lock<std::mutex> lock(m_mutex);
         for (auto p : m_locals) { body(*p); }
