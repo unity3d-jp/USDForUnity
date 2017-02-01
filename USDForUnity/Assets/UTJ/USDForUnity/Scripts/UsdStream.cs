@@ -34,7 +34,7 @@ namespace UTJ
         bool m_isCompiling = false;
 #endif
         [SerializeField] bool m_directVBUpdate = true;
-        [SerializeField] bool m_deferredUpdate = true;
+        [SerializeField] bool m_deferredUpdate = false;
 
         [HideInInspector][SerializeField] string[] m_variantSelections_keys;
         [HideInInspector][SerializeField] VariantSelection[] m_variantSelections_values;
@@ -86,6 +86,7 @@ namespace UTJ
         public bool deferredUpdate
         {
             get { return m_deferredUpdate; }
+	        set { m_deferredUpdate = value; }
         }
 #if UNITY_EDITOR
         public bool forceSingleThread
@@ -552,7 +553,7 @@ namespace UTJ
         }
 
 
-        void usdiKickAsyncUpdateTask()
+        public void usdiKickAsyncUpdateTask()
         {
             // kick async update tasks
 #if UNITY_EDITOR

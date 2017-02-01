@@ -169,7 +169,26 @@ namespace UTJ
                     };
                 }
             }
-        };
+
+
+	        public ImportSettings Clone()
+	        {
+				return new usdi.ImportSettings()
+				{
+					interpolation = this.interpolation,
+					normalCalculation = this.normalCalculation,
+					tangentCalculation = this.tangentCalculation,
+					maxBoneWeights = this.maxBoneWeights,
+					scale = this.scale,
+					loadAllPayloads = this.loadAllPayloads,
+					triangulate = this.triangulate,
+					swapHandedness = this.swapHandedness,
+					swapFaces = this.swapFaces,
+					splitMesh = this.splitMesh,
+					doubleBuffering = this.doubleBuffering,
+				};
+			}
+		};
 
         [Serializable]
         public struct ExportSettings
