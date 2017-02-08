@@ -140,7 +140,7 @@ namespace UTJ
             }
             else
             {
-                return new Mesh();
+	            return new Mesh() {name = "<dyn>"};
             }
         }
 
@@ -199,14 +199,14 @@ namespace UTJ
                 m_renderer = renderer;
                 usdiSetupBones(parent, ref meshData);
 
-                if (renderer.sharedMesh != null && parent.master == null)
+                if (renderer.sharedMesh != null && parent.master == null && renderer.sharedMesh.name.IndexOf("<dyn>") == 0)
                 {
                     m_umesh = renderer.sharedMesh;
                 }
                 else
                 {
                     m_umesh = usdiShareOrCreateMesh(parent);
-                    renderer.sharedMesh = m_umesh;
+					renderer.sharedMesh = m_umesh;
                 }
                 m_umesh.MarkDynamic();
             }
@@ -215,14 +215,14 @@ namespace UTJ
                 // setup MeshFilter and MeshRenderer
 
                 var meshFilter = usdi.GetOrAddComponent<MeshFilter>(go);
-                if (meshFilter.sharedMesh != null && parent.master == null)
+                if (meshFilter.sharedMesh != null && parent.master == null && meshFilter.sharedMesh.name.IndexOf("<dyn>") == 0)
                 {
                     m_umesh = meshFilter.sharedMesh;
                 }
                 else
                 {
                     m_umesh = usdiShareOrCreateMesh(parent);
-                    meshFilter.sharedMesh = m_umesh;
+					meshFilter.sharedMesh = m_umesh;
                 }
                 m_umesh.MarkDynamic();
 

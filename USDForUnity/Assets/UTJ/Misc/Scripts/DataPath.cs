@@ -17,8 +17,8 @@ namespace UTJ
             DataPath,
         }
 
-        [SerializeField] Root m_root;
-        [SerializeField] string m_leaf;
+        [SerializeField] public Root m_root;
+        [SerializeField] public string m_leaf;
 #if UNITY_EDITOR
         // just for inspector
         [SerializeField] bool m_readOnly = false;

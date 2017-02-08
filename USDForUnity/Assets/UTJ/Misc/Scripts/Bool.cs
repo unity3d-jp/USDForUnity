@@ -8,7 +8,8 @@ namespace UTJ
     [Serializable]
     public struct Bool
     {
-        [SerializeField] byte v;
+        [SerializeField]
+		public byte v;
         public static implicit operator bool(Bool v) { return v.v != 0; }
         public static implicit operator Bool(bool v) { Bool r; r.v = v ? (byte)1 : (byte)0; return r; }
     }
