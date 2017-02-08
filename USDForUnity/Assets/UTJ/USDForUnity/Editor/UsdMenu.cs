@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+#if UNITY_EDITOR && !(UNITY_5_7_OR_NEWER || ENABLE_SCRIPTED_IMPORTERS)
 using System;
 using UnityEngine;
 using UnityEditor;
