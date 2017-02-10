@@ -17,9 +17,9 @@ namespace UTJ
             FreeScale,
         }
         [SerializeField]
-        Types m_type;
+        public Types m_type;
         [SerializeField]
-        float m_scale;
+        public float m_scale;
 
         public Types type
         {

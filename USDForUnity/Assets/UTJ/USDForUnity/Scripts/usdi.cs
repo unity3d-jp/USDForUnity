@@ -169,7 +169,7 @@ namespace UTJ
                     };
                 }
             }
-        };
+		};
 
         [Serializable]
         public struct ExportSettings

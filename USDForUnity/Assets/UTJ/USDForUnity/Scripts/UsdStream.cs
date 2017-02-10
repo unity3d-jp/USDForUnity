@@ -22,19 +22,19 @@ namespace UTJ
 
 
         #region fields
-        [SerializeField] DataPath m_path;
-        [SerializeField] usdi.ImportSettings m_importSettings = new usdi.ImportSettings();
-        [SerializeField] TimeUnit m_timeUnit = new TimeUnit();
-        [SerializeField] double m_time;
+        [SerializeField] public DataPath m_path;
+        [SerializeField] public usdi.ImportSettings m_importSettings = new usdi.ImportSettings();
+        [SerializeField] public TimeUnit m_timeUnit = new TimeUnit();
+        [SerializeField] public double m_time;
 
         [Header("Debug")]
 #if UNITY_EDITOR
-        [SerializeField] bool m_forceSingleThread = false;
-        [SerializeField] bool m_detailedLog = false;
+        [SerializeField] public bool m_forceSingleThread = false;
+        [SerializeField] public bool m_detailedLog = false;
         bool m_isCompiling = false;
 #endif
-        [SerializeField] bool m_directVBUpdate = true;
-        [SerializeField] bool m_deferredUpdate = true;
+        [SerializeField] public bool m_directVBUpdate = true;
+        [SerializeField] public bool m_deferredUpdate = false;
 
         [HideInInspector][SerializeField] string[] m_variantSelections_keys;
         [HideInInspector][SerializeField] VariantSelection[] m_variantSelections_values;
@@ -86,6 +86,7 @@ namespace UTJ
         public bool deferredUpdate
         {
             get { return m_deferredUpdate; }
+	        set { m_deferredUpdate = value; }
         }
 #if UNITY_EDITOR
         public bool forceSingleThread
@@ -552,7 +553,7 @@ namespace UTJ
         }
 
 
-        void usdiKickAsyncUpdateTask()
+        public void usdiKickAsyncUpdateTask()
         {
             // kick async update tasks
 #if UNITY_EDITOR
@@ -655,12 +656,15 @@ namespace UTJ
             usdiRequestForceUpdate();
         }
 #endif
-
+	    public static bool GlobalLockout = false;
 
         void Update()
         {
+	        if (GlobalLockout)
+		        return;
+
 #if UNITY_EDITOR
-            if (EditorApplication.isCompiling && !m_isCompiling)
+			if (EditorApplication.isCompiling && !m_isCompiling)
             {
                 // on compile begin
                 m_isCompiling = true;
