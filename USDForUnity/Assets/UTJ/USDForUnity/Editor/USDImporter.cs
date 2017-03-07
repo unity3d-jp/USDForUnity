@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.Experimental;
 using UnityEngine;
 using UTJ;
 
@@ -13,7 +14,6 @@ namespace UTJ.USD
 		StripUSD,
 		RetainUSD
 	}
-
 
 	[ScriptedImporter(4, new[] {"usd", "usda", "usdc"})]
 	public class USDImporter : ScriptedImporter
@@ -30,9 +30,9 @@ namespace UTJ.USD
 
 		private SortedDictionary<int, UnityEngine.Object> _subObjects;
 
-		public override void OnImportAsset(ImportAssetEventArgs args)
+		public override void OnImportAsset()
 		{
-			var fileName = System.IO.Path.GetFileNameWithoutExtension(args.AssetSourcePath);
+			var fileName = System.IO.Path.GetFileNameWithoutExtension(assetSourcePath);
 
 			var go = new GameObject(fileName);
 			var usdStream = go.AddComponent<UsdStream>();
@@ -55,26 +55,26 @@ namespace UTJ.USD
 			usdStream.timeUnit = m_timeUnit;
 			usdStream.playTime = m_time;
 
-			usdStream.LoadImmediate(args.AssetSourcePath);
+			usdStream.LoadImmediate(assetSourcePath);
 
 			var material = new Material(Shader.Find("Standard")) {};
 			material.name = "Material_0";
-			args.AddSubAsset("Default Material", material);
+			AddSubAsset("Default Material", material);
 			_subObjects = new SortedDictionary<int, UnityEngine.Object>();
-			CollectSubAssets(go.transform, args, material);
+			CollectSubAssets(go.transform, material);
 
 			int i = 0;
 			foreach (var m in _subObjects)
 			{
 				if (String.IsNullOrEmpty(m.Value.name) || m.Value.name.IndexOf("<dyn>") == 0)
 					m.Value.name = fileName + "_" + m.Value.GetType().Name + "_" + (++i);
-				args.AddSubAsset(m.Value.name, m.Value);
+				AddSubAsset(m.Value.name, m.Value);
 			}
 
 			if (m_importMode == UsdImportMode.StripUSD)
 				usdStream.usdiDetachUsdComponents();
 
-			args.SetMainAsset(fileName, go);
+			SetMainAsset(fileName, go);
 		}
 
 		private void RegisterSubAsset(UnityEngine.Object subAsset)
@@ -85,7 +85,7 @@ namespace UTJ.USD
 			}
 		}
 
-		private void CollectSubAssets(Transform node, ImportAssetEventArgs args, Material mat)
+		private void CollectSubAssets(Transform node, Material mat)
 		{
 			var schemas = node.GetComponents<UsdXformComponent>();
 			foreach (var s in schemas)
@@ -110,7 +110,7 @@ namespace UTJ.USD
 			}
 
 			for (int i = 0; i < node.childCount; i++)
-				CollectSubAssets(node.GetChild(i), args, mat);
+				CollectSubAssets(node.GetChild(i), mat);
 		}
 	}
 }

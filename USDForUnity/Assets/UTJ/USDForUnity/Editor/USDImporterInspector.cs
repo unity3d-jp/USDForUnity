@@ -7,7 +7,7 @@ using UnityEngine;
 namespace UTJ.USD
 {
 	[CustomEditor(typeof(USDImporter))]
-	public class USDImporterInspector : ScriptedImporterInspector
+	public class USDImporterInspector : UnityEditor.Experimental.ScriptedImporterEditor
 	{
 		private bool m_ShowAdvOptions= false;
 
