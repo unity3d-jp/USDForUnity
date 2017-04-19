@@ -1,9 +1,10 @@
-#if UNITY_5_7_OR_NEWER || ENABLE_SCRIPTED_IMPORTERS
+#if UNITY_2017_1_OR_NEWER
 
 using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.Experimental;
+using UnityEditor.Experimental.AssetImporters;
 using UnityEngine;
 using UTJ;
 
@@ -30,9 +31,9 @@ namespace UTJ.USD
 
 		private SortedDictionary<int, UnityEngine.Object> _subObjects;
 
-		public override void OnImportAsset()
+		public override void OnImportAsset( AssetImportContext ctx )
 		{
-			var fileName = System.IO.Path.GetFileNameWithoutExtension(assetSourcePath);
+			var fileName = System.IO.Path.GetFileNameWithoutExtension( ctx.assetPath);
 
 			var go = new GameObject(fileName);
 			var usdStream = go.AddComponent<UsdStream>();
@@ -55,11 +56,11 @@ namespace UTJ.USD
 			usdStream.timeUnit = m_timeUnit;
 			usdStream.playTime = m_time;
 
-			usdStream.LoadImmediate(assetSourcePath);
+			usdStream.LoadImmediate(ctx.assetPath);
 
 			var material = new Material(Shader.Find("Standard")) {};
 			material.name = "Material_0";
-			AddSubAsset("Default Material", material);
+			ctx.AddSubAsset("Default Material", material);
 			_subObjects = new SortedDictionary<int, UnityEngine.Object>();
 			CollectSubAssets(go.transform, material);
 
@@ -68,13 +69,13 @@ namespace UTJ.USD
 			{
 				if (String.IsNullOrEmpty(m.Value.name) || m.Value.name.IndexOf("<dyn>") == 0)
 					m.Value.name = fileName + "_" + m.Value.GetType().Name + "_" + (++i);
-				AddSubAsset(m.Value.name, m.Value);
+				ctx.AddSubAsset(m.Value.name, m.Value);
 			}
 
 			if (m_importMode == UsdImportMode.StripUSD)
 				usdStream.usdiDetachUsdComponents();
 
-			SetMainAsset(fileName, go);
+			ctx.SetMainAsset(fileName, go);
 		}
 
 		private void RegisterSubAsset(UnityEngine.Object subAsset)

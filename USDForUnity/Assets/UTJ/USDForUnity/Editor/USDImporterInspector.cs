@@ -1,13 +1,14 @@
-#if UNITY_5_7_OR_NEWER || ENABLE_SCRIPTED_IMPORTERS
+#if UNITY_2017_1_OR_NEWER
 
 using System;
 using UnityEditor;
+using UnityEditor.Experimental.AssetImporters;
 using UnityEngine;
 
 namespace UTJ.USD
 {
 	[CustomEditor(typeof(USDImporter))]
-	public class USDImporterInspector : UnityEditor.Experimental.ScriptedImporterEditor
+	public class USDImporterInspector : ScriptedImporterEditor
 	{
 		private bool m_ShowAdvOptions= false;
 
