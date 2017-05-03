@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
-namespace UTJ
+namespace UTJ.USD
 {
 
     [AddComponentMenu("USD/Mesh Export Config")]

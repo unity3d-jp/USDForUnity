@@ -91,7 +91,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <PostBuildEvent>
       <Command>xcopy /Yq $(TargetPath) $(SolutionDir)bin\x86_64\
-xcopy /Yq $(TargetPath) $(SolutionDir)..\USDForUnity\Assets\UTJ\Plugins\x86_64\</Command>
+xcopy /Yq $(TargetPath) $(SolutionDir)..\USDForUnity\Assets\UTJ\USDForUnity\Plugins\x86_64\</Command>
     </PostBuildEvent>
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -109,7 +109,7 @@ xcopy /Yq $(TargetPath) $(SolutionDir)..\USDForUnity\Assets\UTJ\Plugins\x86_64\<
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Master|x64'">
     <PostBuildEvent>
       <Command>xcopy /Yq $(TargetPath) $(SolutionDir)bin\x86_64\
-xcopy /Yq $(TargetPath) $(SolutionDir)..\USDForUnity\Assets\UTJ\Plugins\x86_64\</Command>
+xcopy /Yq $(TargetPath) $(SolutionDir)..\USDForUnity\Assets\UTJ\USDForUnity\Plugins\x86_64\</Command>
     </PostBuildEvent>
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -156,7 +156,7 @@ xcopy /Yq $(TargetPath) $(SolutionDir)..\USDForUnity\Assets\UTJ\Plugins\x86_64\<
     </Link>
     <PostBuildEvent>
       <Command>xcopy /Yq $(TargetPath) $(SolutionDir)Bin\x86\
-xcopy /Yq $(TargetPath) $(SolutionDir)..\AlembicImporter\Assets\UTJ\Plugins\x86\</Command>
+xcopy /Yq $(TargetPath) $(SolutionDir)..\Assets\UTJ\USDForUnity\Plugins\x86\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -170,7 +170,7 @@ xcopy /Yq $(TargetPath) $(SolutionDir)..\AlembicImporter\Assets\UTJ\Plugins\x86\
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy /Yq $(TargetPath) $(SolutionDir)Bin\x86\
-xcopy /Yq $(TargetPath) $(SolutionDir)..\AlembicImporter\Assets\UTJ\Plugins\x86\</Command>
+xcopy /Yq $(TargetPath) $(SolutionDir)..\Assets\UTJ\USDForUnity\Plugins\x86\</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

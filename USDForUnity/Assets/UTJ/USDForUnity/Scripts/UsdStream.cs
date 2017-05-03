@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
-namespace UTJ
+namespace UTJ.USD
 {
     [ExecuteInEditMode]
     public class UsdStream : MonoBehaviour, ISerializationCallbackReceiver
@@ -658,7 +658,7 @@ namespace UTJ
                 return;
 
 #if UNITY_EDITOR
-			if (EditorApplication.isCompiling && !m_isCompiling)
+            if (EditorApplication.isCompiling && !m_isCompiling)
             {
                 // on compile begin
                 m_isCompiling = true;

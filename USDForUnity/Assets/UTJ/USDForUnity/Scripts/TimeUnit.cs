@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
-namespace UTJ
+namespace UTJ.USD
 {
     [Serializable]
     public class TimeUnit

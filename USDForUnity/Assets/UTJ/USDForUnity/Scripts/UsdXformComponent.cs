@@ -5,7 +5,7 @@ using UnityEditor;
 #endif
 
 
-namespace UTJ
+namespace UTJ.USD
 {
     [ExecuteInEditMode]
     public class UsdXformComponent : UsdIComponent

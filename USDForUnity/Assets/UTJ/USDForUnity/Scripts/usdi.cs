@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
-namespace UTJ
+namespace UTJ.USD
 {
     public static class usdi
     {
@@ -169,7 +169,7 @@ namespace UTJ
                     };
                 }
             }
-		};
+        };
 
         [Serializable]
         public struct ExportSettings

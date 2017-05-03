@@ -3,7 +3,7 @@ using UnityEditor;
 using System.Collections;
 
 
-namespace UTJ
+namespace UTJ.USD
 {
     [CustomPropertyDrawer(typeof(TimeUnit))]
     class TimeUnitDrawer : PropertyDrawer

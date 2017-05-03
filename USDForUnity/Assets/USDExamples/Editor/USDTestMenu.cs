@@ -4,7 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-using UTJ;
+using UTJ.USD;
 
 public class USDTestMenu
 {
@@ -44,7 +44,7 @@ public class USDTestMenu
 
     static UsdStream InstanciateUSD(string path, usdi.ImportSettings opt, Vector3 pos, Vector3 forward, double time)
     {
-        var usd = UTJ.UsdImportWindow.InstanciateUSD(path, (stream) => {
+        var usd = UsdImportWindow.InstanciateUSD(path, (stream) => {
             stream.importSettings = opt;
             stream.playTime = time;
         } );

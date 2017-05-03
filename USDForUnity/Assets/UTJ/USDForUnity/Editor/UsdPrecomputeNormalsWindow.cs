@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace UTJ
+namespace UTJ.USD
 {
     public class UsdPrecomputeNormalsWindow : EditorWindow
     {

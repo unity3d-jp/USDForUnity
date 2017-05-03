@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using UnityEngine;
 
 #if usdiEnableComponentUpdator
-namespace UTJ
+namespace UTJ.USD
 {
     abstract class usdiIStreamUpdater
     {

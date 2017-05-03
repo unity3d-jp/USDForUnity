@@ -2,7 +2,7 @@ using System;
 using UnityEditor;
 using UnityEngine;
 
-namespace UTJ
+namespace UTJ.USD
 {
     [CustomEditor(typeof(UsdCameraComponent))]
     public class UsdCameraEditor : UsdIComponentEditor

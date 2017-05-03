@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEditor;
 using System.Collections;
 
-namespace UTJ
+namespace UTJ.USD
 {
     [CustomPropertyDrawer(typeof(Bool))]
     class BoolDrawer : PropertyDrawer

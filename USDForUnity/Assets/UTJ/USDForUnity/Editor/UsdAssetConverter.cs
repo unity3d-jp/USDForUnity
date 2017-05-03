@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEditor;
 using UnityEditor.Animations;
 
-namespace UTJ
+namespace UTJ.USD
 {
     public class UsdAssetConverterWindow : EditorWindow
     {

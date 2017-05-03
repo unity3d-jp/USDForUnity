@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEngine;
 using UTJ.USD;
 
-namespace UTJ
+namespace UTJ.USD
 {
 	[CustomEditor(typeof(UsdStream))]
 	public class UsdStreamEditor : Editor

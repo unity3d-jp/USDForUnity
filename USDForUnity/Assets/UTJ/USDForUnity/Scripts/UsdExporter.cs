@@ -10,7 +10,7 @@ using UnityEditor;
 
 
 
-namespace UTJ
+namespace UTJ.USD
 {
     [ExecuteInEditMode]
     [AddComponentMenu("USD/Exporter")]

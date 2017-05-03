@@ -2,20 +2,23 @@
 using UnityEngine;
 using UnityEditor;
 
-
-public class usdiPackaging
+namespace UTJ.USD
 {
-    [MenuItem("Assets/Make USDForUnity.unitypackage")]
-    public static void MakePackage()
+    public class UsdPackaging
     {
-        string[] files = new string[]
+        [MenuItem("Assets/Make USDForUnity.unitypackage")]
+        public static void MakePackage()
         {
+            string[] files = new string[]
+            {
 "Assets/UTJ",
 "Assets/USDExamples",
 "Assets/StreamingAssets/USDForUnity",
 "Assets/StreamingAssets/USDExamples",
-        };
-        AssetDatabase.ExportPackage(files, "USDForUnity.unitypackage", ExportPackageOptions.Recurse);
+            };
+            AssetDatabase.ExportPackage(files, "USDForUnity.unitypackage", ExportPackageOptions.Recurse);
+        }
+
     }
 
 }

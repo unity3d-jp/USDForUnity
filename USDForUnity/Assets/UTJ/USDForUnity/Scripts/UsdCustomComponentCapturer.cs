@@ -7,7 +7,7 @@ using UnityEditor;
 #endif
 
 
-namespace UTJ
+namespace UTJ.USD
 {
     public abstract class UsdCustomComponentCapturer : MonoBehaviour
     {

@@ -3,7 +3,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-namespace UTJ
+namespace UTJ.USD
 {
     public class UsdImportWindow : EditorWindow
     {
