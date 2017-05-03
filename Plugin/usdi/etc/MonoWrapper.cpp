@@ -292,7 +292,7 @@ mProperty mObject::findProperty(const char *name) const
 {
     return getClass().findProperty(name);
 }
-mMethod mObject::findMethod(const char *name, int num_args, const char **typenames) const
+mMethod mObject::findMethod(const char *name, int num_args, const char**) const
 {
     return getClass().findMethod(name, num_args);
 }

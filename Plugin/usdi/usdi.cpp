@@ -14,7 +14,6 @@
     #pragma comment(lib, "Shlwapi.lib")
     #pragma comment(lib, "Ws2_32.lib")
     #pragma comment(lib, "half.lib")
-    #pragma comment(lib, "double-conversion.lib")
 
     #pragma comment(lib, "ar.lib")
     #pragma comment(lib, "arch.lib")
@@ -34,6 +33,7 @@
         #pragma comment(lib, "libittnotify.lib")
     #endif
 #endif
+PXR_NAMESPACE_USING_DIRECTIVE
 
 namespace usdi {
     extern int g_debug_level;

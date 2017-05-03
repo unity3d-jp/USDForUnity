@@ -432,22 +432,22 @@ int Context::eachTimeSample(const TimeSampleCallback& cb)
 
         auto& set = times.local();
         if (Xform *xf = usdiAsXform(s)) {
-            xf->eachSample([&set](const XformData& data, Time t) {
+            xf->eachSample([&set](const XformData&, Time t) {
                 set.insert(t);
             });
         }
         if (Camera *cam = usdiAsCamera(s)) {
-            cam->eachSample([&set](const CameraData& data, Time t) {
+            cam->eachSample([&set](const CameraData&, Time t) {
                 set.insert(t);
             });
         }
         if (Mesh *mesh = usdiAsMesh(s)) {
-            mesh->eachSample([&set](const MeshData& data, Time t) {
+            mesh->eachSample([&set](const MeshData&, Time t) {
                 set.insert(t);
             });
         }
         if (Points *points = usdiAsPoints(s)) {
-            points->eachSample([&set](const PointsData& data, Time t) {
+            points->eachSample([&set](const PointsData&, Time t) {
                 set.insert(t);
             });
         }

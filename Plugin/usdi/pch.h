@@ -48,10 +48,11 @@
 
 #pragma warning(push)
 #pragma warning(disable:4100 4127 4244 4305)
+#include "pxr/usd/sdf/types.h"
 #include "pxr/usd/usd/modelAPI.h"
 #include "pxr/usd/usd/timeCode.h"
-#include "pxr/usd/usd/treeIterator.h"
 #include "pxr/usd/usd/variantSets.h"
+#include "pxr/usd/usd/stage.h"
 #include "pxr/usd/usdGeom/xform.h"
 #include "pxr/usd/usdGeom/xformCommonAPI.h"
 #include "pxr/usd/usdGeom/camera.h"
@@ -63,6 +64,7 @@
 #include "pxr/base/gf/matrix4f.h"
 #include "pxr/usd/ar/resolver.h"
 #include "pxr/usd/sdf/fileFormat.h"
+#include "half.h"
 #pragma warning(pop)
 
 #include "etc/Platform.h"

@@ -50,7 +50,7 @@ void TransformAssignM(MonoObject *trans, XformData *data_)
     }
 }
 
-void TransformNotfyChangeM(MonoObject *trans)
+void TransformNotfyChangeM(MonoObject *)
 {
     // nothing to do
 }

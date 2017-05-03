@@ -14,11 +14,6 @@ namespace usdi {
     Body(uint, AttributeType::UInt, SdfValueTypeNames->UInt, TAttribute<uint>)\
     Body(int64_t, AttributeType::Int64, SdfValueTypeNames->Int64, TAttribute<int64_t>)\
     Body(uint64_t, AttributeType::UInt64, SdfValueTypeNames->UInt64, TAttribute<uint64_t>)\
-    Body(half, AttributeType::Half, SdfValueTypeNames->Half, TAttribute<half>)\
-    Body(GfVec2h, AttributeType::Half2, SdfValueTypeNames->Half2, TAttribute<GfVec2h>)\
-    Body(GfVec3h, AttributeType::Half3, SdfValueTypeNames->Half3, TAttribute<GfVec3h>)\
-    Body(GfVec4h, AttributeType::Half4, SdfValueTypeNames->Half4, TAttribute<GfVec4h>)\
-    Body(GfQuath, AttributeType::QuatH, SdfValueTypeNames->Quath, TAttribute<GfQuath>)\
     Body(float, AttributeType::Float, SdfValueTypeNames->Float, TAttribute<float>)\
     Body(GfVec2f, AttributeType::Float2, SdfValueTypeNames->Float2, TAttribute<GfVec2f>)\
     Body(GfVec3f, AttributeType::Float3, SdfValueTypeNames->Float3, TAttribute<GfVec3f>)\
@@ -40,11 +35,6 @@ namespace usdi {
     Body(VtArray<uint>, AttributeType::UIntArray, SdfValueTypeNames->UIntArray, TAttribute<VtArray<uint>>)\
     Body(VtArray<int64_t>, AttributeType::Int64Array, SdfValueTypeNames->Int64Array, TAttribute<VtArray<int64_t>>)\
     Body(VtArray<uint64_t>, AttributeType::UInt64Array, SdfValueTypeNames->UInt64Array, TAttribute<VtArray<uint64_t>>)\
-    Body(VtArray<half>, AttributeType::HalfArray, SdfValueTypeNames->HalfArray, TAttribute<VtArray<half>>)\
-    Body(VtArray<GfVec2h>, AttributeType::Half2Array, SdfValueTypeNames->Half2Array, TAttribute<VtArray<GfVec2h>>)\
-    Body(VtArray<GfVec3h>, AttributeType::Half3Array, SdfValueTypeNames->Half3Array, TAttribute<VtArray<GfVec3h>>)\
-    Body(VtArray<GfVec4h>, AttributeType::Half4Array, SdfValueTypeNames->Half4Array, TAttribute<VtArray<GfVec4h>>)\
-    Body(VtArray<GfQuath>, AttributeType::QuatHArray, SdfValueTypeNames->QuathArray, TAttribute<VtArray<GfQuath>>)\
     Body(VtArray<float>, AttributeType::FloatArray, SdfValueTypeNames->FloatArray, TAttribute<VtArray<float>>)\
     Body(VtArray<GfVec2f>, AttributeType::Float2Array, SdfValueTypeNames->Float2Array, TAttribute<VtArray<GfVec2f>>)\
     Body(VtArray<GfVec3f>, AttributeType::Float3Array, SdfValueTypeNames->Float3Array, TAttribute<VtArray<GfVec3f>>)\
@@ -60,6 +50,18 @@ namespace usdi {
     Body(VtArray<std::string>, AttributeType::StringArray, SdfValueTypeNames->StringArray, TStringAttribute<VtArray<std::string>>)\
     Body(VtArray<TfToken>, AttributeType::TokenArray, SdfValueTypeNames->TokenArray, TStringAttribute<VtArray<TfToken>>)\
     Body(VtArray<SdfAssetPath>, AttributeType::AssetArray, SdfValueTypeNames->AssetArray, TStringAttribute<VtArray<SdfAssetPath>>)
+
+    //Body(half, AttributeType::Half, SdfValueTypeNames->Half, TAttribute<half>)\
+    //Body(GfVec2h, AttributeType::Half2, SdfValueTypeNames->Half2, TAttribute<GfVec2h>)\
+    //Body(GfVec3h, AttributeType::Half3, SdfValueTypeNames->Half3, TAttribute<GfVec3h>)\
+    //Body(GfVec4h, AttributeType::Half4, SdfValueTypeNames->Half4, TAttribute<GfVec4h>)\
+    //Body(GfQuath, AttributeType::QuatH, SdfValueTypeNames->Quath, TAttribute<GfQuath>)\
+
+    //Body(VtArray<half>, AttributeType::HalfArray, SdfValueTypeNames->HalfArray, TAttribute<VtArray<half>>)\
+    //Body(VtArray<GfVec2h>, AttributeType::Half2Array, SdfValueTypeNames->Half2Array, TAttribute<VtArray<GfVec2h>>)\
+    //Body(VtArray<GfVec3h>, AttributeType::Half3Array, SdfValueTypeNames->Half3Array, TAttribute<VtArray<GfVec3h>>)\
+    //Body(VtArray<GfVec4h>, AttributeType::Half4Array, SdfValueTypeNames->Half4Array, TAttribute<VtArray<GfVec4h>>)\
+    //Body(VtArray<GfQuath>, AttributeType::QuatHArray, SdfValueTypeNames->QuathArray, TAttribute<VtArray<GfQuath>>)\
 
 template<class T> class TAttribute;
 template<class T> class TStringAttribute;
@@ -376,7 +378,7 @@ public:
         m_usdattr.Get(&m_sample, t);
     }
 
-    bool readSample(AttributeData& dst, Time t, bool copy) override
+    bool readSample(AttributeData& dst, Time t, bool /*copy*/) override
     {
         updateSample(t);
 
@@ -438,7 +440,7 @@ public:
         m_pointers.push_back(nullptr); // add null terminator for convenience
     }
 
-    bool readSample(AttributeData& dst, Time t, bool copy) override
+    bool readSample(AttributeData& dst, Time t, bool /*copy*/) override
     {
         updateSample(t);
 
@@ -637,17 +639,17 @@ static struct InitConverterFactory
         MakeConvertible(int64_t, Add(int));
         MakeConvertible(uint64_t, Add(uint));
 
-        MakeConvertible(GfVec2h, Add(GfVec2f) Add(GfVec2d) Add(GfVec3h) Add(GfVec3f) Add(GfVec3d) Add(GfVec4h) Add(GfVec4f) Add(GfVec4d));
-        MakeConvertible(GfVec2f, Add(GfVec2h) Add(GfVec2d) Add(GfVec3h) Add(GfVec3f) Add(GfVec3d) Add(GfVec4h) Add(GfVec4f) Add(GfVec4d));
-        MakeConvertible(GfVec2d, Add(GfVec2h) Add(GfVec2f) Add(GfVec3h) Add(GfVec3f) Add(GfVec3d) Add(GfVec4h) Add(GfVec4f) Add(GfVec4d));
+        //MakeConvertible(GfVec2h, Add(GfVec2f) Add(GfVec2d) Add(GfVec3h) Add(GfVec3f) Add(GfVec3d) Add(GfVec4h) Add(GfVec4f) Add(GfVec4d));
+        //MakeConvertible(GfVec2f, Add(GfVec2h) Add(GfVec2d) Add(GfVec3h) Add(GfVec3f) Add(GfVec3d) Add(GfVec4h) Add(GfVec4f) Add(GfVec4d));
+        //MakeConvertible(GfVec2d, Add(GfVec2h) Add(GfVec2f) Add(GfVec3h) Add(GfVec3f) Add(GfVec3d) Add(GfVec4h) Add(GfVec4f) Add(GfVec4d));
 
-        MakeConvertible(GfVec3h, Add(GfVec2h) Add(GfVec2f) Add(GfVec2d) Add(GfVec3f) Add(GfVec3d) Add(GfVec4h) Add(GfVec4f) Add(GfVec4d));
-        MakeConvertible(GfVec3f, Add(GfVec2h) Add(GfVec2f) Add(GfVec2d) Add(GfVec3h) Add(GfVec3d) Add(GfVec4h) Add(GfVec4f) Add(GfVec4d));
-        MakeConvertible(GfVec3d, Add(GfVec2h) Add(GfVec2f) Add(GfVec2d) Add(GfVec3h) Add(GfVec3f) Add(GfVec4h) Add(GfVec4f) Add(GfVec4d));
+        //MakeConvertible(GfVec3h, Add(GfVec2h) Add(GfVec2f) Add(GfVec2d) Add(GfVec3f) Add(GfVec3d) Add(GfVec4h) Add(GfVec4f) Add(GfVec4d));
+        //MakeConvertible(GfVec3f, Add(GfVec2h) Add(GfVec2f) Add(GfVec2d) Add(GfVec3h) Add(GfVec3d) Add(GfVec4h) Add(GfVec4f) Add(GfVec4d));
+        //MakeConvertible(GfVec3d, Add(GfVec2h) Add(GfVec2f) Add(GfVec2d) Add(GfVec3h) Add(GfVec3f) Add(GfVec4h) Add(GfVec4f) Add(GfVec4d));
 
-        MakeConvertible(GfVec4h, Add(GfVec2h) Add(GfVec2f) Add(GfVec2d) Add(GfVec3h) Add(GfVec3f) Add(GfVec3d) Add(GfVec4f) Add(GfVec4d));
-        MakeConvertible(GfVec4f, Add(GfVec2h) Add(GfVec2f) Add(GfVec2d) Add(GfVec3h) Add(GfVec3f) Add(GfVec3d) Add(GfVec4h) Add(GfVec4d));
-        MakeConvertible(GfVec4d, Add(GfVec2h) Add(GfVec2f) Add(GfVec2d) Add(GfVec3h) Add(GfVec3f) Add(GfVec3d) Add(GfVec4h) Add(GfVec4f));
+        //MakeConvertible(GfVec4h, Add(GfVec2h) Add(GfVec2f) Add(GfVec2d) Add(GfVec3h) Add(GfVec3f) Add(GfVec3d) Add(GfVec4f) Add(GfVec4d));
+        //MakeConvertible(GfVec4f, Add(GfVec2h) Add(GfVec2f) Add(GfVec2d) Add(GfVec3h) Add(GfVec3f) Add(GfVec3d) Add(GfVec4h) Add(GfVec4d));
+        //MakeConvertible(GfVec4d, Add(GfVec2h) Add(GfVec2f) Add(GfVec2d) Add(GfVec3h) Add(GfVec3f) Add(GfVec3d) Add(GfVec4h) Add(GfVec4f));
 
         MakeConvertible(GfMatrix2d, Add(GfMatrix2f));
         MakeConvertible(GfMatrix3d, Add(GfMatrix3f));
@@ -672,11 +674,11 @@ Attribute* WrapExistingAttribute(Schema *parent, UsdAttribute usd)
 #define Reinterpret(Sdf, T)\
         if (tname == SdfValueTypeNames->Sdf) { return new TAttribute<T>(parent, usd); }\
         if (tname == SdfValueTypeNames->Sdf##Array) { return new TAttribute<VtArray<T>>(parent, usd); }
-    Reinterpret(Vector3h, GfVec3h)
-    Reinterpret(Normal3h, GfVec3h)
-    Reinterpret(Point3h,  GfVec3h)
-    Reinterpret(Color3h,  GfVec3h)
-    Reinterpret(Color4h,  GfVec4h)
+    //Reinterpret(Vector3h, GfVec3h)
+    //Reinterpret(Normal3h, GfVec3h)
+    //Reinterpret(Point3h,  GfVec3h)
+    //Reinterpret(Color3h,  GfVec3h)
+    //Reinterpret(Color4h,  GfVec4h)
     Reinterpret(Vector3f, GfVec3f)
     Reinterpret(Normal3f, GfVec3f)
     Reinterpret(Point3f,  GfVec3f)
