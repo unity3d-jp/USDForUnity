@@ -7,10 +7,34 @@
     <ClInclude Include="MeshUtils\pch.h">
       <Filter>MeshUtils</Filter>
     </ClInclude>
-    <ClInclude Include="MeshUtils\muVector.h">
+    <ClInclude Include="MeshUtils\mikktspace.h">
       <Filter>MeshUtils</Filter>
     </ClInclude>
-    <ClInclude Include="MeshUtils\mikktspace.h">
+    <ClInclude Include="MeshUtils\Vertex.h">
+      <Filter>MeshUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshUtils\Allocator.h">
+      <Filter>MeshUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshUtils\HandleBasedVector.h">
+      <Filter>MeshUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshUtils\IntrusiveArray.h">
+      <Filter>MeshUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshUtils\Math.h">
+      <Filter>MeshUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshUtils\MeshRefiner.h">
+      <Filter>MeshUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshUtils\RawVector.h">
+      <Filter>MeshUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshUtils\SIMD.h">
+      <Filter>MeshUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshUtils\tls.h">
       <Filter>MeshUtils</Filter>
     </ClInclude>
   </ItemGroup>
@@ -27,6 +51,21 @@
       <Filter>MeshUtils</Filter>
     </ClCompile>
     <ClCompile Include="MeshUtils\mikktspace.c">
+      <Filter>MeshUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshUtils\Allocator.cpp">
+      <Filter>MeshUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshUtils\Math.cpp">
+      <Filter>MeshUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshUtils\MeshRefiner.cpp">
+      <Filter>MeshUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshUtils\SIMD.cpp">
+      <Filter>MeshUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshUtils\Vertex.cpp">
       <Filter>MeshUtils</Filter>
     </ClCompile>
   </ItemGroup>

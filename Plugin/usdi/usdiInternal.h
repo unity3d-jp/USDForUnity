@@ -33,7 +33,7 @@
 #endif
 
 
-#include "MeshUtils/muVector.h"
+#include "MeshUtils/MeshUtils.h"
 namespace usdi {
     PXR_NAMESPACE_USING_DIRECTIVE
 
@@ -91,5 +91,11 @@ inline bool operator==(const ImportSettings& a, const ImportSettings& b) { retur
 inline bool operator!=(const ImportSettings& a, const ImportSettings& b) { return !(a == b); }
 inline bool operator==(const ExportSettings& a, const ExportSettings& b) { return memcmp(&a, &b, sizeof(a)) == 0; }
 inline bool operator!=(const ExportSettings& a, const ExportSettings& b) { return !(a == b); }
+
+inline IArray<int> ToIArray(const VtArray<int>& v) { return{ (int*)v.cdata(), v.size() }; }
+inline IArray<float> ToIArray(const VtArray<float>& v) { return{ (float*)v.cdata(), v.size() }; }
+inline IArray<float2> ToIArray(const VtArray<GfVec2f>& v) { return{ (float2*)v.cdata(), v.size() }; }
+inline IArray<float3> ToIArray(const VtArray<GfVec3f>& v) { return{ (float3*)v.cdata(), v.size() }; }
+inline IArray<float4> ToIArray(const VtArray<GfVec4f>& v) { return{ (float4*)v.cdata(), v.size() }; }
 
 } // namespace usdi

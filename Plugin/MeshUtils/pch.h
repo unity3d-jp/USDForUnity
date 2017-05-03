@@ -1,6 +1,9 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <vector>
 #include <algorithm>
-
-#include "half.h"
+#include <numeric>
+#ifdef muEnableHalf
+    #include "half.h"
+#endif // muEnableHalf

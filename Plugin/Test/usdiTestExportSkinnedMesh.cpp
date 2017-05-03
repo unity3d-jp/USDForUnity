@@ -1,3 +1,5 @@
+#define NOMINMAX
+
 #include <cstdio>
 #include <cmath>
 #include <vector>

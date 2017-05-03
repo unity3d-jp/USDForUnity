@@ -11,15 +11,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="usdi\etc\Allocator.h" />
-    <ClInclude Include="usdi\etc\HandleBasedVector.h" />
     <ClInclude Include="usdi\etc\Hook.h" />
     <ClInclude Include="usdi\etc\Mono.h" />
     <ClInclude Include="usdi\etc\MonoWrapper.h" />
     <ClInclude Include="usdi\etc\MonoWrapperImpl.h" />
     <ClInclude Include="usdi\etc\Platform.h" />
-    <ClInclude Include="usdi\etc\RawVector.h" />
-    <ClInclude Include="usdi\etc\tls.h" />
     <ClInclude Include="usdi\ext\usdiExt.h" />
     <ClInclude Include="usdi\ext\usdiProgressReporter.h" />
     <ClInclude Include="usdi\ext\usdiTask.h" />
@@ -39,7 +35,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="usdi\DllMain.cpp" />
-    <ClCompile Include="usdi\etc\Allocator.cpp" />
     <ClCompile Include="usdi\etc\Hook.cpp" />
     <ClCompile Include="usdi\etc\Mono.cpp" />
     <ClCompile Include="usdi\etc\MonoWrapper.cpp" />
@@ -126,7 +121,7 @@ xcopy /Yq $(TargetPath) $(SolutionDir)..\USDForUnity\Assets\UTJ\USDForUnity\Plug
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <PreprocessorDefinitions>usdiEnableUnityExtension;usdiEnableMonoBinding;usdiEnableInternalUnityMethods;usdiEnableGraphicsInterface;usdiDebug;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>usdiEnableUnityExtension;usdiEnableMonoBinding;usdiEnableInternalUnityMethods;usdiEnableGraphicsInterface;muEnableHalf;usdiDebug;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(VTUNE_AMPLIFIER_XE_2016_DIR)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WarningLevel>Level4</WarningLevel>
@@ -146,7 +141,7 @@ xcopy /Yq $(TargetPath) $(SolutionDir)..\USDForUnity\Assets\UTJ\USDForUnity\Plug
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/Zo %(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>usdiEnableUnityExtension;usdiEnableMonoBinding;usdiEnableInternalUnityMethods;usdiEnableGraphicsInterface;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>usdiEnableUnityExtension;usdiEnableMonoBinding;usdiEnableInternalUnityMethods;usdiEnableGraphicsInterface;muEnableHalf;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Optimization>Full</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>

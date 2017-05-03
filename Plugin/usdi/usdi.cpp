@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "etc/Allocator.h"
 #include "usdiInternal.h"
 #include "usdiAttribute.h"
 #include "usdiSchema.h"
@@ -62,10 +61,8 @@ usdiAPI void usdiFinalize()
 {
 }
 
-usdiAPI void* usdiAlignedMalloc(size_t size, size_t al) { return usdi::AlignedMalloc(size, al); }
-usdiAPI void  usdiAlignedFree(void* addr)               { usdi::AlignedFree(addr); }
-usdiAPI void* usdiFixedMalloc(size_t size)              { return usdi::FixedMalloc(size); }
-usdiAPI void  usdiFixedFree(size_t size, void* addr)    { usdi::FixedFree(size, addr); }
+usdiAPI void* usdiAlignedMalloc(size_t size, size_t al) { return AlignedMalloc(size, al); }
+usdiAPI void  usdiAlignedFree(void* addr)               { AlignedFree(addr); }
 
 // Context interface
 

@@ -8,7 +8,6 @@
 #include "usdiContext.h"
 #include "usdiUtils.h"
 #include "usdiRT/usdiRT.h"
-#include "etc/tls.h"
 
 void mDetachAllThreads();
 

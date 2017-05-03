@@ -1,7 +1,6 @@
 #pragma once
 
 #include "MeshUtils/MeshUtils.h"
-#include "etc/RawVector.h"
 
 namespace usdi {
 

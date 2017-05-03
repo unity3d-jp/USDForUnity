@@ -4,8 +4,6 @@
 #ifdef usdiEnableGraphicsInterface
     #include "GraphicsInterface/GraphicsInterface.h"
 #endif // usdiEnableGraphicsInterface
-#include "etc/HandleBasedVector.h"
-#include "etc/Allocator.h"
 #include "usdiExt.h"
 
 namespace usdi {
@@ -35,8 +33,6 @@ public:
     void copy();
     void unmap();
     void clearDirty();
-
-    usdiDefineCachedOperatorNew(VertexUpdateCommand, 256);
 
 private:
     typedef tbb::spin_mutex::scoped_lock lock_t;
@@ -93,8 +89,6 @@ public:
     void run(bool async = true);
     bool isRunning();
     void wait();
-
-    usdiDefineCachedOperatorNew(Task, 256);
 
 private:
     std::string m_dbg_name;

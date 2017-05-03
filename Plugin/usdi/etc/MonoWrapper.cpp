@@ -2,7 +2,7 @@
 #ifdef usdiEnableMonoBinding
 #include "Mono.h"
 #include "MonoWrapper.h"
-#include "tls.h"
+#include "MeshUtils/tls.h"
 
 
 mImage mDomain::findImage(const char *name)

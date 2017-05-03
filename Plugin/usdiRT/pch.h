@@ -3,6 +3,7 @@
 #define rtImpl
 
 #ifdef _WIN32
+    #define NOMINMAX
     #include <windows.h>
     #pragma warning(disable:4996)
 #else 

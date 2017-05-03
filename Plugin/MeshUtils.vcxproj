@@ -19,12 +19,23 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="MeshUtils\Allocator.h" />
+    <ClInclude Include="MeshUtils\HandleBasedVector.h" />
+    <ClInclude Include="MeshUtils\IntrusiveArray.h" />
+    <ClInclude Include="MeshUtils\Math.h" />
+    <ClInclude Include="MeshUtils\MeshRefiner.h" />
     <ClInclude Include="MeshUtils\mikktspace.h" />
-    <ClInclude Include="MeshUtils\muVector.h" />
     <ClInclude Include="MeshUtils\pch.h" />
     <ClInclude Include="MeshUtils\MeshUtils.h" />
+    <ClInclude Include="MeshUtils\RawVector.h" />
+    <ClInclude Include="MeshUtils\SIMD.h" />
+    <ClInclude Include="MeshUtils\tls.h" />
+    <ClInclude Include="MeshUtils\Vertex.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="MeshUtils\Allocator.cpp" />
+    <ClCompile Include="MeshUtils\Math.cpp" />
+    <ClCompile Include="MeshUtils\MeshRefiner.cpp" />
     <ClCompile Include="MeshUtils\mikktspace.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">NotUsing</PrecompiledHeader>
@@ -38,6 +49,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Master|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="MeshUtils\MeshUtils.cpp" />
+    <ClCompile Include="MeshUtils\SIMD.cpp" />
+    <ClCompile Include="MeshUtils\Vertex.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="MeshUtils\MeshUtilsCore.ispc">
@@ -157,7 +170,7 @@ copy $(IntDir)%(Filename).h %(RelativeDir)</Command>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>muEnableISPC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>muEnableISPC;muEnableHalf;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -192,7 +205,7 @@ copy $(IntDir)%(Filename).h %(RelativeDir)</Command>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>muEnableISPC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>muEnableISPC;muEnableHalf;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -266,7 +279,7 @@ copy $(IntDir)%(Filename).h %(RelativeDir)</Command>
     <ClCompile>
       <Optimization>Full</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>muEnableISPC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>muEnableISPC;muEnableHalf;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -308,7 +321,7 @@ copy $(IntDir)%(Filename).h %(RelativeDir)</Command>
     <ClCompile>
       <Optimization>Full</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>muEnableISPC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>muEnableISPC;muEnableHalf;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader>Use</PrecompiledHeader>

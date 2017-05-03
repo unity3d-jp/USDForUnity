@@ -1,8 +1,8 @@
 #pragma once
 
-#include "etc/Allocator.h"
-
-namespace usdi {
+#include <algorithm>
+#include <initializer_list>
+#include "Allocator.h"
 
 template<class T, size_t Alignment = 0x20>
 class RawVector
@@ -21,7 +21,26 @@ public:
     {
         operator=(v);
     }
+    RawVector(RawVector&& v)
+    {
+        v.swap(*this);
+    }
+    RawVector(std::initializer_list<T> v)
+    {
+        operator=(v);
+    }
+    explicit RawVector(size_t initial_size) { resize(initial_size); }
     RawVector& operator=(const RawVector& v)
+    {
+        assign(v.begin(), v.end());
+        return *this;
+    }
+    RawVector& operator=(RawVector&& v)
+    {
+        v.swap(*this);
+        return *this;
+    }
+    RawVector& operator=(std::initializer_list<T> v)
     {
         assign(v.begin(), v.end());
         return *this;
@@ -30,6 +49,7 @@ public:
     ~RawVector()
     {
         clear();
+        shrink_to_fit();
     }
 
     bool empty() const { return m_size == 0; }
@@ -73,17 +93,45 @@ public:
         }
     }
 
+    void shrink_to_fit()
+    {
+        if (m_size == 0) {
+            deallocate(m_data, m_size);
+            m_size = m_capacity = 0;
+        }
+        else if (m_size == m_capacity) {
+            // nothing to do
+            return;
+        }
+        else {
+            size_t newsize = sizeof(T) * m_size;
+            size_t oldsize = sizeof(T) * m_capacity;
+            T *newdata = (T*)allocate(newsize);
+            memcpy(newdata, m_data, newsize);
+            deallocate(m_data, oldsize);
+            m_data = newdata;
+            m_capacity = m_size;
+        }
+    }
+
     void resize(size_t s)
     {
         reserve(s);
         m_size = s;
     }
 
+    void resize(size_t s, const T& v)
+    {
+        size_t pos = size();
+        resize(s);
+        // std::fill() can suppress compiler's optimization...
+        for (size_t i = pos; i < s; ++i) {
+            m_data[i] = v;
+        }
+    }
+
     void clear()
     {
-        size_t oldsize = sizeof(T) * m_size;
-        deallocate(m_data, oldsize);
-        m_data = nullptr;
         m_size = m_capacity = 0;
     }
 
@@ -100,13 +148,27 @@ public:
         resize(std::distance(first, last));
         std::copy(first, last, begin());
     }
+    void assign(const_pointer first, const_pointer last)
+    {
+        resize(std::distance(first, last));
+        // sadly, memcpy() can way faster than std::copy()
+        memcpy(m_data, first, sizeof(value_type) * m_size);
+    }
 
     template<class ForwardIter>
     void insert(iterator pos, ForwardIter first, ForwardIter last)
     {
-        size_t s = std::distance(begin(), pos);
-        resize(s + std::distance(first, last));
-        std::copy(first, last, begin() + s);
+        size_t d = std::distance(begin(), pos);
+        size_t s = std::distance(first, last);
+        resize(d + s);
+        std::copy(first, last, begin() + pos);
+    }
+    void insert(iterator pos, const_pointer first, const_pointer last)
+    {
+        size_t d = std::distance(begin(), pos);
+        size_t s = std::distance(first, last);
+        resize(d + s);
+        memcpy(m_data + d, first, sizeof(value_type) * s);
     }
 
     void insert(iterator pos, const_reference v)
@@ -147,10 +209,22 @@ public:
         return !(*this == other);
     }
 
+    void zeroclear()
+    {
+        memset(m_data, 0, sizeof(T)*m_size);
+    }
+
+    void copy_to(pointer dst)
+    {
+        memcpy(dst, m_data, sizeof(value_type) * m_size);
+    }
+    void copy_to(pointer dst, size_t num_elements)
+    {
+        memcpy(dst, m_data, sizeof(value_type) * num_elements);
+    }
+
 private:
     T *m_data = nullptr;
     size_t m_size = 0;
     size_t m_capacity = 0;
 };
-
-} // namespace usdi

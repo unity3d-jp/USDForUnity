@@ -286,18 +286,16 @@ void Mesh::updateSample(Time t_)
     // normals
     if (gen_normals) {
         sample.normals.resize(sample.points.size());
-        GenerateNormals((float3*)sample.normals.data(), (const float3*)sample.points.cdata(),
-            sample.counts.cdata(), sample.offsets.cdata(), sample.indices.cdata(),
-            sample.points.size(), sample.counts.size());
+        GenerateNormals(ToIArray(sample.normals),
+            ToIArray(sample.points), ToIArray(sample.counts), ToIArray(sample.offsets), ToIArray(sample.indices));
     }
 
     // tangents
     if (gen_tangents) {
         sample.tangents.resize(sample.points.size());
-        GenerateTangents((float4*)sample.tangents.data(),
-            (const float3*)sample.points.cdata(), (const float3*)sample.normals.cdata(), (const float2*)sample.uvs.cdata(),
-            sample.counts.cdata(), sample.offsets.cdata(), sample.indices.cdata(),
-            sample.points.size(), sample.counts.size());
+        GenerateTangents(ToIArray(sample.tangents),
+            ToIArray(sample.points), ToIArray(sample.normals), ToIArray(sample.uvs),
+            ToIArray(sample.counts), ToIArray(sample.offsets), ToIArray(sample.indices));
     }
 
     // bone & weights
@@ -386,7 +384,7 @@ void Mesh::updateSample(Time t_)
     }
 
     // bounds
-    ComputeBounds((const float3*)sample.points.cdata(), sample.points.size(), sample.bounds_min, sample.bounds_max);
+    MinMax((const float3*)sample.points.cdata(), sample.points.size(), sample.bounds_min, sample.bounds_max);
     sample.center = (sample.bounds_min + sample.bounds_max) * 0.5f;
     sample.extents = (sample.bounds_max - sample.bounds_min) * 0.5f;
 
@@ -432,7 +430,7 @@ void Mesh::updateSample(Time t_)
             sms.indices.resize(isize);
             for (int i = 0; i < isize; ++i) { sms.indices[i] = i; }
 
-#define Sel(C) C ? sample.indices_flattened_triangulated : sample.indices_triangulated
+#define Sel(C) ToIArray(C ? sample.indices_flattened_triangulated : sample.indices_triangulated)
             CopyWithIndices(sms.points, sample.points, Sel(flattened.points), ibegin, iend);
             CopyWithIndices(sms.normals, sample.normals, Sel(flattened.normals), ibegin, iend);
             CopyWithIndices(sms.colors, sample.colors, Sel(flattened.colors), ibegin, iend);
@@ -447,7 +445,7 @@ void Mesh::updateSample(Time t_)
             }
 #undef Sel
 
-            ComputeBounds((float3*)sms.points.cdata(), sms.points.size(), sms.bounds_min, sms.bounds_max);
+            MinMax((float3*)sms.points.cdata(), sms.points.size(), sms.bounds_min, sms.bounds_max);
             sms.center = (sms.bounds_min + sms.bounds_max) * 0.5f;
             sms.extents = sms.bounds_max - sms.bounds_min;
         }
@@ -881,9 +879,8 @@ bool Mesh::precomputeNormals(bool gen_tangents, bool overwrite)
             attr_points.Get(&points, t);
             if (gen_normals) {
                 normals.resize(points.size());
-                GenerateNormals((float3*)normals.data(), (const float3*)points.cdata(),
-                    counts.cdata(), offsets.cdata(), indices.cdata(),
-                    points.size(), counts.size());
+                GenerateNormals(ToIArray(normals),
+                    ToIArray(points), ToIArray(counts), ToIArray(offsets), ToIArray(indices));
             }
             else {
                 attr_normals.Get(&normals, t);
@@ -893,10 +890,9 @@ bool Mesh::precomputeNormals(bool gen_tangents, bool overwrite)
             if (gen_tangents) {
                 attr_uv.Get(&uv, t);
                 tangents.resize(points.size());
-                GenerateTangents((float4*)tangents.data(),
-                    (const float3*)points.cdata(), (const float3*)normals.cdata(), (const float2*)uv.cdata(),
-                    counts.cdata(), offsets.cdata(), indices.cdata(),
-                    points.size(), counts.size());
+                GenerateTangents(ToIArray(tangents),
+                    ToIArray(points), ToIArray(normals), ToIArray(uv),
+                    ToIArray(counts), ToIArray(offsets), ToIArray(indices));
             }
         });
 

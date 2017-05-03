@@ -167,7 +167,7 @@ static void Test_Scale()
 }
 
 
-static void Test_ComputeBounds()
+static void Test_MinMax()
 {
     auto data = GenerateFloat3Array(NumTestData, 0.1f, 1.0f);
     float3 bounds1[2];
@@ -179,12 +179,12 @@ static void Test_ComputeBounds()
 
     for (int i = 0; i < NumTry; ++i) {
         auto start = now();
-        ComputeBounds_Generic(data.data(), data.size(), bounds1[0], bounds1[1]);
+        MinMax_Generic(data.data(), data.size(), bounds1[0], bounds1[1]);
         elapsed1 += now() - start;
 
 #ifdef muEnableISPC
         start = now();
-        ComputeBounds_ISPC(data.data(), data.size(), bounds2[0], bounds2[1]);
+        MinMax_ISPC(data.data(), data.size(), bounds2[0], bounds2[1]);
         elapsed2 += now() - start;
 #endif // muEnableISPC
 
@@ -192,9 +192,9 @@ static void Test_ComputeBounds()
         if (!result) { break; }
     }
 
-    printf("Test_ComputeBounds: %s\n", result ? "succeeded" : "failed");
-    printf("    ComputeBounds_Generic(): avg. %f ms\n", float(elapsed1 / NumTry) / 1000000.0f);
-    printf("    ComputeBounds_ISPC(): avg. %f ms\n", float(elapsed2 / NumTry) / 1000000.0f);
+    printf("Test_MinMax: %s\n", result ? "succeeded" : "failed");
+    printf("    MinMax_Generic(): avg. %f ms\n", float(elapsed1 / NumTry) / 1000000.0f);
+    printf("    MinMax_ISPC(): avg. %f ms\n", float(elapsed2 / NumTry) / 1000000.0f);
     printf("\n");
 }
 
@@ -229,45 +229,6 @@ static void Test_Normalize()
     printf("\n");
 }
 
-
-static void Test_GenerateNormals()
-{
-    std::vector<int> counts;
-    std::vector<int> offsets;
-    std::vector<int> indices;
-    std::vector<float3> points;
-    std::vector<float2> uv;
-    std::vector<float3> normals;
-    GenerateWaveMesh(counts, indices, points, uv, 1.0f, 0.5f, 1024, 0.0);
-    GenerateOffsets(offsets, counts);
-
-    ns elapsed1 = 0;
-    ns elapsed2 = 0;
-    bool result = false;
-
-    std::vector<float3> normals1; normals1.resize(points.size());
-    std::vector<float3> normals2; normals2.resize(points.size());
-
-    for (int i = 0; i < NumTry; ++i) {
-        auto start = now();
-        GenerateNormals_Generic(normals1.data(), points.data(), counts.data(), offsets.data(), indices.data(), points.size(), counts.size());
-        elapsed1 += now() - start;
-
-#ifdef muEnableISPC
-        start = now();
-        GenerateNormals_ISPC(normals2.data(), points.data(), counts.data(), offsets.data(), indices.data(), points.size(), counts.size());
-        elapsed2 += now() - start;
-#endif // muEnableISPC
-
-        result = near_equal(normals1, normals2);
-        if (!result) { break; }
-    }
-
-    printf("Test_GenerateNormals: %s\n", result ? "succeeded" : "failed");
-    printf("    CalculateNormals_Generic(): avg. %f ms\n", float(elapsed1 / NumTry) / 1000000.0f);
-    printf("    CalculateNormals_ISPC(): avg. %f ms\n", float(elapsed2 / NumTry) / 1000000.0f);
-    printf("\n");
-}
 
 void Test_Interleave()
 {
@@ -345,8 +306,7 @@ void MeshUtilsTest()
     Test_HalfConversion();
     Test_InvertX();
     Test_Scale();
-    Test_ComputeBounds();
+    Test_MinMax();
     Test_Normalize();
-    Test_GenerateNormals();
     Test_Interleave();
 }

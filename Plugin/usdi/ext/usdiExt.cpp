@@ -18,15 +18,6 @@
 
 
 extern "C" {
-    
-usdiAPI bool usdiIsMonoBindingAvailable()
-{
-#ifdef usdiEnableMonoBinding
-    return g_mono_dll != nullptr;
-#else
-    return false;
-#endif
-}
 
 usdiAPI bool usdiIsVtxCmdAvailable()
 {
