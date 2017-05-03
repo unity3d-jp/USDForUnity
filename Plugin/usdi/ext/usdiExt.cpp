@@ -13,7 +13,6 @@
 #include "etc/Mono.h"
 #include "usdiExt.h"
 #include "ext/usdiTask.h"
-#include "ext/usdiComponentUpdater.h"
 #include "ext/usdiProgressReporter.h"
 
 

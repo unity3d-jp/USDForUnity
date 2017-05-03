@@ -20,8 +20,6 @@
     <ClInclude Include="usdi\etc\Platform.h" />
     <ClInclude Include="usdi\etc\RawVector.h" />
     <ClInclude Include="usdi\etc\tls.h" />
-    <ClInclude Include="usdi\ext\UnityEngineBinding.h" />
-    <ClInclude Include="usdi\ext\usdiComponentUpdater.h" />
     <ClInclude Include="usdi\ext\usdiExt.h" />
     <ClInclude Include="usdi\ext\usdiProgressReporter.h" />
     <ClInclude Include="usdi\ext\usdiTask.h" />
@@ -46,8 +44,6 @@
     <ClCompile Include="usdi\etc\Mono.cpp" />
     <ClCompile Include="usdi\etc\MonoWrapper.cpp" />
     <ClCompile Include="usdi\etc\MonoWrapper_Cache.cpp" />
-    <ClCompile Include="usdi\ext\UnityEngineBinding.cpp" />
-    <ClCompile Include="usdi\ext\usdiComponentUpdater.cpp" />
     <ClCompile Include="usdi\ext\usdiExt.cpp" />
     <ClCompile Include="usdi\ext\usdiProgressReporter.cpp" />
     <ClCompile Include="usdi\ext\usdiTask.cpp" />

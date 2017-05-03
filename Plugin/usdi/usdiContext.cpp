@@ -14,10 +14,6 @@ void mDetachAllThreads();
 
 namespace usdi {
 
-#if usdiEnableMonoBinding && usdiEnableUnityExtension
-void InitializeInternalMethods();
-void ClearInternalMethodsCache();
-#endif
 
 namespace fs =
 #ifdef usdiEnableBoostFilesystem
@@ -34,11 +30,6 @@ static int g_ctx_count;
 Context::Context()
 {
     ++g_ctx_count;
-    if (g_ctx_count == 1) {
-#if usdiEnableMonoBinding && usdiEnableUnityExtension
-        usdi::InitializeInternalMethods();
-#endif
-    }
 
     initialize();
     usdiLogTrace("Context::Context()\n");
@@ -49,13 +40,6 @@ Context::~Context()
     initialize();
     usdiLogTrace("Context::~Context()\n");
     --g_ctx_count;
-
-#if usdiEnableMonoBinding && usdiEnableUnityExtension
-    if (g_ctx_count == 0) {
-        //mDetachAllThreads();
-        usdi::ClearInternalMethodsCache();
-    }
-#endif
 }
 
 bool Context::valid() const
@@ -123,6 +107,8 @@ void Context::applyImportConfig()
 
 void Context::addAssetSearchPath(const char *path)
 {
+    if (!path) { return; }
+
     auto *search_paths_ = GetEnv(UsdSearchPathName);
     std::string search_paths = search_paths_ ? search_paths_ : "";
 

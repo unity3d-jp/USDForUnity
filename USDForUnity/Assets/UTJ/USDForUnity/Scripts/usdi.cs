@@ -641,7 +641,6 @@ namespace UTJ.USD
 
         // ext
 
-        [DllImport("usdi")] public static extern Bool usdiIsMonoBindingAvailable();
         [DllImport("usdi")] public static extern Bool usdiIsVtxCmdAvailable();
 
         [DllImport("usdi")] public static extern IntPtr usdiVtxCmdCreate(string dbg_name);
@@ -667,13 +666,6 @@ namespace UTJ.USD
         [DllImport("usdi")] public static extern void usdiProgressReporterDestroy(IntPtr pr);
         [DllImport("usdi")] public static extern void usdiProgressReporterWrite(IntPtr pr, string message);
 
-
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        private static extern void usdiUniTransformAssign(UnityEngine.Transform trans, ref XformData data);
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        private static extern void usdiUniTransformNotfyChange(UnityEngine.Transform trans);
-        [MethodImpl(MethodImplOptions.InternalCall)]
-        private static extern void usdiUniMeshAssignBounds(UnityEngine.Mesh mesh, ref Vector3 center, ref Vector3 extents);
 
         private static void TransformAssignImpl(UnityEngine.Transform trans, ref XformData data)
         {
@@ -906,19 +898,9 @@ namespace UTJ.USD
         public static void InitializePluginPass2()
         {
             usdi.usdiInitialize();
-
-            if(usdi.usdiIsMonoBindingAvailable())
-            {
-                TransformAssign = usdiUniTransformAssign;
-                TransformNotfyChange = usdiUniTransformNotfyChange;
-                MeshAssignBounds = usdiUniMeshAssignBounds;
-            }
-            else
-            {
-                TransformAssign = TransformAssignImpl;
-                TransformNotfyChange = TransformNotfyChangeImpl;
-                MeshAssignBounds = MeshAssignBoundsImpl;
-            }
+            TransformAssign = TransformAssignImpl;
+            TransformNotfyChange = TransformNotfyChangeImpl;
+            MeshAssignBounds = MeshAssignBoundsImpl;
             pluginInitialized = true;
         }
 
