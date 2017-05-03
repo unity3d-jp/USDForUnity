@@ -22,19 +22,19 @@ namespace UTJ
 
 
         #region fields
-        [SerializeField] public DataPath m_path;
-        [SerializeField] public usdi.ImportSettings m_importSettings = new usdi.ImportSettings();
-        [SerializeField] public TimeUnit m_timeUnit = new TimeUnit();
-        [SerializeField] public double m_time;
+        [SerializeField] DataPath m_path;
+        [SerializeField] usdi.ImportSettings m_importSettings = new usdi.ImportSettings();
+        [SerializeField] TimeUnit m_timeUnit = new TimeUnit();
+        [SerializeField] double m_time;
 
         [Header("Debug")]
 #if UNITY_EDITOR
-        [SerializeField] public bool m_forceSingleThread = false;
-        [SerializeField] public bool m_detailedLog = false;
+        [SerializeField] bool m_forceSingleThread = false;
+        [SerializeField] bool m_detailedLog = false;
         bool m_isCompiling = false;
 #endif
-        [SerializeField] public bool m_directVBUpdate = true;
-        [SerializeField] public bool m_deferredUpdate = false;
+        [SerializeField] bool m_directVBUpdate = true;
+        [SerializeField] bool m_deferredUpdate = false;
 
         [HideInInspector][SerializeField] string[] m_variantSelections_keys;
         [HideInInspector][SerializeField] VariantSelection[] m_variantSelections_values;
@@ -86,7 +86,7 @@ namespace UTJ
         public bool deferredUpdate
         {
             get { return m_deferredUpdate; }
-	        set { m_deferredUpdate = value; }
+            set { m_deferredUpdate = value; }
         }
 #if UNITY_EDITOR
         public bool forceSingleThread
@@ -409,7 +409,7 @@ namespace UTJ
             {
                 usdi.usdiDestroyContext(m_ctx);
                 m_ctx = default(usdi.Context);
-                usdiLog("usdiStream: failed to load " + fullpath);
+                usdiLog("UsdStream: failed to load " + fullpath);
                 return false;
             }
 
@@ -427,7 +427,7 @@ namespace UTJ
             usdiAsyncUpdate(m_time);
             usdiUpdate(m_time);
 
-            usdiLog("usdiStream: loaded " + fullpath);
+            usdiLog("UsdStream: loaded " + fullpath);
             return true;
         }
 
@@ -468,7 +468,7 @@ namespace UTJ
             usdi.usdiDestroyContext(m_ctx);
             m_ctx = default(usdi.Context);
 
-            usdiLog("usdiStream: unloaded " + m_path.GetFullPath());
+            usdiLog("UsdStream: unloaded " + m_path.GetFullPath());
         }
 
         public bool usdiSave()
@@ -505,12 +505,6 @@ namespace UTJ
                 }
             }
             deleter(this);
-        }
-
-        public void usdiMakePrefab()
-        {
-            // todo
-            Debug.Log("not implemented yet");
         }
 
         // possibly called from non-main thread
@@ -553,7 +547,7 @@ namespace UTJ
         }
 
 
-        public void usdiKickAsyncUpdateTask()
+        void usdiKickAsyncUpdateTask()
         {
             // kick async update tasks
 #if UNITY_EDITOR
@@ -574,7 +568,7 @@ namespace UTJ
                                 usdiAsyncUpdate(m_time);
                             }
                             finally { }
-                        }, "usdiStream: " + gameObject.name);
+                        }, "UsdStream: " + gameObject.name);
                 }
                 m_asyncUpdate.Run();
             }
@@ -656,12 +650,12 @@ namespace UTJ
             usdiRequestForceUpdate();
         }
 #endif
-	    public static bool GlobalLockout = false;
+        public static bool GlobalLockout = false;
 
         void Update()
         {
-	        if (GlobalLockout)
-		        return;
+            if (GlobalLockout)
+                return;
 
 #if UNITY_EDITOR
 			if (EditorApplication.isCompiling && !m_isCompiling)

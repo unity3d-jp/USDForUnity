@@ -23,6 +23,7 @@ namespace UTJ
         bool m_setupRequierd = true;
         Vector3[] m_points;
         Vector3[] m_normals;
+        Color[] m_colors;
         Vector2[] m_uvs;
         Vector4[] m_tangents;
         BoneWeight[] m_weights;
@@ -39,6 +40,8 @@ namespace UTJ
 
 
         #region properties
+        public Transform transform { get { return m_trans; } }
+        public Renderer renderer { get { return m_renderer; } }
         public Mesh mesh { get { return m_umesh; } }
         public Matrix4x4[] bindposes { get { return m_bindposes; } }
         public Transform[] bones { get { return m_bones; } }
@@ -140,7 +143,7 @@ namespace UTJ
             }
             else
             {
-	            return new Mesh() {name = "<dyn>"};
+                return new Mesh() {name = "<dyn>"};
             }
         }
 
@@ -206,7 +209,7 @@ namespace UTJ
                 else
                 {
                     m_umesh = usdiShareOrCreateMesh(parent);
-					renderer.sharedMesh = m_umesh;
+                    renderer.sharedMesh = m_umesh;
                 }
                 m_umesh.MarkDynamic();
             }
@@ -222,7 +225,7 @@ namespace UTJ
                 else
                 {
                     m_umesh = usdiShareOrCreateMesh(parent);
-					meshFilter.sharedMesh = m_umesh;
+                    meshFilter.sharedMesh = m_umesh;
                 }
                 m_umesh.MarkDynamic();
 
@@ -232,9 +235,21 @@ namespace UTJ
 #if UNITY_EDITOR
             if (assignDefaultMaterial)
             {
-                Material material = UnityEngine.Object.Instantiate(GetDefaultMaterial());
-                material.name = "Material_0";
-                m_renderer.sharedMaterial = material;
+                Material[] materials = null;
+                if (m_nth != 0)
+                {
+                    var s = parent.submeshes[0];
+                    if (s.renderer != null)
+                    {
+                        materials = s.renderer.sharedMaterials;
+                    }
+                }
+                if(materials == null)
+                {
+                    materials = new Material[] { UnityEngine.Object.Instantiate(GetDefaultMaterial()) };
+                    materials[0].name = "Material_0";
+                }
+                m_renderer.sharedMaterials = materials;
             }
 #endif
         }
@@ -262,6 +277,11 @@ namespace UTJ
             {
                 m_normals = new Vector3[meshData.num_points];
                 meshData.normals = usdi.GetArrayPtr(m_normals);
+            }
+            if(summary.has_colors)
+            {
+                m_colors = new Color[meshData.num_points];
+                meshData.colors = usdi.GetArrayPtr(m_colors);
             }
             if (summary.has_tangents)
             {
@@ -298,6 +318,11 @@ namespace UTJ
             {
                 m_normals = new Vector3[data.num_points];
                 data.normals = usdi.GetArrayPtr(m_normals);
+            }
+            if (summary.has_colors)
+            {
+                m_colors = new Color[data.num_points];
+                data.colors = usdi.GetArrayPtr(m_colors);
             }
             if (summary.has_tangents)
             {
@@ -413,6 +438,7 @@ namespace UTJ
 
                 m_umesh.vertices = m_points;
                 if (m_normals != null) { m_umesh.normals = m_normals; }
+                if (m_colors != null) { m_umesh.colors = m_colors; }
                 if (m_uvs != null) { m_umesh.uv = m_uvs; }
                 if (m_tangents != null) { m_umesh.tangents = m_tangents; }
 

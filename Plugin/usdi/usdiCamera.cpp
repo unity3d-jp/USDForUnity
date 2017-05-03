@@ -5,6 +5,7 @@
 #include "usdiCamera.h"
 #include "usdiContext.h"
 #include "usdiContext.i"
+#include "usdiAttribute.h"
 
 namespace usdi {
 
@@ -105,6 +106,36 @@ bool Camera::writeSample(const CameraData& src, Time t_)
     }
 
     return true;
+}
+
+int Camera::eachSample(const SampleCallback & cb)
+{
+    static const char *attr_names[] = {
+        "clippingRange",
+        "focalLength",
+        "focusDistance",
+        "horizontalAperture",
+        "verticalAperture",
+    };
+
+    std::map<Time, int> times;
+    for (auto *name : attr_names) {
+        if (auto *attr = findAttribute(name)) {
+            attr->eachTime([&times](Time t) {
+                times[t] = 0;
+            });
+        }
+    }
+    if (times.empty()) {
+        times[usdiDefaultTime()] = 0;
+    }
+
+    CameraData data;
+    for (const auto& t : times) {
+        readSample(data, t.first);
+        cb(data, t.first);
+    }
+    return (int)times.size();
 }
 
 } // namespace usdi

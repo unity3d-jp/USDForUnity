@@ -34,6 +34,7 @@ rtAPI Platform    GetPlatform();
 rtAPI const char* GetModulePath();
 rtAPI void        AddDLLSearchPath(const char *v);
 rtAPI void        SetEnv(const char *name, const char *value);
+rtAPI const char* GetEnv(const char *name);
 
 rtAPI module_t DLLLoad(const char *path);
 rtAPI void     DLLUnload(module_t mod);

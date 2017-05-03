@@ -4,6 +4,7 @@
 
 #ifdef _WIN32
     #include <windows.h>
+    #pragma warning(disable:4996)
 #else 
     #include <dlfcn.h>
     #ifdef __APPLE__

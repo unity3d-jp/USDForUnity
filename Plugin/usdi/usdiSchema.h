@@ -128,6 +128,13 @@ public:
         for (auto& c : m_instances) { body(c); }
     }
 
+    // Body: [](Attribute *attr) -> void
+    template<class Body>
+    void eachAttribute(const Body& body)
+    {
+        for (auto& a : m_attributes) { body(a.get()); }
+    }
+
     template<class T>
     T as()
     {

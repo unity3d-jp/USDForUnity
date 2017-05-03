@@ -16,6 +16,8 @@
     #define usdiSTDCall
 #endif
 
+#include <cstdint>
+
 namespace usdi {
 
 using byte = unsigned char;
@@ -183,8 +185,9 @@ struct MeshSummary
     uint                num_bones = 0;
     uint                max_bone_weights = 0; // should be 0 or 4 or 8
     bool                has_normals = false;
-    bool                has_tangents = false;
+    bool                has_colors = false;
     bool                has_uvs = false;
+    bool                has_tangents = false;
     bool                has_velocities = false;
 };
 
@@ -201,8 +204,10 @@ struct SubmeshData
 {
     float3      *points = nullptr;
     float3      *normals = nullptr;
-    float4      *tangents = nullptr;
+    float4      *colors = nullptr;
     float2      *uvs = nullptr;
+    float4      *tangents = nullptr;
+    float3      *velocities = nullptr;
     int         *indices = nullptr;
     union {
         Weights4 *weights4 = nullptr;
@@ -219,10 +224,11 @@ struct MeshData
     // these pointers can be null (in this case, just be ignored).
     // otherwise, if you pass to usdiMeshSampleReadData(), pointers must point valid memory block to store data.
     float3  *points = nullptr;
-    float3  *velocities = nullptr;
     float3  *normals = nullptr;
-    float4  *tangents = nullptr;
+    float4  *colors = nullptr;
     float2  *uvs = nullptr;
+    float4  *tangents = nullptr;
+    float3  *velocities = nullptr;
     int     *counts = nullptr;
     int     *indices = nullptr;
     int     *indices_triangulated = nullptr;
@@ -262,6 +268,9 @@ struct PointsData
     // otherwise, if you pass to usdiMeshSampleReadData(), pointers must point valid memory block to store data.
     float3  *points = nullptr;
     float3  *velocities = nullptr;
+    float   *widths = nullptr;
+    int64_t *ids64 = nullptr;
+    int32_t *ids32 = nullptr;
 
     uint    num_points = 0;
 };
@@ -295,6 +304,8 @@ usdiAPI void             usdiAlignedFree(void *addr);
 usdiAPI void*            usdiFixedMalloc(size_t size);
 usdiAPI void             usdiFixedFree(size_t size, void *addr);
 
+usdiAPI void             usdiAddAssetSearchPath(const char *path);
+usdiAPI void             usdiClearAssetSearchPath();
 
 // Context interface
 usdiAPI usdi::Context*   usdiCreateContext();
@@ -328,6 +339,8 @@ usdiAPI void             usdiUpdateAllSamples(usdi::Context *ctx, usdi::Time t);
 usdiAPI void             usdiRebuildSchemaTree(usdi::Context *ctx);
 using usdiPreComputeNormalsCallback = void (usdiSTDCall*)(usdi::Mesh *mesh, bool done);
 usdiAPI void             usdiPreComputeNormalsAll(usdi::Context *ctx, bool gen_tangents, bool overwrite = false, usdiPreComputeNormalsCallback cb = nullptr);
+using usdiTimeSampleCallback = void (usdiSTDCall*)(usdi::Time t);
+usdiAPI int              usdiEachTimeSample(usdi::Context *ctx, usdiTimeSampleCallback cb);
 
 // Prim interface
 usdiAPI int              usdiPrimGetID(usdi::Schema *schema);
@@ -395,18 +408,24 @@ usdiAPI usdi::Xform*     usdiAsXform(usdi::Schema *schema); // dynamic cast to X
 usdiAPI void             usdiXformGetSummary(usdi::Xform *xf, usdi::XformSummary *dst);
 usdiAPI bool             usdiXformReadSample(usdi::Xform *xf, usdi::XformData *dst, usdi::Time t);
 usdiAPI bool             usdiXformWriteSample(usdi::Xform *xf, const usdi::XformData *src, usdi::Time t = usdiDefaultTime());
+using usdiXformSampleCallback = void (usdiSTDCall*)(const usdi::XformData *data, usdi::Time t);
+usdiAPI int              usdiXformEachSample(usdi::Xform *xf, usdiXformSampleCallback cb);
 
 // Camera interface
 usdiAPI usdi::Camera*    usdiAsCamera(usdi::Schema *schema); // dynamic cast to Camera
 usdiAPI void             usdiCameraGetSummary(usdi::Camera *cam, usdi::CameraSummary *dst);
 usdiAPI bool             usdiCameraReadSample(usdi::Camera *cam, usdi::CameraData *dst, usdi::Time t);
 usdiAPI bool             usdiCameraWriteSample(usdi::Camera *cam, const usdi::CameraData *src, usdi::Time t = usdiDefaultTime());
+using usdiCameraSampleCallback = void (usdiSTDCall*)(const usdi::CameraData *data, usdi::Time t);
+usdiAPI int              usdiCameraEachSample(usdi::Camera *cam, usdiCameraSampleCallback cb);
 
 // Mesh interface
 usdiAPI usdi::Mesh*      usdiAsMesh(usdi::Schema *schema); // dynamic cast to Mesh
 usdiAPI void             usdiMeshGetSummary(usdi::Mesh *mesh, usdi::MeshSummary *dst);
 usdiAPI bool             usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t, bool copy);
 usdiAPI bool             usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t = usdiDefaultTime());
+using usdiMeshSampleCallback = void (usdiSTDCall*)(const usdi::MeshData *data, usdi::Time t);
+usdiAPI int              usdiMeshEachSample(usdi::Mesh *mesh, usdiMeshSampleCallback cb);
 usdiAPI bool             usdiMeshPreComputeNormals(usdi::Mesh *mesh, bool gen_tangents, bool overwrite = false);
 
 // Points interface
@@ -414,6 +433,8 @@ usdiAPI usdi::Points*    usdiAsPoints(usdi::Schema *schema); // dynamic cast to 
 usdiAPI void             usdiPointsGetSummary(usdi::Points *points, usdi::PointsSummary *dst);
 usdiAPI bool             usdiPointsReadSample(usdi::Points *points, usdi::PointsData *dst, usdi::Time t, bool copy);
 usdiAPI bool             usdiPointsWriteSample(usdi::Points *points, const usdi::PointsData *src, usdi::Time t = usdiDefaultTime());
+using usdiPointsSampleCallback = void (usdiSTDCall*)(const usdi::PointsData *data, usdi::Time t);
+usdiAPI int              usdiPointsEachSample(usdi::Points *points, usdiPointsSampleCallback cb);
 
 // Attribute interface
 usdiAPI usdi::Schema*    usdiAttrGetParent(usdi::Attribute *attr);
@@ -422,5 +443,9 @@ usdiAPI const char*      usdiAttrGetTypeName(usdi::Attribute *attr);
 usdiAPI void             usdiAttrGetSummary(usdi::Attribute *attr, usdi::AttributeSummary *dst);
 usdiAPI bool             usdiAttrReadSample(usdi::Attribute *attr, usdi::AttributeData *dst, usdi::Time t, bool copy);
 usdiAPI bool             usdiAttrWriteSample(usdi::Attribute *attr, const usdi::AttributeData *src, usdi::Time t = usdiDefaultTime());
+
+// Alembic related
+usdiAPI bool             usdiConvertUSDToAlembic(const char *src_usd, const char *dst_abc);
+
 
 } // extern "C"

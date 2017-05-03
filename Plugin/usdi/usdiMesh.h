@@ -2,29 +2,43 @@
 
 namespace usdi {
 
+union VAFlags
+{
+    uint32_t any = 0;
+    struct {
+        uint32_t points : 1;
+        uint32_t normals : 1;
+        uint32_t colors : 1;
+        uint32_t uvs : 1;
+        uint32_t tangents : 1;
+        uint32_t velocities : 1;
+        uint32_t weights : 1;
+    };
+};
 
 struct SubmeshSample
 {
     VtArray<GfVec3f> points;
     VtArray<GfVec3f> normals;
-    VtArray<GfVec4f> tangents;
+    VtArray<GfVec4f> colors;
     VtArray<GfVec2f> uvs;
+    VtArray<GfVec4f> tangents;
+    VtArray<GfVec3f> velocities;
     VtArray<int>     indices;
     VtArray<Weights4> weights4;
     VtArray<Weights8> weights8;
     float3           bounds_min = {}, bounds_max = {};
     float3           center = {}, extents = {};
-
-    void clear();
 };
 
 struct MeshSample
 {
     VtArray<GfVec3f> points;
-    VtArray<GfVec3f> velocities;
     VtArray<GfVec3f> normals;
-    VtArray<GfVec4f> tangents;
+    VtArray<GfVec4f> colors;
     VtArray<GfVec2f> uvs;
+    VtArray<GfVec4f> tangents;
+    VtArray<GfVec3f> velocities;
     VtArray<int>     counts;
     VtArray<int>     offsets;
     VtArray<int>     indices;
@@ -43,8 +57,6 @@ struct MeshSample
 
     float3           bounds_min = {}, bounds_max = {};
     float3           center = {}, extents = {};
-
-    void clear();
 };
 
 
@@ -64,6 +76,9 @@ public:
     bool                readSample(MeshData& dst, Time t, bool copy);
     bool                writeSample(const MeshData& src, Time t);
 
+    using SampleCallback = std::function<void(const MeshData& data, Time t)>;
+    int eachSample(const SampleCallback& cb);
+
     // true if normals are generated (don't care about tangents)
     bool                precomputeNormals(bool gen_tangents, bool overwrite = false);
 
@@ -77,6 +92,7 @@ private:
     UsdGeomMesh         m_mesh;
     MeshSample          m_sample[2], *m_front_sample = nullptr;
     SubmeshSamples      m_submeshes[2], *m_front_submesh = nullptr;
+    Attribute           *m_attr_colors = nullptr;
     Attribute           *m_attr_uv = nullptr;
     Attribute           *m_attr_tangents = nullptr;
 

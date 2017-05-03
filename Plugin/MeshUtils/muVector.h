@@ -1,6 +1,10 @@
 #pragma once
 
 #include <cmath>
+#include <cstring>
+#include "half.h"
+
+#define muDefaultEpsilon 0.00001f
 
 namespace mu {
 
@@ -9,52 +13,76 @@ struct float2
     float x, y;
     float& operator[](int i) { return ((float*)this)[i]; }
     const float& operator[](int i) const { return ((float*)this)[i]; }
+    bool operator==(const float2& v) const { return x == v.x && y == v.y; }
+    bool operator!=(const float2& v) const { return !((*this)==v); }
+    static float2 zero() { return{ 0.0f, 0.0f }; }
 };
 struct float3
 {
     float x, y, z;
     float& operator[](int i) { return ((float*)this)[i]; }
     const float& operator[](int i) const { return ((float*)this)[i]; }
+    bool operator==(const float3& v) const { return x == v.x && y == v.y && z == v.z; }
+    bool operator!=(const float3& v) const { return !((*this) == v); }
+    static float3 zero() { return{ 0.0f, 0.0f, 0.0f }; }
+    static float3 one() { return{ 1.0f, 1.0f, 1.0f }; }
 };
 struct float4
 {
     float x, y, z, w;
     float& operator[](int i) { return ((float*)this)[i]; }
     const float& operator[](int i) const { return ((float*)this)[i]; }
+    bool operator==(const float4& v) const { return x == v.x && y == v.y && z == v.z && w == v.w; }
+    bool operator!=(const float4& v) const { return !((*this) == v); }
+    static float4 zero() { return{ 0.0f, 0.0f, 0.0f, 0.0f }; }
 };
 struct quatf
 {
     float x, y, z, w;
     float& operator[](int i) { return ((float*)this)[i]; }
     const float& operator[](int i) const { return ((float*)this)[i]; }
+    bool operator==(const quatf& v) const { return x == v.x && y == v.y && z == v.z && w == v.w; }
+    bool operator!=(const quatf& v) const { return !((*this) == v); }
+    static quatf identity() { return{ 0.0f, 0.0f, 0.0f, 1.0f }; }
 };
 
 struct float3x3
 {
-    float3 v[3];
-    float3& operator[](int i) { return v[i]; }
-    const float3& operator[](int i) const { return v[i]; }
+    float3 m[3];
+    float3& operator[](int i) { return m[i]; }
+    const float3& operator[](int i) const { return m[i]; }
+    bool operator==(const float3x3& v) const { return memcmp(m, v.m, sizeof(*this)) == 0; }
+    bool operator!=(const float3x3& v) const { return !((*this) == v); }
 };
 struct float4x4 
 {
-    float4 v[4];
-    float4& operator[](int i) { return v[i]; }
-    const float4& operator[](int i) const { return v[i]; }
+    float4 m[4];
+    float4& operator[](int i) { return m[i]; }
+    const float4& operator[](int i) const { return m[i]; }
+    bool operator==(const float4x4& v) const { return memcmp(m, v.m, sizeof(*this)) == 0; }
+    bool operator!=(const float4x4& v) const { return !((*this) == v); }
 };
 
 
-inline bool near_equal(float a, float b)
+inline bool near_equal(float a, float b, float epsilon = muDefaultEpsilon)
 {
-    const float epsilon = 0.00001f;
     return std::abs(a - b) < epsilon;
 }
-inline bool near_equal(const float3& a, const float3& b)
+inline bool near_equal(const float2& a, const float2& b, float e = muDefaultEpsilon)
 {
-    return near_equal(a.x, b.x) && near_equal(a.y, b.y) && near_equal(a.z, b.z);
+    return near_equal(a.x, b.x, e) && near_equal(a.y, b.y, e);
 }
-inline bool near_equal(const quatf& a, const quatf& b)
+inline bool near_equal(const float3& a, const float3& b, float e = muDefaultEpsilon)
 {
-    return near_equal(a.x, b.x) && near_equal(a.y, b.y) && near_equal(a.z, b.z) && near_equal(a.w, b.w);
+    return near_equal(a.x, b.x, e) && near_equal(a.y, b.y, e) && near_equal(a.z, b.z, e);
+}
+inline bool near_equal(const float4& a, const float4& b, float e = muDefaultEpsilon)
+{
+    return near_equal(a.x, b.x, e) && near_equal(a.y, b.y, e) && near_equal(a.z, b.z, e) && near_equal(a.w, b.w, e);
+}
+inline bool near_equal(const quatf& a, const quatf& b, float e = muDefaultEpsilon)
+{
+    return near_equal(a.x, b.x, e) && near_equal(a.y, b.y, e) && near_equal(a.z, b.z, e) && near_equal(a.w, b.w, e);
 }
 
 template<class Int>
@@ -79,11 +107,19 @@ inline float3 operator-(const float3& l, const float3& r)
 }
 inline float3 operator*(const float3& l, float r)
 {
-    return{ l.x*r, l.y*r, l.z*r };
+    return{ l.x * r, l.y * r, l.z * r };
+}
+inline float3 operator*(const float3& l, const float3& r)
+{
+    return{ l.x * r.x, l.y * r.y, l.z * r.z };
 }
 inline float3 operator/(const float3& l, float r)
 {
     return{ l.x / r, l.y / r, l.z / r };
+}
+inline float3 operator/(const float3& l, const float3& r)
+{
+    return{ l.x / r.x, l.y / r.y, l.z / r.z };
 }
 
 inline float4 operator*(const float4& l, float r)
@@ -109,42 +145,40 @@ inline quatf operator*(const quatf& l, const quatf& r)
 
 inline float2& operator*=(float2& l, float r)
 {
-    l.x *= r;
-    l.y *= r;
+    l = l * r;
     return l;
 }
 
 inline float3& operator+=(float3& l, const float3& r)
 {
-    l.x += r.x;
-    l.y += r.y;
-    l.z += r.z;
+    l = l + r;
     return l;
 }
-
 inline float3& operator*=(float3& l, float r)
 {
-    l.x *= r;
-    l.y *= r;
-    l.z *= r;
+    l = l * r;
+    return l;
+}
+inline float3& operator*=(float3& l, const float3& r)
+{
+    l = l * r;
     return l;
 }
 
 inline float4& operator*=(float4& l, float r)
 {
-    l.x *= r;
-    l.y *= r;
-    l.z *= r;
-    l.w *= r;
+    l = l * r;
     return l;
 }
 
 inline quatf& operator*=(quatf& l, float r)
 {
-    l.x *= r;
-    l.y *= r;
-    l.z *= r;
-    l.w *= r;
+    l = l * r;
+    return l;
+}
+inline quatf& operator*=(quatf& l, const quatf& r)
+{
+    l = l * r;
     return l;
 }
 
@@ -167,12 +201,30 @@ inline float3 cross(const float3& l, const float3& r)
         l.x * r.y - l.y * r.x };
 }
 
+inline quatf rotateX(float angle)
+{
+    float c = std::cos(angle * 0.5f);
+    float s = std::sin(angle * 0.5f);
+    return{ s, 0.0f, 0.0f, c };
+}
+inline quatf rotateY(float angle)
+{
+    float c = std::cos(angle * 0.5f);
+    float s = std::sin(angle * 0.5f);
+    return{ 0.0f, s, 0.0f, c };
+}
+inline quatf rotateZ(float angle)
+{
+    float c = std::cos(angle * 0.5f);
+    float s = std::sin(angle * 0.5f);
+    return{ 0.0f, 0.0f, s, c };
+}
 inline quatf rotate(const float3& axis, float angle)
 {
     return{
-        axis.x * std::sin(angle *0.5f),
-        axis.y * std::sin(angle *0.5f),
-        axis.z * std::sin(angle *0.5f),
+        axis.x * std::sin(angle * 0.5f),
+        axis.y * std::sin(angle * 0.5f),
+        axis.z * std::sin(angle * 0.5f),
         std::cos(angle * 0.5f)
     };
 }

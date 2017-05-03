@@ -210,15 +210,19 @@ namespace UTJ
 
         public struct XformData
         {
-            public enum Flags
-            {
-                UpdatedMask     = 0xf,
-                UpdatedPosition = 0x1,
-                UpdatedRotation = 0x2,
-                UpdatedScale    = 0x4,
-            };
 
-            public int flags;
+            [Serializable]
+            public struct Flags
+            {
+                public uint bits;
+
+
+                public bool updatedPosition { get { return (bits & 0x1) != 0; } }
+                public bool updatedRotation { get { return (bits & 0x2) != 0; } }
+                public bool updatedScale { get { return (bits & 0x4) != 0; } }
+            }
+
+            public Flags flags;
             public Vector3     position;
             public Quaternion  rotation;
             public Vector3     scale;
@@ -230,7 +234,7 @@ namespace UTJ
                 {
                     return new XformData
                     {
-                        flags = 0,
+                        flags = new Flags(),
                         position = Vector3.zero,
                         rotation = Quaternion.identity,
                         scale = Vector3.one,
@@ -283,8 +287,9 @@ namespace UTJ
             public int num_bones;
             public int max_bone_weights;
             public Bool has_normals;
-            public Bool has_tangents;
+            public Bool has_colors;
             public Bool has_uvs;
+            public Bool has_tangents;
             public Bool has_velocities;
 
             public static MeshSummary default_value { get { return default(MeshSummary); } }
@@ -294,8 +299,10 @@ namespace UTJ
         {
             public IntPtr   points;
             public IntPtr   normals;
-            public IntPtr   tangents;
+            public IntPtr   colors;
             public IntPtr   uvs;
+            public IntPtr   tangents;
+            public IntPtr   velocities;
             public IntPtr   indices; // always triangulated
             public IntPtr   weights;
             public int      num_points; // == num_indices
@@ -309,10 +316,11 @@ namespace UTJ
         public struct MeshData
         {
             public IntPtr   points;
-            public IntPtr   velocities;
             public IntPtr   normals;
-            public IntPtr   tangents;
+            public IntPtr   colors;
             public IntPtr   uvs;
+            public IntPtr   tangents;
+            public IntPtr   velocities;
             public IntPtr   counts;
             public IntPtr   indices;
             public IntPtr   indices_triangulated;
@@ -354,6 +362,9 @@ namespace UTJ
         {
             public IntPtr points;
             public IntPtr velocities;
+            public IntPtr widths;
+            public IntPtr ids64;
+            public IntPtr ids32;
 
             public int num_points;
 
@@ -401,9 +412,13 @@ namespace UTJ
 
         [DllImport("usdi")] public static extern void usdiInitialize();
         [DllImport("usdi")] public static extern void usdiFinalize();
+        [DllImport("usdi")] public static extern Bool usdiConvertUSDToAlembic(string usd_path, string abc_path);
 
 
         [DllImport ("usdi")] public static extern IntPtr        usdiGetRenderEventFunc();
+
+        [DllImport ("usdi")] public static extern void          usdiAddAssetSearchPath(string path);
+        [DllImport ("usdi")] public static extern void          usdiClearAssetSearchPath();
 
         // Context interface
         [DllImport ("usdi")] public static extern Context       usdiCreateContext();
@@ -532,17 +547,23 @@ namespace UTJ
         [DllImport ("usdi")] public static extern Xform     usdiAsXform(Schema schema);
         [DllImport ("usdi")] public static extern Bool      usdiXformReadSample(Xform xf, ref XformData dst, double t);
         [DllImport ("usdi")] public static extern Bool      usdiXformWriteSample(Xform xf, ref XformData src, double t);
+        public delegate void usdiXformSampleCallback(ref XformData data, double t);
+        [DllImport ("usdi")] public static extern int       usdiXformEachSample(Xform xf, usdiXformSampleCallback cb);
 
         // Camera interface
         [DllImport ("usdi")] public static extern Camera    usdiAsCamera(Schema schema);
         [DllImport ("usdi")] public static extern Bool      usdiCameraReadSample(Camera cam, ref CameraData dst, double t);
         [DllImport ("usdi")] public static extern Bool      usdiCameraWriteSample(Camera cam, ref CameraData src, double t);
+        public delegate void usdiCameraSampleCallback(ref CameraData data, double t);
+        [DllImport ("usdi")] public static extern int       usdiCameraEachSample(Camera cam, usdiCameraSampleCallback cb);
 
         // Mesh interface
         [DllImport ("usdi")] public static extern Mesh      usdiAsMesh(Schema schema);
         [DllImport ("usdi")] public static extern void      usdiMeshGetSummary(Mesh mesh, ref MeshSummary dst);
         [DllImport ("usdi")] public static extern Bool      usdiMeshReadSample(Mesh mesh, ref MeshData dst, double t, Bool copy);
         [DllImport ("usdi")] public static extern Bool      usdiMeshWriteSample(Mesh mesh, ref MeshData src, double t);
+        public delegate void usdiMeshSampleCallback(ref MeshData data, double t);
+        [DllImport ("usdi")] public static extern int       usdiMeshEachSample(Mesh mesh, usdiMeshSampleCallback cb);
         [DllImport ("usdi")] public static extern Bool      usdiMeshPreComputeNormals(Mesh mesh, Bool gen_tangents, Bool overwrite);
 
         // Points interface
@@ -550,6 +571,8 @@ namespace UTJ
         [DllImport ("usdi")] public static extern void      usdiPointsGetSummary(Points points, ref PointsSummary dst);
         [DllImport ("usdi")] public static extern Bool      usdiPointsReadSample(Points points, ref PointsData dst, double t, Bool copy);
         [DllImport ("usdi")] public static extern Bool      usdiPointsWriteSample(Points points, ref PointsData src, double t);
+        public delegate void usdiPointsSampleCallback(ref PointsData data, double t);
+        [DllImport ("usdi")] public static extern int       usdiPointsEachSample(Points points, usdiPointsSampleCallback cb);
 
         // Attribute interface
         [DllImport ("usdi")] public static extern IntPtr    usdiAttrGetName(Attribute attr);
@@ -640,6 +663,11 @@ namespace UTJ
         [DllImport("usdi")] public static extern IntPtr usdiTaskCreateAttrReadSample(Attribute points, ref AttributeData dst, ref double t);
         [DllImport("usdi")] public static extern IntPtr usdiTaskCreateComposite(IntPtr tasks, int num);
 
+        [DllImport("usdi")] public static extern IntPtr usdiProgressReporterCreate();
+        [DllImport("usdi")] public static extern void usdiProgressReporterDestroy(IntPtr pr);
+        [DllImport("usdi")] public static extern void usdiProgressReporterWrite(IntPtr pr, string message);
+
+
         [MethodImpl(MethodImplOptions.InternalCall)]
         private static extern void usdiUniTransformAssign(UnityEngine.Transform trans, ref XformData data);
         [MethodImpl(MethodImplOptions.InternalCall)]
@@ -649,15 +677,15 @@ namespace UTJ
 
         private static void TransformAssignImpl(UnityEngine.Transform trans, ref XformData data)
         {
-            if ((data.flags & (int)usdi.XformData.Flags.UpdatedPosition) != 0)
+            if (data.flags.updatedPosition)
             {
                 trans.localPosition = data.position;
             }
-            if ((data.flags & (int)usdi.XformData.Flags.UpdatedRotation) != 0)
+            if (data.flags.updatedRotation)
             {
                 trans.localRotation = data.rotation;
             }
-            if ((data.flags & (int)usdi.XformData.Flags.UpdatedScale) != 0)
+            if (data.flags.updatedScale)
             {
                 trans.localScale = data.scale;
             }
@@ -776,6 +804,34 @@ namespace UTJ
             }
         }
 
+        public class ProgressReporter
+        {
+            IntPtr m_handle;
+
+            public ProgressReporter()
+            {
+            }
+            ~ProgressReporter()
+            {
+                Close();
+            }
+            public void Open()
+            {
+                Close();
+                m_handle = usdiProgressReporterCreate();
+            }
+            public void Close()
+            {
+                usdiProgressReporterDestroy(m_handle);
+                m_handle = IntPtr.Zero;
+            }
+            public void Write(string message)
+            {
+                usdiProgressReporterWrite(m_handle, message);
+            }
+        }
+
+
 
         public static T GetOrAddComponent<T>(GameObject go) where T : Component
         {
@@ -870,6 +926,10 @@ namespace UTJ
         {
             usdi.usdiFinalize();
         }
-    }
 
+        public static bool ConvertUSDToAlembic(string usd_path, string abc_path)
+        {
+            return usdi.usdiConvertUSDToAlembic(usd_path, abc_path);
+    }
+    }
 }

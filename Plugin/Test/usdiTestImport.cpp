@@ -58,7 +58,14 @@ static void InspectAttribute(usdi::Attribute *attr)
         break;\
     }
 
-#define PString(Enum, Type) PScalar(Enum, Type)
+#define PString(Enum, Type)\
+    case usdi::AttributeType::Enum:\
+    {\
+        usdi::AttributeData data; data.num_elements = 1;\
+        usdiAttrReadSample(attr, &data, t, true);\
+        P((Type)data.data);\
+        break;\
+    }
 
 #define PVector(Enum, Type)\
     case usdi::AttributeType::Enum:\

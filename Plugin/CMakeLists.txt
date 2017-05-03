@@ -214,6 +214,7 @@ IF(NOT USDI_ENABLE_OSX_BUNDLE)
             usdiRT MeshUtils
             ${Boost_SYSTEM_LIBRARY_RELEASE}
             ${Boost_FILESYSTEM_LIBRARY_RELEASE}
+            ${OPENEXR_Half_LIBRARY}
         )
     ENDIF()
 

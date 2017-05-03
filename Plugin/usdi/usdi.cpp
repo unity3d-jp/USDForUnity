@@ -54,6 +54,8 @@ usdiAPI usdi::Time usdiDefaultTime()
 
 usdiAPI void usdiInitialize()
 {
+    // force load UsdAbc plugin
+    SdfFileFormat::FindByExtension(".abc");
 }
 
 usdiAPI void usdiFinalize()
@@ -66,6 +68,18 @@ usdiAPI void* usdiFixedMalloc(size_t size)              { return usdi::FixedMall
 usdiAPI void  usdiFixedFree(size_t size, void* addr)    { usdi::FixedFree(size, addr); }
 
 // Context interface
+
+
+usdiAPI void usdiAddAssetSearchPath(const char *path)
+{
+    usdiTraceFunc();
+    usdi::Context::addAssetSearchPath(path);
+}
+usdiAPI void usdiClearAssetSearchPath()
+{
+    usdiTraceFunc();
+    usdi::Context::clearAssetSearchPath();
+}
 
 usdiAPI usdi::Context* usdiCreateContext()
 {
@@ -238,6 +252,13 @@ usdiAPI void usdiPreComputeNormalsAll(usdi::Context *ctx, bool gen_tangents, boo
         callback = [cb](usdi::Mesh *m, bool done) { cb(m, done); };
     }
     ctx->precomputeNormalsAll(gen_tangents, overwrite, callback);
+}
+
+usdiAPI int usdiEachTimeSample(usdi::Context * ctx, usdiTimeSampleCallback cb)
+{
+    usdiTraceFunc();
+    if (!ctx) return 0;
+    return ctx->eachTimeSample([cb](usdi::Time t) { cb(t); });
 }
 
 
@@ -582,6 +603,13 @@ usdiAPI bool usdiXformWriteSample(usdi::Xform *xf, const usdi::XformData *src, u
     return xf->writeSample(*src, t);
 }
 
+usdiAPI int usdiXformEachSample(usdi::Xform * xf, usdiXformSampleCallback cb)
+{
+    usdiTraceFunc();
+    if (!xf || !cb) return 0;
+    return xf->eachSample([cb](const usdi::XformData& data, usdi::Time t) { cb(&data, t); });
+}
+
 
 // Camera interface
 
@@ -610,6 +638,13 @@ usdiAPI bool usdiCameraWriteSample(usdi::Camera *cam, const usdi::CameraData *sr
     if (!cam || !src) return false;
     usdiVTuneScope("usdiCameraWriteSample");
     return cam->writeSample(*src, t);
+}
+
+usdiAPI int usdiCameraEachSample(usdi::Camera *cam, usdiCameraSampleCallback cb)
+{
+    usdiTraceFunc();
+    if (!cam || !cb) return 0;
+    return cam->eachSample([cb](const usdi::CameraData& data, usdi::Time t) { cb(&data, t); });
 }
 
 
@@ -644,6 +679,13 @@ usdiAPI bool usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src, us
     if (!mesh || !src) return false;
     usdiVTuneScope("usdiMeshWriteSample");
     return mesh->writeSample(*src, t);
+}
+
+usdiAPI int usdiMeshEachSample(usdi::Mesh *mesh, usdiMeshSampleCallback cb)
+{
+    usdiTraceFunc();
+    if (!mesh || !cb) return 0;
+    return mesh->eachSample([cb](const usdi::MeshData& data, usdi::Time t) { cb(&data, t); });
 }
 
 usdiAPI bool usdiMeshPreComputeNormals(usdi::Mesh *mesh, bool gen_tangents, bool overwrite)
@@ -684,6 +726,13 @@ usdiAPI bool usdiPointsWriteSample(usdi::Points *points, const usdi::PointsData 
     if (!points || !src) return false;
     usdiVTuneScope("usdiPointsWriteSample");
     return points->writeSample(*src, t);
+}
+
+usdiAPI int usdiPointsEachSample(usdi::Points *points, usdiPointsSampleCallback cb)
+{
+    usdiTraceFunc();
+    if (!points || !cb) return 0;
+    return points->eachSample([cb](const usdi::PointsData& data, usdi::Time t) { cb(&data, t); });
 }
 
 
@@ -729,6 +778,11 @@ usdiAPI bool usdiAttrWriteSample(usdi::Attribute *attr, const usdi::AttributeDat
     usdiTraceFunc();
     if (!attr || !src) { return false; }
     return attr->writeSample(*src, t);
+}
+
+usdiAPI bool usdiConvertUSDToAlembic(const char *src_usd, const char *dst_abc)
+{
+    return usdi::Context::convertUSDToAlembic(src_usd, dst_abc);
 }
 
 } // extern "C"

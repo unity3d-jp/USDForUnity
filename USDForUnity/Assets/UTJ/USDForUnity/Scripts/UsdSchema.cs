@@ -13,11 +13,13 @@ namespace UTJ
         protected GameObject m_go;
         protected bool m_goAssigned = false;
         protected string m_primPath;
+        protected string m_primName;
         protected string m_primTypeName;
         protected UsdSchema m_master;
         protected UsdStream m_stream;
         protected usdi.Schema m_schema;
         protected usdi.VariantSets m_variantSets;
+        protected usdi.AssetRef[] m_referencingAssets;
         [SerializeField] protected int[] m_variantSelection;
         [SerializeField] bool m_overrideImportSettings;
         [SerializeField] usdi.ImportSettings m_importSettings = usdi.ImportSettings.default_value;
@@ -66,6 +68,10 @@ namespace UTJ
         {
             get { return m_primPath; }
         }
+        public string primName
+        {
+            get { return m_primName; }
+        }
         public string primTypeName
         {
             get { return m_primTypeName; }
@@ -89,6 +95,10 @@ namespace UTJ
         public UsdSchema master
         {
             get { return m_master; }
+        }
+        public usdi.AssetRef[] referencingAssets
+        {
+            get { return m_referencingAssets; }
         }
         #endregion
 
@@ -153,11 +163,13 @@ namespace UTJ
         public virtual void usdiOnLoad()
         {
             m_primPath = usdi.usdiPrimGetPathS(m_schema);
+            m_primName = usdi.usdiPrimGetNameS(m_schema);
             m_primTypeName = usdi.usdiPrimGetUsdTypeNameS(m_schema);
             m_master = m_stream.usdiFindSchema(usdi.usdiPrimGetMaster(m_schema));
 
             usdiSyncVarinatSets();
             usdiSyncImportSettings();
+            m_referencingAssets = usdi.usdiGetReferencingAssets(m_schema);
             if (m_goAssigned)
             {
                 var c = usdiSetupSchemaComponent();

@@ -5,6 +5,12 @@ namespace usdi {
 class Context
 {
 public:
+    static void addAssetSearchPath(const char *path);
+    static void clearAssetSearchPath();
+
+    static bool convertUSDToAlembic(const char *src_usd, const char *dst_abc);
+
+
     Context();
     virtual ~Context();
 
@@ -46,6 +52,9 @@ public:
     int                 generateID();
     void                notifyForceUpdate();
     void                updateAllSamples(Time t);
+
+    using TimeSampleCallback = std::function<void(Time t)>;
+    int eachTimeSample(const TimeSampleCallback& cb);
 
     using precomputeNormalsCallback = std::function<void(Mesh*, bool)>;
     void                precomputeNormalsAll(bool gen_tangents, bool overwrite, const precomputeNormalsCallback& cb);

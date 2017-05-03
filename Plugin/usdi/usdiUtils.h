@@ -31,15 +31,29 @@ inline Schema* FindSchema(SchemaArray& schemas, const char *path)
 
 
 typedef RawVector<char> TempBuffer;
-
 TempBuffer& GetTemporaryBuffer();
 
-template<class SourceT>
-inline void InterleaveBuffered(TempBuffer& buf, const SourceT& src, size_t num)
+
+template<typename Body>
+class lambda_task : public tbb::task
 {
-    using vertex_t = typename SourceT::vertex_t;
-    buf.resize(sizeof(vertex_t) * num);
-    Interleave((vertex_t*)buf.data(), src, num);
+private:
+    Body m_body;
+    tbb::task* execute() override
+    {
+        m_body();
+        return nullptr;
+    }
+public:
+    lambda_task(const Body& body) : m_body(body) {}
+};
+
+template<typename Body>
+inline tbb::task* launch(const Body& body)
+{
+    auto *ret = new(tbb::task::allocate_root()) lambda_task<Body>(body);
+    tbb::task::enqueue(*ret);
+    return ret;
 }
 
 } // namespace usdi

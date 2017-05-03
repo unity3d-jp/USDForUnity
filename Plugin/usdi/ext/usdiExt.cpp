@@ -14,6 +14,7 @@
 #include "usdiExt.h"
 #include "ext/usdiTask.h"
 #include "ext/usdiComponentUpdater.h"
+#include "ext/usdiProgressReporter.h"
 
 
 
@@ -166,6 +167,26 @@ usdiAPI usdi::Task* usdiTaskCreateComposite(usdi::Task **tasks, int num)
         }
     });
 }
+
+
+usdiAPI usdi::IProgressReporter* usdiProgressReporterCreate()
+{
+    usdiTraceFunc();
+    return usdi::CreateProgressReporter();
+}
+usdiAPI void usdiProgressReporterDestroy(usdi::IProgressReporter *pr)
+{
+    usdiTraceFunc();
+    delete pr;
+}
+usdiAPI void usdiProgressReporterWrite(usdi::IProgressReporter *pr, const char *message)
+{
+    usdiTraceFunc();
+    if (!pr || !message) { return; }
+    pr->write(message);
+}
+
+
 
 usdiAPI int usdiMemcmp(const void *a, const void *b, int size)
 {

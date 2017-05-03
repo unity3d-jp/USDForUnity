@@ -67,6 +67,9 @@
     <ClCompile Include="usdi\etc\Allocator.cpp">
       <Filter>usdi\etc</Filter>
     </ClCompile>
+    <ClCompile Include="usdi\ext\usdiProgressReporter.cpp">
+      <Filter>usdi\ext</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="usdi\pch.h">
@@ -143,6 +146,12 @@
     </ClInclude>
     <ClInclude Include="usdi\etc\Allocator.h">
       <Filter>usdi\etc</Filter>
+    </ClInclude>
+    <ClInclude Include="usdi\usdiVectorConversion.h">
+      <Filter>usdi</Filter>
+    </ClInclude>
+    <ClInclude Include="usdi\ext\usdiProgressReporter.h">
+      <Filter>usdi\ext</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
