@@ -15,7 +15,6 @@ void TestExportSkinnedMesh(const char *filename, int cseg, int hseg)
     auto *ctx = usdiCreateContext();
 
     usdi::ExportSettings settings;
-    settings.instanceable_by_default = true;
     usdiSetExportSettings(ctx, &settings);
 
     usdiCreateStage(ctx, filename);
@@ -137,41 +136,6 @@ void TestExportSkinnedMesh(const char *filename, int cseg, int hseg)
             data.bindposes = bindposes;
 
 
-            usdiPrimBeginEditVariant(xf, "Shape", "Triangular");
-            Cylinder(3, hseg);
-            Expand();
-            data.num_counts = counts.size();
-            data.num_indices = indices2.size();
-            data.num_points = points2.size();
-            data.counts = counts.data();
-            data.indices = indices2.data();
-            data.points = points2.data();
-            data.uvs = uv2.data();
-            data.weights4 = weights2.data();
-            mesh = usdiCreateMesh(ctx, xf, "Triangular");
-            usdiMeshWriteSample(mesh, &data);
-            usdiMeshPreComputeNormals(mesh, false);
-            usdiPrimEndEditVariant(xf);
-
-
-            usdiPrimBeginEditVariant(xf, "Shape", "Square");
-            Cylinder(4, hseg);
-            Expand();
-            data.num_counts = counts.size();
-            data.num_indices = indices2.size();
-            data.num_points = points2.size();
-            data.counts = counts.data();
-            data.indices = indices2.data();
-            data.points = points2.data();
-            data.uvs = uv2.data();
-            data.weights4 = weights2.data();
-            mesh = usdiCreateMesh(ctx, xf, "Square");
-            usdiMeshWriteSample(mesh, &data);
-            usdiMeshPreComputeNormals(mesh, false);
-            usdiPrimEndEditVariant(xf);
-
-
-            usdiPrimBeginEditVariant(xf, "Shape", "Cylinder");
             Cylinder(cseg, hseg);
             data.num_counts = counts.size();
             data.num_indices = indices.size();
@@ -199,7 +163,6 @@ void TestExportSkinnedMesh(const char *filename, int cseg, int hseg)
                 usdiMeshWriteSample(mesh, &data);
                 usdiMeshPreComputeNormals(mesh, false);
             }
-            usdiPrimEndEditVariant(xf);
         }
 
 
