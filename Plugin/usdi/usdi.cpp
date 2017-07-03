@@ -13,21 +13,7 @@
     #pragma comment(lib, "Shlwapi.lib")
     #pragma comment(lib, "Ws2_32.lib")
     #pragma comment(lib, "half.lib")
-
-    #pragma comment(lib, "ar.lib")
-    #pragma comment(lib, "arch.lib")
-    #pragma comment(lib, "gf.lib")
-    #pragma comment(lib, "js.lib")
-    #pragma comment(lib, "kind.lib")
-    #pragma comment(lib, "pcp.lib")
-    #pragma comment(lib, "plug.lib")
-    #pragma comment(lib, "sdf.lib")
-    #pragma comment(lib, "tf.lib")
-    #pragma comment(lib, "tracelite.lib")
-    #pragma comment(lib, "usd.lib")
-    #pragma comment(lib, "usdGeom.lib")
-    #pragma comment(lib, "vt.lib")
-    #pragma comment(lib, "work.lib")
+    #pragma comment(lib, "usd_ms.lib")
     #ifdef usdiDbgVTune
         #pragma comment(lib, "libittnotify.lib")
     #endif

@@ -2,7 +2,6 @@
 #define testsImpl
 #include "usdiTests.h"
 
-void MeshUtilsTest();
 void TestExport(const char *filename);
 void TestExportHighMesh(const char *filename, int frame_count);
 void TestExportSkinnedMesh(const char *filename, int cseg, int hseg);
@@ -13,7 +12,6 @@ extern "C" {
 
 testsAPI void TestMain(int argc, char *argv[])
 {
-    MeshUtilsTest();
     TestExport("TestExport.usda");
     TestExport("TestExport.usdc");
     TestExportHighMesh("HighMesh.usda", 1);

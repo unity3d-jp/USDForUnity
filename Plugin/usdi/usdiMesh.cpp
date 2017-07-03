@@ -431,17 +431,17 @@ void Mesh::updateSample(Time t_)
             for (int i = 0; i < isize; ++i) { sms.indices[i] = i; }
 
 #define Sel(C) ToIArray(C ? sample.indices_flattened_triangulated : sample.indices_triangulated)
-            CopyWithIndices(sms.points, sample.points, Sel(flattened.points), ibegin, iend);
-            CopyWithIndices(sms.normals, sample.normals, Sel(flattened.normals), ibegin, iend);
-            CopyWithIndices(sms.colors, sample.colors, Sel(flattened.colors), ibegin, iend);
-            CopyWithIndices(sms.uvs, sample.uvs, Sel(flattened.uvs), ibegin, iend);
-            CopyWithIndices(sms.tangents, sample.tangents, Sel(flattened.tangents), ibegin, iend);
-            CopyWithIndices(sms.velocities, sample.velocities, Sel(flattened.velocities), ibegin, iend);
+            CopyWithIndices<GfVec3f>(sms.points, sample.points, Sel(flattened.points), ibegin, iend);
+            CopyWithIndices<GfVec3f>(sms.normals, sample.normals, Sel(flattened.normals), ibegin, iend);
+            CopyWithIndices<GfVec4f>(sms.colors, sample.colors, Sel(flattened.colors), ibegin, iend);
+            CopyWithIndices<GfVec2f>(sms.uvs, sample.uvs, Sel(flattened.uvs), ibegin, iend);
+            CopyWithIndices<GfVec4f>(sms.tangents, sample.tangents, Sel(flattened.tangents), ibegin, iend);
+            CopyWithIndices<GfVec3f>(sms.velocities, sample.velocities, Sel(flattened.velocities), ibegin, iend);
             if (!sample.weights4.empty()) {
-                CopyWithIndices(sms.weights4, sample.weights4, Sel(flattened.weights), ibegin, iend);
+                CopyWithIndices<Weights4>(sms.weights4, sample.weights4, Sel(flattened.weights), ibegin, iend);
             }
             if (!sample.weights8.empty()) {
-                CopyWithIndices(sms.weights8, sample.weights8, Sel(flattened.weights), ibegin, iend);
+                CopyWithIndices<Weights8>(sms.weights8, sample.weights8, Sel(flattened.weights), ibegin, iend);
             }
 #undef Sel
 

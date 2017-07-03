@@ -223,27 +223,27 @@ bool MeshRefiner::refineDumb()
     {
         {
             new_points.resize(num_indices);
-            mu::CopyWithIndices(new_points.data(), points.data(), indices);
+            mu::CopyWithIndices<float3>(new_points, points, indices);
             points = new_points;
         }
         if (!normals.empty() && (int)normals.size() != num_indices) {
             new_normals.resize(num_indices);
-            mu::CopyWithIndices(new_normals.data(), normals.data(), indices);
+            mu::CopyWithIndices<float3>(new_normals, normals, indices);
             normals = new_normals;
         }
         if (!uv.empty() && (int)uv.size() != num_indices) {
             new_uv.resize(num_indices);
-            mu::CopyWithIndices(new_uv.data(), uv.data(), indices);
+            mu::CopyWithIndices<float2>(new_uv, uv, indices);
             uv = new_uv;
         }
         if (!colors.empty() && (int)colors.size() != num_indices) {
             new_colors.resize(num_indices);
-            mu::CopyWithIndices(new_colors.data(), colors.data(), indices);
+            mu::CopyWithIndices<float4>(new_colors, colors, indices);
             colors = colors;
         }
         if (!weights4.empty() && (int)weights4.size() != num_indices) {
             new_weights4.resize(num_indices);
-            mu::CopyWithIndices(new_weights4.data(), weights4.data(), indices);
+            mu::CopyWithIndices<Weights4>(new_weights4, weights4, indices);
             weights4 = new_weights4;
         }
         flattened = true;

@@ -1,8 +1,8 @@
 ﻿#include "pch.h"
 #ifdef usdiEnableMonoBinding
+#include "MeshUtils/MeshUtils.h"
 #include "Mono.h"
 #include "MonoWrapper.h"
-#include "MeshUtils/tls.h"
 
 
 mImage mDomain::findImage(const char *name)

@@ -105,7 +105,7 @@
     <_ProjectFileVersion>12.0.21005.1</_ProjectFileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(SolutionDir)_out\$(ProjectName)_$(Platform)_$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)_out\$(Platform)_$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)_tmp\$(ProjectName)_$(Platform)_$(Configuration)\</IntDir>
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>$(SolutionDir)External\d3d12\include;$(SolutionDir)External\Unity\include;$(SolutionDir)External\Vulkan\include;$(SolutionDir)External\glew\include;$(SolutionDir)GraphicsInterface;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
@@ -115,7 +115,7 @@
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>$(SolutionDir)External\d3d12\include;$(SolutionDir)External\Unity\include;$(SolutionDir)External\Vulkan\include;$(SolutionDir)External\glew\include;$(SolutionDir)GraphicsInterface;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)external\lib\x86_64;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
-    <OutDir>$(SolutionDir)_out\$(ProjectName)_$(Platform)_$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)_out\$(Platform)_$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)_tmp\$(ProjectName)_$(Platform)_$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">
@@ -131,7 +131,7 @@
     <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Master|Win32'">
-    <OutDir>$(SolutionDir)_out\$(ProjectName)_$(Platform)_$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)_out\$(Platform)_$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)_tmp\$(ProjectName)_$(Platform)_$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(SolutionDir)External\d3d12\include;$(SolutionDir)External\Unity\include;$(SolutionDir)External\Vulkan\include;$(SolutionDir)External\glew\include;$(SolutionDir)GraphicsInterface;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
@@ -141,7 +141,7 @@
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>$(SolutionDir)External\d3d12\include;$(SolutionDir)External\Unity\include;$(SolutionDir)External\Vulkan\include;$(SolutionDir)External\glew\include;$(SolutionDir)GraphicsInterface;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)external\lib\x86_64;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
-    <OutDir>$(SolutionDir)_out\$(ProjectName)_$(Platform)_$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)_out\$(Platform)_$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)_tmp\$(ProjectName)_$(Platform)_$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

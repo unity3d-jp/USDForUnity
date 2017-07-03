@@ -4,6 +4,7 @@
 #include <memory>
 #include "muMath.h"
 #include "muRawVector.h"
+#include "muHandleBasedVector.h"
 #include "muIntrusiveArray.h"
 #include "muSIMD.h"
 #include "muVertex.h"
@@ -133,23 +134,19 @@ inline void EnumerateReverseFaceIndices(const IArray<int> counts, const Body& bo
 }
 
 template<class T>
-inline void CopyWithIndices(T *dst, const T *src, const IArray<int> indices, size_t beg, size_t end)
+inline void CopyWithIndices(IArray<T> dst, const IArray<T>& src, const IArray<int>& indices, size_t beg, size_t end)
 {
-    if (!dst || !src) { return; }
-
     size_t size = end - beg;
-    for (int i = 0; i < (int)size; ++i) {
+    for (size_t i = 0; i < size; ++i) {
         dst[i] = src[indices[beg + i]];
     }
 }
 
 template<class T>
-inline void CopyWithIndices(T *dst, const T *src, const IArray<int> indices)
+inline void CopyWithIndices(IArray<T> dst, const IArray<T>& src, const IArray<int>& indices)
 {
-    if (!dst || !src) { return; }
-
     size_t size = indices.size();
-    for (int i = 0; i < (int)size; ++i) {
+    for (size_t i = 0; i < size; ++i) {
         dst[i] = src[indices[i]];
     }
 }
