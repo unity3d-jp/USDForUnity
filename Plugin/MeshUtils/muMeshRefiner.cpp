@@ -1,7 +1,5 @@
 #include "pch.h"
 #include "MeshUtils.h"
-#include "SIMD.h"
-#include "MeshRefiner.h"
 
 namespace mu {
 
@@ -11,7 +9,6 @@ void MeshRefiner::prepare(
     counts = counts_;
     indices = indices_;
     points = points_;
-    npoints = points_;
     normals.reset(nullptr, 0);
     uv.reset(nullptr, 0);
     colors.reset(nullptr, 0);
@@ -22,10 +19,8 @@ void MeshRefiner::prepare(
 
     counts_tmp.clear();
     offsets.clear();
-    v2f_counts.clear();
-    v2f_offsets.clear();
-    shared_faces.clear();
-    shared_indices.clear();
+    connection.clear();
+
     face_normals.clear();
     normals_tmp.clear();
     tangents_tmp.clear();
@@ -39,6 +34,7 @@ void MeshRefiner::prepare(
     new_indices_triangulated.clear();
     new_indices_submeshes.clear();
     old2new.clear();
+
     num_indices_tri = 0;
 
     int num_indices = 0;
@@ -59,20 +55,22 @@ void MeshRefiner::prepare(
 
 }
 
-void MeshRefiner::genNormals()
+void MeshRefiner::genNormals(bool flip)
 {
-    auto& p = npoints;
+    auto& p = points;
     normals_tmp.resize(p.size());
     normals_tmp.zeroclear();
 
     size_t num_faces = counts.size();
+    int i1 = flip ? 2 : 1;
+    int i2 = flip ? 1 : 2;
     for (size_t fi = 0; fi < num_faces; ++fi)
     {
         int count = counts[fi];
         const int *face = &indices[offsets[fi]];
         float3 p0 = p[face[0]];
-        float3 p1 = p[face[1]];
-        float3 p2 = p[face[2]];
+        float3 p1 = p[face[i1]];
+        float3 p2 = p[face[i2]];
         float3 n = cross(p1 - p0, p2 - p0);
         for (int ci = 0; ci < count; ++ci) {
             normals_tmp[face[ci]] += n;
@@ -83,11 +81,11 @@ void MeshRefiner::genNormals()
     normals = normals_tmp;
 }
 
-void MeshRefiner::genNormals(float smooth_angle)
+void MeshRefiner::genNormalsWithSmoothAngle(float smooth_angle, bool flip)
 {
-    if (v2f_counts.empty()) { buildConnection(); }
+    buildConnection();
 
-    auto& p = npoints;
+    auto& p = points;
     size_t num_indices = indices.size();
     size_t num_faces = counts.size();
     normals_tmp.resize(num_indices);
@@ -95,13 +93,15 @@ void MeshRefiner::genNormals(float smooth_angle)
     // gen face normals
     face_normals.resize(num_faces);
     face_normals.zeroclear();
+    int i1 = flip ? 2 : 1;
+    int i2 = flip ? 1 : 2;
     for (size_t fi = 0; fi < num_faces; ++fi)
     {
         int offset = offsets[fi];
         const int *face = &indices[offset];
         float3 p0 = p[face[0]];
-        float3 p1 = p[face[1]];
-        float3 p2 = p[face[2]];
+        float3 p1 = p[face[i1]];
+        float3 p2 = p[face[i2]];
         float3 n = cross(p1 - p0, p2 - p0);
         face_normals[fi] = n;
     }
@@ -118,11 +118,11 @@ void MeshRefiner::genNormals(float smooth_angle)
         for (int ci = 0; ci < count; ++ci) {
             int vi = face[ci];
 
-            int num_connections = v2f_counts[vi];
-            int *connection = &shared_faces[v2f_offsets[vi]];
+            int num_connections = connection.v2f_counts[vi];
+            int *cfaces = &connection.v2f_faces[connection.v2f_offsets[vi]];
             auto normal = float3::zero();
             for (int ni = 0; ni < num_connections; ++ni) {
-                auto& connected_normal = face_normals[connection[ni]];
+                auto& connected_normal = face_normals[cfaces[ni]];
                 float dp = dot(face_normal, connected_normal);
                 if (dp > angle) {
                     normal += connected_normal;
@@ -526,60 +526,17 @@ void MeshRefiner::swapNewData(
 void MeshRefiner::buildConnection()
 {
     // skip if already built
-    if (v2f_counts.size() == points.size()) { return; }
+    if (connection.v2f_counts.size() == points.size()) { return; }
 
-    size_t num_faces = counts.size();
-    size_t num_indices = indices.size();
-    size_t num_points = points.size();
-
-    v2f_counts.resize(num_points);
-    v2f_offsets.resize(num_points);
-    shared_faces.resize(num_indices);
-    shared_indices.resize(num_indices);
-    memset(v2f_counts.data(), 0, sizeof(int)*num_points);
-
-    {
-        const int *idx = indices.data();
-        for (auto& c : counts) {
-            for (int i = 0; i < c; ++i) {
-                v2f_counts[idx[i]]++;
-            }
-            idx += c;
-        }
-    }
-
-    RawVector<int> v2f_indices;
-    v2f_indices.resize(num_points);
-    memset(v2f_indices.data(), 0, sizeof(int)*num_points);
-
-    {
-        int offset = 0;
-        for (size_t i = 0; i < num_points; ++i) {
-            v2f_offsets[i] = offset;
-            offset += v2f_counts[i];
-        }
-    }
-    {
-        int i = 0;
-        for (int fi = 0; fi < (int)num_faces; ++fi) {
-            int c = counts[fi];
-            for (int ci = 0; ci < c; ++ci) {
-                int vi = indices[i + ci];
-                int ti = v2f_offsets[vi] + v2f_indices[vi]++;
-                shared_faces[ti] = fi;
-                shared_indices[ti] = i + ci;
-            }
-            i += c;
-        }
-    }
+    connection.buildConnection(indices, counts, offsets, points);
 }
 
 int MeshRefiner::findOrAddVertexPNTUC(int vi, const float3& p, const float3& n, const float4& t, const float2& u, const float4& c)
 {
-    int offset = v2f_offsets[vi];
-    int count = v2f_counts[vi];
+    int offset = connection.v2f_offsets[vi];
+    int count = connection.v2f_counts[vi];
     for (int ci = 0; ci < count; ++ci) {
-        int& ni = old2new[shared_indices[offset + ci]];
+        int& ni = old2new[connection.v2f_indices[offset + ci]];
         // tangent can be omitted as it is generated by point, normal and uv
         if (ni != -1 && near_equal(new_points[ni], p) && near_equal(new_normals[ni], n) && near_equal(new_uv[ni], u) && near_equal(new_colors[ni], c)) {
             return ni;
@@ -600,10 +557,10 @@ int MeshRefiner::findOrAddVertexPNTUC(int vi, const float3& p, const float3& n, 
 
 int MeshRefiner::findOrAddVertexPNTU(int vi, const float3& p, const float3& n, const float4& t, const float2& u)
 {
-    int offset = v2f_offsets[vi];
-    int count = v2f_counts[vi];
+    int offset = connection.v2f_offsets[vi];
+    int count = connection.v2f_counts[vi];
     for (int ci = 0; ci < count; ++ci) {
-        int& ni = old2new[shared_indices[offset + ci]];
+        int& ni = old2new[connection.v2f_indices[offset + ci]];
         if (ni != -1 && near_equal(new_points[ni], p) && near_equal(new_normals[ni], n) && near_equal(new_uv[ni], u)) {
             return ni;
         }
@@ -622,10 +579,10 @@ int MeshRefiner::findOrAddVertexPNTU(int vi, const float3& p, const float3& n, c
 
 int MeshRefiner::findOrAddVertexPNU(int vi, const float3& p, const float3& n, const float2& u)
 {
-    int offset = v2f_offsets[vi];
-    int count = v2f_counts[vi];
+    int offset = connection.v2f_offsets[vi];
+    int count = connection.v2f_counts[vi];
     for (int ci = 0; ci < count; ++ci) {
-        int& ni = old2new[shared_indices[offset + ci]];
+        int& ni = old2new[connection.v2f_indices[offset + ci]];
         if (ni != -1 && near_equal(new_points[ni], p) && near_equal(new_normals[ni], n) && near_equal(new_uv[ni], u)) {
             return ni;
         }
@@ -643,10 +600,10 @@ int MeshRefiner::findOrAddVertexPNU(int vi, const float3& p, const float3& n, co
 
 int MeshRefiner::findOrAddVertexPN(int vi, const float3& p, const float3& n)
 {
-    int offset = v2f_offsets[vi];
-    int count = v2f_counts[vi];
+    int offset = connection.v2f_offsets[vi];
+    int count = connection.v2f_counts[vi];
     for (int ci = 0; ci < count; ++ci) {
-        int& ni = old2new[shared_indices[offset + ci]];
+        int& ni = old2new[connection.v2f_indices[offset + ci]];
         if (ni != -1 && near_equal(new_points[ni], p) && near_equal(new_normals[ni], n)) {
             return ni;
         }
@@ -663,10 +620,10 @@ int MeshRefiner::findOrAddVertexPN(int vi, const float3& p, const float3& n)
 
 int MeshRefiner::findOrAddVertexPU(int vi, const float3& p, const float2& u)
 {
-    int offset = v2f_offsets[vi];
-    int count = v2f_counts[vi];
+    int offset = connection.v2f_offsets[vi];
+    int count = connection.v2f_counts[vi];
     for (int ci = 0; ci < count; ++ci) {
-        int& ni = old2new[shared_indices[offset + ci]];
+        int& ni = old2new[connection.v2f_indices[offset + ci]];
         if (ni != -1 && near_equal(new_points[ni], p) && near_equal(new_uv[ni], u)) {
             return ni;
         }

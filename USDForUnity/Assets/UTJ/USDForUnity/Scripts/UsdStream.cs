@@ -228,7 +228,7 @@ namespace UTJ.USD
 
             // find existing GameObject or create new one
             var name = usdi.usdiPrimGetNameS(schema);
-            var child = parent.FindChild(name);
+            var child = parent.Find(name);
             if (child != null)
             {
                 go = child.gameObject;

@@ -1,36 +1,4 @@
-#define C programCount
-#define C3 (programCount*3)
-#define I programIndex
-
-typedef unsigned int16 half;
-
-struct half2  { half x, y; };
-struct half3  { half x, y, z; };
-struct half4  { half x, y, z, w; };
-struct quath  { half x, y, z, w; };
-struct float2 { float x, y; };
-struct float3 { float x, y, z; };
-struct float4 { float x, y, z, w; };
-struct quatf  { float x, y, z, w; };
-
-
-
-float2 half_to_float(half2 h)
-{
-    float2 ret = {half_to_float(h.x), half_to_float(h.y)};
-    return ret;
-}
-float3 half_to_float(half3 h)
-{
-    float3 ret = {half_to_float(h.x), half_to_float(h.y), half_to_float(h.z)};
-    return ret;
-}
-float4 half_to_float(half4 h)
-{
-    float4 ret = {half_to_float(h.x), half_to_float(h.y), half_to_float(h.z), half_to_float(h.w)};
-    return ret;
-}
-
+#include "ispcmath.h"
 
 export void FloatToHalf(
     uniform half dst[],
@@ -157,149 +125,6 @@ export void Lerp(uniform float dst[], uniform const float src1[], uniform const 
     }
 }
 
-export uniform float3 Min(uniform const float3 src[], uniform const int num)
-{
-    uniform float3 rmin = src[0];
-
-    const uniform int num_loops = num / C;
-    if(num_loops > 1) {
-        const uniform float * uniform fv = (const uniform float * uniform)src;
-        uniform float tmin[3][C];
-        tmin[0][I] = fv[C*0 + I];
-        tmin[1][I] = fv[C*1 + I];
-        tmin[2][I] = fv[C*2 + I];
-
-        for(uniform int i=1; i < num_loops; ++i) {
-            uniform const int i3 = i*3;
-
-            float _0 = fv[C*(i3+0) + I];
-            tmin[0][I] = min(tmin[0][I], _0);
-
-            float _1 = fv[C*(i3+1) + I];
-            tmin[1][I] = min(tmin[1][I], _1);
-
-            float _2 = fv[C*(i3+2) + I];
-            tmin[2][I] = min(tmin[2][I], _2);
-        }
-
-        float x,y,z;
-        aos_to_soa3((uniform float*)&tmin[0], &x, &y, &z);
-        rmin.x = reduce_min(x);
-        rmin.y = reduce_min(y);
-        rmin.z = reduce_min(z);
-    }
-
-    for(uniform int i=num_loops*C; i < num; ++i) {
-        uniform float3 t = src[i];
-        rmin.x = min(rmin.x, t.x);
-        rmin.y = min(rmin.y, t.y);
-        rmin.z = min(rmin.z, t.z);
-    }
-
-    return rmin;
-}
-
-export uniform float3 Max(uniform const float3 src[], uniform const int num)
-{
-    uniform float3 rmax = src[0];
-
-    const uniform int num_loops = num / C;
-    if(num_loops > 1) {
-        const uniform float * uniform fv = (const uniform float * uniform)src;
-        uniform float tmax[3][C];
-        tmax[0][I] = fv[C*0 + I];
-        tmax[1][I] = fv[C*1 + I];
-        tmax[2][I] = fv[C*2 + I];
-
-        for(uniform int i=1; i < num_loops; ++i) {
-            uniform const int i3 = i*3;
-
-            float _0 = fv[C*(i3+0) + I];
-            tmax[0][I] = max(tmax[0][I], _0);
-
-            float _1 = fv[C*(i3+1) + I];
-            tmax[1][I] = max(tmax[1][I], _1);
-
-            float _2 = fv[C*(i3+2) + I];
-            tmax[2][I] = max(tmax[2][I], _2);
-        }
-
-        float x,y,z;
-        aos_to_soa3((uniform float*)&tmax[0], &x, &y, &z);
-        rmax.x = reduce_max(x);
-        rmax.y = reduce_max(y);
-        rmax.z = reduce_max(z);
-    }
-
-    for(uniform int i=num_loops*C; i < num; ++i) {
-        uniform float3 t = src[i];
-        rmax.x = max(rmax.x, t.x);
-        rmax.y = max(rmax.y, t.y);
-        rmax.z = max(rmax.z, t.z);
-    }
-
-    return rmax;
-}
-
-export void MinMax(
-    uniform const float3 src[], uniform const int num,
-    uniform float3& dst_min, uniform float3& dst_max)
-{
-    if(num == 0) { return; }
-
-    uniform float3 rmin = src[0], rmax = src[0];
-
-    const uniform int num_loops = num / C;
-    if(num_loops > 1) {
-        const uniform float * uniform fv = (const uniform float * uniform)src;
-        uniform float tmin[3][C];
-        uniform float tmax[3][C];
-        tmin[0][I] = tmax[0][I] = fv[C*0 + I];
-        tmin[1][I] = tmax[1][I] = fv[C*1 + I];
-        tmin[2][I] = tmax[2][I] = fv[C*2 + I];
-
-        for(uniform int i=1; i < num_loops; ++i) {
-            uniform const int i3 = i*3;
-
-            float _0 = fv[C*(i3+0) + I];
-            tmin[0][I] = min(tmin[0][I], _0);
-            tmax[0][I] = max(tmax[0][I], _0);
-
-            float _1 = fv[C*(i3+1) + I];
-            tmin[1][I] = min(tmin[1][I], _1);
-            tmax[1][I] = max(tmax[1][I], _1);
-
-            float _2 = fv[C*(i3+2) + I];
-            tmin[2][I] = min(tmin[2][I], _2);
-            tmax[2][I] = max(tmax[2][I], _2);
-        }
-
-        float x,y,z;
-        aos_to_soa3((uniform float*)&tmin[0], &x, &y, &z);
-        rmin.x = reduce_min(x);
-        rmin.y = reduce_min(y);
-        rmin.z = reduce_min(z);
-
-        aos_to_soa3((uniform float*)&tmax[0], &x, &y, &z);
-        rmax.x = reduce_max(x);
-        rmax.y = reduce_max(y);
-        rmax.z = reduce_max(z);
-    }
-
-    for(uniform int i=num_loops*C; i < num; ++i) {
-        uniform float3 t = src[i];
-        rmin.x = min(rmin.x, t.x);
-        rmin.y = min(rmin.y, t.y);
-        rmin.z = min(rmin.z, t.z);
-        rmax.x = max(rmax.x, t.x);
-        rmax.y = max(rmax.y, t.y);
-        rmax.z = max(rmax.z, t.z);
-    }
-
-    dst_min = rmin;
-    dst_max = rmax;
-}
-
 export uniform bool NearEqual(
     uniform const float src1[], uniform const float src2[], uniform const int num, uniform const float eps)
 {
@@ -308,4 +133,61 @@ export uniform bool NearEqual(
         tdiff = max(tdiff, abs(src1[i] - src2[i]));
     }
     return reduce_max(tdiff) < eps;
+}
+
+
+
+export uniform int RayTrianglesIntersectionSoA(
+    uniform const float3& pos, uniform const float3& dir,
+    uniform const float v1x[], uniform const float v1y[], uniform const float v1z[],
+    uniform const float v2x[], uniform const float v2y[], uniform const float v2z[],
+    uniform const float v3x[], uniform const float v3y[], uniform const float v3z[],
+    uniform const int num_triangles,
+    uniform int& tindex, uniform float& distance)
+{
+    uniform int total_hit = 0;
+    distance = FLT_MAX;
+
+    // SIMD pass
+    uniform int num_triangles_simd = num_triangles & ~(C - 1);
+    for(uniform int bi=0; bi < num_triangles_simd; bi += C) {
+        float3 p1 = {v1x[bi+I], v1y[bi+I], v1z[bi+I]};
+        float3 p2 = {v2x[bi+I], v2y[bi+I], v2z[bi+I]};
+        float3 p3 = {v3x[bi+I], v3y[bi+I], v3z[bi+I]};
+
+        float d;
+        bool hit = ray_triangle_intersection(pos, dir, p1, p2, p3, d);
+        if(any(hit)) {
+            uniform int hita[C]; hita[I] = hit;
+            uniform float da[C]; da[I] = d;
+            for(uniform int i = 0; i < C; ++i) {
+                if(hita[i]) {
+                    total_hit++;
+                    if(da[i] < distance) {
+                        tindex = bi + i;
+                        distance = da[i];
+                    }
+                }
+            }
+        }
+    }
+
+    // non-SIMD pass
+    for(uniform int ti = num_triangles_simd; ti < num_triangles; ++ti) {
+        uniform float3 p1 = {v1x[ti], v1y[ti], v1z[ti]};
+        uniform float3 p2 = {v2x[ti], v2y[ti], v2z[ti]};
+        uniform float3 p3 = {v3x[ti], v3y[ti], v3z[ti]};
+
+        uniform float d;
+        uniform bool hit = ray_triangle_intersection(pos, dir, p1, p2, p3, d);
+        if(hit) {
+            total_hit++;
+            if(d < distance) {
+                tindex = ti;
+                distance = d;
+            }
+        }
+    }
+
+    return total_hit;
 }

@@ -32,7 +32,6 @@ struct MeshRefiner
     IArray<float2> uv;
     IArray<float4> colors;
     IArray<Weights4> weights4;
-    IArray<float3> npoints; // points for normal calculation
 
     RawVector<Submesh> submeshes;
     RawVector<Split> splits;
@@ -40,10 +39,7 @@ struct MeshRefiner
 private:
     RawVector<int> counts_tmp;
     RawVector<int> offsets;
-    RawVector<int> v2f_counts;
-    RawVector<int> v2f_offsets;
-    RawVector<int> shared_faces;
-    RawVector<int> shared_indices;
+    ConnectionData connection;
     RawVector<float3> face_normals;
     RawVector<float3> normals_tmp;
     RawVector<float4> tangents_tmp;
@@ -58,12 +54,13 @@ private:
     RawVector<int>    new_indices_triangulated;
     RawVector<int>    new_indices_submeshes;
     RawVector<int>    old2new;
+
     int num_indices_tri = 0;
 
 public:
     void prepare(const IArray<int>& counts, const IArray<int>& indices, const IArray<float3>& points);
-    void genNormals();
-    void genNormals(float smooth_angle);
+    void genNormals(bool flip);
+    void genNormalsWithSmoothAngle(float smooth_angle, bool flip);
     void genTangents();
 
     bool refine(bool optimize);

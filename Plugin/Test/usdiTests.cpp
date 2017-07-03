@@ -1,3 +1,4 @@
+#include "pch.h"
 #define testsImpl
 #include "usdiTests.h"
 

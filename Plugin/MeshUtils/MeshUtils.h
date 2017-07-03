@@ -2,29 +2,18 @@
 
 #include <vector>
 #include <memory>
-#include "Math.h"
-#include "RawVector.h"
-#include "IntrusiveArray.h"
-#include "HandleBasedVector.h"
-#include "SIMD.h"
-#include "Vertex.h"
-#include "tls.h"
+#include "muMath.h"
+#include "muRawVector.h"
+#include "muIntrusiveArray.h"
+#include "muSIMD.h"
+#include "muVertex.h"
+#include "muTLS.h"
+#include "muMisc.h"
+#include "muConcurrency.h"
 
 namespace mu {
 
-template<int N>
-struct Weights
-{
-    float   weights[N] = {};
-    int     indices[N] = {};
-};
-using Weights4 = Weights<4>;
-using Weights8 = Weights<8>;
-
 // size of dst must be num_points
-bool GenerateNormals(
-    IArray<float3> dst, const IArray<float3> points,
-    const IArray<int> counts, const IArray<int> indices);
 bool GenerateNormals(
     IArray<float3> dst, const IArray<float3> points,
     const IArray<int> counts, const IArray<int> offsets, const IArray<int> indices);
@@ -36,6 +25,74 @@ bool GenerateTangents(
 template<int N>
 bool GenerateWeightsN(RawVector<Weights<N>>& dst, IArray<int> bone_indices, IArray<float> bone_weights, int bones_per_vertex);
 
+
+struct ConnectionData
+{
+    RawVector<int> v2f_counts;
+    RawVector<int> v2f_offsets;
+    RawVector<int> v2f_faces;
+    RawVector<int> v2f_indices;
+
+    RawVector<int> weld_map;
+    RawVector<int> weld_counts;
+    RawVector<int> weld_offsets;
+    RawVector<int> weld_indices;
+
+    void clear();
+    void buildConnection(
+        const IArray<int>& indices, int ngon, const IArray<float3>& vertices, bool welding = false);
+    void buildConnection(
+        const IArray<int>& indices, const IArray<int>& counts, const IArray<int>& offsets, const IArray<float3>& vertices, bool welding = false);
+
+    // Body: [](int face_index, int index_index) -> void
+    template<class Body>
+    void eachConnectedFaces(int vi, const Body& body) const
+    {
+        int count = v2f_counts[vi];
+        int offset = v2f_offsets[vi];
+        for (int i = 0; i < count; ++i) {
+            body(v2f_faces[offset + i], v2f_indices[offset + i]);
+        }
+    }
+
+    // Body: [](int vertex_index) -> void
+    template<class Body>
+    void eachWeldedVertices(int vi, const Body& body) const
+    {
+        int count = weld_counts[vi];
+        int offset = weld_offsets[vi];
+        for (int i = 0; i < count; ++i) {
+            body(weld_indices[offset + i]);
+        }
+    }
+};
+
+bool OnEdge(const IArray<int>& indices, int ngon, const IArray<float3>& vertices, const ConnectionData& connection, int vertex_index);
+bool OnEdge(const IArray<int>& indices, const IArray<int>& counts, const IArray<int>& offsets, const IArray<float3>& vertices, const ConnectionData& connection, int vertex_index);
+
+bool IsEdgeOpened(const IArray<int>& indices, int ngon, const ConnectionData& connection, int i0, int i1);
+bool IsEdgeOpened(const IArray<int>& indices, const IArray<int>& counts, const IArray<int>& offsets, const ConnectionData& connection, int i0, int i1);
+
+template<class Handler>
+void SelectEdge(const IArray<int>& indices, int ngon, const IArray<float3>& vertices,
+    const IArray<int>& vertex_indices, const Handler& handler);
+template<class Handler>
+void SelectEdge(const IArray<int>& indices, const IArray<int>& counts, const IArray<int>& offsets, const IArray<float3>& vertices,
+    const IArray<int>& vertex_indices, const Handler& handler);
+
+template<class Handler>
+void SelectHole(const IArray<int>& indices, int ngon, const IArray<float3>& vertices,
+    const IArray<int>& vertex_indices, const Handler& handler);
+template<class Handler>
+void SelectHole(const IArray<int>& indices, const IArray<int>& counts, const IArray<int>& offsets, const IArray<float3>& vertices,
+    const IArray<int>& vertex_indices, const Handler& handler);
+
+template<class Handler>
+void SelectConnected(const IArray<int>& indices, int ngon, const IArray<float3>& vertices,
+    const IArray<int>& vertex_indices, const Handler& handler);
+template<class Handler>
+void SelectConnected(const IArray<int>& indices, const IArray<int>& counts, const IArray<int>& offsets, const IArray<float3>& vertices,
+    const IArray<int>& vertex_indices, const Handler& handler);
 
 
 // ------------------------------------------------------------
@@ -85,16 +142,6 @@ inline void CopyWithIndices(T *dst, const T *src, const IArray<int> indices, siz
         dst[i] = src[indices[beg + i]];
     }
 }
-template<class T>
-inline void CopyWithIndices(T& dst, const T& src, const IArray<int> indices, size_t beg, size_t end)
-{
-    if (src.empty()) { return; }
-    size_t size = end - beg;
-    dst.resize(size);
-    for (int i = 0; i < (int)size; ++i) {
-        dst[i] = src[indices[beg + i]];
-    }
-}
 
 template<class T>
 inline void CopyWithIndices(T *dst, const T *src, const IArray<int> indices)
@@ -102,16 +149,6 @@ inline void CopyWithIndices(T *dst, const T *src, const IArray<int> indices)
     if (!dst || !src) { return; }
 
     size_t size = indices.size();
-    for (int i = 0; i < (int)size; ++i) {
-        dst[i] = src[indices[i]];
-    }
-}
-template<class T>
-inline void CopyWithIndices(T& dst, const T& src, const IArray<int> indices)
-{
-    if (src.empty()) { return; }
-    size_t size = indices.size();
-    dst.resize(size);
     for (int i = 0; i < (int)size; ++i) {
         dst[i] = src[indices[i]];
     }
@@ -287,4 +324,5 @@ inline uint32_t Float4ToColor32(const float4& c)
 
 } // namespace mu
 
-#include "MeshRefiner.h"
+#include "MeshUtils_impl.h"
+#include "muMeshRefiner.h"

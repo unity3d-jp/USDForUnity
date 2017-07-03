@@ -176,7 +176,7 @@ namespace UTJ.USD
             {
                 string name = "Submesh[" + m_nth + "]";
                 var ptrans = parent.GetComponent<Transform>();
-                var child = ptrans.FindChild(name);
+                var child = ptrans.Find(name);
                 if (child != null)
                 {
                     go = child.gameObject;

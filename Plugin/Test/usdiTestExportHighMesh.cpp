@@ -1,5 +1,4 @@
-#define NOMINMAX
-
+#include "pch.h"
 #include <cstdio>
 #include <cmath>
 #include <vector>

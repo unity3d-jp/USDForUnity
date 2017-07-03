@@ -7,7 +7,7 @@
     #include "half.h"
 #endif // muEnableHalf
 
-#define muDefaultEpsilon 0.00001f
+#define muEpsilon 1e-4f
 #define muMath_AddNamespace
 
 #ifdef muMath_AddNamespace
@@ -162,31 +162,31 @@ struct float4x4
 };
 
 
-inline bool near_equal(float a, float b, float epsilon = muDefaultEpsilon)
+inline bool near_equal(float a, float b, float epsilon = muEpsilon)
 {
     return std::abs(a - b) < epsilon;
 }
-inline bool near_equal(const float2& a, const float2& b, float e = muDefaultEpsilon)
+inline bool near_equal(const float2& a, const float2& b, float e = muEpsilon)
 {
     return near_equal(a.x, b.x, e) && near_equal(a.y, b.y, e);
 }
-inline bool near_equal(const float3& a, const float3& b, float e = muDefaultEpsilon)
+inline bool near_equal(const float3& a, const float3& b, float e = muEpsilon)
 {
     return near_equal(a.x, b.x, e) && near_equal(a.y, b.y, e) && near_equal(a.z, b.z, e);
 }
-inline bool near_equal(const float4& a, const float4& b, float e = muDefaultEpsilon)
+inline bool near_equal(const float4& a, const float4& b, float e = muEpsilon)
 {
     return near_equal(a.x, b.x, e) && near_equal(a.y, b.y, e) && near_equal(a.z, b.z, e) && near_equal(a.w, b.w, e);
 }
-inline bool near_equal(const quatf& a, const quatf& b, float e = muDefaultEpsilon)
+inline bool near_equal(const quatf& a, const quatf& b, float e = muEpsilon)
 {
     return near_equal(a.x, b.x, e) && near_equal(a.y, b.y, e) && near_equal(a.z, b.z, e) && near_equal(a.w, b.w, e);
 }
-inline bool near_equal(const float3x3& a, const float3x3& b, float e = muDefaultEpsilon)
+inline bool near_equal(const float3x3& a, const float3x3& b, float e = muEpsilon)
 {
     return near_equal(a[0], b[0], e) && near_equal(a[1], b[1], e) && near_equal(a[2], b[2], e);
 }
-inline bool near_equal(const float4x4& a, const float4x4& b, float e = muDefaultEpsilon)
+inline bool near_equal(const float4x4& a, const float4x4& b, float e = muEpsilon)
 {
     return near_equal(a[0], b[0], e) && near_equal(a[1], b[1], e) && near_equal(a[2], b[2], e) && near_equal(a[3], b[3], e);
 }
@@ -319,15 +319,66 @@ inline float3& operator/=(float3& l, const float3& r)
 }
 
 
+inline float4 operator+(const float4& l, const float4& r)
+{
+    return{ l.x + r.x, l.y + r.y, l.z + r.z, l.w + r.w };
+}
+inline float4 operator-(const float4& v)
+{
+    return{ -v.x, -v.y, -v.z, -v.w };
+}
+inline float4 operator-(const float4& l, const float4& r)
+{
+    return{ l.x - r.x, l.y - r.y, l.z - r.z, l.w - r.w };
+}
 inline float4 operator*(const float4& l, float r)
 {
-    return{ l.x*r, l.y*r, l.z*r, l.w*r };
+    return{ l.x * r, l.y * r, l.z * r, l.w * r };
+}
+inline float4 operator*(const float4& l, const float4& r)
+{
+    return{ l.x * r.x, l.y * r.y, l.z * r.z, l.w * r.w };
+}
+inline float4 operator/(const float4& l, float r)
+{
+    return{ l.x / r, l.y / r, l.z / r, l.w / r };
+}
+inline float4 operator/(const float4& l, const float4& r)
+{
+    return{ l.x / r.x, l.y / r.y, l.z / r.z, l.w / r.w };
+}
+
+inline float4& operator+=(float4& l, const float4& r)
+{
+    l = l + r;
+    return l;
+}
+inline float4& operator-=(float4& l, const float4& r)
+{
+    l = l - r;
+    return l;
 }
 inline float4& operator*=(float4& l, float r)
 {
     l = l * r;
     return l;
 }
+inline float4& operator*=(float4& l, const float4& r)
+{
+    l = l * r;
+    return l;
+}
+inline float4& operator/=(float4& l, float r)
+{
+    l = l / r;
+    return l;
+}
+inline float4& operator/=(float4& l, const float4& r)
+{
+    l = l / r;
+    return l;
+}
+
 
 inline quatf operator*(const quatf& l, float r)
 {
@@ -436,19 +487,65 @@ inline float4x4& operator*=(float4x4& a, const float4x4 &b)
     return a;
 }
 
-inline float3 applyTRS(const float4x4& m, const float3& v)
+inline float3 swap_handedness(const float3& v) { return { -v.x, v.y, v.z }; }
+inline float4 swap_handedness(const float4& v) { return { -v.x, v.y, v.z, v.w }; }
+
+inline static float clamp01(float v) { return std::max<float>(std::min<float>(v, 1.0f), 0.0f); }
+inline static float clamp11(float v) { return std::max<float>(std::min<float>(v, 1.0f), -1.0f); }
+inline static int clamp01(int v) { return std::max<int>(std::min<int>(v, 1), 0); }
+inline static int clamp11(int v) { return std::max<int>(std::min<int>(v, 1), -1); }
+
+
+inline static float3 mul_v(const float4x4& m, const float3& v)
 {
-    return{
+    return {
+        m[0][0] * v[0] + m[1][0] * v[1] + m[2][0] * v[2],
+        m[0][1] * v[0] + m[1][1] * v[1] + m[2][1] * v[2],
+        m[0][2] * v[0] + m[1][2] * v[1] + m[2][2] * v[2],
+    };
+}
+inline static float4 mul_v(const float4x4& m, const float4& v)
+{
+    return {
+        m[0][0] * v[0] + m[1][0] * v[1] + m[2][0] * v[2],
+        m[0][1] * v[0] + m[1][1] * v[1] + m[2][1] * v[2],
+        m[0][2] * v[0] + m[1][2] * v[1] + m[2][2] * v[2],
+        v[3],
+    };
+}
+inline static float3 mul_p(const float4x4& m, const float3& v)
+{
+    return {
         m[0][0] * v[0] + m[1][0] * v[1] + m[2][0] * v[2] + m[3][0],
         m[0][1] * v[0] + m[1][1] * v[1] + m[2][1] * v[2] + m[3][1],
         m[0][2] * v[0] + m[1][2] * v[1] + m[2][2] * v[2] + m[3][2],
     };
 }
-
-inline float dot(const float3& l, const float3& r)
+inline static float4 mul4(const float4x4& m, const float3& v)
 {
-    return l.x*r.x + l.y*r.y + l.z*r.z;
+    return {
+        m[0][0] * v[0] + m[1][0] * v[1] + m[2][0] * v[2] + m[3][0],
+        m[0][1] * v[0] + m[1][1] * v[1] + m[2][1] * v[2] + m[3][1],
+        m[0][2] * v[0] + m[1][2] * v[1] + m[2][2] * v[2] + m[3][2],
+        m[0][3] * v[0] + m[1][3] * v[1] + m[2][3] * v[2] + m[3][3],
+    };
 }
+
+inline float2 min(float2 a, float2 b) { return{ std::min<float>(a.x, b.x), std::min<float>(a.y, b.y) }; }
+inline float3 min(float3 a, float3 b) { return{ std::min<float>(a.x, b.x), std::min<float>(a.y, b.y), std::min<float>(a.z, b.z) }; }
+inline float2 max(float2 a, float2 b) { return{ std::max<float>(a.x, b.x), std::max<float>(a.y, b.y) }; }
+inline float3 max(float3 a, float3 b) { return{ std::max<float>(a.x, b.x), std::max<float>(a.y, b.y), std::max<float>(a.z, b.z) }; }
+
+inline float  lerp(float  a, float  b, float t) { return a*(1.0f - t) + b*t; }
+inline float2 lerp(float2 a, float2 b, float t) { return a*(1.0f - t) + b*t; }
+inline float3 lerp(float3 a, float3 b, float t) { return a*(1.0f - t) + b*t; }
+
+inline float dot(const float2& l, const float2& r) { return l.x*r.x + l.y*r.y; }
+inline float dot(const float3& l, const float3& r) { return l.x*r.x + l.y*r.y + l.z*r.z; }
+inline float length_sq(float2 v) { return dot(v, v); }
+inline float length_sq(float3 v) { return dot(v, v); }
+inline float length(float2 v) { return sqrt(length_sq(v)); }
+inline float length(float3 v) { return sqrt(length_sq(v)); }
 
 inline float3 normalize(const float3& l)
 {
@@ -464,6 +561,18 @@ inline float3 cross(const float3& l, const float3& r)
         l.x * r.y - l.y * r.x };
 }
 
+// a & b must be normalized
+inline float angle_between(float3 a, float3 b)
+{
+    return std::acos(dot(a, b));
+}
+inline float angle_between(float3 pos1, float3 pos2, float3 center)
+{
+    return angle_between(
+        normalize(pos1 - center),
+        normalize(pos2 - center));
+}
+
 inline float3 apply_rotation(const quatf& q, const float3& p)
 {
     float3 a = cross((float3&)q, p);
@@ -471,7 +580,7 @@ inline float3 apply_rotation(const quatf& q, const float3& p)
     return p + (a * q.w + b) * 2.0f;
 }
 
-inline quatf inverse(const quatf& v)
+inline quatf invert(const quatf& v)
 {
     return{ -v.x, -v.y, -v.z, v.w };
 }
@@ -557,7 +666,7 @@ inline quatf rotate(const float3& axis, float angle)
 template<class T> inline float clamp(T v, T vmin, T vmax) { return std::min<T>(std::max<T>(v, vmin), vmax); }
 inline float saturate(float v) { return clamp(v, -1.0f, 1.0f); }
 
-inline float3 eularZXY(const quatf& q)
+inline float3 to_eularZXY(const quatf& q)
 {
     float d[] = {
         q.x*q.x, q.x*q.y, q.x*q.z, q.x*q.w,
@@ -602,9 +711,31 @@ inline float3 eularZXY(const quatf& q)
     }
 }
 
+inline void to_axis_angle(const quatf& q, float3& axis, float& angle)
+{
+    angle = 2.0f * std::acos(q.w);
+    axis = {
+        q.x / std::sqrt(1.0f - q.w*q.w),
+        q.y / std::sqrt(1.0f - q.w*q.w),
+        q.z / std::sqrt(1.0f - q.w*q.w)
+    };
+}
+
 inline quatf swap_handedness(const quatf& q)
 {
     return { q.x, -q.y, -q.z, q.w };
+}
+
+inline float3x3 look33(float3 dir, float3 up)
+{
+    float3 z = dir;
+    float3 x = normalize(cross(up, z));
+    float3 y = cross(z, x);
+    return{ {
+        { x.x, y.x, z.x },
+        { x.y, y.y, z.y },
+        { x.z, y.z, z.z },
+    } };
 }
 
 inline float3x3 swap_handedness(const float3x3& m)
@@ -651,25 +782,116 @@ inline float4x4 translate(const float3& t)
         { 0.0f, 1.0f, 0.0f, 0.0f },
         { 0.0f, 0.0f, 1.0f, 0.0f },
         {  t.x,  t.y,  t.z, 1.0f }
-    } };
+    }};
 }
 
-inline float4x4 scale(const float3& t)
+inline float3x3 scale33(const float3& t)
 {
-    return{ {
+    return{{
+        {  t.x, 0.0f, 0.0f },
+        { 0.0f,  t.y, 0.0f },
+        { 0.0f, 0.0f,  t.z },
+    }};
+}
+inline float4x4 scale44(const float3& t)
+{
+    return{{
         {  t.x, 0.0f, 0.0f, 0.0f },
         { 0.0f,  t.y, 0.0f, 0.0f },
         { 0.0f, 0.0f,  t.z, 0.0f },
         { 0.0f, 0.0f, 0.0f, 1.0f }
-    } };
+    }};
 }
 
 inline float4x4 transform(const float3& t, const quatf& r, const float3& s)
 {
-    auto ret = scale(s);
+    auto ret = scale44(s);
     ret *= to_float4x4(r);
     ret *= translate(t);
     return ret;
+}
+
+inline float3x3 invert(const float3x3& x)
+{
+    if (x[0][2] != 0 || x[1][2] != 0 || x[2][2] != 1) {
+        float3x3 s = {
+            x[1][1] * x[2][2] - x[2][1] * x[1][2],
+            x[2][1] * x[0][2] - x[0][1] * x[2][2],
+            x[0][1] * x[1][2] - x[1][1] * x[0][2],
+
+            x[2][0] * x[1][2] - x[1][0] * x[2][2],
+            x[0][0] * x[2][2] - x[2][0] * x[0][2],
+            x[1][0] * x[0][2] - x[0][0] * x[1][2],
+
+            x[1][0] * x[2][1] - x[2][0] * x[1][1],
+            x[2][0] * x[0][1] - x[0][0] * x[2][1],
+            x[0][0] * x[1][1] - x[1][0] * x[0][1] };
+
+        float r = x[0][0] * s[0][0] + x[0][1] * s[1][0] + x[0][2] * s[2][0];
+
+        if (std::abs(r) >= 1) {
+            for (int i = 0; i < 3; ++i) {
+                for (int j = 0; j < 3; ++j) {
+                    s[i][j] /= r;
+                }
+            }
+        }
+        else {
+            float mr = std::abs(r) / std::numeric_limits<float>::min();
+
+            for (int i = 0; i < 3; ++i) {
+                for (int j = 0; j < 3; ++j) {
+                    if (mr > std::abs(s[i][j])) {
+                        s[i][j] /= r;
+                    }
+                    else {
+                        // singular
+                        return float3x3::identity();
+                    }
+                }
+            }
+        }
+
+        return s;
+    }
+    else {
+        float3x3 s = {
+             x[1][1], -x[0][1], 0,
+            -x[1][0],  x[0][0], 0,
+                   0,        0, 1 };
+
+        float r = x[0][0] * x[1][1] - x[1][0] * x[0][1];
+
+        if (std::abs(r) >= 1) {
+            for (int i = 0; i < 2; ++i) {
+                for (int j = 0; j < 2; ++j) {
+                    s[i][j] /= r;
+                }
+            }
+        }
+        else {
+            float mr = std::abs(r) / std::numeric_limits<float>::min();
+
+            for (int i = 0; i < 2; ++i) {
+                for (int j = 0; j < 2; ++j) {
+                    if (mr > std::abs(s[i][j])) {
+                        s[i][j] /= r;
+                    }
+                    else
+                    {
+                        
+                        // singular
+                        return float3x3::identity();
+                    }
+                }
+            }
+        }
+
+        s[2][0] = -x[2][0] * s[0][0] - x[2][1] * s[1][0];
+        s[2][1] = -x[2][0] * s[0][1] - x[2][1] * s[1][1];
+
+        return s;
+    }
 }
 
 inline float4x4 invert(const float4x4& x)
@@ -690,38 +912,27 @@ inline float4x4 invert(const float4x4& x)
         x[0][0] * x[1][1] - x[1][0] * x[0][1],
         0,
 
-        0,
-        0,
-        0,
-        1,
+        0, 0, 0, 1,
     };
 
     auto r = x[0][0] * s[0][0] + x[0][1] * s[1][0] + x[0][2] * s[2][0];
 
-    if (std::abs(r) >= 1)
-    {
-        for (int i = 0; i < 3; ++i)
-        {
-            for (int j = 0; j < 3; ++j)
-            {
+    if (std::abs(r) >= 1) {
+        for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < 3; ++j) {
                 s[i][j] /= r;
             }
         }
     }
-    else
-    {
+    else {
         auto mr = std::abs(r) / std::numeric_limits<float>::min();
 
-        for (int i = 0; i < 3; ++i)
-        {
-            for (int j = 0; j < 3; ++j)
-            {
-                if (mr > std::abs(s[i][j]))
-                {
+        for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < 3; ++j) {
+                if (mr > std::abs(s[i][j])) {
                     s[i][j] /= r;
                 }
-                else
-                {
+                else {
                     // error
                     return float4x4::identity();
                 }
@@ -797,7 +1008,7 @@ inline quatf to_quat(const float4x4& m)
 // aperture and focal_length must be millimeter. return fov in degree
 inline float compute_fov(float aperture, float focal_length)
 {
-    return 2.0f * atanf(aperture / (2.0f * focal_length)) * Rad2Deg;
+    return 2.0f * std::atan(aperture / (2.0f * focal_length)) * Rad2Deg;
 }
 
 // aperture: millimeter
@@ -806,6 +1017,152 @@ inline float compute_focal_length(float aperture, float fov)
 {
     return aperture / std::tan(fov * Deg2Rad / 2.0f) / 2.0f;
 }
+
+
+inline bool ray_triangle_intersection(float3 pos, float3 dir, float3 p1, float3 p2, float3 p3, float& distance)
+{
+    const float epsdet = 1e-10f;
+    const float eps = 1e-4f;
+
+    float3 e1 = p2 - p1;
+    float3 e2 = p3 - p1;
+    float3 p = cross(dir, e2);
+    float det = dot(e1, p);
+    if (std::abs(det) < epsdet) return false;
+    float inv_det = 1.0f / det;
+    float3 t = pos - p1;
+    float u = dot(t, p) * inv_det;
+    if (u < -eps || u  > 1 + eps) return false;
+    float3 q = cross(t, e1);
+    float v = dot(dir, q) * inv_det;
+    if (v < -eps || u + v > 1 + eps) return false;
+
+    distance = dot(e2, q) * inv_det;
+    return distance >= 0.0f;
+}
+
+// pos must be on the triangle
+template<class T>
+inline T triangle_interpolation(float3 pos, float3 p1, float3 p2, float3 p3, T x1, T x2, T x3)
+{
+    auto f1 = p1 - pos;
+    auto f2 = p2 - pos;
+    auto f3 = p3 - pos;
+    float a = 1.0f / length(cross(p1 - p2, p1 - p3));
+    float a1 = length(cross(f2, f3)) * a;
+    float a2 = length(cross(f3, f1)) * a;
+    float a3 = length(cross(f1, f2)) * a;
+    return x1 * a1 + x2 * a2 + x3 * a3;
+}
+
+inline float ray_point_distance(float3 pos, float3 dir, float3 p)
+{
+    return length(cross(dir, p - pos));
+}
+
+inline float plane_distance(float3 p, float3 pn, float pd)  { return dot(p, pn) - pd; }
+inline float plane_distance(float3 p, float3 pn)            { return dot(p, pn); }
+inline float3 plane_mirror(float3 p, float3 pn, float pd)   { return p - pn * (plane_distance(p, pn, pd) * 2.0f); }
+inline float3 plane_mirror(float3 p, float3 pn)             { return p - pn * (plane_distance(p, pn) * 2.0f); }
+
+
+inline void poly_minmax(const float2 poly[], int ngon, float2& minp, float2& maxp)
+{
+    minp = maxp = poly[0];
+    for (int i = 1; i < ngon; i++)
+    {
+        minp = min(poly[i], minp);
+        maxp = max(poly[i], maxp);
+    }
+}
+
+inline bool poly_inside(const float2 points[], int num_points, const float2 minp, const float2 maxp, const float2 pos)
+{
+    // an implementation of even-odd rule algorithm ( https://en.wikipedia.org/wiki/Even%E2%80%93odd_rule )
+
+    if (pos.x < minp.x || pos.x > maxp.x ||
+        pos.y < minp.y || pos.y > maxp.y)
+    {
+        return false;
+    }
+
+    // max x-intersections. this should be enough for most cases
+    const int MaxIntersections = 64;
+    float xc[MaxIntersections];
+    int c = 0;
+    for (int i = 0; i < num_points; i++) {
+        int j = i + 1;
+        if (j == num_points) { j = 0; }
+
+        float2 p1 = points[i];
+        float2 p2 = points[j];
+        if (p1.y == p2.y) { continue; }
+        else if (p1.y > p2.y) { std::swap(p1, p2); }
+
+        if ((pos.y >= p1.y && pos.y < p2.y) ||
+            (pos.y == maxp.y && pos.y > p1.y && pos.y <= p2.y))
+        {
+            xc[c++] = (pos.y - p1.y) * (p2.x - p1.x) / (p2.y - p1.y) + p1.x;
+            if (c == MaxIntersections) break;
+        }
+    }
+    std::sort(xc, xc + c);
+
+    for (int i = 0; i < c; i += 2) {
+        if (pos.x >= xc[i] && pos.x < xc[i + 1]) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// SoA variant
+inline bool poly_inside(const float px[], const float py[], int num_points, const float2 minp, const float2 maxp, const float2 pos)
+{
+    if (pos.x < minp.x || pos.x > maxp.x ||
+        pos.y < minp.y || pos.y > maxp.y)
+    {
+        return false;
+    }
+
+    const int MaxIntersections = 64;
+    float xc[MaxIntersections];
+    int c = 0;
+    for (int i = 0; i < num_points; i++) {
+        int j = i + 1;
+        if (j == num_points) { j = 0; }
+
+        float2 p1 = { px[i], py[i] };
+        float2 p2 = { px[j], py[j] };
+        if (p1.y == p2.y) { continue; }
+        else if (p1.y > p2.y) { std::swap(p1, p2); }
+
+        if ((pos.y >= p1.y && pos.y < p2.y) ||
+            (pos.y == maxp.y && pos.y > p1.y && pos.y <= p2.y))
+        {
+            xc[c++] = (pos.y - p1.y) * (p2.x - p1.x) / (p2.y - p1.y) + p1.x;
+            if (c == MaxIntersections) break;
+        }
+    }
+    std::sort(xc, xc + c);
+
+    for (int i = 0; i < c; i += 2) {
+        if (pos.x >= xc[i] && pos.x < xc[i + 1]) {
+            return true;
+        }
+    }
+    return false;
+}
+
+inline bool poly_inside(const float2 points[], int num_points, const float2 pos)
+{
+    if (num_points < 3) { return false; }
+    float2 minp, maxp;
+    poly_minmax(points, num_points, minp, maxp);
+    return poly_inside(points, num_points, minp, maxp, pos);
+}
+
+
 
 #ifdef muMath_AddNamespace
 } // namespace mu

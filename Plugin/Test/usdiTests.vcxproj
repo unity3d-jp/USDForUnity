@@ -12,7 +12,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Mesh.cpp" />
-    <ClCompile Include="MeshUtilsTest.cpp" />
+    <ClCompile Include="pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Master|x64'">Create</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="usdiTestExport.cpp" />
     <ClCompile Include="usdiTestExportHighMesh.cpp" />
     <ClCompile Include="usdiTestExportSkinnedMesh.cpp" />
@@ -29,6 +32,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Mesh.h" />
+    <ClInclude Include="pch.h" />
     <ClInclude Include="usdiTests.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -67,7 +71,7 @@
       <Command>xcopy /Yq $(TargetPath) $(SolutionDir)bin\x86_64\</Command>
     </PostBuildEvent>
     <ClCompile>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <PreprocessorDefinitions>muEnableISPC;muEnableHalf;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -85,7 +89,7 @@
       <Command>xcopy /Yq $(TargetPath) $(SolutionDir)bin\x86_64\</Command>
     </PostBuildEvent>
     <ClCompile>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/Zo %(AdditionalOptions)</AdditionalOptions>

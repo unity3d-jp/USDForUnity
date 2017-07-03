@@ -1,9 +1,6 @@
 #include "pch.h"
 #include "MeshUtils.h"
 #include "mikktspace.h"
-#include "RawVector.h"
-#include "IntrusiveArray.h"
-#include "SIMD.h"
 
 #ifdef muEnableHalf
 #ifdef _WIN32
@@ -14,34 +11,6 @@
 namespace mu {
 
 
-
-bool GenerateNormals(
-    IArray<float3> dst, const IArray<float3> points,
-    const IArray<int> counts, const IArray<int> indices)
-{
-    if (dst.size() != points.size()) {
-        return false;
-    }
-    dst.zeroclear();
-
-    size_t num_faces = counts.size();
-    int offset = 0;
-    for (size_t fi = 0; fi < num_faces; ++fi)
-    {
-        int count = counts[fi];
-        const int *face = &indices[offset];
-        float3 p0 = points[face[0]];
-        float3 p1 = points[face[1]];
-        float3 p2 = points[face[2]];
-        float3 n = cross(p1 - p0, p2 - p0);
-        for (int ci = 0; ci < count; ++ci) {
-            dst[face[ci]] += n;
-        }
-        offset += count;
-    }
-    Normalize(dst.data(), dst.size());
-    return true;
-}
 
 bool GenerateNormals(
     IArray<float3> dst, const IArray<float3> points,
@@ -230,5 +199,75 @@ bool GenerateWeightsN(RawVector<Weights<N>>& dst, IArray<int> bone_indices, IArr
 }
 template bool GenerateWeightsN(RawVector<Weights<4>>& dst, IArray<int> bone_indices, IArray<float> bone_weights, int bones_per_vertex);
 template bool GenerateWeightsN(RawVector<Weights<8>>& dst, IArray<int> bone_indices, IArray<float> bone_weights, int bones_per_vertex);
+
+
+void ConnectionData::clear()
+{
+    v2f_counts.clear();
+    v2f_offsets.clear();
+    v2f_faces.clear();
+    v2f_indices.clear();
+
+    weld_map.clear();
+    weld_counts.clear();
+    weld_offsets.clear();
+    weld_indices.clear();
+}
+
+void ConnectionData::buildConnection(
+    const IArray<int>& indices_, int ngon_, const IArray<float3>& vertices_, bool welding)
+{
+    if (welding) {
+        impl::BuildWeldMap(*this, vertices_);
+
+        impl::IndicesW indices__{ indices_, weld_map };
+        impl::CountsC counts_{ ngon_, indices_.size()/ngon_ };
+        impl::BuildConnection(*this, indices__, counts_, vertices_);
+    }
+    else {
+        impl::CountsC counts_{ ngon_, indices_.size() / ngon_ };
+        impl::BuildConnection(*this, indices_, counts_, vertices_);
+    }
+}
+
+void ConnectionData::buildConnection(
+    const IArray<int>& indices_, const IArray<int>& counts_, const IArray<int>& /*offsets_*/, const IArray<float3>& vertices_, bool welding)
+{
+    if (welding) {
+        impl::BuildWeldMap(*this, vertices_);
+
+        impl::IndicesW vi{ indices_, weld_map };
+        impl::BuildConnection(*this, vi, counts_, vertices_);
+    }
+    else {
+        impl::BuildConnection(*this, indices_, counts_, vertices_);
+    }
+}
+
+
+bool OnEdge(const IArray<int>& indices, int ngon, const IArray<float3>& vertices, const ConnectionData& connection, int vertex_index)
+{
+    impl::CountsC counts{ ngon, indices.size() / ngon };
+    impl::OffsetsC offsets{ ngon, indices.size() / ngon };
+    return impl::OnEdgeImpl(indices, counts, offsets, vertices, connection, vertex_index);
+}
+
+bool OnEdge(const IArray<int>& indices, const IArray<int>& counts, const IArray<int>& offsets, const IArray<float3>& vertices, const ConnectionData& connection, int vertex_index)
+{
+    return impl::OnEdgeImpl(indices, counts, offsets, vertices, connection, vertex_index);
+}
+
+
+bool IsEdgeOpened(const IArray<int>& indices, int ngon, const ConnectionData& connection, int i0, int i1)
+{
+    impl::CountsC counts{ ngon, indices.size() / ngon };
+    impl::OffsetsC offsets{ ngon, indices.size() / ngon };
+    return IsEdgeOpenedImpl(indices, counts, offsets, connection, i0, i1);
+}
+
+bool IsEdgeOpened(const IArray<int>& indices, const IArray<int>& counts, const IArray<int>& offsets, const ConnectionData& connection, int i0, int i1)
+{
+    return impl::IsEdgeOpenedImpl(indices, counts, offsets, connection, i0, i1);
+}
 
 } // namespace mu
