@@ -54,22 +54,13 @@
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir);$(SolutionDir)External\OpenEXR\include\OpenEXR;$(SolutionDir)External\tbb\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)External\tbb\lib;$(SolutionDir)External\OpenEXR\lib;$(LibraryPath)</LibraryPath>
-    <OutDir>$(SolutionDir)_out\$(Platform)_$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)_tmp\$(ProjectName)_$(Platform)_$(Configuration)\</IntDir>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Master|x64'">
-    <IncludePath>$(SolutionDir);$(SolutionDir)External\OpenEXR\include\OpenEXR;$(SolutionDir)External\tbb\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)External\tbb\lib;$(SolutionDir)External\OpenEXR\lib;$(LibraryPath)</LibraryPath>
+  <PropertyGroup Condition="'$(Platform)'=='x64'">
+    <IncludePath>$(SolutionDir);$(SolutionDir)External\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)External\libs\win64;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)_out\$(Platform)_$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)_tmp\$(ProjectName)_$(Platform)_$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <PostBuildEvent>
-      <Command>xcopy /Yq $(TargetPath) $(SolutionDir)bin\x86_64\</Command>
-    </PostBuildEvent>
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -85,9 +76,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Master|x64'">
-    <PostBuildEvent>
-      <Command>xcopy /Yq $(TargetPath) $(SolutionDir)bin\x86_64\</Command>
-    </PostBuildEvent>
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
