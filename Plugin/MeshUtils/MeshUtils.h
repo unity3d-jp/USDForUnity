@@ -2,10 +2,9 @@
 
 #include <vector>
 #include <memory>
-#include "muMath.h"
 #include "muRawVector.h"
-#include "muHandleBasedVector.h"
 #include "muIntrusiveArray.h"
+#include "muMath.h"
 #include "muSIMD.h"
 #include "muVertex.h"
 #include "muTLS.h"
@@ -14,14 +13,27 @@
 
 namespace mu {
 
-// size of dst must be num_points
-bool GenerateNormals(
+bool GenerateNormalsPoly(
     IArray<float3> dst, const IArray<float3> points,
     const IArray<int> counts, const IArray<int> offsets, const IArray<int> indices);
 
-bool GenerateTangents(
+bool GenerateTangentsPoly(
     IArray<float4> dst, const IArray<float3> points, const IArray<float3> normals, const IArray<float2> uv,
     const IArray<int> counts, const IArray<int> offsets, const IArray<int> indices);
+
+// PointsIter: indexed_iterator<const float3*, int*> or indexed_iterator_s<const float3*, int*>
+template<class PointsIter>
+void GenerateNormalsPoly(float3 *dst,
+    PointsIter vertices, const int *counts, const int *offsets, const int *indices,
+    int num_faces, int num_vertices);
+
+// PointsIter: indexed_iterator<const float3*, int*> or indexed_iterator_s<const float3*, int*>
+// UVIter: indexed_iterator<const float2*, int*> or indexed_iterator_s<const float2*, int*>
+template<class PointsIter, class UVIter>
+void GenerateTangentsPoly(float4 *dst,
+    PointsIter vertices, UVIter uv, const float3 *normals,
+    const int *counts, const int *offsets, const int *indices,
+    int num_faces, int num_vertices);
 
 template<int N>
 bool GenerateWeightsN(RawVector<Weights<N>>& dst, IArray<int> bone_indices, IArray<float> bone_weights, int bones_per_vertex);
@@ -133,22 +145,20 @@ inline void EnumerateReverseFaceIndices(const IArray<int> counts, const Body& bo
     }
 }
 
-template<class T>
-inline void CopyWithIndices(IArray<T> dst, const IArray<T>& src, const IArray<int>& indices, size_t beg, size_t end)
+template<class T, class I>
+inline void CopyWithIndices(T *dst, const T *src, const I *indices, size_t beg, size_t end)
 {
+    if (!dst || !src) { return; }
+
     size_t size = end - beg;
     for (size_t i = 0; i < size; ++i) {
         dst[i] = src[indices[beg + i]];
     }
 }
-
-template<class T>
-inline void CopyWithIndices(IArray<T> dst, const IArray<T>& src, const IArray<int>& indices)
+template<class T, class I>
+inline void CopyWithIndices(T *dst, const T *src, const I *indices, size_t size)
 {
-    size_t size = indices.size();
-    for (size_t i = 0; i < size; ++i) {
-        dst[i] = src[indices[i]];
-    }
+    CopyWithIndices<T, I>(dst, src, indices, 0, size);
 }
 
 template<class IntArray1, class IntArray2>

@@ -286,14 +286,14 @@ void Mesh::updateSample(Time t_)
     // normals
     if (gen_normals) {
         sample.normals.resize(sample.points.size());
-        GenerateNormals(ToIArray(sample.normals),
+        GenerateNormalsPoly(ToIArray(sample.normals),
             ToIArray(sample.points), ToIArray(sample.counts), ToIArray(sample.offsets), ToIArray(sample.indices));
     }
 
     // tangents
     if (gen_tangents) {
         sample.tangents.resize(sample.points.size());
-        GenerateTangents(ToIArray(sample.tangents),
+        GenerateTangentsPoly(ToIArray(sample.tangents),
             ToIArray(sample.points), ToIArray(sample.normals), ToIArray(sample.uvs),
             ToIArray(sample.counts), ToIArray(sample.offsets), ToIArray(sample.indices));
     }
@@ -430,18 +430,18 @@ void Mesh::updateSample(Time t_)
             sms.indices.resize(isize);
             for (int i = 0; i < isize; ++i) { sms.indices[i] = i; }
 
-#define Sel(C) ToIArray(C ? sample.indices_flattened_triangulated : sample.indices_triangulated)
-            CopyWithIndices<GfVec3f>(sms.points, sample.points, Sel(flattened.points), ibegin, iend);
-            CopyWithIndices<GfVec3f>(sms.normals, sample.normals, Sel(flattened.normals), ibegin, iend);
-            CopyWithIndices<GfVec4f>(sms.colors, sample.colors, Sel(flattened.colors), ibegin, iend);
-            CopyWithIndices<GfVec2f>(sms.uvs, sample.uvs, Sel(flattened.uvs), ibegin, iend);
-            CopyWithIndices<GfVec4f>(sms.tangents, sample.tangents, Sel(flattened.tangents), ibegin, iend);
-            CopyWithIndices<GfVec3f>(sms.velocities, sample.velocities, Sel(flattened.velocities), ibegin, iend);
+#define Sel(C) (C ? sample.indices_flattened_triangulated.cdata() : sample.indices_triangulated.cdata())
+            CopyWithIndices(sms.points.data(), sample.points.cdata(), Sel(flattened.points), ibegin, iend);
+            CopyWithIndices(sms.normals.data(), sample.normals.cdata(), Sel(flattened.normals), ibegin, iend);
+            CopyWithIndices(sms.colors.data(), sample.colors.cdata(), Sel(flattened.colors), ibegin, iend);
+            CopyWithIndices(sms.uvs.data(), sample.uvs.cdata(), Sel(flattened.uvs), ibegin, iend);
+            CopyWithIndices(sms.tangents.data(), sample.tangents.cdata(), Sel(flattened.tangents), ibegin, iend);
+            CopyWithIndices(sms.velocities.data(), sample.velocities.cdata(), Sel(flattened.velocities), ibegin, iend);
             if (!sample.weights4.empty()) {
-                CopyWithIndices<Weights4>(sms.weights4, sample.weights4, Sel(flattened.weights), ibegin, iend);
+                CopyWithIndices(sms.weights4.data(), sample.weights4.cdata(), Sel(flattened.weights), ibegin, iend);
             }
             if (!sample.weights8.empty()) {
-                CopyWithIndices<Weights8>(sms.weights8, sample.weights8, Sel(flattened.weights), ibegin, iend);
+                CopyWithIndices(sms.weights8.data(), sample.weights8.cdata(), Sel(flattened.weights), ibegin, iend);
             }
 #undef Sel
 
@@ -868,6 +868,8 @@ bool Mesh::precomputeNormals(bool gen_tangents, bool overwrite)
             auto& tangents = _tangents[i];
             auto& uv = _uv[i];
             auto& num_indices = _num_indices[i];
+            int num_faces = (int)counts.size();
+            int num_points = (int)points.size();
 
             // setup indices
             attr_indices.Get(&indices, t);
@@ -878,9 +880,9 @@ bool Mesh::precomputeNormals(bool gen_tangents, bool overwrite)
             // generate normals
             attr_points.Get(&points, t);
             if (gen_normals) {
-                normals.resize(points.size());
-                GenerateNormals(ToIArray(normals),
-                    ToIArray(points), ToIArray(counts), ToIArray(offsets), ToIArray(indices));
+                normals.resize(num_points);
+                GenerateNormalsPoly((float3*)normals.data(),
+                    (float3*)points.cdata(), (int*)counts.cdata(), (int*)offsets.cdata(), (int*)indices.cdata(), num_faces, num_points);
             }
             else {
                 attr_normals.Get(&normals, t);
@@ -889,10 +891,10 @@ bool Mesh::precomputeNormals(bool gen_tangents, bool overwrite)
             // generate tangents
             if (gen_tangents) {
                 attr_uv.Get(&uv, t);
-                tangents.resize(points.size());
-                GenerateTangents(ToIArray(tangents),
-                    ToIArray(points), ToIArray(normals), ToIArray(uv),
-                    ToIArray(counts), ToIArray(offsets), ToIArray(indices));
+                tangents.resize(num_points);
+                GenerateTangentsPoly((float4*)tangents.data(),
+                    (float3*)points.cdata(), (float2*)uv.cdata(), (float3*)normals.cdata(),
+                    (int*)counts.cdata(), (int*)offsets.cdata(), (int*)indices.cdata(), num_faces, num_points);
             }
         });
 

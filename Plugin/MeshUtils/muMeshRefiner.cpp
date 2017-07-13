@@ -52,14 +52,12 @@ void MeshRefiner::prepare(
     else {
         mu::CountIndices(counts, offsets, num_indices, num_indices_tri);
     }
-
 }
 
 void MeshRefiner::genNormals(bool flip)
 {
     auto& p = points;
-    normals_tmp.resize(p.size());
-    normals_tmp.zeroclear();
+    normals_tmp.resize_zeroclear(p.size());
 
     size_t num_faces = counts.size();
     int i1 = flip ? 2 : 1;
@@ -91,8 +89,7 @@ void MeshRefiner::genNormalsWithSmoothAngle(float smooth_angle, bool flip)
     normals_tmp.resize(num_indices);
 
     // gen face normals
-    face_normals.resize(num_faces);
-    face_normals.zeroclear();
+    face_normals.resize_zeroclear(num_faces);
     int i1 = flip ? 2 : 1;
     int i2 = flip ? 1 : 2;
     for (size_t fi = 0; fi < num_faces; ++fi)
@@ -117,31 +114,26 @@ void MeshRefiner::genNormalsWithSmoothAngle(float smooth_angle, bool flip)
         auto& face_normal = face_normals[fi];
         for (int ci = 0; ci < count; ++ci) {
             int vi = face[ci];
-
-            int num_connections = connection.v2f_counts[vi];
-            int *cfaces = &connection.v2f_faces[connection.v2f_offsets[vi]];
             auto normal = float3::zero();
-            for (int ni = 0; ni < num_connections; ++ni) {
-                auto& connected_normal = face_normals[cfaces[ni]];
-                float dp = dot(face_normal, connected_normal);
-                if (dp > angle) {
-                    normal += connected_normal;
+            connection.eachConnectedFaces(vi, [&](int fi2, int) {
+                float3 n = face_normals[fi2];
+                if (dot(face_normal, n) > angle) {
+                    normal += n;
                 }
-            }
+            });
             normals_tmp[offset + ci] = normal;
         }
     }
 
     // normalize
     Normalize(normals_tmp.data(), normals_tmp.size());
-
     normals = normals_tmp;
 }
 
 void MeshRefiner::genTangents()
 {
-    tangents_tmp.resize(std::max<size_t>(normals.size(), uv.size()));
-    mu::GenerateTangents(tangents_tmp, points, normals, uv, counts, offsets, indices);
+    tangents_tmp.resize_discard(std::max<size_t>(normals.size(), uv.size()));
+    mu::GenerateTangentsPoly(tangents_tmp, points, normals, uv, counts, offsets, indices);
 }
 
 bool MeshRefiner::refine(bool optimize)
@@ -223,27 +215,27 @@ bool MeshRefiner::refineDumb()
     {
         {
             new_points.resize(num_indices);
-            mu::CopyWithIndices<float3>(new_points, points, indices);
+            mu::CopyWithIndices(new_points.data(), points.data(), indices.data(), num_indices);
             points = new_points;
         }
         if (!normals.empty() && (int)normals.size() != num_indices) {
             new_normals.resize(num_indices);
-            mu::CopyWithIndices<float3>(new_normals, normals, indices);
+            mu::CopyWithIndices(new_normals.data(), normals.data(), indices.data(), num_indices);
             normals = new_normals;
         }
         if (!uv.empty() && (int)uv.size() != num_indices) {
             new_uv.resize(num_indices);
-            mu::CopyWithIndices<float2>(new_uv, uv, indices);
+            mu::CopyWithIndices(new_uv.data(), uv.data(), indices.data(), num_indices);
             uv = new_uv;
         }
         if (!colors.empty() && (int)colors.size() != num_indices) {
             new_colors.resize(num_indices);
-            mu::CopyWithIndices<float4>(new_colors, colors, indices);
+            mu::CopyWithIndices(new_colors.data(), colors.data(), indices.data(), num_indices);
             colors = colors;
         }
         if (!weights4.empty() && (int)weights4.size() != num_indices) {
             new_weights4.resize(num_indices);
-            mu::CopyWithIndices<Weights4>(new_weights4, weights4, indices);
+            mu::CopyWithIndices(new_weights4.data(), weights4.data(), indices.data(), num_indices);
             weights4 = new_weights4;
         }
         flattened = true;

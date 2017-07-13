@@ -5,6 +5,7 @@
     #include "GraphicsInterface/GraphicsInterface.h"
 #endif // usdiEnableGraphicsInterface
 #include "usdiExt.h"
+#include "MeshUtils/muHandleBasedVector.h"
 
 namespace usdi {
 

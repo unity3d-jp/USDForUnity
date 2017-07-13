@@ -8,9 +8,9 @@
 #endif
 
 #ifdef _WIN32
-    #define TestModule "usdiTests.dll"
+    #define TestModule "Test.dll"
 #else
-    #define TestModule "usdiTests"
+    #define TestModule "Test"
 #endif
 
 int main(int argc, char *argv[])

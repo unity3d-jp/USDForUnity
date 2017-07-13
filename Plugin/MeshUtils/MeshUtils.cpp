@@ -12,7 +12,7 @@ namespace mu {
 
 
 
-bool GenerateNormals(
+bool GenerateNormalsPoly(
     IArray<float3> dst, const IArray<float3> points,
     const IArray<int> counts, const IArray<int> offsets, const IArray<int> indices)
 {
@@ -117,7 +117,7 @@ struct TSpaceContext
     }
 };
 
-bool GenerateTangents(
+bool GenerateTangentsPoly(
     IArray<float4> dst, const IArray<float3> points, const IArray<float3> normals, const IArray<float2> uv,
     const IArray<int> counts, const IArray<int> offsets, const IArray<int> indices)
 {
@@ -150,7 +150,7 @@ bool GenerateWeightsN(RawVector<Weights<N>>& dst, IArray<int> bone_indices, IArr
     }
 
     int num_weightsN = (int)bone_indices.size() / bones_per_vertex;
-    dst.resize(num_weightsN);
+    dst.resize_discard(num_weightsN);
 
     if (bones_per_vertex <= N) {
         dst.zeroclear();

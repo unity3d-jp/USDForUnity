@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26228.9
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "usdi", "usdi.vcxproj", "{08361722-5520-47AC-A0C2-31E8A062B73F}"
 EndProject
@@ -13,11 +13,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MeshUtils", "MeshUtils.vcxp
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "setup", "setup.vcxproj", "{1C5DE91B-7AE9-4304-9FA1-0DE1ABA8C02D}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "usdiTests", "Test\usdiTests.vcxproj", "{89E3D0A3-3CCB-43E3-9B92-F70EB5731429}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "usdiTestsMain", "Test\usdiTestsMain.vcxproj", "{11990C37-1C63-418F-9AB1-74076C470584}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "usdiRT", "usdiRT.vcxproj", "{66397903-6FF2-46C6-B51E-B323FD248FAD}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test", "Test\Test.vcxproj", "{89E3D0A3-3CCB-43E3-9B92-F70EB5731429}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestMain", "Test\TestMain.vcxproj", "{11990C37-1C63-418F-9AB1-74076C470584}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,6 +41,10 @@ Global
 		{1C5DE91B-7AE9-4304-9FA1-0DE1ABA8C02D}.Debug|x64.Build.0 = Debug|x64
 		{1C5DE91B-7AE9-4304-9FA1-0DE1ABA8C02D}.Master|x64.ActiveCfg = Master|x64
 		{1C5DE91B-7AE9-4304-9FA1-0DE1ABA8C02D}.Master|x64.Build.0 = Master|x64
+		{66397903-6FF2-46C6-B51E-B323FD248FAD}.Debug|x64.ActiveCfg = Debug|x64
+		{66397903-6FF2-46C6-B51E-B323FD248FAD}.Debug|x64.Build.0 = Debug|x64
+		{66397903-6FF2-46C6-B51E-B323FD248FAD}.Master|x64.ActiveCfg = Master|x64
+		{66397903-6FF2-46C6-B51E-B323FD248FAD}.Master|x64.Build.0 = Master|x64
 		{89E3D0A3-3CCB-43E3-9B92-F70EB5731429}.Debug|x64.ActiveCfg = Debug|x64
 		{89E3D0A3-3CCB-43E3-9B92-F70EB5731429}.Debug|x64.Build.0 = Debug|x64
 		{89E3D0A3-3CCB-43E3-9B92-F70EB5731429}.Master|x64.ActiveCfg = Master|x64
@@ -49,10 +53,6 @@ Global
 		{11990C37-1C63-418F-9AB1-74076C470584}.Debug|x64.Build.0 = Debug|x64
 		{11990C37-1C63-418F-9AB1-74076C470584}.Master|x64.ActiveCfg = Master|x64
 		{11990C37-1C63-418F-9AB1-74076C470584}.Master|x64.Build.0 = Master|x64
-		{66397903-6FF2-46C6-B51E-B323FD248FAD}.Debug|x64.ActiveCfg = Debug|x64
-		{66397903-6FF2-46C6-B51E-B323FD248FAD}.Debug|x64.Build.0 = Debug|x64
-		{66397903-6FF2-46C6-B51E-B323FD248FAD}.Master|x64.ActiveCfg = Master|x64
-		{66397903-6FF2-46C6-B51E-B323FD248FAD}.Master|x64.Build.0 = Master|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

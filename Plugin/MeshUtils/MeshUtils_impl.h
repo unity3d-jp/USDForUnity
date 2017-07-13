@@ -40,12 +40,11 @@ inline void BuildConnection(
     size_t num_faces = counts.size();
     size_t num_indices = indices.size();
 
-    connection.v2f_offsets.resize(num_points);
-    connection.v2f_faces.resize(num_indices);
-    connection.v2f_indices.resize(num_indices);
+    connection.v2f_offsets.resize_discard(num_points);
+    connection.v2f_faces.resize_discard(num_indices);
+    connection.v2f_indices.resize_discard(num_indices);
 
-    connection.v2f_counts.resize(num_points);
-    connection.v2f_counts.zeroclear();
+    connection.v2f_counts.resize_zeroclear(num_points);
     {
         int ii = 0;
         for (size_t fi = 0; fi < num_faces; ++fi) {
@@ -88,16 +87,16 @@ inline void BuildWeldMap(
     auto& weld_indices = connection.weld_indices;
 
     int n = (int)vertices.size();
-    weld_map.resize(n);
-    weld_counts.resize(n);
-    weld_offsets.resize(n);
-    weld_indices.resize(n);
+    weld_map.resize_discard(n);
+    weld_counts.resize_discard(n);
+    weld_offsets.resize_discard(n);
+    weld_indices.resize_discard(n);
 
     parallel_for(0, n, [&](int vi) {
         int r = vi;
         float3 p = vertices[vi];
         for (int i = 0; i < vi; ++i) {
-            if (near_equal(length_sq(vertices[i] - p), 0.0f)) {
+            if (length(vertices[i] - p) < 0.0000001f) {
                 r = i;
                 break;
             }
@@ -144,7 +143,7 @@ inline bool OnEdgeImpl(const Indices& indices, const Counts& counts, const Offse
         float3 v0 = vertices[indices[c * fi + f0]];
         float3 v1 = vertices[indices[c * fi + f1]];
         float3 v2 = vertices[indices[c * fi + f2]];
-        angle += angle_between(v1, v2, v0);
+        angle += angle_between2(v1, v2, v0);
     }
     // angle_between's precision seems very low on Mac.. it can be like 357.9f on closed edge
     return angle < 357.0f * Deg2Rad;
@@ -395,6 +394,86 @@ inline void SelectConnected(const IArray<int>& indices, const IArray<int>& count
 
     for (int i : vertex_indices) {
         impl.selectConnected(i, handler);
+    }
+}
+
+
+// PointsIter: indexed_iterator<const float3*, int*> or indexed_iterator_s<const float3*, int*>
+template<class PointsIter>
+void GenerateNormalsPoly(float3 *dst,
+    PointsIter vertices,
+    const int *counts, const int *offsets, const int *indices,
+    int num_faces, int num_vertices)
+{
+    memset(dst, 0, sizeof(float3)*num_vertices);
+
+    RawVector<float3> face_vertices;
+    for (int fi = 0; fi < num_faces; ++fi) {
+        int count = counts[fi];
+        face_vertices.resize_discard(count);
+        for (int i = 0; i < count; ++i) {
+            face_vertices[i] = *(vertices++);
+        }
+
+        const int *face = &indices[offsets[fi]];
+        int num_triangles = (fi - 2) * 3;
+        for (int ti = 0; ti < num_triangles; ++ti) {
+            int tidx[3] = { 0, ti + 1, ti + 2 };
+            float3 p0 = face_vertices[tidx[0]];
+            float3 p1 = face_vertices[tidx[1]];
+            float3 p2 = face_vertices[tidx[2]];
+            float3 n = cross(p1 - p0, p2 - p0);
+
+            for (int i = 0; i < 3; ++i) {
+                dst[face[tidx[i]]] += n;
+            }
+        }
+    }
+    Normalize(dst, num_vertices);
+}
+
+// PointsIter: indexed_iterator<const float3*, int*> or indexed_iterator_s<const float3*, int*>
+// UVIter: indexed_iterator<const float2*, int*> or indexed_iterator_s<const float2*, int*>
+template<class PointsIter, class UVIter>
+void GenerateTangentsPoly(float4 *dst,
+    PointsIter vertices, UVIter uv, const float3 *normals,
+    const int *counts, const int *offsets, const int *indices,
+    int num_faces, int num_vertices)
+{
+    RawVector<float3> tangents, binormals;
+    tangents.resize_zeroclear(num_vertices);
+    binormals.resize_zeroclear(num_vertices);
+
+    RawVector<float3> face_vertices;
+    RawVector<float2> face_uv;
+    for (int fi = 0; fi < num_faces; ++fi) {
+        int count = counts[fi];
+        face_vertices.resize_discard(count);
+        face_uv.resize_discard(count);
+        for (int i = 0; i < count; ++i) {
+            face_vertices[i] = *(vertices++);
+            face_uv[i] = *(uv++);
+        }
+
+        const int *face = &indices[offsets[fi]];
+        int num_triangles = (fi - 2) * 3;
+        for (int ti = 0; ti < num_triangles; ++ti) {
+            int tidx[3] = { 0, ti + 1, ti + 2 };
+            float3 v[3] = { face_vertices[tidx[0]], face_vertices[tidx[1]], face_vertices[tidx[2]] };
+            float2 u[3] = { face_uv[tidx[0]], face_uv[tidx[1]], face_uv[tidx[2]] };
+            float3 t[3];
+            float3 b[3];
+            compute_triangle_tangent(v, u, t, b);
+
+            for (int i = 0; i < 3; ++i) {
+                tangents[face[tidx[i]]] += t[tidx[i]];
+                binormals[face[tidx[i]]] += b[tidx[i]];
+            }
+        }
+    }
+
+    for (int vi = 0; vi < num_vertices; ++vi) {
+        dst[vi] = orthogonalize_tangent(tangents[vi], binormals[vi], normals[vi]);
     }
 }
 

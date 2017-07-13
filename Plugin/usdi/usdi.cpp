@@ -39,8 +39,6 @@ usdiAPI usdi::Time usdiDefaultTime()
 
 usdiAPI void usdiInitialize()
 {
-    // force load UsdAbc plugin
-    SdfFileFormat::FindByExtension(".abc");
 }
 
 usdiAPI void usdiFinalize()

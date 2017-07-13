@@ -101,21 +101,20 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir);$(SolutionDir)usdi;$(SolutionDir)External\boost\include;$(SolutionDir)External\double-conversion\include;$(SolutionDir)External\python27\include;$(SolutionDir)External\OpenEXR\include\OpenEXR;$(SolutionDir)External\tbb\include;$(SolutionDir)External\USD\include;$(SolutionDir)External\Unity\include;$(VTUNE_AMPLIFIER_XE_2016_DIR)include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)usdi;$(SolutionDir)External\boost\include;$(SolutionDir)External\double-conversion\include;$(SolutionDir)External\python27\include;$(SolutionDir)External\OpenEXR\include;$(SolutionDir)External\tbb\include;$(SolutionDir)External\USD\include;$(SolutionDir)External\Unity\include;$(VTUNE_AMPLIFIER_XE_2016_DIR)include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)External\glew\lib;$(SolutionDir)External\Vulkan\lib;$(SolutionDir)External\boost\lib;$(SolutionDir)External\double-conversion\lib;$(SolutionDir)External\OpenEXR\lib;$(SolutionDir)External\python27\lib;$(SolutionDir)External\tbb\lib;$(SolutionDir)External\USD\lib;$(VTUNE_AMPLIFIER_XE_2016_DIR)lib64;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)_out\$(Platform)_$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)_tmp\$(ProjectName)_$(Platform)_$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Master|x64'">
-    <IncludePath>$(SolutionDir);$(SolutionDir)usdi;$(SolutionDir)External\boost\include;$(SolutionDir)External\double-conversion\include;$(SolutionDir)External\python27\include;$(SolutionDir)External\OpenEXR\include\OpenEXR;$(SolutionDir)External\tbb\include;$(SolutionDir)External\USD\include;$(SolutionDir)External\Unity\include;$(VTUNE_AMPLIFIER_XE_2016_DIR)include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)usdi;$(SolutionDir)External\boost\include;$(SolutionDir)External\double-conversion\include;$(SolutionDir)External\python27\include;$(SolutionDir)External\OpenEXR\include;$(SolutionDir)External\tbb\include;$(SolutionDir)External\USD\include;$(SolutionDir)External\Unity\include;$(VTUNE_AMPLIFIER_XE_2016_DIR)include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)External\glew\lib;$(SolutionDir)External\Vulkan\lib;$(SolutionDir)External\boost\lib;$(SolutionDir)External\double-conversion\lib;$(SolutionDir)External\OpenEXR\lib;$(SolutionDir)External\python27\lib;$(SolutionDir)External\tbb\lib;$(SolutionDir)External\USD\lib;$(VTUNE_AMPLIFIER_XE_2016_DIR)lib64;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)_out\$(Platform)_$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)_tmp\$(ProjectName)_$(Platform)_$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <PostBuildEvent>
-      <Command>xcopy /Yq $(TargetPath) $(SolutionDir)bin\x86_64\
-xcopy /Yq $(TargetPath) $(SolutionDir)..\USDForUnity\Assets\UTJ\USDForUnity\Plugins\x86_64\</Command>
+      <Command>xcopy /Yq $(TargetPath) $(SolutionDir)..\USDForUnity\Assets\UTJ\USDForUnity\Plugins\x86_64\</Command>
     </PostBuildEvent>
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -133,8 +132,7 @@ xcopy /Yq $(TargetPath) $(SolutionDir)..\USDForUnity\Assets\UTJ\USDForUnity\Plug
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Master|x64'">
     <PostBuildEvent>
-      <Command>xcopy /Yq $(TargetPath) $(SolutionDir)bin\x86_64\
-xcopy /Yq $(TargetPath) $(SolutionDir)..\USDForUnity\Assets\UTJ\USDForUnity\Plugins\x86_64\</Command>
+      <Command>xcopy /Yq $(TargetPath) $(SolutionDir)..\USDForUnity\Assets\UTJ\USDForUnity\Plugins\x86_64\</Command>
     </PostBuildEvent>
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>

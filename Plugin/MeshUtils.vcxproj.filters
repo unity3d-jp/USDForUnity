@@ -58,7 +58,7 @@
     <ClInclude Include="MeshUtils\MeshUtils_impl.h">
       <Filter>MeshUtils</Filter>
     </ClInclude>
-    <ClInclude Include="MeshUtils\muHandleBasedVector.h">
+    <ClInclude Include="MeshUtils\muSIMDConfig.h">
       <Filter>MeshUtils</Filter>
     </ClInclude>
   </ItemGroup>
