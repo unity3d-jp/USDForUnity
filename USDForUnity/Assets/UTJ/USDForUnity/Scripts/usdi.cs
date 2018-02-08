@@ -655,39 +655,6 @@ namespace UTJ.USD
         [DllImport("usdi")] public static extern void usdiProgressReporterDestroy(IntPtr pr);
         [DllImport("usdi")] public static extern void usdiProgressReporterWrite(IntPtr pr, string message);
 
-
-        private static void TransformAssignImpl(UnityEngine.Transform trans, ref XformData data)
-        {
-            if (data.flags.updatedPosition)
-            {
-                trans.localPosition = data.position;
-            }
-            if (data.flags.updatedRotation)
-            {
-                trans.localRotation = data.rotation;
-            }
-            if (data.flags.updatedScale)
-            {
-                trans.localScale = data.scale;
-            }
-        }
-        private static void TransformNotfyChangeImpl(UnityEngine.Transform trans)
-        {
-            // nothing to do
-        }
-        private static void MeshAssignBoundsImpl(UnityEngine.Mesh mesh, ref Vector3 center, ref Vector3 extents)
-        {
-            mesh.bounds = new Bounds(center, extents);
-        }
-
-        public delegate void TransformAssignT(UnityEngine.Transform trans, ref XformData data);
-        public delegate void TransformNotfyChangeT(UnityEngine.Transform trans);
-        public delegate void MeshAssignBoundsT(UnityEngine.Mesh mesh, ref Vector3 center, ref Vector3 extents);
-
-        public static TransformAssignT TransformAssign;
-        public static TransformNotfyChangeT TransformNotfyChange;
-        public static MeshAssignBoundsT MeshAssignBounds;
-
         public class Task
         {
             protected IntPtr m_handle;
@@ -786,10 +753,6 @@ namespace UTJ.USD
             }
             return ret.ToArray();
         }
-        //public static IntPtr GetArrayPtr(Array v)
-        //{
-        //    return v == null ? IntPtr.Zero : Marshal.UnsafeAddrOfPinnedArrayElement(v, 0);
-        //}
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void InitializePluginPass1()
@@ -820,9 +783,6 @@ namespace UTJ.USD
         public static void InitializePluginPass2()
         {
             usdi.usdiInitialize();
-            TransformAssign = TransformAssignImpl;
-            TransformNotfyChange = TransformNotfyChangeImpl;
-            MeshAssignBounds = MeshAssignBoundsImpl;
             pluginInitialized = true;
         }
 

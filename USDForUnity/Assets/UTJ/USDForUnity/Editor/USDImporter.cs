@@ -40,14 +40,13 @@ namespace UTJ.USD
                 interpolation = m_importSettings.interpolation,
                 normalCalculation = m_importSettings.normalCalculation,
                 tangentCalculation = m_importSettings.tangentCalculation,
+                splitUnit = m_importSettings.splitUnit,
                 maxBoneWeights = m_importSettings.maxBoneWeights,
-                scale = m_importSettings.scale,
+                scaleFactor = m_importSettings.scaleFactor,
                 loadAllPayloads = true,
                 triangulate = true,
                 swapHandedness = m_importSettings.swapHandedness,
                 swapFaces = m_importSettings.swapFaces,
-                splitMesh = true,
-                doubleBuffering = true,
             };
             usdStream.forceSingleThread = m_forceSingleThread;
             usdStream.timeUnit = m_timeUnit;

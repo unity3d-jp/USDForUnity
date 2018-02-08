@@ -52,7 +52,12 @@ namespace UTJ.USD
             base.UsdUpdate(time);
             if(m_goAssigned)
             {
-                usdi.TransformAssign(m_trans, ref m_xfData);
+                if (m_xfData.flags.updatedPosition)
+                    m_trans.localPosition = m_xfData.position;
+                if (m_xfData.flags.updatedRotation)
+                    m_trans.localRotation = m_xfData.rotation;
+                if (m_xfData.flags.updatedScale)
+                    m_trans.localScale = m_xfData.scale;
             }
         }
         #endregion

@@ -18,20 +18,20 @@ namespace UTJ.USD
             var importer = serializedObject.targetObject as USDImporter;
             AddEnumProperty(serializedObject.FindProperty(() => importer.m_importMode), "Import Mode", "", importer.m_importMode.GetType() );
             AddEnumProperty(serializedObject.FindProperty(()=> importer.m_importSettings.interpolation ), "Interpolation", "", importer.m_importSettings.interpolation.GetType() );
-            AddEnumProperty(serializedObject.FindProperty(() => importer.m_importSettings.normalCalculation), "Compute normals", "", importer.m_importSettings.normalCalculation.GetType());
-            AddEnumProperty(serializedObject.FindProperty(() => importer.m_importSettings.tangentCalculation), "Compute tangents", "", importer.m_importSettings.tangentCalculation.GetType());
-            AddFloatProperty(serializedObject.FindProperty(() => importer.m_importSettings.scale), "Scale", "" );
-            AddByteBoolProperty(serializedObject.FindProperty(() => importer.m_importSettings.swapHandedness.v), "Swap handedness", "");
-            AddByteBoolProperty(serializedObject.FindProperty(() => importer.m_importSettings.swapFaces.v), "Swap faces", "");
+            AddEnumProperty(serializedObject.FindProperty(() => importer.m_importSettings.normalCalculation), "Compute Normals", "", importer.m_importSettings.normalCalculation.GetType());
+            AddEnumProperty(serializedObject.FindProperty(() => importer.m_importSettings.tangentCalculation), "Compute Tangents", "", importer.m_importSettings.tangentCalculation.GetType());
+            AddFloatProperty(serializedObject.FindProperty(() => importer.m_importSettings.scaleFactor), "Scale Factor", "" );
+            AddByteBoolProperty(serializedObject.FindProperty(() => importer.m_importSettings.swapHandedness.v), "Swap Handedness", "");
+            AddByteBoolProperty(serializedObject.FindProperty(() => importer.m_importSettings.swapFaces.v), "Swap Faces", "");
             var type = serializedObject.FindProperty(() => importer.m_timeUnit).FindPropertyRelative("m_type");
-            AddEnumProperty(type, "Time unit", "", importer.m_timeUnit.type.GetType());
+            AddEnumProperty(type, "Time Unit", "", importer.m_timeUnit.type.GetType());
 
             // Adv. Settings
             m_ShowAdvOptions = EditorGUILayout.Foldout(m_ShowAdvOptions, new GUIContent("Advanced options"));
             if (m_ShowAdvOptions)
             {
-                AddBoolProperty(serializedObject.FindProperty(() => importer.m_forceSingleThread), "Single threaded", "");
-                AddBoolProperty(serializedObject.FindProperty(() => importer.m_deferredUpdate), "Defered udpate", "");
+                AddBoolProperty(serializedObject.FindProperty(() => importer.m_forceSingleThread), "Single Threaded", "");
+                AddBoolProperty(serializedObject.FindProperty(() => importer.m_deferredUpdate), "Defered Udpate", "");
             }
 
             base.ApplyRevertGUI();

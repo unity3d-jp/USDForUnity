@@ -362,11 +362,11 @@ namespace UTJ.USD
 
         public void usdiUpdateBounds(ref usdi.MeshData data)
         {
-            usdi.MeshAssignBounds(m_umesh, ref data.center, ref data.extents);
+            m_umesh.bounds = new Bounds(data.center, data.extents);
         }
         public void usdiUpdateBounds(ref usdi.SubmeshData data)
         {
-            usdi.MeshAssignBounds(m_umesh, ref data.center, ref data.extents);
+            m_umesh.bounds = new Bounds(data.center, data.extents);
         }
 
         public void usdiSetActive(bool v)

@@ -526,10 +526,7 @@ namespace UTJ.USD
             // update all elements
             int c = m_schemas.Count;
             for (int i = 0; i < c; ++i)
-            {
                 m_schemas[i].UsdUpdate(t);
-            }
-            usdi.TransformNotfyChange(GetComponent<Transform>());
 
             m_prevUpdateTime = t;
         }

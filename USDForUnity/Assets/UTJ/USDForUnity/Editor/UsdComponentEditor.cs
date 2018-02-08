@@ -77,7 +77,7 @@ namespace UTJ.USD
                     importSettings.interpolation = (usdi.InterpolationType)EditorGUILayout.EnumPopup("Interpolation", (Enum)importSettings.interpolation);
                     importSettings.normalCalculation = (usdi.NormalCalculationType)EditorGUILayout.EnumPopup("Normal Calculation", (Enum)importSettings.normalCalculation);
                     importSettings.tangentCalculation = (usdi.TangentCalculationType)EditorGUILayout.EnumPopup("Tangent Calculation", (Enum)importSettings.tangentCalculation);
-                    importSettings.scale = EditorGUILayout.FloatField("Scale", importSettings.scale);
+                    importSettings.scaleFactor = EditorGUILayout.FloatField("Scale", importSettings.scaleFactor);
                     importSettings.swapHandedness = EditorGUILayout.Toggle("Swap Handedness", importSettings.swapHandedness);
                     importSettings.swapFaces = EditorGUILayout.Toggle("Swap Faces", importSettings.swapFaces);
 
