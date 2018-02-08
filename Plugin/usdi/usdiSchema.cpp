@@ -217,7 +217,7 @@ void    Schema::setInstanceable(bool v) { m_prim.SetInstanceable(v); }
 bool Schema::addReference(const char *asset_path, const char *prim_path)
 {
     if (!asset_path) { asset_path = ""; }
-    return m_prim.GetReferences().AppendReference(SdfReference(asset_path, SdfPath(prim_path)));
+    return m_prim.GetReferences().AddReference(SdfReference(asset_path, SdfPath(prim_path)));
 }
 
 
@@ -368,7 +368,7 @@ bool Schema::beginEditVariant(const char *set, const char *variant)
         return false;
     }
     else {
-        vset.AppendVariant(variant);
+        vset.AddVariant(variant);
         vset.SetVariantSelection(variant);
         syncVariantSets();
         m_ctx->beginEdit(vset.GetVariantEditTarget());

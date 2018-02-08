@@ -49,7 +49,7 @@ bool Context::valid() const
 void Context::initialize()
 {
     if (m_stage) {
-        m_stage->Close();
+        m_stage->Unload();
     }
     m_stage = UsdStageRefPtr();
 
