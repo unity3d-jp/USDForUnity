@@ -7,9 +7,6 @@
     <ClCompile Include="usdi\pch.cpp">
       <Filter>usdi</Filter>
     </ClCompile>
-    <ClCompile Include="usdi\UnityPlugin.cpp">
-      <Filter>usdi</Filter>
-    </ClCompile>
     <ClCompile Include="usdi\usdi.cpp">
       <Filter>usdi</Filter>
     </ClCompile>

@@ -1,6 +1,5 @@
 ﻿#include "pch.h"
 
-#ifdef usdiEnableUnityExtension
 #include "usdiInternal.h"
 #include "usdiAttribute.h"
 #include "usdiSchema.h"
@@ -18,70 +17,6 @@
 
 
 extern "C" {
-
-usdiAPI bool usdiIsVtxCmdAvailable()
-{
-#ifdef usdiEnableGraphicsInterface
-    return gi::GetGraphicsInterface() != nullptr;
-#else
-    return false;
-#endif
-}
-
-usdiAPI usdi::Handle usdiVtxCmdCreate(const char *dbg_name)
-{
-#ifdef usdiEnableGraphicsInterface
-    usdiTraceFunc();
-    return usdi::VertexCommandManager::getInstance().createCommand(dbg_name);
-#else
-    return 0;
-#endif
-}
-
-usdiAPI void usdiVtxCmdDestroy(usdi::Handle h)
-{
-#ifdef usdiEnableGraphicsInterface
-    usdiTraceFunc();
-    usdi::VertexCommandManager::getInstance().destroyCommand(h);
-#endif
-}
-
-usdiAPI void usdiVtxCmdUpdate(usdi::Handle h, const usdi::MeshData *src, void *vb, void *ib)
-{
-#ifdef usdiEnableGraphicsInterface
-    usdiTraceFunc();
-    usdi::VertexCommandManager::getInstance().update(h, src, vb, ib);
-#endif
-}
-
-usdiAPI void usdiVtxCmdUpdateSub(usdi::Handle h, const usdi::SubmeshData *src, void *vb, void *ib)
-{
-#ifdef usdiEnableGraphicsInterface
-    usdiTraceFunc();
-    usdi::VertexCommandManager::getInstance().update(h, src, vb, ib);
-#endif
-}
-
-usdiAPI void usdiVtxCmdProcess()
-{
-#ifdef usdiEnableGraphicsInterface
-    usdiTraceFunc();
-    usdiVTuneScope("usdiVtxCmdProcess");
-    usdi::VertexCommandManager::getInstance().process();
-#endif
-}
-
-usdiAPI void usdiVtxCmdWait()
-{
-#ifdef usdiEnableGraphicsInterface
-    usdiTraceFunc();
-    usdiVTuneScope("usdiVtxCmdWait");
-    usdi::VertexCommandManager::getInstance().wait();
-#endif
-}
-
-
-
 
 usdiAPI void usdiTaskDestroy(usdi::Task *t)
 {
@@ -109,15 +44,6 @@ usdiAPI void usdiTaskWait(usdi::Task *t)
     usdiTraceFunc();
     if (!t) { return; }
     t->wait();
-}
-
-usdiAPI usdi::Task* usdiTaskCreateMonoDelegate(usdi::MonoDelegate func, void *arg, const char *name)
-{
-    usdiTraceFunc();
-    return new usdi::Task([=]() {
-        usdi::MonoThreadScope mts;
-        func(arg);
-    }, name);
 }
 
 usdiAPI usdi::Task* usdiTaskCreateMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, const usdi::Time *t)
@@ -199,4 +125,3 @@ usdiAPI void usdiMeshAssignBones(usdi::Mesh *mesh, usdi::MeshData *dst, const ch
 }
 
 } // extern "C"
-#endif // usdiEnableUnityExtension

@@ -12,7 +12,6 @@ namespace UTJ.USD
         static TimeUnit s_timeUnit = new TimeUnit();
         static double s_initialTime = 0.0;
         static bool s_forceSingleThread = false;
-        static bool s_directVBUpdate = true;
 
 
         public static void Open(string path)
@@ -58,7 +57,6 @@ namespace UTJ.USD
                     stream.timeUnit = s_timeUnit;
                     stream.playTime = s_initialTime;
                     stream.forceSingleThread = s_forceSingleThread;
-                    stream.directVBUpdate = s_directVBUpdate;
                 });
                 Selection.activeGameObject = usd.gameObject;
                 Close();

@@ -25,7 +25,6 @@ namespace UTJ.USD
         [SerializeField] public double m_time;
 
         [SerializeField] public bool m_forceSingleThread = false;
-        [SerializeField] public bool m_directVBUpdate = true;
         [SerializeField] public bool m_deferredUpdate;
 
         private SortedDictionary<int, Object> m_subObjects;
@@ -50,7 +49,6 @@ namespace UTJ.USD
                 splitMesh = true,
                 doubleBuffering = true,
             };
-            usdStream.directVBUpdate = m_directVBUpdate;
             usdStream.forceSingleThread = m_forceSingleThread;
             usdStream.timeUnit = m_timeUnit;
             usdStream.playTime = m_time;

@@ -1,5 +1,4 @@
 #include "pch.h"
-#ifdef usdiEnableUnityExtension
 #include "usdiProgressReporter.h"
 
 namespace usdi {
@@ -60,4 +59,3 @@ IProgressReporter* CreateProgressReporter()
 }
 
 } // namespace usdi
-#endif // usdiEnableUnityExtension

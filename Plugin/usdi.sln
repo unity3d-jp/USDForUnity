@@ -1,13 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26228.9
+VisualStudioVersion = 15.0.27130.2026
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "usdi", "usdi.vcxproj", "{08361722-5520-47AC-A0C2-31E8A062B73F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{E6D71B6A-A12A-4818-9933-0D43DC6A5C9F}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GraphicsInterface", "GraphicsInterface.vcxproj", "{29751262-3A23-4CF5-9DEC-8D11AFF02599}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MeshUtils", "MeshUtils.vcxproj", "{FD3FE1FF-ABE5-40DB-B867-144E9DD9B23C}"
 EndProject
@@ -29,10 +27,6 @@ Global
 		{08361722-5520-47AC-A0C2-31E8A062B73F}.Debug|x64.Build.0 = Debug|x64
 		{08361722-5520-47AC-A0C2-31E8A062B73F}.Master|x64.ActiveCfg = Master|x64
 		{08361722-5520-47AC-A0C2-31E8A062B73F}.Master|x64.Build.0 = Master|x64
-		{29751262-3A23-4CF5-9DEC-8D11AFF02599}.Debug|x64.ActiveCfg = Debug|x64
-		{29751262-3A23-4CF5-9DEC-8D11AFF02599}.Debug|x64.Build.0 = Debug|x64
-		{29751262-3A23-4CF5-9DEC-8D11AFF02599}.Master|x64.ActiveCfg = Master|x64
-		{29751262-3A23-4CF5-9DEC-8D11AFF02599}.Master|x64.Build.0 = Master|x64
 		{FD3FE1FF-ABE5-40DB-B867-144E9DD9B23C}.Debug|x64.ActiveCfg = Debug|x64
 		{FD3FE1FF-ABE5-40DB-B867-144E9DD9B23C}.Debug|x64.Build.0 = Debug|x64
 		{FD3FE1FF-ABE5-40DB-B867-144E9DD9B23C}.Master|x64.ActiveCfg = Master|x64
@@ -60,5 +54,8 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{89E3D0A3-3CCB-43E3-9B92-F70EB5731429} = {E6D71B6A-A12A-4818-9933-0D43DC6A5C9F}
 		{11990C37-1C63-418F-9AB1-74076C470584} = {E6D71B6A-A12A-4818-9933-0D43DC6A5C9F}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {935B57F2-1CB4-4949-8DD3-E658B8ECC624}
 	EndGlobalSection
 EndGlobal

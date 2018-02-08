@@ -640,16 +640,6 @@ namespace UTJ.USD
 
 
         // ext
-
-        [DllImport("usdi")] public static extern Bool usdiIsVtxCmdAvailable();
-
-        [DllImport("usdi")] public static extern IntPtr usdiVtxCmdCreate(string dbg_name);
-        [DllImport("usdi")] public static extern void usdiVtxCmdDestroy(IntPtr h);
-        [DllImport("usdi")] public static extern void usdiVtxCmdUpdate(IntPtr h, ref MeshData data, IntPtr vb, IntPtr ib);
-        [DllImport("usdi")] public static extern void usdiVtxCmdUpdateSub(IntPtr h, ref SubmeshData data, IntPtr vb, IntPtr ib);
-        [DllImport("usdi")] public static extern void usdiVtxCmdWait();
-
-
         public delegate void usdiMonoDelegate(IntPtr arg);
         [DllImport("usdi")] public static extern void usdiTaskDestroy(IntPtr task);
         [DllImport("usdi")] public static extern void usdiTaskRun(IntPtr task);
@@ -698,33 +688,6 @@ namespace UTJ.USD
         public static TransformAssignT TransformAssign;
         public static TransformNotfyChangeT TransformNotfyChange;
         public static MeshAssignBoundsT MeshAssignBounds;
-
-
-        public class VertexUpdateCommand
-        {
-            IntPtr handle;
-
-            public VertexUpdateCommand(string dbg_name)
-            {
-                handle = usdiVtxCmdCreate(dbg_name);
-            }
-
-            ~VertexUpdateCommand()
-            {
-                usdiVtxCmdDestroy(handle);
-            }
-
-            public void Update(ref MeshData data, IntPtr vb, IntPtr ib)
-            {
-                usdiVtxCmdUpdate(handle, ref data, vb, ib);
-            }
-
-            public void Update(ref SubmeshData data, IntPtr vb, IntPtr ib)
-            {
-                usdiVtxCmdUpdateSub(handle, ref data, vb, ib);
-            }
-        }
-
 
         public class Task
         {

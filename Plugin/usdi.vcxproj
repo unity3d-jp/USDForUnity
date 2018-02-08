@@ -46,7 +46,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Master|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="usdi\UnityPlugin.cpp" />
     <ClCompile Include="usdi\usdiAttribute.cpp">
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/bigobj %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Master|x64'">/bigobj %(AdditionalOptions)</AdditionalOptions>
@@ -65,9 +64,6 @@
     <Text Include="CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="GraphicsInterface.vcxproj">
-      <Project>{29751262-3a23-4cf5-9dec-8d11aff02599}</Project>
-    </ProjectReference>
     <ProjectReference Include="MeshUtils.vcxproj">
       <Project>{fd3fe1ff-abe5-40db-b867-144e9dd9b23c}</Project>
     </ProjectReference>
@@ -114,7 +110,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <PreprocessorDefinitions>usdiEnableUnityExtension;usdiEnableMonoBinding;usdiEnableInternalUnityMethods;usdiEnableGraphicsInterface;muEnableHalf;usdiDebug;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>muEnableHalf;usdiDebug;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(VTUNE_AMPLIFIER_XE_2016_DIR)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WarningLevel>Level4</WarningLevel>
@@ -133,7 +129,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/Zo %(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>usdiEnableUnityExtension;usdiEnableMonoBinding;usdiEnableInternalUnityMethods;usdiEnableGraphicsInterface;muEnableHalf;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>muEnableHalf;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Optimization>Full</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>

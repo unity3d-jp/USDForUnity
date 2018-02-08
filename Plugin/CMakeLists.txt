@@ -6,14 +6,10 @@ find_package(PythonLibs 2.7 QUIET)
 find_package(Boost COMPONENTS python system filesystem QUIET)
 find_package(TBB QUIET)
 find_package(OpenEXR QUIET)
-find_package(OpenGL QUIET)
-find_package(GLEW QUIET)
 find_package(USD QUIET)
 include(ISPC)
 include(AddPlugin)
 
-option(USDI_ENABLE_GRAPHICS_INTERFACE "Use OpenGL or Direct3D to update vertex buffers directry. It can significantly boost performance." ON)
-option(USDI_ENABLE_MONO_BINDING "Generate mono bindings to access C# objects from C++ directly. It can boost performance." ON)
 option(USDI_ENABLE_DEBUG "Enable debug functionalities." ON)
 option(USDI_ENABLE_TESTS "Build tests." ON)
 
@@ -36,7 +32,6 @@ include_directories(
 )
 
 add_subdirectory(MeshUtils)
-add_subdirectory(GraphicsInterface)
 add_subdirectory(usdiRT)
 add_subdirectory(usdi)
 add_subdirectory(Test)

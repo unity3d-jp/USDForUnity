@@ -31,7 +31,6 @@ namespace UTJ.USD
             if (m_ShowAdvOptions)
             {
                 AddBoolProperty(serializedObject.FindProperty(() => importer.m_forceSingleThread), "Single threaded", "");
-                AddBoolProperty(serializedObject.FindProperty(() => importer.m_directVBUpdate), "Direct VB update", "");
                 AddBoolProperty(serializedObject.FindProperty(() => importer.m_deferredUpdate), "Defered udpate", "");
             }
 

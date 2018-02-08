@@ -33,7 +33,6 @@ namespace UTJ.USD
         [SerializeField] bool m_detailedLog = false;
         bool m_isCompiling = false;
 #endif
-        [SerializeField] bool m_directVBUpdate = true;
         [SerializeField] bool m_deferredUpdate = false;
 
         [HideInInspector][SerializeField] string[] m_variantSelections_keys;
@@ -77,11 +76,6 @@ namespace UTJ.USD
         {
             get { return m_timeUnit; }
             set { m_timeUnit = value; }
-        }
-        public bool directVBUpdate
-        {
-            get { return m_directVBUpdate && usdi.usdiIsVtxCmdAvailable(); }
-            set { m_directVBUpdate = value; }
         }
         public bool deferredUpdate
         {
@@ -697,11 +691,6 @@ namespace UTJ.USD
 
             usdiWaitAsyncUpdateTask();
             usdiUpdate(m_time);
-
-            if (directVBUpdate)
-            {
-                GL.IssuePluginEvent(usdi.usdiGetRenderEventFunc(), 0);
-            }
 
 #if UNITY_EDITOR
             if (EditorApplication.isPlaying)

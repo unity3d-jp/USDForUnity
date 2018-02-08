@@ -227,7 +227,7 @@ namespace UTJ.USD
             int num_submeshes = m_meshData.num_submeshes == 0 ? 1 : m_meshData.num_submeshes;
             for (int i = 0; i < num_submeshes; ++i)
             {
-                m_submeshes[i].usdiUploadMeshData(topology, skinning, m_stream.directVBUpdate);
+                m_submeshes[i].usdiUploadMeshData(topology, skinning);
             }
         }
 

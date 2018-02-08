@@ -392,7 +392,7 @@ namespace UTJ.USD
             m_umesh.bindposes = m_bindposes.Array;
         }
 
-        public void usdiUploadMeshData(bool topology, bool skinning, bool getVB)
+        public void usdiUploadMeshData(bool topology, bool skinning)
         {
             if (topology)
                 m_umesh.Clear();
