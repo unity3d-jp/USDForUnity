@@ -23,9 +23,6 @@
     <ClCompile Include="usdiTests.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MeshUtils.vcxproj">
-      <Project>{fd3fe1ff-abe5-40db-b867-144e9dd9b23c}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\usdi.vcxproj">
       <Project>{08361722-5520-47ac-a0c2-31e8a062b73f}</Project>
     </ProjectReference>
@@ -65,7 +62,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <PreprocessorDefinitions>muEnableISPC;muEnableHalf;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>muEnableISPC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Optimization>Disabled</Optimization>
     </ClCompile>
     <Link>
@@ -81,7 +78,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/Zo %(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>muEnableISPC;muEnableHalf;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>muEnableISPC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Optimization>Full</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>

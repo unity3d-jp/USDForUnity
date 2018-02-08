@@ -20,7 +20,7 @@ public:
 
     AttributeSummary getSummary();
     virtual void    updateSample(Time t) = 0;
-    virtual bool    readSample(AttributeData& dst, Time t, bool copy) = 0;
+    virtual bool    readSample(AttributeData& dst, Time t) = 0;
     virtual bool    writeSample(const AttributeData& src, Time t) = 0;
     virtual bool    getImmediate(void *dst, Time t) = 0;
     virtual bool    setImmediate(const void *src, Time t) = 0;

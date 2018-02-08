@@ -26,7 +26,7 @@ public:
     void                    updateSample(Time t) override;
 
     const PointsSummary&    getSummary() const;
-    bool                    readSample(PointsData& dst, Time t, bool copy);
+    bool                    readSample(PointsData& dst, Time t);
     bool                    writeSample(const PointsData& src, Time t);
 
     using SampleCallback = std::function<void(const PointsData& data, Time t)>;

@@ -69,13 +69,13 @@ void Points::updateSample(Time t_)
     m_points.GetWidthsAttr().Get(&sample.widths, t);
 
     if (conf.swap_handedness) {
-        InvertX((float3*)sample.points.data(), sample.points.size());
-        InvertX((float3*)sample.velocities.data(), sample.velocities.size());
+        SwapHandedness((float3*)sample.points.data(), (int)sample.points.size());
+        SwapHandedness((float3*)sample.velocities.data(), (int)sample.velocities.size());
     }
     if (conf.scale_factor != 1.0f) {
-        Scale((float3*)sample.points.data(), conf.scale_factor, sample.points.size());
-        Scale((float3*)sample.velocities.data(), conf.scale_factor, sample.velocities.size());
-        Scale(sample.widths.data(), conf.scale_factor, sample.widths.size());
+        ApplyScale((float3*)sample.points.data(), (int)sample.points.size(), conf.scale_factor);
+        ApplyScale((float3*)sample.velocities.data(), (int)sample.velocities.size(), conf.scale_factor);
+        ApplyScale(sample.widths.data(), (int)sample.widths.size(), conf.scale_factor);
     }
 
     if (m_attr_ids64) {
@@ -86,7 +86,7 @@ void Points::updateSample(Time t_)
     }
 }
 
-bool Points::readSample(PointsData& dst, Time t, bool copy)
+bool Points::readSample(PointsData& dst, Time t)
 {
     if (t != m_time_prev) { updateSample(t); }
 
@@ -94,29 +94,20 @@ bool Points::readSample(PointsData& dst, Time t, bool copy)
     const auto& sample = *m_front_sample;
 
     dst.num_points = (uint)sample.points.size();
-    if (copy) {
-        if (dst.points && !sample.points.empty()) {
-            memcpy(dst.points, sample.points.data(), sizeof(float3) * dst.num_points);
-        }
-        if (dst.velocities && !sample.velocities.empty()) {
-            memcpy(dst.velocities, sample.velocities.data(), sizeof(float3) * dst.num_points);
-        }
-        if (dst.widths && !sample.widths.empty()) {
-            memcpy(dst.widths, sample.widths.data(), sizeof(float) * dst.num_points);
-        }
-        if (dst.ids64 && !sample.ids64.empty()) {
-            memcpy(dst.widths, sample.widths.data(), sizeof(int64_t) * dst.num_points);
-        }
-        if (dst.ids32 && !sample.ids32.empty()) {
-            memcpy(dst.widths, sample.widths.data(), sizeof(int32_t) * dst.num_points);
-        }
+    if (dst.points && !sample.points.empty()) {
+        memcpy(dst.points, sample.points.data(), sizeof(float3) * dst.num_points);
     }
-    else {
-        dst.points = (float3*)sample.points.cdata();
-        dst.velocities = (float3*)sample.velocities.cdata();
-        dst.widths = (float*)sample.widths.cdata();
-        dst.ids64 = (int64_t*)sample.ids64.cdata();
-        dst.ids32 = (int32_t*)sample.ids32.cdata();
+    if (dst.velocities && !sample.velocities.empty()) {
+        memcpy(dst.velocities, sample.velocities.data(), sizeof(float3) * dst.num_points);
+    }
+    if (dst.widths && !sample.widths.empty()) {
+        memcpy(dst.widths, sample.widths.data(), sizeof(float) * dst.num_points);
+    }
+    if (dst.ids64 && !sample.ids64.empty()) {
+        memcpy(dst.widths, sample.widths.data(), sizeof(int64_t) * dst.num_points);
+    }
+    if (dst.ids32 && !sample.ids32.empty()) {
+        memcpy(dst.widths, sample.widths.data(), sizeof(int32_t) * dst.num_points);
     }
 
     return dst.num_points > 0;
@@ -197,7 +188,7 @@ int Points::eachSample(const SampleCallback & cb)
 
     PointsData data;
     for (const auto& t : times) {
-        readSample(data, t.first, false);
+        readSample(data, t.first);
         cb(data, t.first);
     }
     return (int)times.size();

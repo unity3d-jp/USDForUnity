@@ -1,6 +1,6 @@
 #pragma once
 
-#include "muIterator.h"
+#include "aiIterator.h"
 
 template<class T>
 class IntrusiveArray
@@ -14,7 +14,7 @@ public:
     using iterator = pointer;
     using const_iterator = const_pointer;
 
-    IntrusiveArray() {}
+    IntrusiveArray() : m_data(nullptr), m_size(0) {}
     IntrusiveArray(const T *d, size_t s) : m_data(const_cast<T*>(d)), m_size(s) {}
     IntrusiveArray(const IntrusiveArray& v) : m_data(const_cast<T*>(v.m_data)), m_size(v.m_size) {}
     template<int N>
@@ -22,6 +22,12 @@ public:
     template<class Container>
     IntrusiveArray(const Container& v) : m_data(const_cast<T*>(v.data())), m_size(v.size()) {}
     IntrusiveArray& operator=(const IntrusiveArray& v) { m_data = const_cast<T*>(v.m_data); m_size = v.m_size; return *this; }
+
+    void reset()
+    {
+        m_data = nullptr;
+        m_size = 0;
+    }
 
     void reset(T *d, size_t s)
     {
@@ -47,13 +53,13 @@ public:
     {
         memset(m_data, 0, sizeof(T)*m_size);
     }
-    void copy_to(pointer dst)
+    void copy_to(pointer dst) const
     {
         memcpy(dst, m_data, sizeof(value_type) * m_size);
     }
-    void copy_to(pointer dst, size_t num_elements)
+    void copy_to(pointer dst, size_t num_elements, size_t offset = 0) const
     {
-        memcpy(dst, m_data, sizeof(value_type) * num_elements);
+        memcpy(dst, m_data + offset, sizeof(value_type) * num_elements);
     }
 
 private:

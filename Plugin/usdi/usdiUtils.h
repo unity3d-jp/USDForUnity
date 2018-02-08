@@ -1,7 +1,5 @@
 #pragma once
 
-#include "MeshUtils/MeshUtils.h"
-
 namespace usdi {
 
 template<class T> T* RawPtr(T *v) { return v; }

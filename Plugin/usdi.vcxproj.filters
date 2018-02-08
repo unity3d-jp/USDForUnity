@@ -37,6 +37,15 @@
     <ClCompile Include="usdi\ext\usdiExt.cpp">
       <Filter>usdi\ext</Filter>
     </ClCompile>
+    <ClCompile Include="usdi\Foundation\aiMath.cpp">
+      <Filter>usdi\Foundation</Filter>
+    </ClCompile>
+    <ClCompile Include="usdi\Foundation\aiMeshOps.cpp">
+      <Filter>usdi\Foundation</Filter>
+    </ClCompile>
+    <ClCompile Include="usdi\Foundation\Allocator.cpp">
+      <Filter>usdi\Foundation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="usdi\pch.h">
@@ -84,6 +93,30 @@
     <ClInclude Include="usdi\usdiVectorConversion.h">
       <Filter>usdi</Filter>
     </ClInclude>
+    <ClInclude Include="usdi\Foundation\RawVector.h">
+      <Filter>usdi\Foundation</Filter>
+    </ClInclude>
+    <ClInclude Include="usdi\Foundation\aiIntrusiveArray.h">
+      <Filter>usdi\Foundation</Filter>
+    </ClInclude>
+    <ClInclude Include="usdi\Foundation\aiIterator.h">
+      <Filter>usdi\Foundation</Filter>
+    </ClInclude>
+    <ClInclude Include="usdi\Foundation\aiMath.h">
+      <Filter>usdi\Foundation</Filter>
+    </ClInclude>
+    <ClInclude Include="usdi\Foundation\aiMeshOps.h">
+      <Filter>usdi\Foundation</Filter>
+    </ClInclude>
+    <ClInclude Include="usdi\Foundation\aiMisc.h">
+      <Filter>usdi\Foundation</Filter>
+    </ClInclude>
+    <ClInclude Include="usdi\Foundation\Allocator.h">
+      <Filter>usdi\Foundation</Filter>
+    </ClInclude>
+    <ClInclude Include="usdi\Foundation\ispcmath.h">
+      <Filter>usdi\Foundation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />
@@ -98,5 +131,13 @@
     <Filter Include="usdi\ext">
       <UniqueIdentifier>{5f320d52-1147-481f-b80b-db53ab052345}</UniqueIdentifier>
     </Filter>
+    <Filter Include="usdi\Foundation">
+      <UniqueIdentifier>{f5c88c0c-ef9a-450b-8089-6c273edd41e3}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="usdi\Foundation\aiSIMD.ispc">
+      <Filter>usdi\Foundation</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>

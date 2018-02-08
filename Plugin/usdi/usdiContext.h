@@ -73,9 +73,6 @@ public:
     void                notifyForceUpdate();
     void                updateAllSamples(Time t);
 
-    using TimeSampleCallback = std::function<void(Time t)>;
-    int eachTimeSample(const TimeSampleCallback& cb);
-
 private:
     void    addSchema(Schema *schema);
     void    applyImportConfig();

@@ -2,19 +2,19 @@
 
 #include <algorithm>
 #include <initializer_list>
-#include "muAllocator.h"
+#include "Allocator.h"
 
 template<class T, int Align = 0x20>
 class RawVector
 {
 public:
-    using value_type      = T;
-    using reference       = T&;
+    using value_type = T;
+    using reference = T & ;
     using const_reference = const T&;
-    using pointer         = T*;
-    using const_pointer   = const T*;
-    using iterator        = pointer;
-    using const_iterator  = const_pointer;
+    using pointer = T * ;
+    using const_pointer = const T*;
+    using iterator = pointer;
+    using const_iterator = const_pointer;
     static const int alignment = Align;
 
     RawVector() {}
@@ -158,7 +158,7 @@ public:
 
     void clear()
     {
-        m_size = m_capacity = 0;
+        m_size = 0;
     }
 
     void swap(RawVector &other)
@@ -171,14 +171,20 @@ public:
     template<class FwdIter>
     void assign(FwdIter first, FwdIter last)
     {
-        resize(std::distance(first, last));
+        resize_discard(std::distance(first, last));
         std::copy(first, last, begin());
     }
     void assign(const_pointer first, const_pointer last)
     {
-        resize(std::distance(first, last));
-        // sadly, memcpy() can way faster than std::copy()
-        memcpy(m_data, first, sizeof(value_type) * m_size);
+        if (!first) {
+            clear();
+            return;
+        }
+        else {
+            resize_discard(std::distance(first, last));
+            // sadly, memcpy() can way faster than std::copy()
+            memcpy(m_data, first, sizeof(value_type) * m_size);
+        }
     }
 
     template<class ForwardIter>
@@ -187,7 +193,7 @@ public:
         size_t d = std::distance(begin(), pos);
         size_t s = std::distance(first, last);
         resize(d + s);
-        std::copy(first, last, begin() + pos);
+        std::copy(first, last, begin() + d);
     }
     void insert(iterator pos, const_pointer first, const_pointer last)
     {
@@ -219,6 +225,12 @@ public:
         resize(m_size + 1);
         back() = v;
     }
+    void push_back(T&& v)
+    {
+        resize(m_size + 1);
+        back() = v;
+    }
+
 
     void pop_back()
     {
@@ -240,17 +252,17 @@ public:
         memset(m_data, 0, sizeof(T)*m_size);
     }
 
-    void copy_to(pointer dst)
+    void copy_to(pointer dst) const
     {
         memcpy(dst, m_data, sizeof(value_type) * m_size);
     }
-    void copy_to(pointer dst, size_t num_elements)
+    void copy_to(pointer dst, size_t length, size_t offset = 0) const
     {
-        memcpy(dst, m_data, sizeof(value_type) * num_elements);
+        memcpy(dst, m_data + offset, sizeof(value_type) * length);
     }
 
 private:
-    T *m_data = nullptr;
+    T * m_data = nullptr;
     size_t m_size = 0;
     size_t m_capacity = 0;
 };

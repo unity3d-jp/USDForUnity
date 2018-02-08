@@ -1,7 +1,6 @@
 #pragma once
 
 #include "usdiInternal.h"
-#include "MeshUtils/MeshUtils.h"
 
 namespace usdi {
 
@@ -91,14 +90,14 @@ struct VConvert<V1, V2>\
     }\
 };
 
-Impl(  float, float,    half,  half, 1, FloatToHalf, HalfToFloat)
-Impl(GfVec2f, float, GfVec2h,  half, 2, FloatToHalf, HalfToFloat)
-Impl(GfVec3f, float, GfVec3h,  half, 3, FloatToHalf, HalfToFloat)
-Impl(GfVec4f, float, GfVec4h,  half, 4, FloatToHalf, HalfToFloat)
-Impl(   half,  half,   float, float, 1, HalfToFloat, FloatToHalf)
-Impl(GfVec2h,  half, GfVec2f, float, 2, HalfToFloat, FloatToHalf)
-Impl(GfVec3h,  half, GfVec3f, float, 3, HalfToFloat, FloatToHalf)
-Impl(GfVec4h,  half, GfVec4f, float, 4, HalfToFloat, FloatToHalf)
+//Impl(  float, float,    half,  half, 1, FloatToHalf, HalfToFloat)
+//Impl(GfVec2f, float, GfVec2h,  half, 2, FloatToHalf, HalfToFloat)
+//Impl(GfVec3f, float, GfVec3h,  half, 3, FloatToHalf, HalfToFloat)
+//Impl(GfVec4f, float, GfVec4h,  half, 4, FloatToHalf, HalfToFloat)
+//Impl(   half,  half,   float, float, 1, HalfToFloat, FloatToHalf)
+//Impl(GfVec2h,  half, GfVec2f, float, 2, HalfToFloat, FloatToHalf)
+//Impl(GfVec3h,  half, GfVec3f, float, 3, HalfToFloat, FloatToHalf)
+//Impl(GfVec4h,  half, GfVec4f, float, 4, HalfToFloat, FloatToHalf)
 
 #undef Impl
 

@@ -232,13 +232,6 @@ usdiAPI void usdiRebuildSchemaTree(usdi::Context *ctx)
     ctx->rebuildSchemaTree();
 }
 
-usdiAPI int usdiEachTimeSample(usdi::Context * ctx, usdiTimeSampleCallback cb)
-{
-    usdiTraceFunc();
-    if (!ctx) return 0;
-    return ctx->eachTimeSample([cb](usdi::Time t) { cb(t); });
-}
-
 
 // Schema interface
 
@@ -593,12 +586,12 @@ usdiAPI void usdiMeshGetSummary(usdi::Mesh *mesh, usdi::MeshSummary *dst)
     *dst = mesh->getSummary();
 }
 
-usdiAPI bool usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t, bool copy)
+usdiAPI bool usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t)
 {
     usdiTraceFunc();
     if (!mesh || !dst) return false;
     usdiVTuneScope("usdiMeshReadSample");
-    return mesh->readSample(*dst, t, copy);
+    return mesh->readSample(*dst, t);
 }
 
 usdiAPI bool usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t)
@@ -633,12 +626,12 @@ usdiAPI void usdiPointsGetSummary(usdi::Points *points, usdi::PointsSummary *dst
     *dst = points->getSummary();
 }
 
-usdiAPI bool usdiPointsReadSample(usdi::Points *points, usdi::PointsData *dst, usdi::Time t, bool copy)
+usdiAPI bool usdiPointsReadSample(usdi::Points *points, usdi::PointsData *dst, usdi::Time t)
 {
     usdiTraceFunc();
     if (!points || !dst) return false;
     usdiVTuneScope("usdiPointsReadSample");
-    return points->readSample(*dst, t, copy);
+    return points->readSample(*dst, t);
 }
 
 usdiAPI bool usdiPointsWriteSample(usdi::Points *points, const usdi::PointsData *src, usdi::Time t)
@@ -687,11 +680,11 @@ usdiAPI void usdiAttrGetSummary(usdi::Attribute *attr, usdi::AttributeSummary *d
     *dst = attr->getSummary();
 }
 
-usdiAPI bool usdiAttrReadSample(usdi::Attribute *attr, usdi::AttributeData *dst, usdi::Time t, bool copy)
+usdiAPI bool usdiAttrReadSample(usdi::Attribute *attr, usdi::AttributeData *dst, usdi::Time t)
 {
     usdiTraceFunc();
     if (!attr || !dst) { return false; }
-    return attr->readSample(*dst, t, copy);
+    return attr->readSample(*dst, t);
 }
 
 usdiAPI bool usdiAttrWriteSample(usdi::Attribute *attr, const usdi::AttributeData *src, usdi::Time t)

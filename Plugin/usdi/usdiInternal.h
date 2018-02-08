@@ -33,11 +33,12 @@
 #endif
 
 
-#include "MeshUtils/MeshUtils.h"
+#include "Foundation/RawVector.h"
+#include "Foundation/aiIntrusiveArray.h"
+#include "Foundation/aiMath.h"
+
 namespace usdi {
     PXR_NAMESPACE_USING_DIRECTIVE
-
-    using namespace mu;
 
     class Context;
     class Attribute;

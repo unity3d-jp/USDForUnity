@@ -32,14 +32,53 @@ using uint = unsigned int;
     class Mesh : public Xform {};
     class Points : public Xform {};
 
-    #ifndef usdiOverrideFloat4
-    struct float2 { float x, y; };
-    struct float3 { float x, y, z; };
-    struct float4 { float x, y, z, w; };
-    struct quatf { float x, y, z, w; };
-    struct float3x3 { float3 v[3]; };
-    struct float4x4 { float4 v[4]; };
-    #endif
+#ifndef usdiOverrideFloat4
+    struct float2
+    {
+        float x, y;
+        static constexpr float2 zero() { return{ 0,0 }; }
+    };
+    struct float3
+    {
+        float x, y, z;
+        static constexpr float3 zero() { return{ 0,0,0 }; }
+        static constexpr float3 one() { return{ 1,1,1 }; }
+    };
+    struct float4
+    {
+        float x, y, z, w;
+    };
+    struct quatf
+    {
+        float x, y, z, w;
+        static constexpr quatf identity() { return{ 0,0,0,1 }; }
+    };
+    struct float3x3
+    {
+        float3 v[3];
+        static constexpr float3x3 identity()
+        {
+            return{ {
+                { 1,0,0 },
+                { 0,1,0 },
+                { 0,0,1 },
+            } };
+        }
+    };
+    struct float4x4
+    {
+        float4 v[4];
+        static constexpr float4x4 identity()
+        {
+            return{ {
+                { 1,0,0,0 },
+                { 0,1,0,0 },
+                { 0,0,1,0 },
+                { 0,0,0,1 },
+            } };
+        }
+    };
+#endif
 #endif
     struct AABB
     {
@@ -122,7 +161,7 @@ struct ImportSettings
 
 struct ExportSettings
 {
-    float scale = 1.0f;
+    float scale_factor = 1.0f;
     bool swap_handedness = false;
     bool swap_faces = false;
     bool instanceable_by_default = false;
@@ -151,15 +190,10 @@ struct XformData
     };
 
     int flags = 0;
-    float3 position = { 0.0f, 0.0f, 0.0f};
-    quatf rotation = { 0.0f, 0.0f, 0.0f, 1.0f };
-    float3 scale = { 1.0f, 1.0f, 1.0f };
-    float4x4 transform = { {
-        {1.0f, 0.0f, 0.0f, 0.0f},
-        {0.0f, 1.0f, 0.0f, 0.0f},
-        {0.0f, 0.0f, 1.0f, 0.0f},
-        {0.0f, 0.0f, 0.0f, 1.0f}
-    } };
+    float3 position = float3::zero();
+    quatf rotation = quatf::identity();
+    float3 scale = float3::one();
+    float4x4 transform = float4x4::identity();
 };
 
 
@@ -183,15 +217,15 @@ struct CameraData
 
 struct MeshSummary
 {
-    Time                start = 0.0, end = 0.0;
-    TopologyVariance    topology_variance = TopologyVariance::Constant;
-    uint                num_bones = 0;
-    uint                max_bone_weights = 0; // should be 0 or 4 or 8
-    bool                has_velocities = false;
-    bool                has_normals = false;
-    bool                has_colors = false;
-    bool                has_uvs = false;
-    bool                has_tangents = false;
+    Time start = 0.0, end = 0.0;
+    TopologyVariance topology_variance = TopologyVariance::Constant;
+    uint num_bones = 0;
+    uint max_bone_weights = 0; // should be 0 or 4 or 8
+    bool has_velocities = false;
+    bool has_normals = false;
+    bool has_colors = false;
+    bool has_uvs = false;
+    bool has_tangents = false;
 };
 
 struct MeshSampleSummary
@@ -217,42 +251,42 @@ struct MeshSplitSummary
 template<int N>
 struct Weights
 {
-    float   weight[N] = {};
-    int     indices[N] = {};
+    float weight[N] = {};
+    int   indices[N] = {};
 };
 using Weights4 = Weights<4>;
 using Weights8 = Weights<8>;
 
 struct SubmeshData
 {
-    float3      *points = nullptr;
-    float3      *normals = nullptr;
-    float4      *colors = nullptr;
-    float2      *uvs = nullptr;
-    float4      *tangents = nullptr;
-    float3      *velocities = nullptr;
-    int         *indices = nullptr;
+    float3 *points = nullptr;
+    float3 *normals = nullptr;
+    float4 *colors = nullptr;
+    float2 *uvs = nullptr;
+    float4 *tangents = nullptr;
+    float3 *velocities = nullptr;
+    int    *indices = nullptr;
     union {
         Weights4 *weights4 = nullptr;
         Weights8 *weights8;
     };
-    uint        num_points = 0; // num_points == num_indices in submeshes
+    uint num_points = 0; // num_points == num_indices in submeshes
 
-    float3  center = { 0.0f, 0.0f, 0.0f };
-    float3  extents = { 0.0f, 0.0f, 0.0f };
+    float3 center = float3::zero();
+    float3 extents = float3::zero();
 };
 
 struct MeshData
 {
-    float3  *points = nullptr;
-    float3  *velocities = nullptr;
-    float3  *normals = nullptr;
-    float4  *tangents = nullptr;
-    float2  *uv0 = nullptr;
-    float2  *uv1 = nullptr;
-    float4  *colors = nullptr;
-    int     *counts = nullptr;
-    int     *indices = nullptr;
+    float3 *points = nullptr;
+    float3 *velocities = nullptr;
+    float3 *normals = nullptr;
+    float4 *tangents = nullptr;
+    float2 *uv0 = nullptr;
+    float2 *uv1 = nullptr;
+    float4 *colors = nullptr;
+    int    *counts = nullptr;
+    int    *indices = nullptr;
 
     union {
         Weights4 *weights4 = nullptr;
@@ -262,14 +296,14 @@ struct MeshData
     char    **bones = nullptr;
     char    *root_bone = nullptr;
 
-    uint    num_points = 0;
-    uint    num_counts = 0;
-    uint    num_indices = 0;
-    uint    num_bones = 0;
-    uint    max_bone_weights = 0; // must be 0 or 4 or 8
+    uint num_points = 0;
+    uint num_counts = 0;
+    uint num_indices = 0;
+    uint num_bones = 0;
+    uint max_bone_weights = 0; // must be 0 or 4 or 8
 
-    float3  center = { 0.0f, 0.0f, 0.0f };
-    float3  extents = { 0.0f, 0.0f, 0.0f };
+    float3 center = float3::zero();
+    float3 extents = float3::zero();
 
     SubmeshData *submeshes = nullptr;
     uint    num_submeshes = 0;
@@ -356,8 +390,6 @@ usdiAPI usdi::Points*    usdiCreatePoints(usdi::Context *ctx, usdi::Schema *pare
 usdiAPI void             usdiNotifyForceUpdate(usdi::Context *ctx);
 usdiAPI void             usdiUpdateAllSamples(usdi::Context *ctx, usdi::Time t);
 usdiAPI void             usdiRebuildSchemaTree(usdi::Context *ctx);
-using usdiTimeSampleCallback = void (usdiSTDCall*)(usdi::Time t);
-usdiAPI int              usdiEachTimeSample(usdi::Context *ctx, usdiTimeSampleCallback cb);
 
 // Prim interface
 usdiAPI int              usdiPrimGetID(usdi::Schema *schema);
@@ -430,7 +462,7 @@ usdiAPI int              usdiCameraEachSample(usdi::Camera *cam, usdiCameraSampl
 // Mesh interface
 usdiAPI usdi::Mesh*      usdiAsMesh(usdi::Schema *schema); // dynamic cast to Mesh
 usdiAPI void             usdiMeshGetSummary(usdi::Mesh *mesh, usdi::MeshSummary *dst);
-usdiAPI bool             usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t, bool copy);
+usdiAPI bool             usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t);
 usdiAPI bool             usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t = usdiDefaultTime());
 using usdiMeshSampleCallback = void (usdiSTDCall*)(const usdi::MeshData *data, usdi::Time t);
 usdiAPI int              usdiMeshEachSample(usdi::Mesh *mesh, usdiMeshSampleCallback cb);
@@ -438,7 +470,7 @@ usdiAPI int              usdiMeshEachSample(usdi::Mesh *mesh, usdiMeshSampleCall
 // Points interface
 usdiAPI usdi::Points*    usdiAsPoints(usdi::Schema *schema); // dynamic cast to Points
 usdiAPI void             usdiPointsGetSummary(usdi::Points *points, usdi::PointsSummary *dst);
-usdiAPI bool             usdiPointsReadSample(usdi::Points *points, usdi::PointsData *dst, usdi::Time t, bool copy);
+usdiAPI bool             usdiPointsReadSample(usdi::Points *points, usdi::PointsData *dst, usdi::Time t);
 usdiAPI bool             usdiPointsWriteSample(usdi::Points *points, const usdi::PointsData *src, usdi::Time t = usdiDefaultTime());
 using usdiPointsSampleCallback = void (usdiSTDCall*)(const usdi::PointsData *data, usdi::Time t);
 usdiAPI int              usdiPointsEachSample(usdi::Points *points, usdiPointsSampleCallback cb);
@@ -448,7 +480,7 @@ usdiAPI usdi::Schema*    usdiAttrGetParent(usdi::Attribute *attr);
 usdiAPI const char*      usdiAttrGetName(usdi::Attribute *attr);
 usdiAPI const char*      usdiAttrGetTypeName(usdi::Attribute *attr);
 usdiAPI void             usdiAttrGetSummary(usdi::Attribute *attr, usdi::AttributeSummary *dst);
-usdiAPI bool             usdiAttrReadSample(usdi::Attribute *attr, usdi::AttributeData *dst, usdi::Time t, bool copy);
+usdiAPI bool             usdiAttrReadSample(usdi::Attribute *attr, usdi::AttributeData *dst, usdi::Time t);
 usdiAPI bool             usdiAttrWriteSample(usdi::Attribute *attr, const usdi::AttributeData *src, usdi::Time t = usdiDefaultTime());
 
 // Alembic related

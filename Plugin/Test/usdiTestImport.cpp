@@ -53,7 +53,7 @@ static void InspectAttribute(usdi::Attribute *attr)
     {\
         Type buf;\
         usdi::AttributeData data; data.data = (void*)&buf; data.num_elements = 1;\
-        usdiAttrReadSample(attr, &data, t, true);\
+        usdiAttrReadSample(attr, &data, t);\
         P(buf);\
         break;\
     }
@@ -62,7 +62,7 @@ static void InspectAttribute(usdi::Attribute *attr)
     case usdi::AttributeType::Enum:\
     {\
         usdi::AttributeData data; data.num_elements = 1;\
-        usdiAttrReadSample(attr, &data, t, true);\
+        usdiAttrReadSample(attr, &data, t);\
         P((Type)data.data);\
         break;\
     }
@@ -72,11 +72,11 @@ static void InspectAttribute(usdi::Attribute *attr)
     {\
         std::vector<Type> buf;\
         usdi::AttributeData data;\
-        usdiAttrReadSample(attr, &data, t, true);\
+        usdiAttrReadSample(attr, &data, t);\
         buf.resize(data.num_elements);\
         data.data = buf.data();\
         data.num_elements = buf.size();\
-        usdiAttrReadSample(attr, &data, t, true); \
+        usdiAttrReadSample(attr, &data, t); \
         P(buf);\
         break;\
     }

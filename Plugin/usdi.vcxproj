@@ -13,6 +13,14 @@
   <ItemGroup>
     <ClInclude Include="usdi\etc\Platform.h" />
     <ClInclude Include="usdi\ext\usdiExt.h" />
+    <ClInclude Include="usdi\Foundation\aiIntrusiveArray.h" />
+    <ClInclude Include="usdi\Foundation\aiIterator.h" />
+    <ClInclude Include="usdi\Foundation\aiMath.h" />
+    <ClInclude Include="usdi\Foundation\aiMeshOps.h" />
+    <ClInclude Include="usdi\Foundation\aiMisc.h" />
+    <ClInclude Include="usdi\Foundation\Allocator.h" />
+    <ClInclude Include="usdi\Foundation\ispcmath.h" />
+    <ClInclude Include="usdi\Foundation\RawVector.h" />
     <ClInclude Include="usdi\pch.h" />
     <ClInclude Include="usdi\usdiAttribute.h" />
     <ClInclude Include="usdi\usdiCamera.h" />
@@ -29,6 +37,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="usdi\ext\usdiExt.cpp" />
+    <ClCompile Include="usdi\Foundation\aiMath.cpp" />
+    <ClCompile Include="usdi\Foundation\aiMeshOps.cpp" />
+    <ClCompile Include="usdi\Foundation\Allocator.cpp" />
     <ClCompile Include="usdi\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Master|x64'">Create</PrecompiledHeader>
@@ -51,15 +62,21 @@
     <Text Include="CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="MeshUtils.vcxproj">
-      <Project>{fd3fe1ff-abe5-40db-b867-144e9dd9b23c}</Project>
-    </ProjectReference>
     <ProjectReference Include="setup.vcxproj">
       <Project>{1c5de91b-7ae9-4304-9fa1-0de1aba8c02d}</Project>
     </ProjectReference>
     <ProjectReference Include="usdiRT.vcxproj">
       <Project>{66397903-6ff2-46c6-b51e-b323fd248fad}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="usdi\Foundation\aiSIMD.ispc">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Platform)'=='x64'">External\ispc %(FullPath) -o $(IntDir)%(Filename).obj -h $(IntDir)%(Filename).h --target=sse4,avx --arch=x86-64 --opt=fast-masked-vload --opt=fast-math</Command>
+      <Command Condition="'$(Platform)'=='Win32'">External\ispc %(FullPath) -o $(IntDir)%(Filename).obj -h $(IntDir)%(Filename).h --target=sse4,avx --arch=x86 --opt=fast-masked-vload --opt=fast-math</Command>
+      <Outputs>$(IntDir)%(Filename).obj;$(IntDir)%(Filename)_sse4.obj;$(IntDir)%(Filename)_avx.obj</Outputs>
+      <AdditionalInputs>$(SolutionDir)usdi\Foundation\ispcmath.h</AdditionalInputs>
+    </CustomBuild>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{08361722-5520-47AC-A0C2-31E8A062B73F}</ProjectGuid>
@@ -81,7 +98,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Platform)'=='x64'">
-    <IncludePath>$(SolutionDir);$(SolutionDir)usdi;$(SolutionDir)External\include;$(SolutionDir)External\include\python27;$(SolutionDir)External\Unity\include;$(VTUNE_AMPLIFIER_XE_2016_DIR)include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir);$(SolutionDir)usdi;$(SolutionDir)External\include;$(VTUNE_AMPLIFIER_XE_2016_DIR)include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)External\libs\win64;$(VTUNE_AMPLIFIER_XE_2016_DIR)lib64;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)_out\$(Platform)_$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)_tmp\$(ProjectName)_$(Platform)_$(Configuration)\</IntDir>
@@ -94,10 +111,11 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <PreprocessorDefinitions>muEnableHalf;usdiDebug;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>aiEnableISPC;usdiDebug;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>$(VTUNE_AMPLIFIER_XE_2016_DIR)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <WarningLevel>Level4</WarningLevel>
+      <AdditionalIncludeDirectories>$(IntDir)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -113,7 +131,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/Zo %(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions>muEnableHalf;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>aiEnableISPC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Optimization>Full</Optimization>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>

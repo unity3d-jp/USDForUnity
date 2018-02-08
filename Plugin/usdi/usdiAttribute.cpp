@@ -230,18 +230,13 @@ public:
         m_usdattr.Get(&m_sample, t);
     }
 
-    bool readSample(AttributeData& dst, Time t, bool copy) override
+    bool readSample(AttributeData& dst, Time t) override
     {
         updateSample(t);
 
         dst.num_elements = 1;
-        if (copy) {
-            if (dst.data) {
-                *(rep_t*)dst.data = m_sample;
-            }
-        }
-        else {
-            dst.data = &m_sample;
+        if (dst.data) {
+            *(rep_t*)dst.data = m_sample;
         }
         return true;
     }
@@ -300,19 +295,14 @@ public:
         m_usdattr.Get(&m_sample, t);
     }
 
-    bool readSample(AttributeData& dst, Time t, bool copy) override
+    bool readSample(AttributeData& dst, Time t) override
     {
         updateSample(t);
 
         dst.num_elements = (int)m_sample.size();
-        if (copy) {
-            if (dst.data) {
-                size_t n = std::min<size_t>(m_sample.size(), (size_t)dst.num_elements);
-                memcpy(dst.data, m_sample.cdata(), sizeof(T)*n);
-            }
-        }
-        else {
-            dst.data = m_sample.data();
+        if (dst.data) {
+            size_t n = std::min<size_t>(m_sample.size(), (size_t)dst.num_elements);
+            memcpy(dst.data, m_sample.cdata(), sizeof(T)*n);
         }
         return true;
     }
@@ -378,7 +368,7 @@ public:
         m_usdattr.Get(&m_sample, t);
     }
 
-    bool readSample(AttributeData& dst, Time t, bool /*copy*/) override
+    bool readSample(AttributeData& dst, Time t) override
     {
         updateSample(t);
 
@@ -440,7 +430,7 @@ public:
         m_pointers.push_back(nullptr); // add null terminator for convenience
     }
 
-    bool readSample(AttributeData& dst, Time t, bool /*copy*/) override
+    bool readSample(AttributeData& dst, Time t) override
     {
         updateSample(t);
 
@@ -504,18 +494,13 @@ public:
         VAssign(m_sample, m_tmp);
     }
 
-    bool readSample(AttributeData& dst, Time t, bool copy) override
+    bool readSample(AttributeData& dst, Time t) override
     {
         updateSample(t);
 
         dst.num_elements = 1;
-        if (copy) {
-            if (dst.data) {
-                *(T*)dst.data = m_sample;
-            }
-        }
-        else {
-            dst.data = &m_sample;
+        if (dst.data) {
+            *(T*)dst.data = m_sample;
         }
         return true;
     }
@@ -576,18 +561,13 @@ public:
         Convert()(m_sample, m_tmp);
     }
 
-    bool readSample(AttributeData& dst, Time t, bool copy) override
+    bool readSample(AttributeData& dst, Time t) override
     {
         updateSample(t);
 
         dst.num_elements = (int)m_sample.size();
-        if (copy) {
-            if (dst.data) {
-                Convert()((external_v*)dst.data, (size_t)dst.num_elements, m_sample);
-            }
-        }
-        else {
-            dst.data = &m_sample;
+        if (dst.data) {
+            Convert()((external_v*)dst.data, (size_t)dst.num_elements, m_sample);
         }
         return true;
     }

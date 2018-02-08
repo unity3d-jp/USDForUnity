@@ -7,6 +7,7 @@
 #include "usdiUtils.h"
 #include "usdiContext.h"
 
+
 namespace usdi {
 
 static inline void CountIndices(
@@ -29,42 +30,22 @@ static inline void CountIndices(
     num_indices_triangulated = rett;
 }
 
-static inline void TriangulateIndices(
-    VtArray<int>& triangulated,
-    const VtArray<int> &counts,
-    const VtArray<int> *indices,
-    bool swap_face)
-{
-    const int i1 = swap_face ? 2 : 1;
-    const int i2 = swap_face ? 1 : 2;
-    size_t num_faces = counts.size();
 
-    int n = 0;
-    int i = 0;
-    if (indices) {
-        for (size_t fi = 0; fi < num_faces; ++fi) {
-            int ngon = counts[fi];
-            for (int ni = 0; ni < ngon - 2; ++ni) {
-                triangulated[i + 0] = (*indices)[n + 0];
-                triangulated[i + 1] = (*indices)[n + ni + i1];
-                triangulated[i + 2] = (*indices)[n + ni + i2];
-                i += 3;
-            }
-            n += ngon;
-        }
+template<class T, class IndexArray>
+inline void CopyWithIndices(T *dst, const T *src, const IndexArray& indices)
+{
+    if (!dst || !src) { return; }
+    size_t size = indices.size();
+    for (size_t i = 0; i < (int)size; ++i) {
+        dst[i] = src[indices[i]];
     }
-    else {
-        for (size_t fi = 0; fi < num_faces; ++fi) {
-            int ngon = counts[fi];
-            for (int ni = 0; ni < ngon - 2; ++ni) {
-                triangulated[i + 0] = n + 0;
-                triangulated[i + 1] = n + ni + i1;
-                triangulated[i + 2] = n + ni + i2;
-                i += 3;
-            }
-            n += ngon;
-        }
-    }
+}
+
+template<class T>
+inline void Remap(RawVector<T>& dst, const T *src, const RawVector<int>& indices)
+{
+    dst.resize_discard(indices.size());
+    CopyWithIndices(dst.data(), src, indices);
 }
 
 static inline void assign(Weights4& dst, const Weights8& src)
@@ -178,35 +159,34 @@ void Mesh::updateSample(Time t_)
     const auto& conf = getImportSettings();
 
     auto& sample = m_sample;
-    auto& submeshes = m_submeshes;
 
-    m_mesh.GetPointsAttr().Get(&sample.points, t);
-    m_mesh.GetVelocitiesAttr().Get(&sample.velocities, t);
-    m_mesh.GetFaceVertexCountsAttr().Get(&sample.counts, t);
-    m_mesh.GetFaceVertexIndicesAttr().Get(&sample.indices, t);
+    m_mesh.GetPointsAttr().Get(&sample.points_sp, t);
+    m_mesh.GetVelocitiesAttr().Get(&sample.velocities_sp, t);
+    m_mesh.GetFaceVertexCountsAttr().Get(&sample.counts_sp, t);
+    m_mesh.GetFaceVertexIndicesAttr().Get(&sample.indices_sp, t);
     if (m_attr_colors) {
-        m_attr_colors->getImmediate(&sample.colors, t_);
+        m_attr_colors->getImmediate(&sample.colors_sp, t_);
     }
     if (m_attr_uv0) {
-        m_attr_uv0->getImmediate(&sample.uv0, t_);
+        m_attr_uv0->getImmediate(&sample.uv0_sp, t_);
     }
 
     // apply swap_handedness and scale
     if (conf.swap_handedness) {
-        InvertX((float3*)sample.points.data(), sample.points.size());
-        InvertX((float3*)sample.velocities.data(), sample.velocities.size());
+        SwapHandedness((float3*)sample.points_sp.data(), (int)sample.points_sp.size());
+        SwapHandedness((float3*)sample.velocities_sp.data(), (int)sample.velocities_sp.size());
     }
     if (conf.scale_factor != 1.0f) {
-        Scale((float3*)sample.points.data(), conf.scale_factor, sample.points.size());
-        Scale((float3*)sample.velocities.data(), conf.scale_factor, sample.velocities.size());
+        ApplyScale((float3*)sample.points_sp.data(), (int)sample.points_sp.size(), conf.scale_factor);
+        ApplyScale((float3*)sample.velocities_sp.data(), (int)sample.velocities_sp.size(), conf.scale_factor);
     }
 
     // normals
     bool gen_normals = conf.normal_calculation == NormalCalculationType::Always;
     if (!gen_normals) {
-        if (m_mesh.GetNormalsAttr().Get(&sample.normals, t)) {
+        if (m_mesh.GetNormalsAttr().Get(&sample.normals_sp, t)) {
             if (conf.swap_handedness) {
-                InvertX((float3*)sample.normals.data(), sample.normals.size());
+                SwapHandedness((float3*)sample.normals_sp.data(), (int)sample.normals_sp.size());
             }
         }
         else {
@@ -216,8 +196,8 @@ void Mesh::updateSample(Time t_)
             else {
                 // no normal data is present and no recalculation is required.
                 // just allocate empty normal array.
-                sample.normals.resize(sample.points.size());
-                memset(sample.normals.data(), 0, sizeof(float3)*sample.normals.size());
+                sample.normals_sp.resize(sample.points_sp.size());
+                memset(sample.normals_sp.data(), 0, sizeof(float3)*sample.normals_sp.size());
             }
         }
     }
@@ -231,11 +211,11 @@ void Mesh::updateSample(Time t_)
         sample.indices_triangulated.size() != sample.indices_triangulated.size() ||
         m_update_flag_prev.variant_set_changed;
     if (update_indices) {
-        CountIndices(sample.counts, sample.offsets, m_num_indices, m_num_indices_triangulated);
-        if (conf.triangulate || gen_normals) {
-            sample.indices_triangulated.resize(m_num_indices_triangulated);
-            TriangulateIndices(sample.indices_triangulated, sample.counts, &sample.indices, conf.swap_faces);
-        }
+        //CountIndices(sample.counts_sp, sample.offsets, m_num_indices, m_num_indices_triangulated);
+        //if (conf.triangulate || gen_normals) {
+        //    sample.indices_triangulated.resize(m_num_indices_triangulated);
+        //    TriangulateIndices(sample.indices_triangulated, sample.counts_sp, &sample.indices_sp, conf.swap_faces);
+        //}
     }
     else if (copy_indices) {
         sample.indices_triangulated = sample.indices_triangulated;
@@ -244,18 +224,18 @@ void Mesh::updateSample(Time t_)
 
     // normals
     if (gen_normals) {
-        sample.normals.resize(sample.points.size());
-        GenerateNormalsPoly(ToIArray(sample.normals),
-            ToIArray(sample.points), ToIArray(sample.counts), ToIArray(sample.offsets), ToIArray(sample.indices));
+        sample.normals.resize(sample.points_sp.size());
+        GenerateNormals(sample.normals.data(),
+            sample.points.data(), sample.indices_triangulated.data(), sample.normals.size(), sample.indices_triangulated.size() / 3);
     }
 
     // tangents
     bool gen_tangents = conf.tangent_calculation != TangentCalculationType::Never;
     if (gen_tangents) {
-        sample.tangents.resize(sample.points.size());
-        GenerateTangentsPoly(ToIArray(sample.tangents),
-            ToIArray(sample.points), ToIArray(sample.normals), ToIArray(sample.uv0),
-            ToIArray(sample.counts), ToIArray(sample.offsets), ToIArray(sample.indices));
+        sample.tangents.resize(sample.points_sp.size());
+        //GenerateTangents(ToIArray(sample.tangents),
+        //    ToIArray(sample.points_sp), ToIArray(sample.normals_sp), ToIArray(sample.uv0_sp),
+        //    ToIArray(sample.counts_sp), ToIArray(sample.offsets), ToIArray(sample.indices_sp));
     }
 
     // bone & weights
@@ -344,84 +324,64 @@ void Mesh::updateSample(Time t_)
     }
 
     // bounds
-    MinMax((const float3*)sample.points.cdata(), sample.points.size(), sample.bounds_min, sample.bounds_max);
+    MinMax(sample.bounds_min, sample.bounds_max, (const float3*)sample.points_sp.cdata(), sample.points_sp.size());
     sample.center = (sample.bounds_min + sample.bounds_max) * 0.5f;
     sample.extents = (sample.bounds_max - sample.bounds_min) * 0.5f;
 
 
     // submesh
 
-    VAFlags flattened;
-    flattened.points    = sample.points.size() == m_num_indices;
-    flattened.normals   = sample.normals.size() == m_num_indices;
-    flattened.colors    = sample.colors.size() == m_num_indices;
-    flattened.uvs       = sample.uv0.size() == m_num_indices;
-    flattened.tangents  = sample.tangents.size() == m_num_indices;
-    flattened.velocities= sample.velocities.size() == m_num_indices;
-    flattened.weights   = sample.weights4.size() == m_num_indices || sample.weights8.size() == m_num_indices;
-
     const int max_vertices = conf.split_unit;
-    bool make_submesh = flattened.any || sample.points.size() >= max_vertices;
-
-    if (!make_submesh) {
-        m_num_current_submeshes = 0;
-    }
-    else {
-        m_num_current_submeshes = ceildiv(m_num_indices_triangulated, max_vertices);
-        if (m_num_current_submeshes > submeshes.size()) {
-            submeshes.resize(m_num_current_submeshes);
-        }
-
-        if (flattened.any &&
-            (sample.indices_flattened_triangulated.size() != sample.indices_triangulated.size() || update_indices))
-        {
-            sample.indices_flattened_triangulated.resize(m_num_indices_triangulated);
-            TriangulateIndices(sample.indices_flattened_triangulated, sample.counts, nullptr, conf.swap_faces);
-        }
-
-        // split meshes and flatten vertices
-        for (int nth = 0; nth < m_num_current_submeshes; ++nth) {
-            auto& sms = submeshes[nth];
-            int ibegin = max_vertices * nth;
-            int iend = std::min<int>(max_vertices * (nth + 1), m_num_indices_triangulated);
-            int isize = iend - ibegin;
-
-            sms.indices.resize(isize);
-            for (int i = 0; i < isize; ++i) { sms.indices[i] = i; }
-
-#define Sel(C) (C ? sample.indices_flattened_triangulated.cdata() : sample.indices_triangulated.cdata())
-            CopyWithIndices(sms.points.data(), sample.points.cdata(), Sel(flattened.points), ibegin, iend);
-            CopyWithIndices(sms.normals.data(), sample.normals.cdata(), Sel(flattened.normals), ibegin, iend);
-            CopyWithIndices(sms.colors.data(), sample.colors.cdata(), Sel(flattened.colors), ibegin, iend);
-            CopyWithIndices(sms.uvs.data(), sample.uv0.cdata(), Sel(flattened.uvs), ibegin, iend);
-            CopyWithIndices(sms.tangents.data(), sample.tangents.cdata(), Sel(flattened.tangents), ibegin, iend);
-            CopyWithIndices(sms.velocities.data(), sample.velocities.cdata(), Sel(flattened.velocities), ibegin, iend);
-            if (!sample.weights4.empty()) {
-                CopyWithIndices(sms.weights4.data(), sample.weights4.cdata(), Sel(flattened.weights), ibegin, iend);
-            }
-            if (!sample.weights8.empty()) {
-                CopyWithIndices(sms.weights8.data(), sample.weights8.cdata(), Sel(flattened.weights), ibegin, iend);
-            }
-#undef Sel
-
-            MinMax((float3*)sms.points.cdata(), sms.points.size(), sms.bounds_min, sms.bounds_max);
-            sms.center = (sms.bounds_min + sms.bounds_max) * 0.5f;
-            sms.extents = sms.bounds_max - sms.bounds_min;
-        }
-    }
+//    {
+//
+//        if (sample.indices_flattened_triangulated.size() != sample.indices_triangulated.size() || update_indices)
+//        {
+//            sample.indices_flattened_triangulated.resize(m_num_indices_triangulated);
+//            TriangulateIndices(sample.indices_flattened_triangulated, sample.counts_sp, nullptr, conf.swap_faces);
+//        }
+//
+//        // split meshes and flatten vertices
+//        for (int nth = 0; nth < m_num_current_submeshes; ++nth) {
+//            auto& sms = submeshes[nth];
+//            int ibegin = max_vertices * nth;
+//            int iend = std::min<int>(max_vertices * (nth + 1), m_num_indices_triangulated);
+//            int isize = iend - ibegin;
+//
+//            sms.indices.resize(isize);
+//            for (int i = 0; i < isize; ++i) { sms.indices[i] = i; }
+//
+//#define Sel(C) (C ? sample.indices_flattened_triangulated.cdata() : sample.indices_triangulated.cdata())
+//            CopyWithIndices(sms.points.data(), sample.points_sp.cdata(), Sel(flattened.points), ibegin, iend);
+//            CopyWithIndices(sms.normals.data(), sample.normals_sp.cdata(), Sel(flattened.normals), ibegin, iend);
+//            CopyWithIndices(sms.colors.data(), sample.colors_sp.cdata(), Sel(flattened.colors), ibegin, iend);
+//            CopyWithIndices(sms.uvs.data(), sample.uv0_sp.cdata(), Sel(flattened.uv0), ibegin, iend);
+//            CopyWithIndices(sms.tangents.data(), sample.tangents.cdata(), Sel(flattened.tangents), ibegin, iend);
+//            CopyWithIndices(sms.velocities.data(), sample.velocities_sp.cdata(), Sel(flattened.velocities), ibegin, iend);
+//            if (!sample.weights4.empty()) {
+//                CopyWithIndices(sms.weights4.data(), sample.weights4.cdata(), Sel(flattened.weights), ibegin, iend);
+//            }
+//            if (!sample.weights8.empty()) {
+//                CopyWithIndices(sms.weights8.data(), sample.weights8.cdata(), Sel(flattened.weights), ibegin, iend);
+//            }
+//#undef Sel
+//
+//            MinMax(sms.bounds_min, sms.bounds_max, (float3*)sms.points.cdata(), (int)sms.points.size());
+//            sms.center = (sms.bounds_min + sms.bounds_max) * 0.5f;
+//            sms.extents = sms.bounds_max - sms.bounds_min;
+//        }
+//    }
 }
 
-bool Mesh::readSample(MeshData& dst, Time t, bool copy)
+bool Mesh::readSample(MeshData& dst, Time t)
 {
     if (t != m_time_prev) { updateSample(t); }
 
     const auto& sample = m_sample;
-    const auto& submeshes = m_submeshes;
 
-    dst.num_points = (uint)sample.points.size();
-    dst.num_counts = (uint)sample.counts.size();
+    dst.num_points = (uint)sample.points_sp.size();
+    dst.num_counts = (uint)sample.counts_sp.size();
     dst.num_indices = m_num_indices_triangulated;
-    dst.num_submeshes = (uint)m_num_current_submeshes;
+    dst.num_submeshes = (uint)1;
     dst.center = sample.center;
     dst.extents = sample.extents;
 
@@ -430,115 +390,40 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
     dst.root_bone = (char*)sample.root_bone.GetText();
     dst.num_bones = (int)sample.bones.size();
 
-    if (copy) {
-        if (dst.points && !sample.points.empty()) {
-            memcpy(dst.points, sample.points.cdata(), sizeof(float3) * dst.num_points);
-        }
-        if (dst.normals && !sample.normals.empty()) {
-            memcpy(dst.normals, sample.normals.cdata(), sizeof(float3) * dst.num_points);
-        }
-        if (dst.colors && !sample.colors.empty()) {
-            memcpy(dst.colors, sample.colors.cdata(), sizeof(float4) * dst.num_points);
-        }
-        if (dst.uv0 && !sample.uv0.empty()) {
-            memcpy(dst.uv0, sample.uv0.cdata(), sizeof(float2) * dst.num_points);
-        }
-        if (dst.tangents && !sample.tangents.empty()) {
-            memcpy(dst.tangents, sample.tangents.cdata(), sizeof(float4) * dst.num_points);
-        }
-        if (dst.velocities && !sample.velocities.empty()) {
-            memcpy(dst.velocities, sample.velocities.cdata(), sizeof(float3) * dst.num_points);
-        }
-        if (dst.counts && !sample.counts.empty()) {
-            memcpy(dst.counts, sample.counts.cdata(), sizeof(int) * dst.num_counts);
-        }
-        if (dst.indices && !sample.indices_triangulated.empty()) {
-            memcpy(dst.indices, sample.indices_triangulated.cdata(), sizeof(int) * m_num_indices_triangulated);
-        }
-
-        if (dst.weights4 && !sample.weights4.empty() && sample.max_bone_weights == 4) {
-            memcpy(dst.weights4, sample.weights4.cdata(), sizeof(Weights4) * dst.num_points);
-        }
-        else if (dst.weights8 && !sample.weights8.empty() && sample.max_bone_weights == 8) {
-            memcpy(dst.weights8, sample.weights8.cdata(), sizeof(Weights8) * dst.num_points);
-        }
-        if (dst.bindposes && !sample.bindposes.empty()) {
-            memcpy(dst.bindposes, sample.bindposes.cdata(), sizeof(float4x4) * dst.num_bones);
-        }
-
-        if (dst.submeshes) {
-            for (size_t i = 0; i < dst.num_submeshes; ++i) {
-                const auto& ssrc = submeshes[i];
-                auto& sdst = dst.submeshes[i];
-                sdst.num_points = (uint)ssrc.points.size();
-                sdst.center = ssrc.center;
-                sdst.extents = ssrc.extents;
-
-                if (sdst.indices && !ssrc.indices.empty()) {
-                    memcpy(sdst.indices, ssrc.indices.cdata(), sizeof(int) * sdst.num_points);
-                }
-                if (sdst.points && !ssrc.points.empty()) {
-                    memcpy(sdst.points, ssrc.points.cdata(), sizeof(float3) * sdst.num_points);
-                }
-                if (sdst.normals && !ssrc.normals.empty()) {
-                    memcpy(sdst.normals, ssrc.normals.cdata(), sizeof(float3) * sdst.num_points);
-                }
-                if (sdst.colors && !ssrc.colors.empty()) {
-                    memcpy(sdst.colors, ssrc.colors.cdata(), sizeof(float4) * sdst.num_points);
-                }
-                if (sdst.uvs && !ssrc.uvs.empty()) {
-                    memcpy(sdst.uvs, ssrc.uvs.cdata(), sizeof(float2) * sdst.num_points);
-                }
-                if (sdst.tangents && !ssrc.tangents.empty()) {
-                    memcpy(sdst.tangents, ssrc.tangents.cdata(), sizeof(float4) * sdst.num_points);
-                }
-                if (sdst.velocities && !ssrc.velocities.empty()) {
-                    memcpy(sdst.velocities, ssrc.velocities.cdata(), sizeof(float3) * sdst.num_points);
-                }
-
-                if (sdst.weights4 && !ssrc.weights4.empty()) {
-                    memcpy(sdst.weights4, ssrc.weights4.cdata(), sizeof(Weights4) * sdst.num_points);
-                }
-                if (sdst.weights8 && !ssrc.weights8.empty()) {
-                    memcpy(sdst.weights8, ssrc.weights8.cdata(), sizeof(Weights8) * sdst.num_points);
-                }
-            }
-        }
+    if (dst.points && !sample.points_sp.empty()) {
+        memcpy(dst.points, sample.points_sp.cdata(), sizeof(float3) * dst.num_points);
     }
-    else {
-        dst.points = (float3*)sample.points.cdata();
-        dst.velocities = (float3*)sample.velocities.cdata();
-        dst.normals = (float3*)sample.normals.cdata();
-        dst.colors = (float4*)sample.colors.cdata();
-        dst.uv0 = (float2*)sample.uv0.cdata();
-        dst.tangents = (float4*)sample.tangents.cdata();
-        dst.counts = (int*)sample.counts.cdata();
-        dst.indices = (int*)sample.indices_triangulated.cdata();
-
-        if (!sample.weights4.empty()) {
-            dst.weights4 = (Weights4*)sample.weights4.cdata();
-        }
-        else if (!sample.weights8.empty()) {
-            dst.weights8 = (Weights8*)sample.weights8.cdata();
-        }
-        dst.bindposes = (float4x4*)sample.bindposes.cdata();
-
-        if (dst.submeshes) {
-            for (size_t i = 0; i < dst.num_submeshes; ++i) {
-                const auto& ssrc = submeshes[i];
-                auto& sdst = dst.submeshes[i];
-                sdst.num_points = (uint)ssrc.points.size();
-                sdst.indices = (int*)ssrc.indices.cdata();
-                sdst.points = (float3*)ssrc.points.cdata();
-                sdst.normals = (float3*)ssrc.normals.cdata();
-                sdst.colors = (float4*)ssrc.colors.cdata();
-                sdst.uvs = (float2*)ssrc.uvs.cdata();
-                sdst.tangents = (float4*)ssrc.tangents.cdata();
-                sdst.velocities = (float3*)ssrc.velocities.cdata();
-            }
-        }
+    if (dst.normals && !sample.normals_sp.empty()) {
+        memcpy(dst.normals, sample.normals_sp.cdata(), sizeof(float3) * dst.num_points);
+    }
+    if (dst.colors && !sample.colors_sp.empty()) {
+        memcpy(dst.colors, sample.colors_sp.cdata(), sizeof(float4) * dst.num_points);
+    }
+    if (dst.uv0 && !sample.uv0_sp.empty()) {
+        memcpy(dst.uv0, sample.uv0_sp.cdata(), sizeof(float2) * dst.num_points);
+    }
+    if (dst.tangents && !sample.tangents.empty()) {
+        memcpy(dst.tangents, sample.tangents.cdata(), sizeof(float4) * dst.num_points);
+    }
+    if (dst.velocities && !sample.velocities_sp.empty()) {
+        memcpy(dst.velocities, sample.velocities_sp.cdata(), sizeof(float3) * dst.num_points);
+    }
+    if (dst.counts && !sample.counts_sp.empty()) {
+        memcpy(dst.counts, sample.counts_sp.cdata(), sizeof(int) * dst.num_counts);
+    }
+    if (dst.indices && !sample.indices_triangulated.empty()) {
+        memcpy(dst.indices, sample.indices_triangulated.cdata(), sizeof(int) * m_num_indices_triangulated);
     }
 
+    if (dst.weights4 && !sample.weights4.empty() && sample.max_bone_weights == 4) {
+        memcpy(dst.weights4, sample.weights4.cdata(), sizeof(Weights4) * dst.num_points);
+    }
+    else if (dst.weights8 && !sample.weights8.empty() && sample.max_bone_weights == 8) {
+        memcpy(dst.weights8, sample.weights8.cdata(), sizeof(Weights8) * dst.num_points);
+    }
+    if (dst.bindposes && !sample.bindposes.empty()) {
+        memcpy(dst.bindposes, sample.bindposes.cdata(), sizeof(float4x4) * dst.num_bones);
+    }
     return dst.num_points > 0;
 }
 
@@ -554,43 +439,43 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
 
     bool  ret = false;
     if (src.points) {
-        sample.points.assign((GfVec3f*)src.points, (GfVec3f*)src.points + src.num_points);
+        sample.points_sp.assign((GfVec3f*)src.points, (GfVec3f*)src.points + src.num_points);
         if (conf.swap_handedness) {
-            InvertX((float3*)sample.points.data(), sample.points.size());
+            SwapHandedness((float3*)sample.points_sp.data(), (int)sample.points_sp.size());
         }
-        if (conf.scale != 1.0f) {
-            Scale((float3*)sample.points.data(), conf.scale, sample.points.size());
+        if (conf.scale_factor != 1.0f) {
+            ApplyScale((float3*)sample.points_sp.data(), (int)sample.points_sp.size(), conf.scale_factor);
         }
-        ret = m_mesh.GetPointsAttr().Set(sample.points, t);
+        ret = m_mesh.GetPointsAttr().Set(sample.points_sp, t);
     }
 
     if (src.velocities) {
-        sample.points.assign((GfVec3f*)src.velocities, (GfVec3f*)src.velocities + src.num_points);
+        sample.points_sp.assign((GfVec3f*)src.velocities, (GfVec3f*)src.velocities + src.num_points);
         if (conf.swap_handedness) {
-            InvertX((float3*)sample.velocities.data(), sample.velocities.size());
+            SwapHandedness((float3*)sample.velocities_sp.data(), (int)sample.velocities_sp.size());
         }
-        if (conf.scale != 1.0f) {
-            Scale((float3*)sample.velocities.data(), conf.scale, sample.velocities.size());
+        if (conf.scale_factor != 1.0f) {
+            ApplyScale((float3*)sample.velocities_sp.data(), (int)sample.velocities_sp.size(), conf.scale_factor);
         }
-        m_mesh.GetVelocitiesAttr().Set(sample.velocities, t);
+        m_mesh.GetVelocitiesAttr().Set(sample.velocities_sp, t);
     }
 
     if (src.normals) {
-        sample.normals.assign((GfVec3f*)src.normals, (GfVec3f*)src.normals + src.num_points);
+        sample.normals_sp.assign((GfVec3f*)src.normals, (GfVec3f*)src.normals + src.num_points);
         if (conf.swap_handedness) {
-            InvertX((float3*)sample.normals.data(), sample.normals.size());
+            SwapHandedness((float3*)sample.normals_sp.data(), (int)sample.normals_sp.size());
         }
-        m_mesh.GetNormalsAttr().Set(sample.normals, t);
+        m_mesh.GetNormalsAttr().Set(sample.normals_sp, t);
     }
 
     if (src.indices) {
         if (src.counts) {
-            sample.counts.assign(src.counts, src.counts + src.num_counts);
+            sample.counts_sp.assign(src.counts, src.counts + src.num_counts);
         }
         else {
             // assume all faces are triangles
             size_t ntriangles = src.num_indices / 3;
-            sample.counts.assign(ntriangles, 3);
+            sample.counts_sp.assign(ntriangles, 3);
         }
 
         if (conf.swap_faces) {
@@ -605,28 +490,28 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
                 }
             };
 
-            sample.indices.resize(src.num_indices);
-            copy_with_swap(sample.indices, src.indices, sample.counts);
+            sample.indices_sp.resize(src.num_indices);
+            copy_with_swap(sample.indices_sp, src.indices, sample.counts_sp);
         }
         else {
-            sample.indices.assign(src.indices, src.indices + src.num_indices);
+            sample.indices_sp.assign(src.indices, src.indices + src.num_indices);
         }
-        m_mesh.GetFaceVertexCountsAttr().Set(sample.counts, t);
-        m_mesh.GetFaceVertexIndicesAttr().Set(sample.indices, t);
+        m_mesh.GetFaceVertexCountsAttr().Set(sample.counts_sp, t);
+        m_mesh.GetFaceVertexIndicesAttr().Set(sample.indices_sp, t);
     }
 
     if (src.colors) {
-        sample.colors.assign((GfVec4f*)src.colors, (GfVec4f*)src.colors + src.num_points);
+        sample.colors_sp.assign((GfVec4f*)src.colors, (GfVec4f*)src.colors + src.num_points);
 
         CreateAttributeIfNeeded(m_attr_colors, usdiColorAttrName, AttributeType::Float4Array);
-        m_attr_colors->setImmediate(&sample.colors, t_);
+        m_attr_colors->setImmediate(&sample.colors_sp, t_);
     }
 
     if (src.uv0) {
-        sample.uv0.assign((GfVec2f*)src.uv0, (GfVec2f*)src.uv0 + src.num_points);
+        sample.uv0_sp.assign((GfVec2f*)src.uv0, (GfVec2f*)src.uv0 + src.num_points);
 
         CreateAttributeIfNeeded(m_attr_uv0, usdiUVAttrName, AttributeType::Float2Array);
-        m_attr_uv0->setImmediate(&sample.uv0, t_);
+        m_attr_uv0->setImmediate(&sample.uv0_sp, t_);
     }
 
 
@@ -722,7 +607,7 @@ int Mesh::eachSample(const SampleCallback & cb)
 
     MeshData data;
     for (const auto& t : times) {
-        readSample(data, t.first, false);
+        readSample(data, t.first);
         cb(data, t.first);
     }
     return (int)times.size();

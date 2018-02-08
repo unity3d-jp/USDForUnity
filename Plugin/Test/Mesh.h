@@ -2,16 +2,8 @@
 
 #include <vector>
 #define usdiOverrideFloat4
-#include "MeshUtils//MeshUtils.h"
-namespace usdi {
-    using namespace mu;
-}
+#include "usdi/Foundation/aiMath.h"
 #include "usdi/usdi.h"
-using usdi::float2;
-using usdi::float3;
-using usdi::float4;
-using usdi::quatf;
-using usdi::float4x4;
 
 #define DegToRad (3.1415926535897932384626433832795f / 180.0f)
 
