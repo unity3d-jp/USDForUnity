@@ -1,6 +1,5 @@
 #if UNITY_2017_1_OR_NEWER
 
-using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.Experimental;
@@ -20,7 +19,7 @@ namespace UTJ.USD
     public class USDImporter : ScriptedImporter
     {
         [SerializeField] public UsdImportMode m_importMode = UsdImportMode.RetainUSD;
-        [SerializeField] public bool m_SupportRuntimeUSD = true;
+        [SerializeField] public bool m_supportRuntimeUSD = true;
         [SerializeField] public usdi.ImportSettings m_importSettings = usdi.ImportSettings.default_value;
         [SerializeField] public TimeUnit m_timeUnit = new TimeUnit();
         [SerializeField] public double m_time;
@@ -29,9 +28,9 @@ namespace UTJ.USD
         [SerializeField] public bool m_directVBUpdate = true;
         [SerializeField] public bool m_deferredUpdate;
 
-        private SortedDictionary<int, UnityEngine.Object> _subObjects;
+        private SortedDictionary<int, Object> m_subObjects;
 
-        public override void OnImportAsset( AssetImportContext ctx )
+        public override void OnImportAsset(AssetImportContext ctx)
         {
             var fileName = System.IO.Path.GetFileNameWithoutExtension( ctx.assetPath);
 
@@ -58,31 +57,45 @@ namespace UTJ.USD
 
             usdStream.LoadImmediate(ctx.assetPath);
 
-            var material = new Material(Shader.Find("Standard")) {};
-            material.name = "Material_0";
-            ctx.AddSubAsset("Default Material", material);
-            _subObjects = new SortedDictionary<int, UnityEngine.Object>();
+            var material = new Material(Shader.Find("Standard"));
+            material.name = "Default Material";
+            AddSubAsset(ctx, "Default Material", material);
+            m_subObjects = new SortedDictionary<int, UnityEngine.Object>();
             CollectSubAssets(go.transform, material);
 
             int i = 0;
-            foreach (var m in _subObjects)
+            foreach (var m in m_subObjects)
             {
-                if (String.IsNullOrEmpty(m.Value.name) || m.Value.name.IndexOf("<dyn>") == 0)
+                if (System.String.IsNullOrEmpty(m.Value.name) || m.Value.name.IndexOf("<dyn>") == 0)
                     m.Value.name = fileName + "_" + m.Value.GetType().Name + "_" + (++i);
-                ctx.AddSubAsset(m.Value.name, m.Value);
+                AddSubAsset(ctx, m.Value.name, m.Value);
             }
 
             if (m_importMode == UsdImportMode.StripUSD)
                 usdStream.usdiDetachUsdComponents();
 
+#if UNITY_2017_3_OR_NEWER
+            ctx.AddObjectToAsset(fileName, go);
+            ctx.SetMainObject(go);
+#else
             ctx.SetMainAsset(fileName, go);
+#endif
         }
+        public void AddSubAsset(AssetImportContext ctx, string identifier, Object asset)
+        {
+#if UNITY_2017_3_OR_NEWER
+            ctx.AddObjectToAsset(identifier, asset);
+#else
+            ctx.AddSubAsset(identifier, asset);
+#endif
+        }
+
 
         private void RegisterSubAsset(UnityEngine.Object subAsset)
         {
-            if (!_subObjects.ContainsKey(subAsset.GetInstanceID()))
+            if (!m_subObjects.ContainsKey(subAsset.GetInstanceID()))
             {
-                _subObjects.Add(subAsset.GetInstanceID(), subAsset);
+                m_subObjects.Add(subAsset.GetInstanceID(), subAsset);
             }
         }
 
