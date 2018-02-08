@@ -151,6 +151,9 @@ namespace UTJ.USD
             if (m_umesh == null)
             {
                 m_umesh = new Mesh();
+#if UNITY_2017_3_OR_NEWER
+                m_umesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+#endif
                 m_umesh.MarkDynamic();
             }
 

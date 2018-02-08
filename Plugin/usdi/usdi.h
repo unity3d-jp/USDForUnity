@@ -107,14 +107,13 @@ struct ImportSettings
     InterpolationType interpolation = InterpolationType::Linear;
     NormalCalculationType normal_calculation = NormalCalculationType::WhenMissing;
     TangentCalculationType tangent_calculation = TangentCalculationType::Never;
+    int split_unit = 0x7fffffff;
     int max_bone_weights = 0; // must be 0 or 4 or 8.
     float scale = 1.0f;
     bool load_all_payloads = true;
     bool triangulate = true;
     bool swap_handedness = false;
     bool swap_faces = false;
-    bool split_mesh = true;
-    bool double_buffering = true;
 };
 
 struct ExportSettings

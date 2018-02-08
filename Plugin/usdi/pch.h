@@ -57,6 +57,7 @@
 #include <pxr/usd/usdGeom/xformCommonAPI.h>
 #include <pxr/usd/usdGeom/camera.h>
 #include <pxr/usd/usdGeom/mesh.h>
+#include <pxr/usd/usdGeom/subset.h>
 #include <pxr/usd/usdGeom/points.h>
 #include <pxr/base/gf/transform.h>
 #include <pxr/base/gf/matrix2f.h>

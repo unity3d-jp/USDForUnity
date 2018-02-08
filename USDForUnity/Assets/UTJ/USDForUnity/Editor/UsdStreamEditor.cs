@@ -37,7 +37,7 @@ namespace UTJ.USD
                     AddEnumProperty(serializedObject.FindProperty(() => stream.m_importSettings.interpolation), "Interpolation", "", stream.m_importSettings.interpolation.GetType());
                     AddEnumProperty(serializedObject.FindProperty(() => stream.m_importSettings.normalCalculation), "Compute normals", "", stream.m_importSettings.normalCalculation.GetType());
                     AddEnumProperty(serializedObject.FindProperty(() => stream.m_importSettings.tangentCalculation), "Compute tangents", "", stream.m_importSettings.tangentCalculation.GetType());
-                    AddSimpleProperty(serializedObject.FindProperty(() => stream.m_importSettings.scale), "Scale", "");
+                    AddSimpleProperty(serializedObject.FindProperty(() => stream.m_importSettings.scaleFactor), "Scale Factor", "");
                     AddByteBoolProperty(serializedObject.FindProperty(() => stream.m_importSettings.swapHandedness.v), "Swap handedness", "");
                     AddByteBoolProperty(serializedObject.FindProperty(() => stream.m_importSettings.swapFaces.v), "Swap faces", "");
                     AddEnumProperty(serializedObject.FindProperty(() => stream.m_timeUnit.m_type), "Time unit", "", stream.m_timeUnit.type.GetType());

@@ -140,14 +140,13 @@ namespace UTJ.USD
             public InterpolationType interpolation;
             public NormalCalculationType normalCalculation;
             public TangentCalculationType tangentCalculation;
+            [HideInInspector] public int splitUnit;
             [HideInInspector] public int maxBoneWeights;
-            public float scale;
+            public float scaleFactor;
             [HideInInspector] public Bool loadAllPayloads;
             [HideInInspector] public Bool triangulate;
             public Bool swapHandedness;
             public Bool swapFaces;
-            [HideInInspector] public Bool splitMesh;
-            [HideInInspector] public Bool doubleBuffering;
 
             public static ImportSettings default_value
             {
@@ -158,14 +157,17 @@ namespace UTJ.USD
                         interpolation = InterpolationType.Linear,
                         normalCalculation = NormalCalculationType.WhenMissing,
                         tangentCalculation = TangentCalculationType.Never,
+#if UNITY_2017_3_OR_NEWER
+                        splitUnit = 0x7fffffff,
+#else
+                        splitUnit = 65000,
+#endif
                         maxBoneWeights = 4,
-                        scale = 1.0f,
+                        scaleFactor = 1.0f,
                         loadAllPayloads = true,
                         triangulate = true,
                         swapHandedness = false,
                         swapFaces = false,
-                        splitMesh = true,
-                        doubleBuffering = true,
                     };
                 }
             }

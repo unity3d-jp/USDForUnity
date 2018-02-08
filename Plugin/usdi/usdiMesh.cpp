@@ -9,8 +9,6 @@
 
 namespace usdi {
 
-const int usdiMaxVertices = 64998;
-
 static inline void CountIndices(
     const VtArray<int> &counts,
     VtArray<int>& offsets,
@@ -188,16 +186,6 @@ void Mesh::updateSample(Time t_)
     if (!m_front_sample) {
         m_front_sample = &m_sample[0];
         m_front_submesh = &m_submeshes[0];
-    }
-    else if(conf.double_buffering) {
-        if (m_front_sample == &m_sample[0]) {
-            m_front_sample = &m_sample[1];
-            m_front_submesh = &m_submeshes[1];
-        }
-        else {
-            m_front_sample = &m_sample[0];
-            m_front_submesh = &m_submeshes[0];
-        }
     }
     auto& sample = *m_front_sample;
     auto& submeshes = *m_front_submesh;
@@ -399,15 +387,14 @@ void Mesh::updateSample(Time t_)
     flattened.velocities= sample.velocities.size() == m_num_indices;
     flattened.weights   = sample.weights4.size() == m_num_indices || sample.weights8.size() == m_num_indices;
 
-    bool make_submesh =
-        flattened.any ||
-        (conf.split_mesh && sample.points.size() > usdiMaxVertices);
+    const int max_vertices = conf.split_unit;
+    bool make_submesh = flattened.any || sample.points.size() >= max_vertices;
 
     if (!make_submesh) {
         m_num_current_submeshes = 0;
     }
     else {
-        m_num_current_submeshes = ceildiv(m_num_indices_triangulated, usdiMaxVertices);
+        m_num_current_submeshes = ceildiv(m_num_indices_triangulated, max_vertices);
         if (m_num_current_submeshes > submeshes.size()) {
             submeshes.resize(m_num_current_submeshes);
         }
@@ -422,8 +409,8 @@ void Mesh::updateSample(Time t_)
         // split meshes and flatten vertices
         for (int nth = 0; nth < m_num_current_submeshes; ++nth) {
             auto& sms = submeshes[nth];
-            int ibegin = usdiMaxVertices * nth;
-            int iend = std::min<int>(usdiMaxVertices * (nth + 1), m_num_indices_triangulated);
+            int ibegin = max_vertices * nth;
+            int iend = std::min<int>(max_vertices * (nth + 1), m_num_indices_triangulated);
             int isize = iend - ibegin;
 
             sms.indices.resize(isize);

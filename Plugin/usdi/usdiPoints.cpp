@@ -62,14 +62,6 @@ void Points::updateSample(Time t_)
     if (!m_front_sample) {
         m_front_sample = &m_sample[0];
     }
-    else if (conf.double_buffering) {
-        if (m_front_sample == &m_sample[0]) {
-            m_front_sample = &m_sample[1];
-        }
-        else {
-            m_front_sample = &m_sample[0];
-        }
-    }
     auto& sample = *m_front_sample;
 
     m_points.GetPointsAttr().Get(&sample.points, t);

@@ -183,7 +183,13 @@ namespace UTJ.USD
             {
                 get
                 {
-                    if(bakedMesh_ == null) { bakedMesh_ = new Mesh(); }
+                    if (bakedMesh_ == null)
+                    {
+                        bakedMesh_ = new Mesh();
+#if UNITY_2017_3_OR_NEWER
+                        bakedMesh_.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+#endif
+                    }
                     return bakedMesh_;
                 }
             }
