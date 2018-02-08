@@ -619,8 +619,8 @@ namespace UTJ.USD
                     var data = new AttributeData();
                     usdiAttrReadSample(attr, ref data, defaultTime, true);
 
-                    var tmp = new IntPtr[data.num_elements];
-                    data.data = GetArrayPtr(tmp);
+                    var tmp = new PinnedList<IntPtr>(data.num_elements);
+                    data.data = tmp;
                     usdiAttrReadSample(attr, ref data, defaultTime, true);
 
                     var e = new AssetRef();
@@ -787,12 +787,18 @@ namespace UTJ.USD
 
         public class CompositeTask : Task
         {
-            IntPtr[] m_handles;
+            PinnedList<IntPtr> m_handles;
+
+            public CompositeTask(PinnedList<IntPtr> handles)
+            {
+                m_handles = handles;
+                m_handle = usdiTaskCreateComposite(m_handles, m_handles.Count);
+            }
 
             public CompositeTask(IntPtr[] handles)
             {
-                m_handles = handles;
-                m_handle = usdiTaskCreateComposite(GetArrayPtr(m_handles), m_handles.Length);
+                m_handles = new PinnedList<IntPtr>(handles);
+                m_handle = usdiTaskCreateComposite(m_handles, m_handles.Count);
             }
         }
 
@@ -864,10 +870,10 @@ namespace UTJ.USD
             }
             return ret.ToArray();
         }
-        public static IntPtr GetArrayPtr(Array v)
-        {
-            return v == null ? IntPtr.Zero : Marshal.UnsafeAddrOfPinnedArrayElement(v, 0);
-        }
+        //public static IntPtr GetArrayPtr(Array v)
+        //{
+        //    return v == null ? IntPtr.Zero : Marshal.UnsafeAddrOfPinnedArrayElement(v, 0);
+        //}
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static void InitializePluginPass1()

@@ -17,14 +17,13 @@ namespace UTJ.USD
 
         usdi.Mesh m_mesh;
         usdi.MeshData m_meshData;
-        usdi.SubmeshData[] m_submeshData;
+        PinnedList<usdi.SubmeshData> m_submeshData = new PinnedList<usdi.SubmeshData>();
         usdi.MeshSummary m_meshSummary;
 
         bool m_allocateMeshDataRequired;
         bool m_updateIndicesRequired;
         bool m_updateVerticesRequired;
         bool m_updateSkinningRequired;
-        bool m_kickVBUpdate; // for Unity 5.5 or later
         double m_timeRead; // accessed from worker thread
         usdi.Task m_asyncRead;
         #endregion
@@ -44,7 +43,7 @@ namespace UTJ.USD
             get { return m_meshData; }
             set { m_meshData = value; }
         }
-        public usdi.SubmeshData[] submeshData
+        public PinnedList<usdi.SubmeshData> submeshData
         {
             get { return m_submeshData; }
         }
@@ -128,8 +127,8 @@ namespace UTJ.USD
             }
             else
             {
-                m_submeshData = new usdi.SubmeshData[m_meshData.num_submeshes];
-                m_meshData.submeshes = usdi.GetArrayPtr(m_submeshData);
+                m_submeshData.ResizeDiscard(m_meshData.num_submeshes);
+                m_meshData.submeshes = m_submeshData;
                 usdi.usdiMeshReadSample(m_mesh, ref m_meshData, t, true);
 
                 while (m_submeshes.Count < m_meshData.num_submeshes)
@@ -138,7 +137,7 @@ namespace UTJ.USD
                 }
                 for (int i = 0; i < m_meshData.num_submeshes; ++i)
                 {
-                    m_submeshes[i].usdiAllocateMeshData(ref m_meshSummary, ref m_submeshData);
+                    m_submeshes[i].usdiAllocateMeshData(ref m_meshSummary, m_submeshData);
                 }
             }
         }
@@ -197,15 +196,6 @@ namespace UTJ.USD
                 }
             }
 
-            // todo: update heterogenous mesh when possible
-            m_kickVBUpdate =
-#if UNITY_5_5_OR_NEWER
-                m_stream.directVBUpdate && !m_allocateMeshDataRequired &&
-                m_meshSummary.topology_variance == usdi.TopologyVariance.Homogenous;
-#else
-                false;
-#endif
-
             if (m_allocateMeshDataRequired)
             {
                 usdiAllocateMeshData(m_timeRead);
@@ -213,27 +203,19 @@ namespace UTJ.USD
 
             if (m_updateVerticesRequired)
             {
-                if (m_kickVBUpdate)
+#if UNITY_EDITOR
+                if (m_stream.forceSingleThread)
                 {
-                    usdi.usdiMeshReadSample(m_mesh, ref m_meshData, m_timeRead, false);
-                    // kick VB update task in usdiUpdate()
+                    usdi.usdiMeshReadSample(m_mesh, ref m_meshData, m_timeRead, true);
                 }
                 else
-                {
-#if UNITY_EDITOR
-                    if (m_stream.forceSingleThread)
-                    {
-                        usdi.usdiMeshReadSample(m_mesh, ref m_meshData, m_timeRead, true);
-                    }
-                    else
 #endif
+                {
+                    if (m_asyncRead == null)
                     {
-                        if (m_asyncRead == null)
-                        {
-                            m_asyncRead = new usdi.Task(usdi.usdiTaskCreateMeshReadSample(m_mesh, ref m_meshData, ref m_timeRead));
-                        }
-                        m_asyncRead.Run();
+                        m_asyncRead = new usdi.Task(usdi.usdiTaskCreateMeshReadSample(m_mesh, ref m_meshData, ref m_timeRead));
                     }
+                    m_asyncRead.Run();
                 }
             }
         }
@@ -245,7 +227,7 @@ namespace UTJ.USD
             int num_submeshes = m_meshData.num_submeshes == 0 ? 1 : m_meshData.num_submeshes;
             for (int i = 0; i < num_submeshes; ++i)
             {
-                m_submeshes[i].usdiUploadMeshData(m_kickVBUpdate, topology, skinning, m_stream.directVBUpdate);
+                m_submeshes[i].usdiUploadMeshData(topology, skinning, m_stream.directVBUpdate);
             }
         }
 
@@ -301,7 +283,9 @@ namespace UTJ.USD
                 {
                     for (int i = 0; i < num_submeshes; ++i)
                     {
-                        m_submeshes[i].usdiUpdateBounds(ref m_submeshData[i]);
+                        var tmp = m_submeshData[i];
+                        m_submeshes[i].usdiUpdateBounds(ref tmp);
+                        m_submeshData[i] = tmp;
                     }
                 }
             }
@@ -313,24 +297,7 @@ namespace UTJ.USD
             }
             else if(m_updateVerticesRequired)
             {
-                if (m_kickVBUpdate)
-                {
-                    if (m_meshData.num_submeshes == 0)
-                    {
-                        m_submeshes[0].usdiKickVBUpdateTask(ref m_meshData, m_updateIndicesRequired);
-                    }
-                    else
-                    {
-                        for (int i = 0; i < num_submeshes; ++i)
-                        {
-                            m_submeshes[i].usdiKickVBUpdateTask(ref m_submeshData[i], m_updateIndicesRequired);
-                        }
-                    }
-                }
-                else
-                {
-                    usdiUploadMeshData(m_timeRead, m_updateIndicesRequired, m_updateSkinningRequired);
-                }
+                usdiUploadMeshData(m_timeRead, m_updateIndicesRequired, m_updateSkinningRequired);
             }
 
             m_allocateMeshDataRequired = false;

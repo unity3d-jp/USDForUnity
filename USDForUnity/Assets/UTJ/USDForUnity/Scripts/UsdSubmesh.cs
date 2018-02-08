@@ -21,21 +21,17 @@ namespace UTJ.USD
 
         usdi.Schema m_schema;
         bool m_setupRequierd = true;
-        Vector3[] m_points;
-        Vector3[] m_normals;
-        Color[] m_colors;
-        Vector2[] m_uvs;
-        Vector4[] m_tangents;
-        BoneWeight[] m_weights;
-        Matrix4x4[] m_bindposes;
+        PinnedList<int> m_indices = new PinnedList<int>();
+        PinnedList<Vector3> m_points = new PinnedList<Vector3>();
+        PinnedList<Vector3> m_normals = new PinnedList<Vector3>();
+        PinnedList<Color> m_colors = new PinnedList<Color>();
+        PinnedList<Vector2> m_uvs = new PinnedList<Vector2>();
+        PinnedList<Vector4> m_tangents = new PinnedList<Vector4>();
+        PinnedList<BoneWeight> m_weights = new PinnedList<BoneWeight>();
+        PinnedList<Matrix4x4> m_bindposes = new PinnedList<Matrix4x4>();
         Transform[] m_bones;
         Transform m_rootBone;
-        int[] m_indices;
         int m_count;
-
-        // for Unity 5.5 or later
-        IntPtr m_VB, m_IB;
-        usdi.VertexUpdateCommand m_vuCmd;
         #endregion
 
 
@@ -43,7 +39,7 @@ namespace UTJ.USD
         public Transform transform { get { return m_trans; } }
         public Renderer renderer { get { return m_renderer; } }
         public Mesh mesh { get { return m_umesh; } }
-        public Matrix4x4[] bindposes { get { return m_bindposes; } }
+        public PinnedList<Matrix4x4> bindposes { get { return m_bindposes; } }
         public Transform[] bones { get { return m_bones; } }
         public Transform rootBone { get { return m_rootBone; } }
         #endregion
@@ -54,8 +50,8 @@ namespace UTJ.USD
         {
             {
                 var tmp = usdi.MeshData.default_value;
-                m_bindposes = new Matrix4x4[parent.meshData.num_bones];
-                tmp.bindposes = usdi.GetArrayPtr(m_bindposes);
+                m_bindposes.ResizeDiscard(parent.meshData.num_bones);
+                tmp.bindposes = m_bindposes;
                 usdi.usdiMeshReadSample(parent.nativeMeshPtr, ref tmp, usdi.defaultTime, true);
             }
 
@@ -246,8 +242,10 @@ namespace UTJ.USD
                 }
                 if(materials == null)
                 {
-                    materials = new Material[] { UnityEngine.Object.Instantiate(GetDefaultMaterial()) };
-                    materials[0].name = "Material_0";
+                    materials = new Material[]{
+                        new Material(Shader.Find("Standard")),
+                    };
+                    materials[0].name = "Material";
                 }
                 m_renderer.sharedMaterials = materials;
             }
@@ -271,82 +269,82 @@ namespace UTJ.USD
         public void usdiAllocateMeshData(ref usdi.MeshSummary summary,  ref usdi.MeshData meshData)
         {
             {
-                m_points = new Vector3[meshData.num_points];
-                meshData.points = usdi.GetArrayPtr(m_points);
+                m_points.ResizeDiscard(meshData.num_points);
+                meshData.points = m_points;
             }
             {
-                m_normals = new Vector3[meshData.num_points];
-                meshData.normals = usdi.GetArrayPtr(m_normals);
+                m_normals.ResizeDiscard(meshData.num_points);
+                meshData.normals = m_normals;
             }
             if(summary.has_colors)
             {
-                m_colors = new Color[meshData.num_points];
-                meshData.colors = usdi.GetArrayPtr(m_colors);
+                m_colors.ResizeDiscard(meshData.num_points);
+                meshData.colors = m_colors;
             }
             if (summary.has_tangents)
             {
-                m_tangents = new Vector4[meshData.num_points];
-                meshData.tangents = usdi.GetArrayPtr(m_tangents);
+                m_tangents.ResizeDiscard(meshData.num_points);
+                meshData.tangents = m_tangents;
             }
             if (summary.has_uvs)
             {
-                m_uvs = new Vector2[meshData.num_points];
-                meshData.uvs = usdi.GetArrayPtr(m_uvs);
+                m_uvs.ResizeDiscard(meshData.num_points);
+                meshData.uvs = m_uvs;
                 if (summary.has_tangents)
                 {
-                    m_tangents = new Vector4[meshData.num_points];
-                    meshData.tangents = usdi.GetArrayPtr(m_tangents);
+                    m_tangents.ResizeDiscard(meshData.num_points);
+                    meshData.tangents = m_tangents;
                 }
             }
             if (summary.num_bones > 0)
             {
-                m_weights = new BoneWeight[meshData.num_points];
-                meshData.weights = usdi.GetArrayPtr(m_weights);
+                m_weights.ResizeDiscard(meshData.num_points);
+                meshData.weights = m_weights;
             }
             {
-                m_indices = new int[meshData.num_indices_triangulated];
-                meshData.indices_triangulated = usdi.GetArrayPtr(m_indices);
+                m_indices.ResizeDiscard(meshData.num_indices_triangulated);
+                meshData.indices_triangulated = m_indices;
             }
         }
-        public void usdiAllocateMeshData(ref usdi.MeshSummary summary, ref usdi.SubmeshData[] submeshData)
+        public void usdiAllocateMeshData(ref usdi.MeshSummary summary, PinnedList<usdi.SubmeshData> submeshData)
         {
             var data = submeshData[m_nth];
             {
-                m_points = new Vector3[data.num_points];
-                data.points = usdi.GetArrayPtr(m_points);
+                m_points.ResizeDiscard(data.num_points);
+                data.points = m_points;
             }
             {
-                m_normals = new Vector3[data.num_points];
-                data.normals = usdi.GetArrayPtr(m_normals);
+                m_normals.ResizeDiscard(data.num_points);
+                data.normals = m_normals;
             }
             if (summary.has_colors)
             {
-                m_colors = new Color[data.num_points];
-                data.colors = usdi.GetArrayPtr(m_colors);
+                m_colors.ResizeDiscard(data.num_points);
+                data.colors = m_colors;
             }
             if (summary.has_tangents)
             {
-                m_tangents = new Vector4[data.num_points];
-                data.tangents = usdi.GetArrayPtr(m_tangents);
+                m_tangents.ResizeDiscard(data.num_points);
+                data.tangents = m_tangents;
             }
             if (summary.has_uvs)
             {
-                m_uvs = new Vector2[data.num_points];
-                data.uvs = usdi.GetArrayPtr(m_uvs);
+                m_uvs.ResizeDiscard(data.num_points);
+                data.uvs = m_uvs;
                 if (summary.has_tangents)
                 {
-                    m_tangents = new Vector4[data.num_points];
-                    data.tangents = usdi.GetArrayPtr(m_tangents);
+                    m_tangents.ResizeDiscard(data.num_points);
+                    data.tangents = m_tangents;
                 }
             }
             if (summary.num_bones > 0)
             {
-                m_weights = new BoneWeight[data.num_points];
-                data.weights = usdi.GetArrayPtr(m_weights);
+                m_weights.ResizeDiscard(data.num_points);
+                data.weights = m_weights;
             }
             {
-                m_indices = new int[data.num_points];
-                data.indices = usdi.GetArrayPtr(m_indices);
+                m_indices.ResizeDiscard(data.num_points); // todo: data.num_indices
+                data.indices = m_indices;
             }
             submeshData[m_nth] = data;
         }
@@ -357,31 +355,6 @@ namespace UTJ.USD
             m_normals = null;
             m_uvs = null;
             m_indices = null;
-        }
-
-        public void usdiKickVBUpdateTask(ref usdi.MeshData data, bool updateIndices)
-        {
-            bool active = m_renderer.isVisible;
-            if(active)
-            {
-                if (m_vuCmd == null)
-                {
-                    m_vuCmd = new usdi.VertexUpdateCommand(usdi.usdiPrimGetNameS(m_schema));
-                }
-                m_vuCmd.Update(ref data, m_VB, updateIndices ? m_IB : IntPtr.Zero);
-            }
-        }
-        public void usdiKickVBUpdateTask(ref usdi.SubmeshData data, bool updateIndices)
-        {
-            bool active = m_renderer.isVisible;
-            if (active)
-            {
-                if (m_vuCmd == null)
-                {
-                    m_vuCmd = new usdi.VertexUpdateCommand(usdi.usdiPrimGetNameS(m_schema));
-                }
-                m_vuCmd.Update(ref data, m_VB, updateIndices ? m_IB : IntPtr.Zero);
-            }
         }
 
         public void usdiUpdateBounds(ref usdi.MeshData data)
@@ -415,53 +388,28 @@ namespace UTJ.USD
 
         void usdiUpdateSkinningData()
         {
-            m_umesh.boneWeights = m_weights;
-            m_umesh.bindposes = m_bindposes;
+            m_umesh.boneWeights = m_weights.Array;
+            m_umesh.bindposes = m_bindposes.Array;
         }
 
-        public void usdiUploadMeshData(bool directVBUpdate, bool topology, bool skinning, bool getVB)
+        public void usdiUploadMeshData(bool topology, bool skinning, bool getVB)
         {
-            if (directVBUpdate && m_VB != IntPtr.Zero)
-            {
-                if (m_weights != null && skinning)
-                {
-                    usdiUpdateSkinningData();
-                    m_umesh.UploadMeshData(false);
-                }
-            }
-            else
-            {
-                if (topology)
-                {
-                    m_umesh.Clear();
-                }
+            if (topology)
+                m_umesh.Clear();
 
-                m_umesh.vertices = m_points;
-                if (m_normals != null) { m_umesh.normals = m_normals; }
-                if (m_colors != null) { m_umesh.colors = m_colors; }
-                if (m_uvs != null) { m_umesh.uv = m_uvs; }
-                if (m_tangents != null) { m_umesh.tangents = m_tangents; }
+            m_umesh.SetVertices(m_points.List);
+            if (m_normals.Count > 0) { m_umesh.SetNormals(m_normals.List); }
+            if (m_colors.Count > 0) { m_umesh.SetColors(m_colors.List); }
+            if (m_uvs.Count > 0) { m_umesh.SetUVs(0, m_uvs.List); }
+            if (m_tangents.Count > 0) { m_umesh.SetTangents(m_tangents.List); }
 
-                if (topology)
-                {
-                    m_umesh.SetIndices(m_indices, MeshTopology.Triangles, 0);
-                }
+            if (topology)
+                m_umesh.SetTriangles(m_indices.List, 0);
 
-                if (m_weights != null && skinning)
-                {
-                    usdiUpdateSkinningData();
-                }
+            if (m_weights != null && skinning)
+                usdiUpdateSkinningData();
 
-                m_umesh.UploadMeshData(false);
-
-#if UNITY_5_5_OR_NEWER
-                if (getVB && usdi.usdiIsVtxCmdAvailable())
-                {
-                    m_VB = m_umesh.GetNativeVertexBufferPtr(0);
-                    m_IB = m_umesh.GetNativeIndexBufferPtr();
-                }
-#endif
-            }
+            m_umesh.UploadMeshData(false);
 
             ++m_count;
         }

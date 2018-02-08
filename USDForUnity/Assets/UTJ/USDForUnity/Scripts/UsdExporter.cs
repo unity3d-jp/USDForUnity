@@ -188,14 +188,14 @@ namespace UTJ.USD
                 }
             }
 
-            public int[] indices;
-            public Vector3[] vertices;
-            public Vector3[] normals;
-            public Vector4[] tangents;
-            public Vector2[] uvs;
+            public PinnedList<int> indices = new PinnedList<int>();
+            public PinnedList<Vector3> vertices = new PinnedList<Vector3>();
+            public PinnedList<Vector3> normals = new PinnedList<Vector3>();
+            public PinnedList<Vector4> tangents = new PinnedList<Vector4>();
+            public PinnedList<Vector2> uvs = new PinnedList<Vector2>();
 
-            public BoneWeight[] weights;
-            public Matrix4x4[] bindposes;
+            public PinnedList<BoneWeight> weights = new PinnedList<BoneWeight>();
+            public PinnedList<Matrix4x4> bindposes = new PinnedList<Matrix4x4>();
             public string rootBone;
             public string[] bones;
         }
@@ -213,32 +213,18 @@ namespace UTJ.USD
         public static void CaptureMesh(usdi.Mesh usd, ref usdi.MeshData data, MeshBuffer dst_buf)
         {
             data = usdi.MeshData.default_value;
-            if (dst_buf.vertices != null)
+            data.points = dst_buf.vertices;
+            data.num_points = dst_buf.vertices.Count;
+            data.indices = dst_buf.indices;
+            data.num_indices = dst_buf.indices.Count;
+            data.normals = dst_buf.normals;
+            data.tangents = dst_buf.tangents;
+            data.uvs = dst_buf.uvs;
+
+            if (dst_buf.weights.Count > 0 && dst_buf.bones != null)
             {
-                data.points = usdi.GetArrayPtr(dst_buf.vertices);
-                data.num_points = dst_buf.vertices.Length;
-            }
-            if (dst_buf.indices != null)
-            {
-                data.indices = usdi.GetArrayPtr(dst_buf.indices);
-                data.num_indices = dst_buf.indices.Length;
-            }
-            if (dst_buf.normals != null)
-            {
-                data.normals = usdi.GetArrayPtr(dst_buf.normals);
-            }
-            if (dst_buf.tangents != null)
-            {
-                data.tangents = usdi.GetArrayPtr(dst_buf.tangents);
-            }
-            if (dst_buf.uvs != null)
-            {
-                data.uvs = usdi.GetArrayPtr(dst_buf.uvs);
-            }
-            if (dst_buf.weights != null && dst_buf.bones != null)
-            {
-                data.weights = usdi.GetArrayPtr(dst_buf.weights);
-                data.bindposes = usdi.GetArrayPtr(dst_buf.bindposes);
+                data.weights = dst_buf.weights;
+                data.bindposes = dst_buf.bindposes;
                 data.num_bones = dst_buf.bones.Length;
                 data.max_bone_weights = 4;
                 usdi.usdiMeshAssignBones(usd, ref data, dst_buf.bones, dst_buf.bones.Length);
@@ -250,11 +236,16 @@ namespace UTJ.USD
             usdi.Mesh usd, ref usdi.MeshData data, MeshBuffer buf,
             Mesh mesh, MeshCaptureFlags flags)
         {
-            buf.vertices = flags.points ? mesh.vertices : null;
-            buf.normals = flags.normals ? mesh.normals : null;
-            buf.tangents = flags.tangents ? mesh.tangents : null;
-            buf.indices = flags.indices ? mesh.triangles : null;
-            buf.uvs = flags.uvs ? mesh.uv : null;
+            buf.vertices.LockList(l => { mesh.GetVertices(l); });
+            buf.indices.Assign(mesh.triangles);
+
+            if (flags.normals)
+                buf.normals.LockList(l => { mesh.GetNormals(l); });
+            if (flags.uvs)
+                buf.uvs.LockList(l => { mesh.GetUVs(0, l); });
+            if (flags.tangents)
+                buf.tangents.LockList(l => { mesh.GetTangents(l); });
+
             CaptureMesh(usd, ref data, buf);
         }
 
@@ -263,45 +254,21 @@ namespace UTJ.USD
             SkinnedMeshRenderer smr, MeshCaptureFlags flags, bool captureBones)
         {
 
-            Cloth cloth = smr.GetComponent<Cloth>();
+            // todo: cloth
 
-            if (cloth != null)
-            {
-                var mesh = buf.bakedMesh;
-                smr.BakeMesh(mesh);
-
-                buf.vertices = flags.points ? cloth.vertices : null;
-                buf.normals  = flags.normals ? cloth.normals : null;
-                buf.tangents = flags.tangents ? mesh.tangents : null;
-                buf.indices  = flags.indices ? mesh.triangles : null;
-                buf.uvs      = flags.uvs ? mesh.uv : null;
-            }
-            else if (captureBones && buf.bones != null)
+            if (captureBones && buf.bones != null)
             {
                 var mesh = smr.sharedMesh;
-
-                buf.vertices = flags.points ? mesh.vertices : null;
-                buf.normals  = flags.normals ? mesh.normals : null;
-                buf.tangents = flags.tangents ? mesh.tangents : null;
-                buf.indices  = flags.indices ? mesh.triangles : null;
-                buf.uvs      = flags.uvs ? mesh.uv : null;
-
-                buf.weights   = mesh.boneWeights;
-                buf.bindposes = mesh.bindposes;
+                buf.weights.LockList(l => { mesh.GetBoneWeights(l); });
+                buf.bindposes.LockList(l => { mesh.GetBindposes(l); });
+                CaptureMesh(usd, ref data, buf, mesh, flags);
             }
             else
             {
                 var mesh = buf.bakedMesh;
                 smr.BakeMesh(mesh);
-
-                buf.vertices = flags.points ? mesh.vertices : null;
-                buf.normals  = flags.normals ? mesh.normals : null;
-                buf.tangents = flags.tangents ? mesh.tangents : null;
-                buf.indices  = flags.indices ? mesh.triangles : null;
-                buf.uvs      = flags.uvs ? mesh.uv : null;
+                CaptureMesh(usd, ref data, buf, mesh, flags);
             }
-
-            CaptureMesh(usd, ref data, buf);
         }
 
         public class MeshCapturer : TransformCapturer
@@ -503,9 +470,9 @@ namespace UTJ.USD
             usdi.PointsData m_data = usdi.PointsData.default_value;
             usdi.AttributeData m_dataRot;
 
-            ParticleSystem.Particle[] m_buf_particles;
-            Vector3[] m_buf_positions;
-            Vector4[] m_buf_rotations;
+            PinnedList<ParticleSystem.Particle> m_buf_particles = new PinnedList<ParticleSystem.Particle>();
+            PinnedList<Vector3> m_buf_positions = new PinnedList<Vector3>();
+            PinnedList<Vector4> m_buf_rotations = new PinnedList<Vector4>();
 
             bool m_captureRotations = true;
 
@@ -539,30 +506,15 @@ namespace UTJ.USD
 #else
                     m_target.maxParticles;
 #endif
-                bool allocated = false;
-                if (m_buf_particles == null)
-                {
-                    m_buf_particles = new ParticleSystem.Particle[count_max];
-                    m_buf_positions = new Vector3[count_max];
-                    m_buf_rotations = new Vector4[count_max];
-                    allocated = true;
-                }
-                else if (m_buf_particles.Length != count_max)
-                {
-                    Array.Resize(ref m_buf_particles, count_max);
-                    Array.Resize(ref m_buf_positions, count_max);
-                    Array.Resize(ref m_buf_rotations, count_max);
-                    allocated = true;
-                }
+                m_buf_particles.Resize(count_max);
+                m_buf_positions.Resize(count_max);
+                m_buf_rotations.Resize(count_max);
 
-                if (allocated)
-                {
-                    m_data.points = usdi.GetArrayPtr(m_buf_positions);
-                    m_dataRot.data = usdi.GetArrayPtr(m_buf_rotations);
-                }
+                m_data.points = m_buf_positions;
+                m_dataRot.data = m_buf_rotations;
 
                 // copy particle positions & rotations to buffer
-                int count = m_target.GetParticles(m_buf_particles);
+                int count = m_target.GetParticles(m_buf_particles.Array);
                 for (int i = 0; i < count; ++i)
                 {
                     m_buf_positions[i] = m_buf_particles[i].position;
@@ -571,8 +523,10 @@ namespace UTJ.USD
                 {
                     for (int i = 0; i < count; ++i)
                     {
-                        m_buf_rotations[i] = m_buf_particles[i].axisOfRotation;
-                        m_buf_rotations[i].w = m_buf_particles[i].rotation;
+                        Vector4 tmp;
+                        tmp = m_buf_particles[i].axisOfRotation;
+                        tmp.w = m_buf_particles[i].rotation;
+                        m_buf_rotations[i] = tmp;
                     }
                 }
 
