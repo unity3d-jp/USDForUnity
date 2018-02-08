@@ -646,7 +646,6 @@ namespace UTJ.USD
         [DllImport("usdi")] public static extern Bool usdiTaskIsRunning(IntPtr task);
         [DllImport("usdi")] public static extern void usdiTaskWait(IntPtr task);
 
-        [DllImport("usdi")] public static extern IntPtr usdiTaskCreateMonoDelegate(usdiMonoDelegate func, IntPtr arg, string dbg_name);
         [DllImport("usdi")] public static extern IntPtr usdiTaskCreateMeshReadSample(Mesh mesh, ref MeshData dst, ref double t);
         [DllImport("usdi")] public static extern IntPtr usdiTaskCreatePointsReadSample(Points points, ref PointsData dst, ref double t);
         [DllImport("usdi")] public static extern IntPtr usdiTaskCreateAttrReadSample(Attribute points, ref AttributeData dst, ref double t);
@@ -726,25 +725,6 @@ namespace UTJ.USD
             public void Wait()
             {
                 usdiTaskWait(m_handle);
-            }
-        }
-
-        public class DelegateTask : Task
-        {
-            usdiMonoDelegate m_func;
-            GCHandle m_arg;
-
-            public DelegateTask(usdiMonoDelegate f, object arg, string dbg_name = "")
-            {
-                m_func = f;
-                m_arg = GCHandle.Alloc(arg);
-                m_handle = usdiTaskCreateMonoDelegate(m_func, (IntPtr)m_arg, dbg_name);
-            }
-
-            public DelegateTask(usdiMonoDelegate f, string dbg_name = "")
-            {
-                m_func = f;
-                m_handle = usdiTaskCreateMonoDelegate(m_func, IntPtr.Zero, dbg_name);
             }
         }
 

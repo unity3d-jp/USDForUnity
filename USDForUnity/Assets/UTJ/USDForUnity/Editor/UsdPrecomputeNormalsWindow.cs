@@ -88,8 +88,8 @@ namespace UTJ.USD
             if (stream != null && ndone > 0)
             {
                 reporter.Write("flushing to file ... ");
-                stream.usdiSave();
-                stream.usdiReload();
+                stream.UsdSave();
+                stream.UsdReload();
                 reporter.Write("done.\n");
             }
             reporter.Close();

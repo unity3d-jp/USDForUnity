@@ -36,7 +36,7 @@ namespace UTJ.USD
             var s = schema;
             if (s != null)
             {
-                s.usdiSync();
+                s.UsdSync();
                 s.gameObject = null;
             }
         }

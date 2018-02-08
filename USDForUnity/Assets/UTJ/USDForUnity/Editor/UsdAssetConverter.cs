@@ -137,7 +137,7 @@ namespace UTJ.USD
                 var usd = go.GetComponent<UsdStream>();
                 if(usd != null)
                 {
-                    usd.usdiDetachUsdComponents();
+                    usd.UsdDetachUsdComponents();
                 }
                 else
                 {

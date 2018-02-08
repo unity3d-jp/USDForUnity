@@ -68,9 +68,9 @@ namespace UTJ.USD
             return GetOrAddComponent<UsdMeshComponent>();
         }
 
-        public override void usdiOnLoad()
+        public override void UsdOnLoad()
         {
-            base.usdiOnLoad();
+            base.UsdOnLoad();
 
             m_mesh = usdi.usdiAsMesh(m_schema);
             usdi.usdiMeshGetSummary(m_mesh, ref m_meshSummary);
@@ -93,9 +93,9 @@ namespace UTJ.USD
             }
         }
 
-        public override void usdiOnUnload()
+        public override void UsdOnUnload()
         {
-            base.usdiOnUnload();
+            base.UsdOnUnload();
 
             int c = m_submeshes.Count;
             for (int i = 0; i < c; ++i) { m_submeshes[i].usdiOnUnload(); }
@@ -143,9 +143,9 @@ namespace UTJ.USD
         }
 
         // async
-        public override void usdiAsyncUpdate(double time)
+        public override void UsdAsyncUpdate(double time)
         {
-            base.usdiAsyncUpdate(time);
+            base.UsdAsyncUpdate(time);
             if (m_updateFlags.bits == 0 && !m_allocateMeshDataRequired && !m_updateIndicesRequired && !m_updateVerticesRequired) {
                 return;
             }
@@ -232,15 +232,15 @@ namespace UTJ.USD
         }
 
         // sync
-        public override void usdiUpdate(double time)
+        public override void UsdUpdate(double time)
         {
             if (m_updateFlags.bits == 0 && !m_allocateMeshDataRequired && !m_updateVerticesRequired)
             {
                 return;
             }
-            base.usdiUpdate(time);
+            base.UsdUpdate(time);
 
-            usdiSync();
+            UsdSync();
 
             int num_submeshes = m_meshData.num_submeshes == 0 ? 1 : m_meshData.num_submeshes;
 
@@ -306,7 +306,7 @@ namespace UTJ.USD
             m_updateSkinningRequired = false;
         }
 
-        public override void usdiSync()
+        public override void UsdSync()
         {
             if (m_asyncRead != null)
             {

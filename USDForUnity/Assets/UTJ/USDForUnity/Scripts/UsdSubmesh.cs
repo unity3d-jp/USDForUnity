@@ -101,7 +101,7 @@ namespace UTJ.USD
                 m_bones = new Transform[boneNames.Length];
                 for (int i = 0; i < boneNames.Length; ++i)
                 {
-                    var schema = parent.stream.usdiFindSchema(boneNames[i]);
+                    var schema = parent.stream.UsdFindSchema(boneNames[i]);
                     if (schema == null)
                     {
                         Debug.LogError("bone not found: " + boneNames[i]);
@@ -117,7 +117,7 @@ namespace UTJ.USD
 
                 if (meshData.root_bone != IntPtr.Zero)
                 {
-                    var rootBone = parent.stream.usdiFindSchema(rootBoneName);
+                    var rootBone = parent.stream.UsdFindSchema(rootBoneName);
                     m_rootBone = rootBone.gameObject.GetComponent<Transform>();
                 }
                 else

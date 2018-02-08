@@ -642,8 +642,6 @@ namespace UTJ.USD
         float m_elapsed;
         int m_frameCount;
         int m_prevFrame = -1;
-
-        usdi.Task m_asyncFlush;
         float m_timeFlush;
         #endregion
 
@@ -971,17 +969,8 @@ namespace UTJ.USD
             }
         }
 
-        void WaitFlush()
-        {
-            if (m_asyncFlush != null)
-            {
-                m_asyncFlush.Wait();
-            }
-        }
-
         void FlushUSD()
         {
-            WaitFlush();
             usdi.usdiSave(m_ctx);
         }
 
@@ -995,9 +984,6 @@ namespace UTJ.USD
             if (frame == m_prevFrame) { return; }
             m_prevFrame = frame;
 
-            // wait for complete previous flush
-            WaitFlush();
-
             float begin_time = Time.realtimeSinceStartup;
 
             // capture components
@@ -1006,31 +992,7 @@ namespace UTJ.USD
                 c.Capture(m_time);
             }
 
-            // kick flush task
-#if UNITY_EDITOR
-            if (m_forceSingleThread)
-            {
-                foreach (var c in m_capturers) { c.Flush(time); }
-            }
-            else
-#endif
-            {
-                if (m_asyncFlush == null)
-                {
-                    m_asyncFlush = new usdi.DelegateTask((var) =>
-                    {
-                        try
-                        {
-                            foreach (var c in m_capturers) { c.Flush(m_timeFlush); }
-                        }
-                        finally
-                        {
-                        }
-                    }, "UsdExporter: " + gameObject.name);
-                }
-                m_timeFlush = m_time;
-                m_asyncFlush.Run();
-            }
+            foreach (var c in m_capturers) { c.Flush(time); }
 
             ++m_frameCount;
             switch(m_timeUnit.type)

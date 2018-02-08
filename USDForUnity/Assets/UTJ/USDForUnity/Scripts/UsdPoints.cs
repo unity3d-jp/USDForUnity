@@ -39,18 +39,18 @@ namespace UTJ.USD
             return GetOrAddComponent<UsdPointsComponent>();
         }
 
-        public override void usdiOnLoad()
+        public override void UsdOnLoad()
         {
-            base.usdiOnLoad();
+            base.UsdOnLoad();
 
             m_usdPoints = usdi.usdiAsPoints(m_schema);
             usdi.usdiPointsGetSummary(m_usdPoints, ref m_summary);
             m_usdAttrRot = usdi.usdiPrimFindAttribute(m_usdPoints, "rotations");
         }
 
-        public override void usdiOnUnload()
+        public override void UsdOnUnload()
         {
-            base.usdiOnUnload();
+            base.UsdOnUnload();
 
             m_asyncRead = null;
 
@@ -61,9 +61,9 @@ namespace UTJ.USD
             m_rotData = default(usdi.AttributeData);
         }
 
-        public override void usdiAsyncUpdate(double time)
+        public override void UsdAsyncUpdate(double time)
         {
-            base.usdiAsyncUpdate(time);
+            base.UsdAsyncUpdate(time);
             if (m_updateFlags.bits == 0) { return; }
 
             usdi.PointsData tmp = usdi.PointsData.default_value;
@@ -131,15 +131,15 @@ namespace UTJ.USD
             }
         }
 
-        public override void usdiUpdate(double time)
+        public override void UsdUpdate(double time)
         {
             if (m_updateFlags.bits == 0) { return; }
-            base.usdiUpdate(time);
+            base.UsdUpdate(time);
 
-            usdiSync();
+            UsdSync();
         }
 
-        public override void usdiSync()
+        public override void UsdSync()
         {
             if (m_asyncRead != null)
             {

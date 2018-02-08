@@ -70,7 +70,7 @@ namespace UTJ.USD
             }
 
             if (m_importMode == UsdImportMode.StripUSD)
-                usdStream.usdiDetachUsdComponents();
+                usdStream.UsdDetachUsdComponents();
 
 #if UNITY_2017_3_OR_NEWER
             ctx.AddObjectToAsset(fileName, go);

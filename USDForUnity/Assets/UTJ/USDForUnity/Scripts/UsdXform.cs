@@ -28,28 +28,28 @@ namespace UTJ.USD
             return GetOrAddComponent<UsdXformComponent>();
         }
 
-        public override void usdiOnLoad()
+        public override void UsdOnLoad()
         {
-            base.usdiOnLoad();
+            base.UsdOnLoad();
             m_xf = usdi.usdiAsXform(m_schema);
             m_trans = GetComponent<Transform>();
         }
 
-        public override void usdiOnUnload()
+        public override void UsdOnUnload()
         {
-            base.usdiOnUnload();
+            base.UsdOnUnload();
             m_xf = default(usdi.Xform);
         }
 
-        public override void usdiAsyncUpdate(double time)
+        public override void UsdAsyncUpdate(double time)
         {
             m_updateFlags = usdi.usdiPrimGetUpdateFlags(m_xf);
             usdi.usdiXformReadSample(m_xf, ref m_xfData, time);
         }
 
-        public override void usdiUpdate(double time)
+        public override void UsdUpdate(double time)
         {
-            base.usdiUpdate(time);
+            base.UsdUpdate(time);
             if(m_goAssigned)
             {
                 usdi.TransformAssign(m_trans, ref m_xfData);

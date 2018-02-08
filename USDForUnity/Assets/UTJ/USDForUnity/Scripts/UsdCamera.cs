@@ -41,30 +41,30 @@ namespace UTJ.USD
             return GetOrAddComponent<UsdCameraComponent>();
         }
 
-        public override void usdiOnLoad()
+        public override void UsdOnLoad()
         {
-            base.usdiOnLoad();
+            base.UsdOnLoad();
             m_camera = usdi.usdiAsCamera(m_schema);
             m_ucam = GetOrAddComponent<Camera>();
         }
 
-        public override void usdiOnUnload()
+        public override void UsdOnUnload()
         {
-            base.usdiOnUnload();
+            base.UsdOnUnload();
             m_camera = default(usdi.Camera);
         }
 
-        public override void usdiAsyncUpdate(double time)
+        public override void UsdAsyncUpdate(double time)
         {
-            base.usdiAsyncUpdate(time);
+            base.UsdAsyncUpdate(time);
             if (m_updateFlags.bits == 0) { return; }
             usdi.usdiCameraReadSample(m_camera, ref m_cameraData, time);
         }
 
-        public override void usdiUpdate(double time)
+        public override void UsdUpdate(double time)
         {
             if (m_updateFlags.bits == 0) { return; }
-            base.usdiUpdate(time);
+            base.UsdUpdate(time);
 
             if (m_goAssigned)
             {

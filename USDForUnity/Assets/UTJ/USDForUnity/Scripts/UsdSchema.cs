@@ -125,7 +125,7 @@ namespace UTJ.USD
             {
                 if (usdi.usdiPrimSetVariantSelection(m_schema, si, m_variantSelection[si]))
                 {
-                    m_stream.usdiSetVariantSelection(m_primPath, m_variantSelection);
+                    m_stream.UsdSetVariantSelection(m_primPath, m_variantSelection);
                 }
             }
         }
@@ -147,11 +147,11 @@ namespace UTJ.USD
             if (m_overrideImportSettings)
             {
                 usdi.usdiPrimSetImportSettings(m_schema, ref m_importSettings);
-                m_stream.usdiSetImportSettings(primPath, ref m_importSettings);
+                m_stream.UsdSetImportSettings(primPath, ref m_importSettings);
             }
             else
             {
-                m_stream.usdiDeleteImportSettings(primPath);
+                m_stream.UsdDeleteImportSettings(primPath);
             }
         }
 
@@ -160,12 +160,12 @@ namespace UTJ.USD
             return GetOrAddComponent<UsdComponent>();
         }
 
-        public virtual void usdiOnLoad()
+        public virtual void UsdOnLoad()
         {
             m_primPath = usdi.usdiPrimGetPathS(m_schema);
             m_primName = usdi.usdiPrimGetNameS(m_schema);
             m_primTypeName = usdi.usdiPrimGetUsdTypeNameS(m_schema);
-            m_master = m_stream.usdiFindSchema(usdi.usdiPrimGetMaster(m_schema));
+            m_master = m_stream.UsdFindSchema(usdi.usdiPrimGetMaster(m_schema));
 
             usdiSyncVarinatSets();
             usdiSyncImportSettings();
@@ -177,22 +177,22 @@ namespace UTJ.USD
             }
         }
 
-        public virtual void usdiOnUnload()
+        public virtual void UsdOnUnload()
         {
-            usdiSync();
+            UsdSync();
             m_schema = default(usdi.Xform);
         }
 
-        public virtual void usdiAsyncUpdate(double time)
+        public virtual void UsdAsyncUpdate(double time)
         {
         }
 
-        public virtual void usdiUpdate(double time)
+        public virtual void UsdUpdate(double time)
         {
         }
 
         // make sure all async operations are completed
-        public virtual void usdiSync()
+        public virtual void UsdSync()
         {
         }
 
