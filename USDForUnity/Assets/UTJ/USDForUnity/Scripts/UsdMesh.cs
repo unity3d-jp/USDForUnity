@@ -25,7 +25,6 @@ namespace UTJ.USD
         bool m_updateVerticesRequired;
         bool m_updateSkinningRequired;
         double m_timeRead; // accessed from worker thread
-        usdi.Task m_asyncRead;
         #endregion
 
 
@@ -109,8 +108,6 @@ namespace UTJ.USD
             m_updateVerticesRequired = false;
             m_updateSkinningRequired = false;
             m_timeRead = 0.0;
-
-            m_asyncRead = null;
         }
 
 
@@ -203,20 +200,7 @@ namespace UTJ.USD
 
             if (m_updateVerticesRequired)
             {
-#if UNITY_EDITOR
-                if (m_stream.forceSingleThread)
-                {
-                    usdi.usdiMeshReadSample(m_mesh, ref m_meshData, m_timeRead, true);
-                }
-                else
-#endif
-                {
-                    if (m_asyncRead == null)
-                    {
-                        m_asyncRead = new usdi.Task(usdi.usdiTaskCreateMeshReadSample(m_mesh, ref m_meshData, ref m_timeRead));
-                    }
-                    m_asyncRead.Run();
-                }
+                usdi.usdiMeshReadSample(m_mesh, ref m_meshData, m_timeRead, true);
             }
         }
 
@@ -308,10 +292,6 @@ namespace UTJ.USD
 
         public override void UsdSync()
         {
-            if (m_asyncRead != null)
-            {
-                m_asyncRead.Wait();
-            }
         }
 
         #endregion

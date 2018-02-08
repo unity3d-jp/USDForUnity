@@ -18,9 +18,6 @@ namespace UTJ.USD
         PinnedList<Vector3> m_velocities = new PinnedList<Vector3>();
         PinnedList<Vector4> m_rotations = new PinnedList<Vector4>();
         PinnedList<int> m_ids = new PinnedList<int>();
-
-        usdi.Task m_asyncRead;
-        double m_timeRead;
         #endregion
 
 
@@ -51,8 +48,6 @@ namespace UTJ.USD
         public override void UsdOnUnload()
         {
             base.UsdOnUnload();
-
-            m_asyncRead = null;
 
             m_usdPoints = default(usdi.Points);
             m_summary = default(usdi.PointsSummary);
@@ -98,35 +93,10 @@ namespace UTJ.USD
             // read points data
             if (m_pointsData.num_points > 0)
             {
-
-#if UNITY_EDITOR
-                if (m_stream.forceSingleThread)
+                usdi.usdiPointsReadSample(m_usdPoints, ref m_pointsData, time, true);
+                if (m_usdAttrRot)
                 {
-                    usdi.usdiPointsReadSample(m_usdPoints, ref m_pointsData, m_timeRead, true);
-                    if (m_usdAttrRot)
-                    {
-                        usdi.usdiAttrReadSample(m_usdAttrRot, ref m_rotData, m_timeRead, true);
-                    }
-                }
-                else
-#endif
-                {
-                    if (m_asyncRead == null)
-                    {
-                        if(m_usdAttrRot)
-                        {
-                            m_asyncRead = new usdi.CompositeTask(new IntPtr[] {
-                                usdi.usdiTaskCreatePointsReadSample(m_usdPoints, ref m_pointsData, ref m_timeRead),
-                                usdi.usdiTaskCreateAttrReadSample(m_usdAttrRot, ref m_rotData, ref m_timeRead)
-                            });
-                        }
-                        else
-                        {
-                            m_asyncRead =  new usdi.Task(usdi.usdiTaskCreatePointsReadSample(m_usdPoints, ref m_pointsData, ref m_timeRead));
-                        }
-                    }
-                    m_timeRead = time;
-                    m_asyncRead.Run();
+                    usdi.usdiAttrReadSample(m_usdAttrRot, ref m_rotData, time, true);
                 }
             }
         }
@@ -141,10 +111,6 @@ namespace UTJ.USD
 
         public override void UsdSync()
         {
-            if (m_asyncRead != null)
-            {
-                m_asyncRead.Wait();
-            }
         }
         #endregion
 

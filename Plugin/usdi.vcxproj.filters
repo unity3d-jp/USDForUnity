@@ -34,9 +34,6 @@
     <ClCompile Include="usdi\usdiXform.cpp">
       <Filter>usdi</Filter>
     </ClCompile>
-    <ClCompile Include="usdi\ext\usdiTask.cpp">
-      <Filter>usdi\ext</Filter>
-    </ClCompile>
     <ClCompile Include="usdi\ext\usdiExt.cpp">
       <Filter>usdi\ext</Filter>
     </ClCompile>
@@ -77,9 +74,6 @@
     </ClInclude>
     <ClInclude Include="usdi\usdiConfig.h">
       <Filter>usdi</Filter>
-    </ClInclude>
-    <ClInclude Include="usdi\ext\usdiTask.h">
-      <Filter>usdi\ext</Filter>
     </ClInclude>
     <ClInclude Include="usdi\ext\usdiExt.h">
       <Filter>usdi\ext</Filter>

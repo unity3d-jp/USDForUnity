@@ -13,7 +13,6 @@
   <ItemGroup>
     <ClInclude Include="usdi\etc\Platform.h" />
     <ClInclude Include="usdi\ext\usdiExt.h" />
-    <ClInclude Include="usdi\ext\usdiTask.h" />
     <ClInclude Include="usdi\pch.h" />
     <ClInclude Include="usdi\usdiAttribute.h" />
     <ClInclude Include="usdi\usdiCamera.h" />
@@ -30,7 +29,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="usdi\ext\usdiExt.cpp" />
-    <ClCompile Include="usdi\ext\usdiTask.cpp" />
     <ClCompile Include="usdi\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Master|x64'">Create</PrecompiledHeader>
