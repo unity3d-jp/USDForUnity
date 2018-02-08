@@ -67,7 +67,7 @@ void TestExportHighMesh(const char *filename, int frame_count)
             data.num_indices = indices[i].size();
             data.points = points[i].data();
             data.num_points = points[i].size();
-            data.uvs = uv[i].data();
+            data.uv0 = uv[i].data();
             data.colors = colors[i].data();
             usdiMeshWriteSample(mesh, &data, t);
         }

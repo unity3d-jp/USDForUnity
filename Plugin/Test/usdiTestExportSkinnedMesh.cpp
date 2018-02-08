@@ -142,7 +142,7 @@ void TestExportSkinnedMesh(const char *filename, int cseg, int hseg)
             data.counts = counts.data();
             data.indices = indices.data();
             data.points = points.data();
-            data.uvs = uv.data();
+            data.uv0 = uv.data();
             data.weights4 = weights.data();
             mesh = usdiCreateMesh(ctx, xf, "Cylinder");
             usdiMeshWriteSample(mesh, &data);
@@ -155,7 +155,7 @@ void TestExportSkinnedMesh(const char *filename, int cseg, int hseg)
                 data.counts = counts.data();
                 data.indices = indices2.data();
                 data.points = points2.data();
-                data.uvs = nullptr;
+                data.uv0 = nullptr;
                 data.weights4 = weights2.data();
                 mesh = usdiCreateMesh(ctx, mesh, "Sphere");
                 usdiMeshWriteSample(mesh, &data);

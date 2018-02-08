@@ -284,17 +284,37 @@ namespace UTJ.USD
         public struct MeshSummary
         {
             public double start, end;
-            public TopologyVariance topology_variance;
-            public int num_bones;
-            public int max_bone_weights;
-            public Bool has_normals;
-            public Bool has_colors;
-            public Bool has_uvs;
-            public Bool has_tangents;
-            public Bool has_velocities;
+            public TopologyVariance topologyVariance;
+            public int boneCount;
+            public int maxBoneWeights;
+            public Bool hasVelocities;
+            public Bool hasNormals;
+            public Bool hasColors;
+            public Bool hasUV0;
+            public Bool hasTangents;
 
             public static MeshSummary default_value { get { return default(MeshSummary); } }
         };
+
+        public struct MeshSampleSummary
+        {
+            public int splitCount;
+            public int submeshCount;
+            public int vertexCount;
+            public int indexCount;
+            public Bool topologyChanged;
+        }
+
+        public struct MeshSplitSummary
+        {
+            public int submeshCount;
+            public int submeshOffset;
+            public int vertexCount;
+            public int vertexOffset;
+            public int indexCount;
+            public int indexOffset;
+        }
+
 
         public struct SplitData
         {
@@ -314,37 +334,41 @@ namespace UTJ.USD
             public static SplitData default_value { get { return default(SplitData); } }
         };
 
+        public struct SubmeshData
+        {
+            public IntPtr indices;
+        }
+
         public struct MeshData
         {
             public IntPtr   points;
-            public IntPtr   normals;
-            public IntPtr   colors;
-            public IntPtr   uvs;
-            public IntPtr   tangents;
             public IntPtr   velocities;
+            public IntPtr   normals;
+            public IntPtr   tangents;
+            public IntPtr   uv0;
+            public IntPtr   uv1;
+            public IntPtr   colors;
             public IntPtr   counts;
             public IntPtr   indices;
-            public IntPtr   indices_triangulated;
 
             public IntPtr   weights;
             public IntPtr   bindposes;
             public IntPtr   bones;
-            public IntPtr   root_bone;
+            public IntPtr   rootBone;
 
-            public int      num_points;
-            public int      num_counts;
-            public int      num_indices;
-            public int      num_indices_triangulated;
-            public int      num_bones;
-            public int      max_bone_weights;
+            public int      pointCount;
+            public int      faceCount;
+            public int      indexCount;
+            public int      boneCount;
+            public int      maxBoneWeights;
 
             public Vector3  center;
             public Vector3  extents;
 
             public IntPtr   submeshes; // pointer to array of SubmeshData
-            public int      num_submeshes;
+            public int      submeshCount;
 
-            public static MeshData default_value
+            public static MeshData defaultValue
             {
                 get
                 {
@@ -367,9 +391,9 @@ namespace UTJ.USD
             public IntPtr ids64;
             public IntPtr ids32;
 
-            public int num_points;
+            public int pointCount;
 
-            public static PointsData default_value
+            public static PointsData defaultValue
             {
                 get
                 {

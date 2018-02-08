@@ -188,7 +188,7 @@ void Mesh::updateSample(Time t_)
         m_attr_colors->getImmediate(&sample.colors, t_);
     }
     if (m_attr_uv0) {
-        m_attr_uv0->getImmediate(&sample.uvs, t_);
+        m_attr_uv0->getImmediate(&sample.uv0, t_);
     }
 
     // apply swap_handedness and scale
@@ -254,7 +254,7 @@ void Mesh::updateSample(Time t_)
     if (gen_tangents) {
         sample.tangents.resize(sample.points.size());
         GenerateTangentsPoly(ToIArray(sample.tangents),
-            ToIArray(sample.points), ToIArray(sample.normals), ToIArray(sample.uvs),
+            ToIArray(sample.points), ToIArray(sample.normals), ToIArray(sample.uv0),
             ToIArray(sample.counts), ToIArray(sample.offsets), ToIArray(sample.indices));
     }
 
@@ -355,7 +355,7 @@ void Mesh::updateSample(Time t_)
     flattened.points    = sample.points.size() == m_num_indices;
     flattened.normals   = sample.normals.size() == m_num_indices;
     flattened.colors    = sample.colors.size() == m_num_indices;
-    flattened.uvs       = sample.uvs.size() == m_num_indices;
+    flattened.uvs       = sample.uv0.size() == m_num_indices;
     flattened.tangents  = sample.tangents.size() == m_num_indices;
     flattened.velocities= sample.velocities.size() == m_num_indices;
     flattened.weights   = sample.weights4.size() == m_num_indices || sample.weights8.size() == m_num_indices;
@@ -393,7 +393,7 @@ void Mesh::updateSample(Time t_)
             CopyWithIndices(sms.points.data(), sample.points.cdata(), Sel(flattened.points), ibegin, iend);
             CopyWithIndices(sms.normals.data(), sample.normals.cdata(), Sel(flattened.normals), ibegin, iend);
             CopyWithIndices(sms.colors.data(), sample.colors.cdata(), Sel(flattened.colors), ibegin, iend);
-            CopyWithIndices(sms.uvs.data(), sample.uvs.cdata(), Sel(flattened.uvs), ibegin, iend);
+            CopyWithIndices(sms.uvs.data(), sample.uv0.cdata(), Sel(flattened.uvs), ibegin, iend);
             CopyWithIndices(sms.tangents.data(), sample.tangents.cdata(), Sel(flattened.tangents), ibegin, iend);
             CopyWithIndices(sms.velocities.data(), sample.velocities.cdata(), Sel(flattened.velocities), ibegin, iend);
             if (!sample.weights4.empty()) {
@@ -420,8 +420,7 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
 
     dst.num_points = (uint)sample.points.size();
     dst.num_counts = (uint)sample.counts.size();
-    dst.num_indices = (uint)sample.indices.size();
-    dst.num_indices_triangulated = m_num_indices_triangulated;
+    dst.num_indices = m_num_indices_triangulated;
     dst.num_submeshes = (uint)m_num_current_submeshes;
     dst.center = sample.center;
     dst.extents = sample.extents;
@@ -441,8 +440,8 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
         if (dst.colors && !sample.colors.empty()) {
             memcpy(dst.colors, sample.colors.cdata(), sizeof(float4) * dst.num_points);
         }
-        if (dst.uvs && !sample.uvs.empty()) {
-            memcpy(dst.uvs, sample.uvs.cdata(), sizeof(float2) * dst.num_points);
+        if (dst.uv0 && !sample.uv0.empty()) {
+            memcpy(dst.uv0, sample.uv0.cdata(), sizeof(float2) * dst.num_points);
         }
         if (dst.tangents && !sample.tangents.empty()) {
             memcpy(dst.tangents, sample.tangents.cdata(), sizeof(float4) * dst.num_points);
@@ -453,11 +452,8 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
         if (dst.counts && !sample.counts.empty()) {
             memcpy(dst.counts, sample.counts.cdata(), sizeof(int) * dst.num_counts);
         }
-        if (dst.indices && !sample.indices.empty()) {
-            memcpy(dst.indices, sample.indices.cdata(), sizeof(int) * dst.num_indices);
-        }
-        if (dst.indices_triangulated && !sample.indices_triangulated.empty()) {
-            memcpy(dst.indices_triangulated, sample.indices_triangulated.cdata(), sizeof(int) * m_num_indices_triangulated);
+        if (dst.indices && !sample.indices_triangulated.empty()) {
+            memcpy(dst.indices, sample.indices_triangulated.cdata(), sizeof(int) * m_num_indices_triangulated);
         }
 
         if (dst.weights4 && !sample.weights4.empty() && sample.max_bone_weights == 4) {
@@ -514,11 +510,10 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
         dst.velocities = (float3*)sample.velocities.cdata();
         dst.normals = (float3*)sample.normals.cdata();
         dst.colors = (float4*)sample.colors.cdata();
-        dst.uvs = (float2*)sample.uvs.cdata();
+        dst.uv0 = (float2*)sample.uv0.cdata();
         dst.tangents = (float4*)sample.tangents.cdata();
         dst.counts = (int*)sample.counts.cdata();
-        dst.indices = (int*)sample.indices.cdata();
-        dst.indices_triangulated = (int*)sample.indices_triangulated.cdata();
+        dst.indices = (int*)sample.indices_triangulated.cdata();
 
         if (!sample.weights4.empty()) {
             dst.weights4 = (Weights4*)sample.weights4.cdata();
@@ -627,11 +622,11 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
         m_attr_colors->setImmediate(&sample.colors, t_);
     }
 
-    if (src.uvs) {
-        sample.uvs.assign((GfVec2f*)src.uvs, (GfVec2f*)src.uvs + src.num_points);
+    if (src.uv0) {
+        sample.uv0.assign((GfVec2f*)src.uv0, (GfVec2f*)src.uv0 + src.num_points);
 
         CreateAttributeIfNeeded(m_attr_uv0, usdiUVAttrName, AttributeType::Float2Array);
-        m_attr_uv0->setImmediate(&sample.uvs, t_);
+        m_attr_uv0->setImmediate(&sample.uv0, t_);
     }
 
 

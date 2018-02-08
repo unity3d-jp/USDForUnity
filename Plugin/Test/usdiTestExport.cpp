@@ -176,7 +176,7 @@ void TestExport(const char *filename)
             data.points = points;
             data.normals = normals;
             data.tangents = tangents;
-            data.uvs = uvs;
+            data.uv0 = uvs;
             data.indices = indices;
             data.num_points = std::extent<decltype(points)>::value;
             data.num_counts = std::extent<decltype(counts)>::value;
@@ -207,7 +207,7 @@ void TestExport(const char *filename)
 
         usdi::MeshData data;
         data.points = vertices;
-        data.uvs = uv;
+        data.uv0 = uv;
         data.counts = counts;
         data.indices = indices;
         data.num_points = std::extent<decltype(vertices)>::value;

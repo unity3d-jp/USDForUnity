@@ -36,7 +36,7 @@ struct MeshSample
     VtArray<GfVec3f> points;
     VtArray<GfVec3f> normals;
     VtArray<GfVec4f> colors;
-    VtArray<GfVec2f> uvs;
+    VtArray<GfVec2f> uv0, uv1;
     VtArray<GfVec4f> tangents;
     VtArray<GfVec3f> velocities;
     VtArray<int>     counts;

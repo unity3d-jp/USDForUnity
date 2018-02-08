@@ -61,37 +61,37 @@ namespace UTJ.USD
             base.UsdAsyncUpdate(time);
             if (m_updateFlags.bits == 0) { return; }
 
-            usdi.PointsData tmp = usdi.PointsData.default_value;
+            usdi.PointsData tmp = usdi.PointsData.defaultValue;
             usdi.usdiPointsReadSample(m_usdPoints, ref tmp, time, true);
 
             // allocate points data
-            if (m_pointsData.num_points == tmp.num_points)
+            if (m_pointsData.pointCount == tmp.pointCount)
             {
                 // no need to allocate
             }
             else
             {
-                m_pointsData.num_points = tmp.num_points;
+                m_pointsData.pointCount = tmp.pointCount;
 
-                m_positions.ResizeDiscard(m_pointsData.num_points);
+                m_positions.ResizeDiscard(m_pointsData.pointCount);
                 m_pointsData.points = m_positions;
 
                 if (m_summary.has_velocities)
                 {
-                    m_velocities.ResizeDiscard(m_pointsData.num_points);
+                    m_velocities.ResizeDiscard(m_pointsData.pointCount);
                     m_pointsData.velocities = m_velocities;
                 }
                 if (m_usdAttrRot)
                 {
-                    m_rotations.ResizeDiscard(m_pointsData.num_points);
+                    m_rotations.ResizeDiscard(m_pointsData.pointCount);
                     m_rotData.data = m_rotations;
-                    m_rotData.num_elements = tmp.num_points;
+                    m_rotData.num_elements = tmp.pointCount;
                 }
                 // todo: ids
             }
 
             // read points data
-            if (m_pointsData.num_points > 0)
+            if (m_pointsData.pointCount > 0)
             {
                 usdi.usdiPointsReadSample(m_usdPoints, ref m_pointsData, time, true);
                 if (m_usdAttrRot)

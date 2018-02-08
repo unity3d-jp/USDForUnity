@@ -218,21 +218,21 @@ namespace UTJ.USD
 
         public static void CaptureMesh(usdi.Mesh usd, ref usdi.MeshData data, MeshBuffer dst_buf)
         {
-            data = usdi.MeshData.default_value;
+            data = usdi.MeshData.defaultValue;
             data.points = dst_buf.vertices;
-            data.num_points = dst_buf.vertices.Count;
+            data.pointCount = dst_buf.vertices.Count;
             data.indices = dst_buf.indices;
-            data.num_indices = dst_buf.indices.Count;
+            data.indexCount = dst_buf.indices.Count;
             data.normals = dst_buf.normals;
             data.tangents = dst_buf.tangents;
-            data.uvs = dst_buf.uvs;
+            data.uv0 = dst_buf.uvs;
 
             if (dst_buf.weights.Count > 0 && dst_buf.bones != null)
             {
                 data.weights = dst_buf.weights;
                 data.bindposes = dst_buf.bindposes;
-                data.num_bones = dst_buf.bones.Length;
-                data.max_bone_weights = 4;
+                data.boneCount = dst_buf.bones.Length;
+                data.maxBoneWeights = 4;
                 usdi.usdiMeshAssignBones(usd, ref data, dst_buf.bones, dst_buf.bones.Length);
                 usdi.usdiMeshAssignRootBone(usd, ref data, dst_buf.rootBone);
             }
@@ -473,7 +473,7 @@ namespace UTJ.USD
         {
             ParticleSystem m_target;
             usdi.Attribute m_attr_rotatrions;
-            usdi.PointsData m_data = usdi.PointsData.default_value;
+            usdi.PointsData m_data = usdi.PointsData.defaultValue;
             usdi.AttributeData m_dataRot;
 
             PinnedList<ParticleSystem.Particle> m_buf_particles = new PinnedList<ParticleSystem.Particle>();
@@ -536,7 +536,7 @@ namespace UTJ.USD
                     }
                 }
 
-                m_data.num_points = count;
+                m_data.pointCount = count;
                 m_dataRot.num_elements = count;
             }
 

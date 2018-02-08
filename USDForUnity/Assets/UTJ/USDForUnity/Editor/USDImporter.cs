@@ -15,7 +15,7 @@ namespace UTJ.USD
         RetainUSD
     }
 
-    [ScriptedImporter(4, new[] {"usd", "usda", "usdc"})]
+    [ScriptedImporter(4, new[] {"usd", "usda", "usdc"}, 100)]
     public class USDImporter : ScriptedImporter
     {
         [SerializeField] public UsdImportMode m_importMode = UsdImportMode.RetainUSD;

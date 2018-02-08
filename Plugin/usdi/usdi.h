@@ -187,12 +187,32 @@ struct MeshSummary
     TopologyVariance    topology_variance = TopologyVariance::Constant;
     uint                num_bones = 0;
     uint                max_bone_weights = 0; // should be 0 or 4 or 8
+    bool                has_velocities = false;
     bool                has_normals = false;
     bool                has_colors = false;
     bool                has_uvs = false;
     bool                has_tangents = false;
-    bool                has_velocities = false;
 };
+
+struct MeshSampleSummary
+{
+    int split_count = 0;
+    int submesh_count = 0;
+    int vertex_count = 0;
+    int index_count = 0;
+    bool topology_changed = false;
+};
+
+struct MeshSplitSummary
+{
+    int submesh_count = 0;
+    int submesh_offset = 0;
+    int vertex_count = 0;
+    int vertex_offset = 0;
+    int index_count = 0;
+    int index_offset = 0;
+};
+
 
 template<int N>
 struct Weights
@@ -224,17 +244,15 @@ struct SubmeshData
 
 struct MeshData
 {
-    // these pointers can be null (in this case, just be ignored).
-    // otherwise, if you pass to usdiMeshSampleReadData(), pointers must point valid memory block to store data.
     float3  *points = nullptr;
-    float3  *normals = nullptr;
-    float4  *colors = nullptr;
-    float2  *uvs = nullptr;
-    float4  *tangents = nullptr;
     float3  *velocities = nullptr;
+    float3  *normals = nullptr;
+    float4  *tangents = nullptr;
+    float2  *uv0 = nullptr;
+    float2  *uv1 = nullptr;
+    float4  *colors = nullptr;
     int     *counts = nullptr;
     int     *indices = nullptr;
-    int     *indices_triangulated = nullptr;
 
     union {
         Weights4 *weights4 = nullptr;
@@ -247,7 +265,6 @@ struct MeshData
     uint    num_points = 0;
     uint    num_counts = 0;
     uint    num_indices = 0;
-    uint    num_indices_triangulated = 0;
     uint    num_bones = 0;
     uint    max_bone_weights = 0; // must be 0 or 4 or 8
 

@@ -85,7 +85,7 @@ namespace UTJ.USD
             else
             {
                 m_allocateMeshDataRequired = true;
-                if (m_meshSummary.num_bones > 0 && m_stream.importSettings.swapHandedness)
+                if (m_meshSummary.boneCount > 0 && m_stream.importSettings.swapHandedness)
                 {
                     Debug.LogWarning("Swap Handedness import option is enabled. This may cause broken skinning animation.");
                 }
@@ -99,7 +99,7 @@ namespace UTJ.USD
             int c = m_submeshes.Count;
             for (int i = 0; i < c; ++i) { m_submeshes[i].usdiOnUnload(); }
 
-            m_meshData = usdi.MeshData.default_value;
+            m_meshData = usdi.MeshData.defaultValue;
             m_submeshData = null;
             m_meshSummary = usdi.MeshSummary.default_value;
 
@@ -114,25 +114,25 @@ namespace UTJ.USD
         // async
         void usdiAllocateMeshData(double t)
         {
-            usdi.MeshData md = usdi.MeshData.default_value;
+            usdi.MeshData md = usdi.MeshData.defaultValue;
             usdi.usdiMeshReadSample(m_mesh, ref md, t, true);
 
             m_meshData = md;
-            if (m_meshData.num_submeshes == 0)
+            if (m_meshData.submeshCount == 0)
             {
                 m_submeshes[0].usdiAllocateMeshData(ref m_meshSummary, ref m_meshData);
             }
             else
             {
-                m_submeshData.ResizeDiscard(m_meshData.num_submeshes);
+                m_submeshData.ResizeDiscard(m_meshData.submeshCount);
                 m_meshData.submeshes = m_submeshData;
                 usdi.usdiMeshReadSample(m_mesh, ref m_meshData, t, true);
 
-                while (m_submeshes.Count < m_meshData.num_submeshes)
+                while (m_submeshes.Count < m_meshData.submeshCount)
                 {
                     usdiAddSubmesh();
                 }
-                for (int i = 0; i < m_meshData.num_submeshes; ++i)
+                for (int i = 0; i < m_meshData.submeshCount; ++i)
                 {
                     m_submeshes[i].usdiAllocateMeshData(ref m_meshSummary, m_submeshData);
                 }
@@ -160,7 +160,7 @@ namespace UTJ.USD
                 m_updateSkinningRequired = false;
 
                 usdi.usdiMeshReadSample(m_mesh, ref m_meshData, m_timeRead, true);
-                while (m_submeshes.Count < m_meshData.num_submeshes)
+                while (m_submeshes.Count < m_meshData.submeshCount)
                 {
                     usdiAddSubmesh();
                 }
@@ -170,14 +170,14 @@ namespace UTJ.USD
                 if (!m_allocateMeshDataRequired)
                 {
                     m_allocateMeshDataRequired =
-                        m_meshSummary.topology_variance == usdi.TopologyVariance.Heterogenous ||
+                        m_meshSummary.topologyVariance == usdi.TopologyVariance.Heterogenous ||
                         m_updateFlags.variantSetChanged;
                 }
                 if(!m_updateIndicesRequired)
                 {
                     m_updateIndicesRequired =
                         m_allocateMeshDataRequired ||
-                        m_meshSummary.topology_variance == usdi.TopologyVariance.Heterogenous ||
+                        m_meshSummary.topologyVariance == usdi.TopologyVariance.Heterogenous ||
                         m_updateFlags.importConfigChanged;
 
                 }
@@ -185,7 +185,7 @@ namespace UTJ.USD
                 {
                     m_updateVerticesRequired =
                         m_updateIndicesRequired ||
-                        m_meshSummary.topology_variance != usdi.TopologyVariance.Constant;
+                        m_meshSummary.topologyVariance != usdi.TopologyVariance.Constant;
                 }
                 if(!m_updateSkinningRequired)
                 {
@@ -208,7 +208,7 @@ namespace UTJ.USD
         // sync
         void usdiUploadMeshData(double t, bool topology, bool skinning)
         {
-            int num_submeshes = m_meshData.num_submeshes == 0 ? 1 : m_meshData.num_submeshes;
+            int num_submeshes = m_meshData.submeshCount == 0 ? 1 : m_meshData.submeshCount;
             for (int i = 0; i < num_submeshes; ++i)
             {
                 m_submeshes[i].usdiUploadMeshData(topology, skinning);
@@ -226,7 +226,7 @@ namespace UTJ.USD
 
             UsdSync();
 
-            int num_submeshes = m_meshData.num_submeshes == 0 ? 1 : m_meshData.num_submeshes;
+            int num_submeshes = m_meshData.submeshCount == 0 ? 1 : m_meshData.submeshCount;
 
             if(m_goAssigned)
             {
@@ -243,7 +243,7 @@ namespace UTJ.USD
                 }
             }
 
-            if (m_meshSummary.topology_variance == usdi.TopologyVariance.Heterogenous)
+            if (m_meshSummary.topologyVariance == usdi.TopologyVariance.Heterogenous)
             {
                 // number of active submeshes may change over time if topology is dynamic.
                 int i = 1;
@@ -259,7 +259,7 @@ namespace UTJ.USD
 
             if (m_updateVerticesRequired)
             {
-                if(m_meshData.num_submeshes == 0)
+                if(m_meshData.submeshCount == 0)
                 {
                     m_submeshes[0].usdiUpdateBounds(ref m_meshData);
                 }

@@ -49,8 +49,8 @@ namespace UTJ.USD
         void usdiSetupBones(UsdMesh parent, ref usdi.MeshData meshData)
         {
             {
-                var tmp = usdi.MeshData.default_value;
-                m_bindposes.ResizeDiscard(parent.meshData.num_bones);
+                var tmp = usdi.MeshData.defaultValue;
+                m_bindposes.ResizeDiscard(parent.meshData.boneCount);
                 tmp.bindposes = m_bindposes;
                 usdi.usdiMeshReadSample(parent.nativeMeshPtr, ref tmp, usdi.defaultTime, true);
             }
@@ -66,7 +66,7 @@ namespace UTJ.USD
             }
             else
             {
-                var rootBoneName = usdi.S(meshData.root_bone);
+                var rootBoneName = usdi.S(meshData.rootBone);
                 var boneNames = usdi.SA(meshData.bones);
 
                 if (parent.isInstance)
@@ -115,7 +115,7 @@ namespace UTJ.USD
                     m_bones[i] = schema.gameObject.GetComponent<Transform>();
                 }
 
-                if (meshData.root_bone != IntPtr.Zero)
+                if (meshData.rootBone != IntPtr.Zero)
                 {
                     var rootBone = parent.stream.UsdFindSchema(rootBoneName);
                     m_rootBone = rootBone.gameObject.GetComponent<Transform>();
@@ -193,7 +193,7 @@ namespace UTJ.USD
             var meshData = parent.meshData;
             bool assignDefaultMaterial = false;
 
-            if (meshSummary.num_bones > 0)
+            if (meshSummary.boneCount > 0)
             {
                 // setup SkinnedMeshRenderer
 
@@ -272,41 +272,41 @@ namespace UTJ.USD
         public void usdiAllocateMeshData(ref usdi.MeshSummary summary,  ref usdi.MeshData meshData)
         {
             {
-                m_points.ResizeDiscard(meshData.num_points);
+                m_points.ResizeDiscard(meshData.pointCount);
                 meshData.points = m_points;
             }
             {
-                m_normals.ResizeDiscard(meshData.num_points);
+                m_normals.ResizeDiscard(meshData.pointCount);
                 meshData.normals = m_normals;
             }
-            if(summary.has_colors)
+            if(summary.hasColors)
             {
-                m_colors.ResizeDiscard(meshData.num_points);
+                m_colors.ResizeDiscard(meshData.pointCount);
                 meshData.colors = m_colors;
             }
-            if (summary.has_tangents)
+            if (summary.hasTangents)
             {
-                m_tangents.ResizeDiscard(meshData.num_points);
+                m_tangents.ResizeDiscard(meshData.pointCount);
                 meshData.tangents = m_tangents;
             }
-            if (summary.has_uvs)
+            if (summary.hasUV0)
             {
-                m_uvs.ResizeDiscard(meshData.num_points);
-                meshData.uvs = m_uvs;
-                if (summary.has_tangents)
+                m_uvs.ResizeDiscard(meshData.pointCount);
+                meshData.uv0 = m_uvs;
+                if (summary.hasTangents)
                 {
-                    m_tangents.ResizeDiscard(meshData.num_points);
+                    m_tangents.ResizeDiscard(meshData.pointCount);
                     meshData.tangents = m_tangents;
                 }
             }
-            if (summary.num_bones > 0)
+            if (summary.boneCount > 0)
             {
-                m_weights.ResizeDiscard(meshData.num_points);
+                m_weights.ResizeDiscard(meshData.pointCount);
                 meshData.weights = m_weights;
             }
             {
-                m_indices.ResizeDiscard(meshData.num_indices_triangulated);
-                meshData.indices_triangulated = m_indices;
+                m_indices.ResizeDiscard(meshData.indexCount);
+                meshData.indices = m_indices;
             }
         }
         public void usdiAllocateMeshData(ref usdi.MeshSummary summary, PinnedList<usdi.SplitData> submeshData)
@@ -320,27 +320,27 @@ namespace UTJ.USD
                 m_normals.ResizeDiscard(data.num_points);
                 data.normals = m_normals;
             }
-            if (summary.has_colors)
+            if (summary.hasColors)
             {
                 m_colors.ResizeDiscard(data.num_points);
                 data.colors = m_colors;
             }
-            if (summary.has_tangents)
+            if (summary.hasTangents)
             {
                 m_tangents.ResizeDiscard(data.num_points);
                 data.tangents = m_tangents;
             }
-            if (summary.has_uvs)
+            if (summary.hasUV0)
             {
                 m_uvs.ResizeDiscard(data.num_points);
                 data.uvs = m_uvs;
-                if (summary.has_tangents)
+                if (summary.hasTangents)
                 {
                     m_tangents.ResizeDiscard(data.num_points);
                     data.tangents = m_tangents;
                 }
             }
-            if (summary.num_bones > 0)
+            if (summary.boneCount > 0)
             {
                 m_weights.ResizeDiscard(data.num_points);
                 data.weights = m_weights;
