@@ -79,9 +79,6 @@ public:
     using SampleCallback = std::function<void(const MeshData& data, Time t)>;
     int eachSample(const SampleCallback& cb);
 
-    // true if normals are generated (don't care about tangents)
-    bool                precomputeNormals(bool gen_tangents, bool overwrite = false);
-
     // ugly workaround for C# (C# strings are need to be copied on C++ side)
     void                assignRootBone(MeshData& dst, const char *v);
     void                assignBones(MeshData& dst, const char **v, int n);

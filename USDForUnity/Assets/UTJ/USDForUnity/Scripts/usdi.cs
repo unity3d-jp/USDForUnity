@@ -449,8 +449,6 @@ namespace UTJ.USD
         [DllImport ("usdi")] public static extern void          usdiNotifyForceUpdate(Context ctx);
         [DllImport ("usdi")] public static extern void          usdiUpdateAllSamples(Context ctx, double t);
         [DllImport ("usdi")] public static extern void          usdiRebuildSchemaTree(Context ctx);
-        public delegate void usdiPreComputeNormalsCallback(Mesh mesh, Bool done);
-        [DllImport ("usdi")] public static extern void          usdiPreComputeNormalsAll(Context ctx, Bool gen_tangents, Bool overwrite, usdiPreComputeNormalsCallback cb = null);
 
         // Prim interface
         [DllImport ("usdi")] public static extern int           usdiPrimGetID(Schema schema);
@@ -582,8 +580,8 @@ namespace UTJ.USD
         [DllImport ("usdi")] public static extern Bool      usdiAttrWriteSample(Attribute attr, ref AttributeData src, double t);
 
         [DllImport ("usdi")] public static extern IntPtr    usdiIndexStringArray(IntPtr v, int i);
-        [DllImport ("usdi")] public static extern void          usdiMeshAssignRootBone(Mesh mesh, ref MeshData dst, string v);
-        [DllImport ("usdi")] public static extern void          usdiMeshAssignBones(Mesh mesh, ref MeshData dst, string[] v, int n);
+        [DllImport ("usdi")] public static extern void      usdiMeshAssignRootBone(Mesh mesh, ref MeshData dst, string v);
+        [DllImport ("usdi")] public static extern void      usdiMeshAssignBones(Mesh mesh, ref MeshData dst, string[] v, int n);
 
 
         public class AssetRef
@@ -742,33 +740,6 @@ namespace UTJ.USD
             {
                 m_handles = new PinnedList<IntPtr>(handles);
                 m_handle = usdiTaskCreateComposite(m_handles, m_handles.Count);
-            }
-        }
-
-        public class ProgressReporter
-        {
-            IntPtr m_handle;
-
-            public ProgressReporter()
-            {
-            }
-            ~ProgressReporter()
-            {
-                Close();
-            }
-            public void Open()
-            {
-                Close();
-                m_handle = usdiProgressReporterCreate();
-            }
-            public void Close()
-            {
-                usdiProgressReporterDestroy(m_handle);
-                m_handle = IntPtr.Zero;
-            }
-            public void Write(string message)
-            {
-                usdiProgressReporterWrite(m_handle, message);
             }
         }
 

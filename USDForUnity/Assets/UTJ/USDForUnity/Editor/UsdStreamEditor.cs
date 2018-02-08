@@ -133,12 +133,6 @@ namespace UTJ.USD
             var t = target as UsdStream;
 
             EditorGUILayout.Space();
-            if (GUILayout.Button("Precompute Normals / Tangents"))
-            {
-                UsdPrecomputeNormalsWindow.Open(t);
-            }
-
-            EditorGUILayout.Space();
             if (GUILayout.Button("Rebuild Tree"))
             {
                 t.UsdReload();

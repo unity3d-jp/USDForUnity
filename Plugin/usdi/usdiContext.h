@@ -56,9 +56,6 @@ public:
     using TimeSampleCallback = std::function<void(Time t)>;
     int eachTimeSample(const TimeSampleCallback& cb);
 
-    using precomputeNormalsCallback = std::function<void(Mesh*, bool)>;
-    void                precomputeNormalsAll(bool gen_tangents, bool overwrite, const precomputeNormalsCallback& cb);
-
 private:
     void    addSchema(Schema *schema);
     void    applyImportConfig();

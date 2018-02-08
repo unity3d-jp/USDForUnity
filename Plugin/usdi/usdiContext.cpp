@@ -457,24 +457,4 @@ int Context::eachTimeSample(const TimeSampleCallback& cb)
     return 0;
 }
 
-static void precomputeNormalsAllImpl(Schema *schema, bool gen_tangents, bool overwrite, const Context::precomputeNormalsCallback& cb)
-{
-    if (!schema) { return; }
-
-    schema->eachChild([&](Schema *s) {
-        s->editVariants([&]() {
-            auto *mesh = dynamic_cast<Mesh*>(s);
-            if (mesh && mesh->isEditable()) {
-                bool done = mesh->precomputeNormals(gen_tangents, overwrite);
-                if (cb) { cb(mesh, done); }
-            }
-            precomputeNormalsAllImpl(s, gen_tangents, overwrite, cb);
-        });
-    });
-}
-void Context::precomputeNormalsAll(bool gen_tangents, bool overwrite, const precomputeNormalsCallback& cb)
-{
-    precomputeNormalsAllImpl(getRoot(), gen_tangents, overwrite, cb);
-}
-
 } // namespace usdi

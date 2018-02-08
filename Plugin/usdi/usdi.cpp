@@ -223,17 +223,6 @@ usdiAPI void usdiRebuildSchemaTree(usdi::Context *ctx)
     if (!ctx) return;
     ctx->rebuildSchemaTree();
 }
-usdiAPI void usdiPreComputeNormalsAll(usdi::Context *ctx, bool gen_tangents, bool overwrite, usdiPreComputeNormalsCallback cb)
-{
-    usdiTraceFunc();
-    if (!ctx) return;
-
-    usdi::Context::precomputeNormalsCallback callback;
-    if (cb) {
-        callback = [cb](usdi::Mesh *m, bool done) { cb(m, done); };
-    }
-    ctx->precomputeNormalsAll(gen_tangents, overwrite, callback);
-}
 
 usdiAPI int usdiEachTimeSample(usdi::Context * ctx, usdiTimeSampleCallback cb)
 {
@@ -667,13 +656,6 @@ usdiAPI int usdiMeshEachSample(usdi::Mesh *mesh, usdiMeshSampleCallback cb)
     usdiTraceFunc();
     if (!mesh || !cb) return 0;
     return mesh->eachSample([cb](const usdi::MeshData& data, usdi::Time t) { cb(&data, t); });
-}
-
-usdiAPI bool usdiMeshPreComputeNormals(usdi::Mesh *mesh, bool gen_tangents, bool overwrite)
-{
-    usdiTraceFunc();
-    if (!mesh) return false;
-    return mesh->precomputeNormals(gen_tangents, overwrite);
 }
 
 

@@ -337,8 +337,6 @@ usdiAPI usdi::Points*    usdiCreatePoints(usdi::Context *ctx, usdi::Schema *pare
 usdiAPI void             usdiNotifyForceUpdate(usdi::Context *ctx);
 usdiAPI void             usdiUpdateAllSamples(usdi::Context *ctx, usdi::Time t);
 usdiAPI void             usdiRebuildSchemaTree(usdi::Context *ctx);
-using usdiPreComputeNormalsCallback = void (usdiSTDCall*)(usdi::Mesh *mesh, bool done);
-usdiAPI void             usdiPreComputeNormalsAll(usdi::Context *ctx, bool gen_tangents, bool overwrite = false, usdiPreComputeNormalsCallback cb = nullptr);
 using usdiTimeSampleCallback = void (usdiSTDCall*)(usdi::Time t);
 usdiAPI int              usdiEachTimeSample(usdi::Context *ctx, usdiTimeSampleCallback cb);
 
@@ -426,7 +424,6 @@ usdiAPI bool             usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *ds
 usdiAPI bool             usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t = usdiDefaultTime());
 using usdiMeshSampleCallback = void (usdiSTDCall*)(const usdi::MeshData *data, usdi::Time t);
 usdiAPI int              usdiMeshEachSample(usdi::Mesh *mesh, usdiMeshSampleCallback cb);
-usdiAPI bool             usdiMeshPreComputeNormals(usdi::Mesh *mesh, bool gen_tangents, bool overwrite = false);
 
 // Points interface
 usdiAPI usdi::Points*    usdiAsPoints(usdi::Schema *schema); // dynamic cast to Points

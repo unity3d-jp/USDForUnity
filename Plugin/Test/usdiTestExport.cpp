@@ -218,7 +218,6 @@ void TestExport(const char *filename)
             usdi::Time t = i;
             usdiMeshWriteSample(mesh2, &data, t);
         }
-        usdiMeshPreComputeNormals(mesh2, true);
 
         AddAttribute(mesh2, "TestImageAsset", usdi::AttributeType::Asset, "USDAssets/test.exr");
         AddAttribute(mesh2, "TestFBXAsset", usdi::AttributeType::Asset, "USDAssets/test.fbx");

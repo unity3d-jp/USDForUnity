@@ -62,7 +62,6 @@ namespace UTJ.USD
         float m_epsilon_Scale = 0.0001f;
         float m_epsilon_Camera = 0.0001f;
 
-        usdi.ProgressReporter m_reporter;
         Transform m_root;
         AnimationClip m_animClip;
         AnimatorController m_controller;
@@ -112,13 +111,11 @@ namespace UTJ.USD
         #region impl
         public UsdAssetConverter(Transform root)
         {
-            m_reporter = new usdi.ProgressReporter();
             m_root = root;
         }
 
         public bool Convert()
         {
-            m_reporter.Open();
             m_animClip = new AnimationClip();
 
             int nchildren = m_root.childCount;
@@ -154,7 +151,6 @@ namespace UTJ.USD
                 //PrefabUtility.CreatePrefab("Assets/" + m_assetName + ".prefab", m_root.gameObject);
             }
 
-            m_reporter.Close();
             return true;
         }
 
@@ -196,7 +192,6 @@ namespace UTJ.USD
             var cmp = t.GetComponent<UsdIComponent>();
             if(cmp != null)
             {
-                m_reporter.Write("converting " + cmp.schema.primName + " ...\n");
                 var schema = cmp.schema;
                 m_rcpTimeScale = 1.0f / schema.stream.timeUnit.scale;
                 ConvertXform(schema as UsdXform, path);
@@ -316,8 +311,6 @@ namespace UTJ.USD
             int before = cv.length;
             AnimationCurveKeyReducer.DoReduction(cv.curve, cv.epsilon);
             int after = cv.length;
-            m_reporter.Write("  key reduction: " + cv.field + " " + before + " -> " + after + "\n");
-
         }
         #endregion
     }

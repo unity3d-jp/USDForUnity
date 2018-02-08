@@ -71,9 +71,6 @@ void TestExportHighMesh(const char *filename, int frame_count)
             data.colors = colors[i].data();
             usdiMeshWriteSample(mesh, &data, t);
         }
-
-        usdiMeshPreComputeNormals(mesh, false);
-        //usdiMeshPreComputeNormals(mesh, true);
     }
 
     {

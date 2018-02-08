@@ -3,7 +3,6 @@
 #include "usdiInternal.h"
 #include "usdiTask.h"
 #include "usdiUtils.h"
-#include "etc/Mono.h"
 
 namespace usdi {
 

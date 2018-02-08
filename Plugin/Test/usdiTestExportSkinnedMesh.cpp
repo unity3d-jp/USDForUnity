@@ -146,7 +146,6 @@ void TestExportSkinnedMesh(const char *filename, int cseg, int hseg)
             data.weights4 = weights.data();
             mesh = usdiCreateMesh(ctx, xf, "Cylinder");
             usdiMeshWriteSample(mesh, &data);
-            usdiMeshPreComputeNormals(mesh, false);
             {
                 Sphere(0);
                 Expand();
@@ -160,7 +159,6 @@ void TestExportSkinnedMesh(const char *filename, int cseg, int hseg)
                 data.weights4 = weights2.data();
                 mesh = usdiCreateMesh(ctx, mesh, "Sphere");
                 usdiMeshWriteSample(mesh, &data);
-                usdiMeshPreComputeNormals(mesh, false);
             }
         }
 

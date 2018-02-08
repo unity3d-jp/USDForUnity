@@ -10,16 +10,6 @@ namespace UTJ.USD
         public override void OnInspectorGUI()
         {
             base.OnInspectorGUI();
-
-            var t = target as UsdMeshComponent;
-            if(!t.schema.isInstance && !t.schema.isMaster && !t.schema.isInMaster)
-            {
-                EditorGUILayout.Space();
-                if (GUILayout.Button("Precompute Normals / Tangents"))
-                {
-                    UsdPrecomputeNormalsWindow.Open(t.schema as UsdMesh);
-                }
-            }
         }
     }
 }
