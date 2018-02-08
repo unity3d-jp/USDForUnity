@@ -5,7 +5,6 @@
 #include "usdiPoints.h"
 #include "usdiUtils.h"
 #include "usdiContext.h"
-#include "usdiContext.i"
 #include "usdiAttribute.h"
 
 namespace usdi {

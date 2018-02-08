@@ -15,7 +15,7 @@ class "Imageable" (
     primitive and can override shader inputs.'''
 )
 {
-    rel proxyPrim = None (
+    rel proxyPrim (
         doc = '''The proxyPrim relationship allows us to link a
         prim whose purpose is "render" to its (single target)
         purpose="proxy" prim.  This is entirely optional, but can be
@@ -90,24 +90,10 @@ class "Xformable" (
     doc = """Base class for all transformable prims, which allows arbitrary
     sequences of component affine transformations to be encoded.
 
-    \\anchor usdGeom_linAlgBasics
-    <b>A Note about UsdGeom Linear Algebra</b>
+    \\note 
+    You may find it useful to review while reading
+    this class description.
     
-    To ensure reliable interchange, we stipulate the following foundational
-    mathematical assumptions:
-    - Matrices are laid out and indexed in row-major order, such that, given
-    a \\c GfMatrix4d datum mat, mat[3][1] denotes the second column
-    of the fourth row.
-    - GfVec datatypes are row vectors that <b>pre-multiply</b> matrices to 
-    effect transformations, which implies, for example, that it is the fourth 
-    row of a GfMatrix4d that specifies the translation of the transformation.
-    - GfQuatf and GfQuatd quaternion objects are laid out with the first 
-    element as the imaginary 3-vector, followed by the real component.
-    - All rotation angles are expressed in degrees, not radians.
-    - Vector cross-products and rotations intrinsically follow the
-    <A HREF=\"https://en.wikipedia.org/wiki/Right-hand_rule\">right hand rule.</A>
-
-
     <b>Supported Component Transformation Operations</b>
     
     UsdGeomXformable currently supports arbitrary sequences of the following
@@ -157,10 +143,10 @@ class "Xformable" (
     
     \\sa \"Using the Authoring API\"
     
-    <b>Data Encoding</b>
+    <b>Data Encoding and Op Ordering</b>
     
     Because there is no \"fixed schema\" of operations, all of the attributes
-    that encode transform operations are custom, and are scoped in 
+    that encode transform operations are dynamic, and are scoped in 
     the namespace \"xformOp\". The second component of an attribute's name provides
     the type of operation, as listed above.  An \"xformOp\" attribute can 
     have additional namespace components derived from the opSuffix argument 
@@ -170,41 +156,68 @@ class "Xformable" (
     \"xformOp:translate:maya:pivot\", \"translate\" is the type of operation and
     \"maya:pivot\" is the suffix.
     
-    For example, the following ordered list of attribute declarations in usda
+    The following ordered list of attribute declarations in usda
     define a basic Scale-Rotate-Translate with XYZ Euler angles, wherein the
-    translation is double-precision, and the remainder of the ops are single.
+    translation is double-precision, and the remainder of the ops are single,
+    in which we will:
+
+    <ol>
+    <li> Scale by 2.0 in each dimension
+    <li> Rotate about the X, Y, and Z axes by 30, 60, and 90 degrees, respectively
+    <li> Translate by 100 units in the Y direction
+    </ol>
+
     \\code
-    double3 xformOp:translate
-    float3 xformOp:rotateXYZ
-    float3 xformOp:scale
+    float3 xformOp:rotateXYZ = (30, 60, 90)
+    float3 xformOp:scale = (2, 2, 2)
+    double3 xformOp:translate = (0, 100, 0)
+    uniform token[] xformOpOrder = [ \"xformOp:translate\", \"xformOp:rotateXYZ\", \"xformOp:scale\" ]
     \\endcode
+
+    The attributes appear in the dictionary order in which USD, by default,
+    sorts them.  To ensure the ops are recovered and evaluated in the correct
+    order, the schema introduces the **xformOpOrder** attribute, which
+    contains the names of the op attributes, in the precise sequence in which
+    they should be pushed onto a transform stack. **Note** that the order is
+    opposite to what you might expect, given the matrix algebra described in
+     This also dictates order of op creation,
+    since each call to AddXformOp() adds a new op to the end of the
+    \\b xformOpOrder array, as a new \"most-local\" operation.  See 
+    \"Example 2 below\" for C++ code that could
+    have produced this USD.
     
     If it were important for the prim's rotations to be independently 
     overridable, we could equivalently (at some performance cost) encode
     the transformation also like so:
     \\code
-    double3 xformOp:translate
-    float xformOp:rotateZ
-    float xformOp:rotateY
-    float xformOp:rotateX
-    float3 xformOp:scale
+    float xformOp:rotateX = 30
+    float xformOp:rotateY = 60
+    float xformOp:rotateZ = 90
+    float3 xformOp:scale = (2, 2, 2)
+    double3 xformOp:translate = (0, 100, 0)
+    uniform token[] xformOpOrder = [ \"xformOp:translate\", \"xformOp:rotateZ\", \"xformOp:rotateY\", \"xformOp:rotateX\", \"xformOp:scale\" ]
     \\endcode
     
+    Again, note that although we are encoding an XYZ rotation, the three
+    rotations appear in the **xformOpOrder** in the opposite order, with Z,
+    followed, by Y, followed by X.
+
     Were we to add a Maya-style scalePivot to the above example, it might 
     look like the following:
     \\code
-    double3 xformOp:translate
-    float xformOp:rotateXYZ
+    float3 xformOp:rotateXYZ = (30, 60, 90)
+    float3 xformOp:scale = (2, 2, 2)
+    double3 xformOp:translate = (0, 100, 0)
     double3 xformOp:translate:scalePivot
-    float3 xformOp:scale
+    uniform token[] xformOpOrder = [ \"xformOp:translate\", \"xformOp:rotateXYZ\", \"xformOp:translate:scalePivot\", \"xformOp:scale\" ]
     \\endcode
 
-    <b>Paired \"Inverted\" Ops and Op Ordering</b>
+    <b>Paired \"Inverted\" Ops</b>
 
     We have been claiming that the ordered list of ops serves as a set
     of instructions to a transform stack, but you may have noticed in the last
     example that there is a missing operation - the pivot for the scale op
-    needs to be applied in its inverse-form as a final op!  In the 
+    needs to be applied in its inverse-form as a final (most local) op!  In the 
     AbcGeom::Xform schema, we would have encoded an actual \"final\" translation
     op whose value was authored by the exporter as the negation of the pivot's
     value.  However, doing so would be brittle in USD, given that each op can
@@ -212,18 +225,13 @@ class "Xformable" (
     maintained as the negation of the other in order for successful
     re-importation of the schema cannot be expressed in USD.
     
-    Our solution leverages the last component of the encoding: we already
-    require a statement of the op ordering (since they are attributes, they
-    will, in general be retrieved in dictionary order using the core API's).
-    We express this as a uniform builtin VtTokenArray attribute
-    xformOpOrder, whose elements contain the full attribute names, 
-    in order, of the UsdGeomXformable transform operations.  It also may
-    contain one of two special tokens that address the paired op and
-    \"stack resetting\" behavior.
+    Our solution leverages the **xformOpOrder** member of the schema, which,
+    in addition to ordering the ops, may also contain one of two special
+    tokens that address the paired op and \"stack resetting\" behavior.
 
     The \"paired op\" behavior is encoded as an \"!invert!\" prefix in 
-    xformOpOrder, as the result of an AddXformOp(isInverseOp=True) call.  
-    The xformOpOrder for the last example would look like:
+    \\b xformOpOrder, as the result of an AddXformOp(isInverseOp=True) call.  
+    The \\b xformOpOrder for the last example would look like:
     \\code
     uniform token[] xformOpOrder = [ \"xformOp:translate\", \"xformOp:rotateXYZ\", \"xformOp:translate:scalePivot\", \"xformOp:scale\", \"!invert!xformOp:translate:scalePivot\" ]
     \\endcode
@@ -258,20 +266,23 @@ class "Xformable" (
     \\anchor usdGeom_xformableExamples
     <b>Using the C++ API</b>
     
-    #1. Writing out a simple transform matrix encoding
+    #1. Creating a simple transform matrix encoding
     \\snippet examples.cpp CreateMatrixWithDefault
     
-    #2. Writing out an SRT with pivot using UsdGeomXformCommonAPI
+    #2. Creating the simple SRT from the example above
+    \\snippet examples.cpp CreateExampleSRT
+    
+    #3. Creating a parameterized SRT with pivot using UsdGeomXformCommonAPI
     \\snippet examples.cpp CreateSRTWithDefaults
     
-    #3. Writing out a rotate-only pivot transform with animated
+    #4. Creating a rotate-only pivot transform with animated
     rotation and translation
     \\snippet examples.cpp CreateAnimatedTransform
     
 """
 )
 {
-    rel proxyPrim = None (
+    rel proxyPrim (
         doc = '''The proxyPrim relationship allows us to link a
         prim whose purpose is "render" to its (single target)
         purpose="proxy" prim.  This is entirely optional, but can be
@@ -360,7 +371,7 @@ class Scope "Scope" (
     transformability perspective."""
 )
 {
-    rel proxyPrim = None (
+    rel proxyPrim (
         doc = '''The proxyPrim relationship allows us to link a
         prim whose purpose is "render" to its (single target)
         purpose="proxy" prim.  This is entirely optional, but can be
@@ -435,7 +446,7 @@ class Xform "Xform" (
     doc = "Concrete prim schema for a transform, which implements Xformable "
 )
 {
-    rel proxyPrim = None (
+    rel proxyPrim (
         doc = '''The proxyPrim relationship allows us to link a
         prim whose purpose is "render" to its (single target)
         purpose="proxy" prim.  This is entirely optional, but can be
@@ -559,7 +570,7 @@ class "Boundable" (
         the extent of all children, as they will be pruned from BBox computation
         during traversal."""
     )
-    rel proxyPrim = None (
+    rel proxyPrim (
         doc = '''The proxyPrim relationship allows us to link a
         prim whose purpose is "render" to its (single target)
         purpose="proxy" prim.  This is entirely optional, but can be
@@ -683,7 +694,11 @@ class "Gprim" (
     )
     uniform token orientation = "rightHanded" (
         allowedTokens = ["rightHanded", "leftHanded"]
-        doc = "See: http://renderman.pixar.com/resources/current/rps/attributes.html#orientation-and-sides"
+        doc = """Orientation specifies whether the gprim's surface normal 
+        should be computed using the right hand rule, or the left hand rule.
+        Please see for a deeper explanation and
+        generalization of orientation to composed scenes with transformation
+        hierarchies."""
     )
     color3f[] primvars:displayColor (
         doc = '''It is useful to have an "official" colorSet that can be used
@@ -698,7 +713,7 @@ class "Gprim" (
         each can be indepedently overridden, and because shaders rarely consume
         rgba parameters."""
     )
-    rel proxyPrim = None (
+    rel proxyPrim (
         doc = '''The proxyPrim relationship allows us to link a
         prim whose purpose is "render" to its (single target)
         purpose="proxy" prim.  This is entirely optional, but can be
@@ -812,7 +827,11 @@ class Cube "Cube" (
     )
     uniform token orientation = "rightHanded" (
         allowedTokens = ["rightHanded", "leftHanded"]
-        doc = "See: http://renderman.pixar.com/resources/current/rps/attributes.html#orientation-and-sides"
+        doc = """Orientation specifies whether the gprim's surface normal 
+        should be computed using the right hand rule, or the left hand rule.
+        Please see for a deeper explanation and
+        generalization of orientation to composed scenes with transformation
+        hierarchies."""
     )
     color3f[] primvars:displayColor (
         doc = '''It is useful to have an "official" colorSet that can be used
@@ -827,7 +846,7 @@ class Cube "Cube" (
         each can be indepedently overridden, and because shaders rarely consume
         rgba parameters."""
     )
-    rel proxyPrim = None (
+    rel proxyPrim (
         doc = '''The proxyPrim relationship allows us to link a
         prim whose purpose is "render" to its (single target)
         purpose="proxy" prim.  This is entirely optional, but can be
@@ -947,7 +966,11 @@ class Sphere "Sphere" (
     )
     uniform token orientation = "rightHanded" (
         allowedTokens = ["rightHanded", "leftHanded"]
-        doc = "See: http://renderman.pixar.com/resources/current/rps/attributes.html#orientation-and-sides"
+        doc = """Orientation specifies whether the gprim's surface normal 
+        should be computed using the right hand rule, or the left hand rule.
+        Please see for a deeper explanation and
+        generalization of orientation to composed scenes with transformation
+        hierarchies."""
     )
     color3f[] primvars:displayColor (
         doc = '''It is useful to have an "official" colorSet that can be used
@@ -962,7 +985,7 @@ class Sphere "Sphere" (
         each can be indepedently overridden, and because shaders rarely consume
         rgba parameters."""
     )
-    rel proxyPrim = None (
+    rel proxyPrim (
         doc = '''The proxyPrim relationship allows us to link a
         prim whose purpose is "render" to its (single target)
         purpose="proxy" prim.  This is entirely optional, but can be
@@ -1093,7 +1116,11 @@ class Cylinder "Cylinder" (
     )
     uniform token orientation = "rightHanded" (
         allowedTokens = ["rightHanded", "leftHanded"]
-        doc = "See: http://renderman.pixar.com/resources/current/rps/attributes.html#orientation-and-sides"
+        doc = """Orientation specifies whether the gprim's surface normal 
+        should be computed using the right hand rule, or the left hand rule.
+        Please see for a deeper explanation and
+        generalization of orientation to composed scenes with transformation
+        hierarchies."""
     )
     color3f[] primvars:displayColor (
         doc = '''It is useful to have an "official" colorSet that can be used
@@ -1108,7 +1135,7 @@ class Cylinder "Cylinder" (
         each can be indepedently overridden, and because shaders rarely consume
         rgba parameters."""
     )
-    rel proxyPrim = None (
+    rel proxyPrim (
         doc = '''The proxyPrim relationship allows us to link a
         prim whose purpose is "render" to its (single target)
         purpose="proxy" prim.  This is entirely optional, but can be
@@ -1238,7 +1265,11 @@ class Capsule "Capsule" (
     )
     uniform token orientation = "rightHanded" (
         allowedTokens = ["rightHanded", "leftHanded"]
-        doc = "See: http://renderman.pixar.com/resources/current/rps/attributes.html#orientation-and-sides"
+        doc = """Orientation specifies whether the gprim's surface normal 
+        should be computed using the right hand rule, or the left hand rule.
+        Please see for a deeper explanation and
+        generalization of orientation to composed scenes with transformation
+        hierarchies."""
     )
     color3f[] primvars:displayColor (
         doc = '''It is useful to have an "official" colorSet that can be used
@@ -1253,7 +1284,7 @@ class Capsule "Capsule" (
         each can be indepedently overridden, and because shaders rarely consume
         rgba parameters."""
     )
-    rel proxyPrim = None (
+    rel proxyPrim (
         doc = '''The proxyPrim relationship allows us to link a
         prim whose purpose is "render" to its (single target)
         purpose="proxy" prim.  This is entirely optional, but can be
@@ -1385,7 +1416,11 @@ class Cone "Cone" (
     )
     uniform token orientation = "rightHanded" (
         allowedTokens = ["rightHanded", "leftHanded"]
-        doc = "See: http://renderman.pixar.com/resources/current/rps/attributes.html#orientation-and-sides"
+        doc = """Orientation specifies whether the gprim's surface normal 
+        should be computed using the right hand rule, or the left hand rule.
+        Please see for a deeper explanation and
+        generalization of orientation to composed scenes with transformation
+        hierarchies."""
     )
     color3f[] primvars:displayColor (
         doc = '''It is useful to have an "official" colorSet that can be used
@@ -1400,7 +1435,7 @@ class Cone "Cone" (
         each can be indepedently overridden, and because shaders rarely consume
         rgba parameters."""
     )
-    rel proxyPrim = None (
+    rel proxyPrim (
         doc = '''The proxyPrim relationship allows us to link a
         prim whose purpose is "render" to its (single target)
         purpose="proxy" prim.  This is entirely optional, but can be
@@ -1536,7 +1571,11 @@ class "PointBased" (
     )
     uniform token orientation = "rightHanded" (
         allowedTokens = ["rightHanded", "leftHanded"]
-        doc = "See: http://renderman.pixar.com/resources/current/rps/attributes.html#orientation-and-sides"
+        doc = """Orientation specifies whether the gprim's surface normal 
+        should be computed using the right hand rule, or the left hand rule.
+        Please see for a deeper explanation and
+        generalization of orientation to composed scenes with transformation
+        hierarchies."""
     )
     point3f[] points (
         doc = """The primary geometry attribute for all PointBased
@@ -1555,7 +1594,7 @@ class "PointBased" (
         each can be indepedently overridden, and because shaders rarely consume
         rgba parameters."""
     )
-    rel proxyPrim = None (
+    rel proxyPrim (
         doc = '''The proxyPrim relationship allows us to link a
         prim whose purpose is "render" to its (single target)
         purpose="proxy" prim.  This is entirely optional, but can be
@@ -1617,12 +1656,17 @@ class "PointBased" (
     )
     vector3f[] velocities (
         doc = """If provided, 'velocities' should be used by renderers to 
-        compute motion blur for a given 'points' sample, rather than 
-        interpolating to a neighboring 'points' sample.  This is the only
-        reasonable means of specifying motion blur for topologically
+
+        compute positions between samples for the 'points' attribute, rather
+        than interpolating between neighboring 'points' samples.  This is the
+        only reasonable means of computing motion blur for topologically
         varying PointBased primitives.  It follows that the length of each
         'velocities' sample must match the length of the corresponding
-        'points' sample."""
+        'points' sample.  Velocity is measured in position units per second,
+        as per most simulation software. To convert to position units per
+        UsdTimeCode, divide by UsdStage::GetTimeCodesPerSecond().
+        
+        See also ."""
     )
     token visibility = "inherited" (
         allowedTokens = ["inherited", "invisible"]
@@ -1775,7 +1819,11 @@ class Mesh "Mesh" (
     )
     uniform token orientation = "rightHanded" (
         allowedTokens = ["rightHanded", "leftHanded"]
-        doc = "See: http://renderman.pixar.com/resources/current/rps/attributes.html#orientation-and-sides"
+        doc = """Orientation specifies whether the gprim's surface normal 
+        should be computed using the right hand rule, or the left hand rule.
+        Please see for a deeper explanation and
+        generalization of orientation to composed scenes with transformation
+        hierarchies."""
     )
     point3f[] points (
         doc = """The primary geometry attribute for all PointBased
@@ -1794,7 +1842,7 @@ class Mesh "Mesh" (
         each can be indepedently overridden, and because shaders rarely consume
         rgba parameters."""
     )
-    rel proxyPrim = None (
+    rel proxyPrim (
         doc = '''The proxyPrim relationship allows us to link a
         prim whose purpose is "render" to its (single target)
         purpose="proxy" prim.  This is entirely optional, but can be
@@ -1866,14 +1914,27 @@ class Mesh "Mesh" (
         lighterweight and faster to render, depending on renderer and render
         mode.)'''
     )
+    token triangleSubdivisionRule = "catmullClark" (
+        allowedTokens = ["catmullClark", "smooth"]
+        doc = '''Specifies what weights are used during triangle subdivision for
+        the Catmull-Clark scheme. Valid values are "catmullClark" (the default) 
+        and "smooth".
+
+        See http://graphics.pixar.com/opensubdiv/docs/subdivision_surfaces.html#triangle-subdivision-rule'''
+    )
     vector3f[] velocities (
         doc = """If provided, 'velocities' should be used by renderers to 
-        compute motion blur for a given 'points' sample, rather than 
-        interpolating to a neighboring 'points' sample.  This is the only
-        reasonable means of specifying motion blur for topologically
+
+        compute positions between samples for the 'points' attribute, rather
+        than interpolating between neighboring 'points' samples.  This is the
+        only reasonable means of computing motion blur for topologically
         varying PointBased primitives.  It follows that the length of each
         'velocities' sample must match the length of the corresponding
-        'points' sample."""
+        'points' sample.  Velocity is measured in position units per second,
+        as per most simulation software. To convert to position units per
+        UsdTimeCode, divide by UsdStage::GetTimeCodesPerSecond().
+        
+        See also ."""
     )
     token visibility = "inherited" (
         allowedTokens = ["inherited", "invisible"]
@@ -1894,6 +1955,65 @@ class Mesh "Mesh" (
         It is managed by the AddXformOp(), SetResetXformStack(), and
         SetXformOpOrder(), and consulted by GetOrderedXformOps() and
         GetLocalTransformation()."""
+    )
+}
+
+class GeomSubset "GeomSubset" (
+    doc = """Encodes a subset of a piece of geometry (i.e. a UsdGeomImageable) 
+    as a set of indices. Currently only supports encoding of face-subsets, but 
+    could be extended in the future to support subsets representing edges, 
+    segments, points etc.
+
+    To apply to a geometric prim, a GeomSubset prim must be defined as a 
+    child of it in namespace. This restriction makes it easy and efficient 
+    to discover subsets of a prim. We might want to relax this restriction if 
+    it's common to have multiple <b>families</b> of subsets on a gprim and if 
+    it's useful to be able to organize subsets belonging to a </b>family</b> 
+    under a common scope. See 'familyName' attribute for more info on defining 
+    a family of subsets.
+
+    Note that a GeomSubset isn't an imageable (i.e. doesn't derive from
+    UsdGeomImageable). So, you can't author <b>visibility</b> for it or 
+    override its <b>purpose</b>.
+
+    Materials are bound to GeomSubsets just as they are for regular 
+    geometry using API available in UsdShade (UsdShadeMaterial::Bind).
+"""
+)
+{
+    uniform token elementType = "face" (
+        allowedTokens = ["face"]
+        doc = '''The type of element that the indices target. Currently only 
+        allows "face" and defaults to it.'''
+    )
+    uniform token familyName = "" (
+        doc = '''The name of the family of subsets that this subset belongs to. 
+        This is optional and is primarily useful when there are multiple 
+        families of subsets under a geometric prim. In some cases, this could 
+        also be used for achieving proper roundtripping of subset data between 
+        DCC apps.
+        When multiple subsets belonging to a prim have the same familyName, they 
+        are said to belong to the family. A <i>familyType</i> value can be 
+        encoded on the owner of a family of subsets as a token using the static 
+        method UsdGeomSubset::SetFamilyType(). "familyType" can have one of the 
+        following values:
+        <ul><li><b>UsdGeomTokens->partition</b>: implies that every element of 
+        the whole geometry appears exactly once in only one of the subsets
+        belonging to the family.</li>
+        <li><b>UsdGeomTokens->nonOverlapping</b>: an element that appears in one 
+        subset may not appear in any other subset belonging to the family.</li>
+        <li><b>UsdGeomTokens->unrestricted</b>: implies that there are no
+        restrictions w.r.t. the membership of elements in the subsets. They 
+        could be overlapping and the union of all subsets in the family may 
+        not represent the whole.</li>
+        </ul>
+        \\note The validity of subset data is not enforced by the authoring 
+        APIs, however they can be checked using UsdGeomSubset::ValidateFamily().
+        '''
+    )
+    int[] indices = [] (
+        doc = """The set of indices included in this subset. The indices need not 
+        be sorted, but the same index should not appear more than once."""
     )
 }
 
@@ -1991,7 +2111,11 @@ class NurbsPatch "NurbsPatch" (
     )
     uniform token orientation = "rightHanded" (
         allowedTokens = ["rightHanded", "leftHanded"]
-        doc = "See: http://renderman.pixar.com/resources/current/rps/attributes.html#orientation-and-sides"
+        doc = """Orientation specifies whether the gprim's surface normal 
+        should be computed using the right hand rule, or the left hand rule.
+        Please see for a deeper explanation and
+        generalization of orientation to composed scenes with transformation
+        hierarchies."""
     )
     point3f[] points (
         doc = """The primary geometry attribute for all PointBased
@@ -2018,7 +2142,7 @@ class NurbsPatch "NurbsPatch" (
         each can be indepedently overridden, and because shaders rarely consume
         rgba parameters."""
     )
-    rel proxyPrim = None (
+    rel proxyPrim (
         doc = '''The proxyPrim relationship allows us to link a
         prim whose purpose is "render" to its (single target)
         purpose="proxy" prim.  This is entirely optional, but can be
@@ -2136,12 +2260,17 @@ class NurbsPatch "NurbsPatch" (
     )
     vector3f[] velocities (
         doc = """If provided, 'velocities' should be used by renderers to 
-        compute motion blur for a given 'points' sample, rather than 
-        interpolating to a neighboring 'points' sample.  This is the only
-        reasonable means of specifying motion blur for topologically
+
+        compute positions between samples for the 'points' attribute, rather
+        than interpolating between neighboring 'points' samples.  This is the
+        only reasonable means of computing motion blur for topologically
         varying PointBased primitives.  It follows that the length of each
         'velocities' sample must match the length of the corresponding
-        'points' sample."""
+        'points' sample.  Velocity is measured in position units per second,
+        as per most simulation software. To convert to position units per
+        UsdTimeCode, divide by UsdStage::GetTimeCodesPerSecond().
+        
+        See also ."""
     )
     uniform token vForm = "open" (
         allowedTokens = ["open", "closed", "periodic"]
@@ -2250,7 +2379,11 @@ class "Curves" (
     )
     uniform token orientation = "rightHanded" (
         allowedTokens = ["rightHanded", "leftHanded"]
-        doc = "See: http://renderman.pixar.com/resources/current/rps/attributes.html#orientation-and-sides"
+        doc = """Orientation specifies whether the gprim's surface normal 
+        should be computed using the right hand rule, or the left hand rule.
+        Please see for a deeper explanation and
+        generalization of orientation to composed scenes with transformation
+        hierarchies."""
     )
     point3f[] points (
         doc = """The primary geometry attribute for all PointBased
@@ -2269,7 +2402,7 @@ class "Curves" (
         each can be indepedently overridden, and because shaders rarely consume
         rgba parameters."""
     )
-    rel proxyPrim = None (
+    rel proxyPrim (
         doc = '''The proxyPrim relationship allows us to link a
         prim whose purpose is "render" to its (single target)
         purpose="proxy" prim.  This is entirely optional, but can be
@@ -2331,12 +2464,17 @@ class "Curves" (
     )
     vector3f[] velocities (
         doc = """If provided, 'velocities' should be used by renderers to 
-        compute motion blur for a given 'points' sample, rather than 
-        interpolating to a neighboring 'points' sample.  This is the only
-        reasonable means of specifying motion blur for topologically
+
+        compute positions between samples for the 'points' attribute, rather
+        than interpolating between neighboring 'points' samples.  This is the
+        only reasonable means of computing motion blur for topologically
         varying PointBased primitives.  It follows that the length of each
         'velocities' sample must match the length of the corresponding
-        'points' sample."""
+        'points' sample.  Velocity is measured in position units per second,
+        as per most simulation software. To convert to position units per
+        UsdTimeCode, divide by UsdStage::GetTimeCodesPerSecond().
+        
+        See also ."""
     )
     token visibility = "inherited" (
         allowedTokens = ["inherited", "invisible"]
@@ -2532,7 +2670,11 @@ class BasisCurves "BasisCurves" (
     )
     uniform token orientation = "rightHanded" (
         allowedTokens = ["rightHanded", "leftHanded"]
-        doc = "See: http://renderman.pixar.com/resources/current/rps/attributes.html#orientation-and-sides"
+        doc = """Orientation specifies whether the gprim's surface normal 
+        should be computed using the right hand rule, or the left hand rule.
+        Please see for a deeper explanation and
+        generalization of orientation to composed scenes with transformation
+        hierarchies."""
     )
     point3f[] points (
         doc = """The primary geometry attribute for all PointBased
@@ -2551,7 +2693,7 @@ class BasisCurves "BasisCurves" (
         each can be indepedently overridden, and because shaders rarely consume
         rgba parameters."""
     )
-    rel proxyPrim = None (
+    rel proxyPrim (
         doc = '''The proxyPrim relationship allows us to link a
         prim whose purpose is "render" to its (single target)
         purpose="proxy" prim.  This is entirely optional, but can be
@@ -2618,12 +2760,17 @@ class BasisCurves "BasisCurves" (
     )
     vector3f[] velocities (
         doc = """If provided, 'velocities' should be used by renderers to 
-        compute motion blur for a given 'points' sample, rather than 
-        interpolating to a neighboring 'points' sample.  This is the only
-        reasonable means of specifying motion blur for topologically
+
+        compute positions between samples for the 'points' attribute, rather
+        than interpolating between neighboring 'points' samples.  This is the
+        only reasonable means of computing motion blur for topologically
         varying PointBased primitives.  It follows that the length of each
         'velocities' sample must match the length of the corresponding
-        'points' sample."""
+        'points' sample.  Velocity is measured in position units per second,
+        as per most simulation software. To convert to position units per
+        UsdTimeCode, divide by UsdStage::GetTimeCodesPerSecond().
+        
+        See also ."""
     )
     token visibility = "inherited" (
         allowedTokens = ["inherited", "invisible"]
@@ -2665,7 +2812,7 @@ class NurbsCurves "NurbsCurves" (
     doc = """This schema is analagous to NURBS Curves in packages like Maya
     and Houdini, often used for interchange of rigging and modeling curves.  
     Unlike Maya, this curve spec supports batching of multiple curves into a 
-    single prim and widths in the schema.  Additionally, we require 
+    single prim, widths, and normals in the schema.  Additionally, we require 
     'numSegments + 2 * degree + 1' knots (2 more than maya does).  This is to
     be more consistent with RenderMan's NURBS patch specification.  
     
@@ -2678,7 +2825,11 @@ class NurbsCurves "NurbsCurves" (
     - knot[-1] = knot[-2];
     
     In spite of these slight differences in the spec, curves generated in Maya
-    should be preserved when roundtripping."""
+    should be preserved when roundtripping.
+    
+    'order' and 'range', when representing a batched NurbsCurve should be
+    authored one value per curve.  'knots' should be the concatentation of
+    all batched curves."""
 )
 {
     int[] curveVertexCounts (
@@ -2720,7 +2871,10 @@ class NurbsCurves "NurbsCurves" (
         during traversal."""
     )
     double[] knots (
-        doc = "Knot vectors are batched together and define how to interpolate curve segments."
+        doc = """Knot vector providing curve parameterization.
+        The length of the slice of the array for the ith curve 
+        must be ( curveVertexCount[i] + order[i] ), and its
+        entries must take on monotonically increasing values."""
     )
     normal3f[] normals (
         doc = """Provide orientation for individual points, which, depending on
@@ -2732,12 +2886,18 @@ class NurbsCurves "NurbsCurves" (
         its 'interpolation'.  See \\ref SetNormalsInterpolation()"""
     )
     int[] order = [] (
-        doc = """Order is degree + 1.  It must be less than or equal to the 
-        number of cvsPerCurve"""
+        doc = """Order of the curve.  Order must be positive and is
+        equal to the degree of the polynomial basis to be evaluated, plus 1.
+        Its value for the 'i'th curve must be less than or equal to the 
+        number of cvs in the curveVertexCount[i]"""
     )
     uniform token orientation = "rightHanded" (
         allowedTokens = ["rightHanded", "leftHanded"]
-        doc = "See: http://renderman.pixar.com/resources/current/rps/attributes.html#orientation-and-sides"
+        doc = """Orientation specifies whether the gprim's surface normal 
+        should be computed using the right hand rule, or the left hand rule.
+        Please see for a deeper explanation and
+        generalization of orientation to composed scenes with transformation
+        hierarchies."""
     )
     point3f[] points (
         doc = """The primary geometry attribute for all PointBased
@@ -2756,7 +2916,7 @@ class NurbsCurves "NurbsCurves" (
         each can be indepedently overridden, and because shaders rarely consume
         rgba parameters."""
     )
-    rel proxyPrim = None (
+    rel proxyPrim (
         doc = '''The proxyPrim relationship allows us to link a
         prim whose purpose is "render" to its (single target)
         purpose="proxy" prim.  This is entirely optional, but can be
@@ -2817,16 +2977,26 @@ class NurbsCurves "NurbsCurves" (
         a better tool for dynamic, interactive complexity management.'''
     )
     double2[] ranges (
-        doc = "Specifies the parametric range used to evaluate the curve."
+        doc = """Provides the minimum and maximum parametric values (as defined
+        by knots) over which the curve is actually defined.  The minimum must 
+        be less than the maximum, and greater than or equal to the value of the 
+        knots['i'th curve slice][order[i]-1]. The maxium must be less 
+        than or equal to the last element's value in knots['i'th curve slice].
+\tRange maps to (vmin, vmax) in the RenderMan spec."""
     )
     vector3f[] velocities (
         doc = """If provided, 'velocities' should be used by renderers to 
-        compute motion blur for a given 'points' sample, rather than 
-        interpolating to a neighboring 'points' sample.  This is the only
-        reasonable means of specifying motion blur for topologically
+
+        compute positions between samples for the 'points' attribute, rather
+        than interpolating between neighboring 'points' samples.  This is the
+        only reasonable means of computing motion blur for topologically
         varying PointBased primitives.  It follows that the length of each
         'velocities' sample must match the length of the corresponding
-        'points' sample."""
+        'points' sample.  Velocity is measured in position units per second,
+        as per most simulation software. To convert to position units per
+        UsdTimeCode, divide by UsdStage::GetTimeCodesPerSecond().
+        
+        See also ."""
     )
     token visibility = "inherited" (
         allowedTokens = ["inherited", "invisible"]
@@ -2918,7 +3088,11 @@ class Points "Points" (
     )
     uniform token orientation = "rightHanded" (
         allowedTokens = ["rightHanded", "leftHanded"]
-        doc = "See: http://renderman.pixar.com/resources/current/rps/attributes.html#orientation-and-sides"
+        doc = """Orientation specifies whether the gprim's surface normal 
+        should be computed using the right hand rule, or the left hand rule.
+        Please see for a deeper explanation and
+        generalization of orientation to composed scenes with transformation
+        hierarchies."""
     )
     point3f[] points (
         doc = """The primary geometry attribute for all PointBased
@@ -2937,7 +3111,7 @@ class Points "Points" (
         each can be indepedently overridden, and because shaders rarely consume
         rgba parameters."""
     )
-    rel proxyPrim = None (
+    rel proxyPrim (
         doc = '''The proxyPrim relationship allows us to link a
         prim whose purpose is "render" to its (single target)
         purpose="proxy" prim.  This is entirely optional, but can be
@@ -2999,12 +3173,17 @@ class Points "Points" (
     )
     vector3f[] velocities (
         doc = """If provided, 'velocities' should be used by renderers to 
-        compute motion blur for a given 'points' sample, rather than 
-        interpolating to a neighboring 'points' sample.  This is the only
-        reasonable means of specifying motion blur for topologically
+
+        compute positions between samples for the 'points' attribute, rather
+        than interpolating between neighboring 'points' samples.  This is the
+        only reasonable means of computing motion blur for topologically
         varying PointBased primitives.  It follows that the length of each
         'velocities' sample must match the length of the corresponding
-        'points' sample."""
+        'points' sample.  Velocity is measured in position units per second,
+        as per most simulation software. To convert to position units per
+        UsdTimeCode, divide by UsdStage::GetTimeCodesPerSecond().
+        
+        See also ."""
     )
     token visibility = "inherited" (
         allowedTokens = ["inherited", "invisible"]
@@ -3098,10 +3277,11 @@ class PointInstancer "PointInstancer" (
     2. If *scales* is authored, next apply the scaling matrix from *scales[i]*
     3. If *orientations* is authored: **if *angularVelocities* is authored**, 
     first multiply *orientations[i]* by the unit quaternion derived by scaling 
-    *angularVelocities[i]* by the time differential from the left-bracketing 
-    timeSample for *orientation* to the requested evaluation time *t*, 
-    storing the result in *R*, **else** assign *R* directly from 
-    *orientations[i]*.  Apply the rotation matrix derived from *R*.
+    *angularVelocities[i]* by the \"time differential\" 
+    from the left-bracketing timeSample for *orientation* to the requested 
+    evaluation time *t*, storing the result in *R*, **else** assign *R* 
+    directly from *orientations[i]*.  Apply the rotation matrix derived 
+    from *R*.
     4. Apply the translation derived from *positions[i]*. If *velocities* is 
     authored, apply the translation deriving from *velocities[i]* scaled by 
     the time differential from the left-bracketing timeSample for *positions* 
@@ -3110,12 +3290,39 @@ class PointInstancer "PointInstancer" (
     prim itself (or the UsdGeomImageable::ComputeLocalToWorldTransform() of the 
     PointInstancer to put the instance directly into world space)
 
+    \\anchor UsdGeom_PITimeScaling
+    <b>Scaling Velocities for Interpolation</b>
+    
+    When computing time-differentials by which to apply velocity or
+    angularVelocity to positions or orientations, we must scale by
+    ( 1.0 / UsdStage::GetTimeCodesPerSecond() ), because velocities are recorded
+    in units/second, while we are interpolating in UsdTimeCode ordinates.
     
     We provide both high and low-level API's for dealing with the
     transformation as a matrix, both will compute the instance matrices using
     multiple threads; the low-level API allows the client to cache unvarying
     inputs so that they need not be read duplicately when computing over
     time.
+    
+    Primvars on PointInstancer
+    
+    \"Primvars\" authored on a PointInstancer prim should
+    always be applied to each instance with constant interpolation at
+    the root of the instance.  When you are authoring primvars on a 
+    PointInstancer, think about it as if you were authoring them on a 
+    point-cloud (e.g. a UsdGeomPoints gprim).  The same 
+    <A HREF=\"http://renderman.pixar.com/resources/current/rps/appnote.22.html#classSpecifiers\">interpolation rules for points</A> apply here, substituting
+    \"instance\" for \"point\".
+    
+    In other words, the (constant) value extracted for each instance
+    from the authored primvar value depends on the authored interpolation
+    and elementSize of the primvar, as follows:
+    - <b>constant</b> or <b>uniform</b> : the entire authored value of the
+    primvar should be applied exactly to each instance.
+    - <b>varying</b>, <b>vertex</b>, or <b>faceVarying</b>: the first
+    elementSize elements of the authored primvar array should be assigned to
+    instance zero, the second elementSize elements should be assigned to
+    instance one, and so forth.
 
     
     Masking Instances: \"Deactivating\" and Invising
@@ -3141,7 +3348,7 @@ class PointInstancer "PointInstancer" (
 
     The first masking feature encodes a list of IDs in a list-editable metadatum
     called inactiveIds, which, although it does not have any similar 
-    impact to stage poopulation as \"prim activation\",
+    impact to stage population as \"prim activation\",
     it shares with that feature that its application is uniform over all time.
     Because it is list-editable, we can sparsely add and remove instances
     from it in many layers.
@@ -3210,34 +3417,15 @@ class PointInstancer "PointInstancer" (
     18     }
     19 }
     \\endcode
-    
-    Primvars on PointInstancer
-    
-    \"Primvars\" authored on a PointInstancer prim should
-    always be applied to each instance with constant interpolation at
-    the root of the instance.  When you are authoring primvars on a 
-    PointInstancer, think about it as if you were authoring them on a 
-    point-cloud (e.g. a UsdGeomPoints gprim).  The same 
-    <A HREF=\"http://renderman.pixar.com/resources/current/rps/appnote.22.html#classSpecifiers\">interpolation rules for points</A> apply here, substituting
-    \"instance\" for \"point\".
-    
-    In other words, the (constant) value extracted for each instance
-    from the authored primvar value depends on the authored interpolation
-    and elementSize of the primvar, as follows:
-    - <b>constant</b> or <b>uniform</b> : the entire authored value of the
-    primvar should be applied exactly to each instance.
-    - <b>varying</b>, <b>vertex</b>, or <b>faceVarying</b>: the first
-    elementSize elements of the authored primvar array should be assigned to
-    instance zero, the second elementSize elements should be assigned to
-    instance one, and so forth."""
+    """
 )
 {
     vector3f[] angularVelocities (
         doc = """If authored, per-instance angular velocity vector to be used for
       interoplating orientations.  Angular velocities should be considered
       mandatory if both protoIndices and orientations are animated.
-      Magnitude of the angular velocity is measured in <b>degrees</b> per
-      UsdTimeCode . To convert to degrees per second, multiply by
+      Angular velocity is measured in <b>degrees</b> per second. To convert
+      to degrees per UsdTimeCode, divide by
       UsdStage::GetTimeCodesPerSecond().
       
       See also ."""
@@ -3263,7 +3451,7 @@ class PointInstancer "PointInstancer" (
       binary state on Id'd instances without adding a separate primvar.
       See also \\ref UsdGeomPointInstancer_varyingTopo"""
     )
-    int64[] invisibleIds (
+    int64[] invisibleIds = [] (
         doc = """A list of id's to make invisible at the evaluation time.
       See ."""
     )
@@ -3291,13 +3479,7 @@ class PointInstancer "PointInstancer" (
       drawn for each instance.  <b>Topology attribute</b> - can be animated, 
       but at a potential performance impact for streaming."""
     )
-    uniform token prototypeDrawMode = "fullGeom" (
-        allowedTokens = ["point", "card", "fullGeom"]
-        doc = """Draw modes that host applications can use as a hint for how each
-      instance of each prototype should be represented.  This hint should only
-      affect interactive/preview representations and is optional."""
-    )
-    rel prototypes = None (
+    rel prototypes (
         doc = """<b>Required property</b>. Orders and targets the prototype root 
       prims, which can be located anywhere in the scenegraph that is convenient,
       although we promote organizing prototypes as children of the 
@@ -3306,7 +3488,7 @@ class PointInstancer "PointInstancer" (
       instance that prototype. Since relationships are uniform, this property
       cannot be animated."""
     )
-    rel proxyPrim = None (
+    rel proxyPrim (
         doc = '''The proxyPrim relationship allows us to link a
         prim whose purpose is "render" to its (single target)
         purpose="proxy" prim.  This is entirely optional, but can be
@@ -3373,14 +3555,17 @@ class PointInstancer "PointInstancer" (
       See also ."""
     )
     vector3f[] velocities (
-        doc = """If authored, per-instance velocity vector to be used for
-      interpolating position.  Velocities should be considered mandatory if
-      both protoIndices and positions are animated.  Magnitude of
-      the velocity is measured in position units per UsdTimeCode . To convert to
-      position units per second, multiply by
-      UsdStage::GetTimeCodesPerSecond().
-      
-      See also ."""
+        doc = """If provided, per-instance 'velocities' will be used to 
+       compute positions between samples for the 'positions' attribute,
+       rather than interpolating between neighboring 'positions' samples.
+       Velocities should be considered mandatory if both protoIndices
+       and positions are animated.  Velocity is measured in position
+       units per second, as per most simulation software. To convert to
+       position units per UsdTimeCode, divide by
+       UsdStage::GetTimeCodesPerSecond().
+
+       See also 
+       ."""
     )
     token visibility = "inherited" (
         allowedTokens = ["inherited", "invisible"]
@@ -3429,7 +3614,7 @@ class Camera "Camera" (
     will transform the world such that the camera is at the origin, looking 
     down the -Z axis, with Y as the up axis.
     
-    \\sa \"UsdGeom Linear Algebra Basic Assumptions\"
+    \\sa \\ref UsdGeom_LinAlgBasics
      """
 )
 {
@@ -3466,7 +3651,7 @@ class Camera "Camera" (
     token projection = "perspective" (
         allowedTokens = ["perspective", "orthographic"]
     )
-    rel proxyPrim = None (
+    rel proxyPrim (
         doc = '''The proxyPrim relationship allows us to link a
         prim whose purpose is "render" to its (single target)
         purpose="proxy" prim.  This is entirely optional, but can be
@@ -3570,6 +3755,161 @@ class Camera "Camera" (
         It is managed by the AddXformOp(), SetResetXformStack(), and
         SetXformOpOrder(), and consulted by GetOrderedXformOps() and
         GetLocalTransformation()."""
+    )
+}
+
+class "GeomModelAPI" (
+    doc = """UsdGeomModelAPI extends the generic UsdModelAPI schema with
+    geometry specific concepts such as cached extents for the entire model,
+    constraint targets, and geometry-inspired extensions to the payload
+    lofting process.
+   
+    As described in GetExtentsHint() below, it is useful to cache extents
+    at the model level.  UsdGeomModelAPI provides schema for computing and
+    storing these cached extents, which can be consumed by UsdGeomBBoxCache to
+    provide fast access to precomputed extents that will be used as the model's
+    bounds ( see UsdGeomBBoxCache::UsdGeomBBoxCache() ).
+
+    Draw Modes
+
+    Draw modes provide optional alternate imaging behavior for USD subtrees with
+    kind model. model:drawMode (which is inheritable) and
+    model:applyDrawMode (which is not) are resolved into a decision to stop
+    traversing the scene graph at a certain point, and replace a USD subtree
+    with proxy geometry.
+
+    The value of model:drawMode determines the type of proxy geometry:
+    - origin - Draw the model-space basis vectors of the replaced prim.
+    - bounds - Draw the model-space bounding box of the replaced prim.
+    - cards - Draw textured quads as a placeholder for the replaced prim.
+    - default - An explicit opinion to draw the USD subtree as normal.
+
+    model:drawMode is inheritable so that a whole scene, a large group, or
+    all prototypes of a model hierarchy PointInstancer can be assigned a draw
+    mode with a single attribute edit.  model:applyDrawMode is meant to be
+    authored earlier, and provides flexibility for different asset types. For
+    example, a character assembly (composed of character, clothes, etc) might
+    have model:applyDrawMode set at the top of the subtree so the whole
+    group can be drawn as a single card object. An effects subtree might have
+    model:applyDrawMode set at the component level so each particle group
+    draws individually in bounding box mode.
+
+    A value for model:drawMode on a child prim takes precedence over a
+    value on a parent prim.
+
+    Cards Geometry
+
+    The specific geometry used in cards mode is controlled by the
+    model:cardGeometry attribute:
+    - cross - Generate a quad normal to each basis direction and negative.
+                   Locate each quad so that it bisects the model extents.
+    - box   - Generate a quad normal to each basis direction and negative.
+                   Locate each quad on a face of the model extents, facing out.
+    - fromTexture - Generate a quad for each supplied texture from
+                         attributes stored in that texture's metadata.
+
+    For cross and box mode, the extents are calculated for purposes
+    default, proxy, and render, at their earliest authored time.
+    If the model has no textures, all six card faces are rendered using
+    model:drawModeColor. If one or more textures are present, only axes
+    with one or more textures assigned are drawn.  For each axis, if both
+    textures (positive and negative) are specified, they'll be used on the
+    corresponding card faces; if only one texture is specified, it will be
+    mapped to the opposite card face after being flipped on the texture's
+    s-axis. Any card faces with invalid asset paths will be drawn with
+    model:drawModeColor.
+
+    For fromTexture mode, only card faces with valid textures assigned
+    are drawn. The geometry is generated by pulling the worldtoscreen
+    attribute out of texture metadata.  This is expected to be a 4x4 matrix
+    mapping the model-space position of the card quad to the clip-space quad
+    with corners (-1,-1,0) and (1,1,0).  The card vertices are generated by
+    transforming the clip-space corners by the inverse of worldtoscreen.
+    Textures are mapped so that (s) and (t) map to (+x) and (+y) in clip space.
+    If the metadata cannot be read in the right format, or the matrix can't
+    be inverted, the card face is not drawn.
+
+    All card faces are drawn and textured as double-sided.
+
+    \\todo CreatePayload() """
+)
+{
+    uniform bool model:applyDrawMode (
+        doc = """If true, and this prim or parent prims have model:drawMode
+                 set, apply an alternate imaging mode to this prim. See
+                 \\ref UsdGeomModelAPI_drawMode."""
+    )
+    uniform token model:cardGeometry (
+        allowedTokens = ["cross", "box", "fromTexture"]
+        doc = """The geometry to generate for imaging prims inserted for \\em
+                 cards imaging mode. See for
+                 geometry descriptions. If unspecified, it should be interpreted
+                 as cross."""
+    )
+    asset model:cardTextureXNeg (
+        doc = """In cards imaging mode, the texture applied to the X- quad.
+                 The texture axes (s,t) are mapped to model-space axes (y, -z)."""
+    )
+    asset model:cardTextureXPos (
+        doc = """In cards imaging mode, the texture applied to the X+ quad.
+                 The texture axes (s,t) are mapped to model-space axes (-y, -z)."""
+    )
+    asset model:cardTextureYNeg (
+        doc = """In cards imaging mode, the texture applied to the Y- quad.
+                 The texture axes (s,t) are mapped to model-space axes (-x, -z)."""
+    )
+    asset model:cardTextureYPos (
+        doc = """In cards imaging mode, the texture applied to the Y+ quad.
+                 The texture axes (s,t) are mapped to model-space axes (x, -z)."""
+    )
+    asset model:cardTextureZNeg (
+        doc = """In cards imaging mode, the texture applied to the Z- quad.
+                 The texture axes (s,t) are mapped to model-space axes (-x, -y)."""
+    )
+    asset model:cardTextureZPos (
+        doc = """In cards imaging mode, the texture applied to the Z+ quad.
+                 The texture axes (s,t) are mapped to model-space axes (x, -y)."""
+    )
+    uniform token model:drawMode (
+        allowedTokens = ["origin", "bounds", "cards", "default"]
+        doc = """Alternate imaging mode; applied to this prim or child prims
+                 where model:applyDrawMode is true, or where the prim
+                 has kind component. See \\ref UsdGeomModelAPI_drawMode
+                 for mode descriptions."""
+    )
+    uniform Vec3f model:drawModeColor (
+        doc = """The base color of imaging prims inserted for alternate
+                 imaging modes. For origin and bounds modes, this
+                 controls line color; for cards mode, this controls the
+                 fallback quad color. If unspecified, it should be interpreted
+                 as (0.18, 0.18, 0.18)."""
+    )
+}
+
+class "MotionAPI" (
+    doc = """UsdGeomMotionAPI encodes data that can live on any prim that
+    may affect computations involving:
+    - computed motion for motion blur
+    - sampling for motion blur
+    
+    For example, UsdGeomMotionAPI provides *velocityScale* 
+    (GetVelocityScaleAttr()) for controlling how motion-blur samples should
+    be computed by velocity-consuming schemas."""
+)
+{
+    float motion:velocityScale = 1 (
+        doc = """VelocityScale is an **inherited** float attribute that
+        velocity-based schemas (e.g. PointBased, PointInstancer) can consume
+        to compute interpolated positions and orientations by applying
+        velocity and angularVelocity, which is required for interpolating 
+        between samples when topology is varying over time.  Although these 
+        quantities are generally physically computed by a simulator, sometimes 
+        we require more or less motion-blur to achieve the desired look.  
+        VelocityScale allows artists to dial-in, as a post-sim correction, 
+        a scale factor to be applied to the velocity prior to computing 
+        interpolated positions from it.
+        
+        See also ComputeVelocityScale()"""
     )
 }
 

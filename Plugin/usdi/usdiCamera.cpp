@@ -4,7 +4,6 @@
 #include "usdiXform.h"
 #include "usdiCamera.h"
 #include "usdiContext.h"
-#include "usdiContext.i"
 #include "usdiAttribute.h"
 
 namespace usdi {

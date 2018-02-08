@@ -3,7 +3,6 @@
 #include "usdiAttribute.h"
 #include "usdiSchema.h"
 #include "usdiContext.h"
-#include "usdiContext.i"
 #include "usdiUtils.h"
 
 namespace usdi {

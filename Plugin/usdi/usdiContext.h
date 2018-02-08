@@ -83,4 +83,14 @@ private:
     EditTargets     m_edit_targets;
 };
 
+
+template<class T>
+inline T* Context::createSchema(Schema *parent, const char *name)
+{
+    T *ret = new T(this, parent, name);
+    addSchema(ret);
+    if (parent) { parent->addChild(ret); }
+    return ret;
+}
+
 } // namespace usdi

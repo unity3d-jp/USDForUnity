@@ -6,7 +6,6 @@
 #include "usdiMesh.h"
 #include "usdiUtils.h"
 #include "usdiContext.h"
-#include "usdiContext.i"
 
 namespace usdi {
 

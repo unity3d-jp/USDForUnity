@@ -3,7 +3,6 @@
 #include "usdiSchema.h"
 #include "usdiXform.h"
 #include "usdiContext.h"
-#include "usdiContext.i"
 #include "usdiAttribute.h"
 
 //#define usdiSerializeRotationAsEuler

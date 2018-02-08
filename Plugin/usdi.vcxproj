@@ -34,7 +34,6 @@
     <ClInclude Include="usdi\usdiXform.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="usdi\DllMain.cpp" />
     <ClCompile Include="usdi\etc\Hook.cpp" />
     <ClCompile Include="usdi\etc\Mono.cpp" />
     <ClCompile Include="usdi\etc\MonoWrapper.cpp" />
@@ -73,9 +72,6 @@
     <ProjectReference Include="usdiRT.vcxproj">
       <Project>{66397903-6ff2-46c6-b51e-b323fd248fad}</Project>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="usdi\usdiContext.i" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{08361722-5520-47AC-A0C2-31E8A062B73F}</ProjectGuid>
