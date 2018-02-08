@@ -9,7 +9,6 @@
 #include "usdiUtils.h"
 #include "usdiRT/usdiRT.h"
 
-void mDetachAllThreads();
 
 namespace usdi {
 
@@ -26,7 +25,82 @@ namespace fs =
 static int g_ctx_count;
 
 
-Context::Context()
+ContextManager ContextManager::s_instance;
+
+Context* ContextManager::getContext(int uid)
+{
+    auto it = s_instance.m_contexts.find(uid);
+    if (it != s_instance.m_contexts.end()) {
+        usdiLogTrace("Using already created context for gameObject with ID %d", uid);
+        return it->second.get();
+    }
+
+    auto ctx = new Context(uid);
+    s_instance.m_contexts[uid].reset(ctx);
+    usdiLogTrace("Register context for gameObject with ID %d", uid);
+    return ctx;
+}
+
+void ContextManager::destroyContext(int uid)
+{
+    auto it = s_instance.m_contexts.find(uid);
+    if (it != s_instance.m_contexts.end()) {
+        usdiLogTrace("Unregister context for gameObject with ID %d", uid);
+        s_instance.m_contexts.erase(it);
+    }
+}
+
+void ContextManager::destroyContextsWithPath(const char* asset_path)
+{
+    auto path = Context::normalizePath(asset_path);
+    for (auto it = s_instance.m_contexts.begin(); it != s_instance.m_contexts.end();) {
+        if (it->second->getPath() == path) {
+            usdiLogTrace("Unregister context for gameObject with ID %s", it->second->getPath().c_str());
+            s_instance.m_contexts.erase(it++);
+        }
+        else {
+            ++it;
+        }
+    }
+}
+
+ContextManager::~ContextManager()
+{
+    if (m_contexts.size()) {
+        usdiLogTrace("%lu remaining context(s) registered", m_contexts.size());
+    }
+    m_contexts.clear();
+}
+
+
+std::string Context::normalizePath(const char *in_path)
+{
+    std::string path;
+
+    if (in_path != nullptr) {
+        path = in_path;
+
+#ifdef _WIN32
+        size_t n = path.length();
+        for (size_t i = 0; i < n; ++i) {
+            char c = path[i];
+            if (c == '\\') {
+                path[i] = '/';
+            }
+            else if (c >= 'A' && c <= 'Z') {
+                path[i] = 'a' + (c - 'A');
+            }
+        }
+#endif
+    }
+
+    return path;
+}
+
+
+
+Context::Context(int uid)
+    : m_uid(uid)
 {
     ++g_ctx_count;
 
@@ -163,6 +237,8 @@ bool Context::open(const char *path)
         }
     }
 
+    m_path = path;
+
     applyImportConfig();
     m_start_time = m_stage->GetStartTimeCode();
     m_end_time = m_stage->GetEndTimeCode();
@@ -226,12 +302,14 @@ void Context::setExportSettings(const ExportSettings& v)
 
 
 
-UsdStageRefPtr  Context::getUsdStage() const    { return m_stage; }
-Schema*         Context::getRoot() const        { return m_root; }
-int             Context::getNumSchemas() const  { return (int)m_schemas.size(); }
-Schema*         Context::getSchema(int i) const { return m_schemas[i].get(); }
-int             Context::getNumMasters() const  { return (int)m_masters.size(); }
-Schema*         Context::getMaster(int i) const { return m_masters[i]; }
+int                 Context::getUid() const         { return m_uid; }
+const std::string&  Context::getPath() const        { return m_path; }
+UsdStageRefPtr      Context::getUsdStage() const    { return m_stage; }
+Schema*             Context::getRoot() const        { return m_root; }
+int                 Context::getNumSchemas() const  { return (int)m_schemas.size(); }
+Schema*             Context::getSchema(int i) const { return m_schemas[i].get(); }
+int                 Context::getNumMasters() const  { return (int)m_masters.size(); }
+Schema*             Context::getMaster(int i) const { return m_masters[i]; }
 
 Schema* Context::findSchema(const char *path) const
 {

@@ -2,16 +2,34 @@
 
 namespace usdi {
 
+
+class ContextManager
+{
+public:
+    static Context* getContext(int uid);
+    static void destroyContext(int uid);
+    static void destroyContextsWithPath(const char* assetPath);
+
+private:
+    ~ContextManager();
+
+    using ContextPtr = std::unique_ptr<Context>;
+    std::map<int, ContextPtr> m_contexts;
+    static ContextManager s_instance;
+};
+
+
 class Context
 {
 public:
+    static std::string normalizePath(const char *path);
     static void addAssetSearchPath(const char *path);
     static void clearAssetSearchPath();
 
     static bool convertUSDToAlembic(const char *src_usd, const char *dst_abc);
 
 
-    Context();
+    Context(int uid = -1);
     virtual ~Context();
 
     bool                valid() const;
@@ -27,6 +45,8 @@ public:
     const ExportSettings&   getExportSettings() const;
     void                    setExportSettings(const ExportSettings& v);
 
+    int                 getUid() const;
+    const std::string&  getPath() const;
     UsdStageRefPtr      getUsdStage() const;
     Schema*             getRoot() const;
     int                 getNumSchemas() const;
@@ -66,6 +86,8 @@ private:
     using Masters = std::vector<Schema*>;
     using EditTargets = std::vector<UsdEditTarget>;
 
+    int             m_uid = 0;
+    std::string     m_path;
     UsdStageRefPtr  m_stage;
     Schemas         m_schemas;
     Schema*         m_root = nullptr;

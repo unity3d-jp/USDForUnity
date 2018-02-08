@@ -382,7 +382,7 @@ namespace UTJ.USD
 
             m_path = path;
             m_path.readOnly = true;
-            m_ctx = usdi.usdiCreateContext();
+            m_ctx = usdi.usdiCreateContext(GetInstanceID());
 
             var fullpath = m_path.GetFullPath();
             if (!usdi.usdiOpen(m_ctx, fullpath))

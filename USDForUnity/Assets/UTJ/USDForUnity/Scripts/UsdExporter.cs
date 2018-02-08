@@ -930,7 +930,7 @@ namespace UTJ.USD
             }
 
             // create context and open archive
-            m_ctx = usdi.usdiCreateContext();
+            m_ctx = usdi.usdiCreateContext(GetInstanceID());
             if (!usdi.usdiCreateStage(m_ctx, m_outputPath))
             {
                 Debug.LogError("UsdExporter: failed to create " + m_outputPath);

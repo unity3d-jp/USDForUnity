@@ -309,7 +309,8 @@ usdiAPI void             usdiAddAssetSearchPath(const char *path);
 usdiAPI void             usdiClearAssetSearchPath();
 
 // Context interface
-usdiAPI usdi::Context*   usdiCreateContext();
+usdiAPI void             usdiClearContextsWithPath(const char *path);
+usdiAPI usdi::Context*   usdiCreateContext(int uid = -1);
 usdiAPI void             usdiDestroyContext(usdi::Context *ctx);
 usdiAPI bool             usdiOpen(usdi::Context *ctx, const char *path);
 usdiAPI bool             usdiCreateStage(usdi::Context *ctx, const char *path);
@@ -346,11 +347,6 @@ usdiAPI int              usdiPrimGetID(usdi::Schema *schema);
 usdiAPI const char*      usdiPrimGetPath(usdi::Schema *schema);
 usdiAPI const char*      usdiPrimGetName(usdi::Schema *schema);
 usdiAPI const char*      usdiPrimGetUsdTypeName(usdi::Schema *schema);
-
-usdiAPI bool             usdiPrimIsImportSettingsOverriden(usdi::Schema *schema);
-usdiAPI void             usdiPrimSetOverrideImportSettings(usdi::Schema *schema, bool v);
-usdiAPI void             usdiPrimGetImportSettings(usdi::Schema *schema, usdi::ImportSettings *dst);
-usdiAPI void             usdiPrimSetImportSettings(usdi::Schema *schema, const usdi::ImportSettings *v);
 
 usdiAPI usdi::Schema*    usdiPrimGetMaster(usdi::Schema *schema);
 usdiAPI int              usdiPrimGetNumInstances(usdi::Schema *schema);

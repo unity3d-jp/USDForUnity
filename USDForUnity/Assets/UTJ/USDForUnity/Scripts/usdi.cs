@@ -422,7 +422,8 @@ namespace UTJ.USD
         [DllImport ("usdi")] public static extern void          usdiClearAssetSearchPath();
 
         // Context interface
-        [DllImport ("usdi")] public static extern Context       usdiCreateContext();
+        [DllImport("usdi")] public static extern void           usdiClearContextsWithPath(string path);
+        [DllImport ("usdi")] public static extern Context       usdiCreateContext(int uid);
         [DllImport ("usdi")] public static extern void          usdiDestroyContext(Context ctx);
         [DllImport ("usdi")] public static extern Bool          usdiOpen(Context ctx, string path);
         [DllImport ("usdi")] public static extern Bool          usdiCreateStage(Context ctx, string path);

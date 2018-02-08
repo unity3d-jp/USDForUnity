@@ -62,16 +62,24 @@ usdiAPI void usdiClearAssetSearchPath()
     usdi::Context::clearAssetSearchPath();
 }
 
-usdiAPI usdi::Context* usdiCreateContext()
+
+usdiAPI void usdiClearContextsWithPath(const char *path)
 {
     usdiTraceFunc();
-    return new usdi::Context();
+    usdi::ContextManager::destroyContextsWithPath(path);
+}
+
+usdiAPI usdi::Context* usdiCreateContext(int uid)
+{
+    usdiTraceFunc();
+    return usdi::ContextManager::getContext(uid);
 }
 
 usdiAPI void usdiDestroyContext(usdi::Context *ctx)
 {
     usdiTraceFunc();
-    delete ctx;
+    if (ctx)
+        usdi::ContextManager::destroyContext(ctx->getUid());
 }
 
 usdiAPI bool usdiOpen(usdi::Context *ctx, const char *path)
