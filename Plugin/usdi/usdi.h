@@ -59,7 +59,11 @@ enum class NormalCalculationType
     WhenMissing,
     Always,
 };
-using TangentCalculationType = NormalCalculationType;
+enum class TangentCalculationType
+{
+    Never,
+    Always,
+};
 
 enum class AttributeType
 {
@@ -106,10 +110,10 @@ struct ImportSettings
 {
     InterpolationType interpolation = InterpolationType::Linear;
     NormalCalculationType normal_calculation = NormalCalculationType::WhenMissing;
-    TangentCalculationType tangent_calculation = TangentCalculationType::Never;
+    TangentCalculationType tangent_calculation = TangentCalculationType::Always;
     int split_unit = 0x7fffffff;
     int max_bone_weights = 0; // must be 0 or 4 or 8.
-    float scale = 1.0f;
+    float scale_factor = 1.0f;
     bool load_all_payloads = true;
     bool triangulate = true;
     bool swap_handedness = false;
@@ -300,8 +304,6 @@ usdiAPI void             usdiFinalize();
 
 usdiAPI void*            usdiAlignedMalloc(size_t size, size_t alignment);
 usdiAPI void             usdiAlignedFree(void *addr);
-usdiAPI void*            usdiFixedMalloc(size_t size);
-usdiAPI void             usdiFixedFree(size_t size, void *addr);
 
 usdiAPI void             usdiAddAssetSearchPath(const char *path);
 usdiAPI void             usdiClearAssetSearchPath();
@@ -349,10 +351,6 @@ usdiAPI bool             usdiPrimIsImportSettingsOverriden(usdi::Schema *schema)
 usdiAPI void             usdiPrimSetOverrideImportSettings(usdi::Schema *schema, bool v);
 usdiAPI void             usdiPrimGetImportSettings(usdi::Schema *schema, usdi::ImportSettings *dst);
 usdiAPI void             usdiPrimSetImportSettings(usdi::Schema *schema, const usdi::ImportSettings *v);
-usdiAPI bool             usdiPrimIsExportSettingsOverriden(usdi::Schema *schema);
-usdiAPI void             usdiPrimSetOverrideExportSettings(usdi::Schema *schema, bool v);
-usdiAPI void             usdiPrimGetExportSettings(usdi::Schema *schema, usdi::ExportSettings *dst);
-usdiAPI void             usdiPrimSetExportSettings(usdi::Schema *schema, const usdi::ExportSettings *v);
 
 usdiAPI usdi::Schema*    usdiPrimGetMaster(usdi::Schema *schema);
 usdiAPI int              usdiPrimGetNumInstances(usdi::Schema *schema);

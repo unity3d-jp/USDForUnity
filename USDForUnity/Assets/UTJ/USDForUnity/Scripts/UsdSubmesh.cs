@@ -309,7 +309,7 @@ namespace UTJ.USD
                 meshData.indices_triangulated = m_indices;
             }
         }
-        public void usdiAllocateMeshData(ref usdi.MeshSummary summary, PinnedList<usdi.SubmeshData> submeshData)
+        public void usdiAllocateMeshData(ref usdi.MeshSummary summary, PinnedList<usdi.SplitData> submeshData)
         {
             var data = submeshData[m_nth];
             {
@@ -364,7 +364,7 @@ namespace UTJ.USD
         {
             m_umesh.bounds = new Bounds(data.center, data.extents);
         }
-        public void usdiUpdateBounds(ref usdi.SubmeshData data)
+        public void usdiUpdateBounds(ref usdi.SplitData data)
         {
             m_umesh.bounds = new Bounds(data.center, data.extents);
         }

@@ -72,10 +72,10 @@ void Points::updateSample(Time t_)
         InvertX((float3*)sample.points.data(), sample.points.size());
         InvertX((float3*)sample.velocities.data(), sample.velocities.size());
     }
-    if (conf.scale != 1.0f) {
-        Scale((float3*)sample.points.data(), conf.scale, sample.points.size());
-        Scale((float3*)sample.velocities.data(), conf.scale, sample.velocities.size());
-        Scale(sample.widths.data(), conf.scale, sample.widths.size());
+    if (conf.scale_factor != 1.0f) {
+        Scale((float3*)sample.points.data(), conf.scale_factor, sample.points.size());
+        Scale((float3*)sample.velocities.data(), conf.scale_factor, sample.velocities.size());
+        Scale(sample.widths.data(), conf.scale_factor, sample.widths.size());
     }
 
     if (m_attr_ids64) {

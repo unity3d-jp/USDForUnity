@@ -25,7 +25,6 @@ namespace UTJ.USD
             var s = schema;
             if (s != null)
             {
-                s.usdiApplyImportSettings();
                 s.usdiApplyVariantSets();
             }
         }

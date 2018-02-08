@@ -259,56 +259,6 @@ usdiAPI const char* usdiPrimGetUsdTypeName(usdi::Schema *schema)
     return schema->getUsdTypeName();
 }
 
-// import / export settings
-usdiAPI bool usdiPrimIsImportSettingsOverriden(usdi::Schema *schema)
-{
-    usdiTraceFunc();
-    if (!schema) { return false; }
-    return schema->isImportSettingsOverridden();
-}
-usdiAPI void usdiPrimSetOverrideImportSettings(usdi::Schema *schema, bool v)
-{
-    usdiTraceFunc();
-    if (!schema) { return; }
-    schema->setOverrideImportSettings(v);
-}
-usdiAPI void usdiPrimGetImportSettings(usdi::Schema *schema, usdi::ImportSettings *dst)
-{
-    usdiTraceFunc();
-    if (!schema || !dst) { return; }
-    *dst = schema->getImportSettings();
-}
-usdiAPI void usdiPrimSetImportSettings(usdi::Schema *schema, const usdi::ImportSettings *v)
-{
-    usdiTraceFunc();
-    if (!schema || !v) { return; }
-    schema->setImportSettings(*v);
-}
-usdiAPI bool usdiPrimIsExportSettingsOverriden(usdi::Schema *schema)
-{
-    usdiTraceFunc();
-    if (!schema) { return false; }
-    return schema->isExportSettingsOverridden();
-}
-usdiAPI void usdiPrimSetOverrideExportSettings(usdi::Schema *schema, bool v)
-{
-    usdiTraceFunc();
-    if (!schema) { return; }
-    schema->setOverrideExportSettings(v);
-}
-usdiAPI void usdiPrimGetExportSettings(usdi::Schema *schema, usdi::ExportSettings *dst)
-{
-    usdiTraceFunc();
-    if (!schema || !dst) { return; }
-    *dst = schema->getExportSettings();
-}
-usdiAPI void usdiPrimSetExportSettings(usdi::Schema *schema, const usdi::ExportSettings *v)
-{
-    usdiTraceFunc();
-    if (!schema || !v) { return; }
-    schema->setExportSettings(*v);
-}
-
 // master / instance
 usdiAPI usdi::Schema* usdiPrimGetMaster(usdi::Schema *schema)
 {

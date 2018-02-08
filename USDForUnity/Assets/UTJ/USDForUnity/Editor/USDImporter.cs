@@ -98,13 +98,6 @@ namespace UTJ.USD
 
         private void CollectSubAssets(Transform node, Material mat)
         {
-            var schemas = node.GetComponents<UsdXformComponent>();
-            foreach (var s in schemas)
-            {
-                s.schema.overrideImportSettings = true;
-                s.schema.importSettings = m_importSettings;
-            }
-
             var meshFilter = node.GetComponent<MeshFilter>();
             if (meshFilter != null)
                 RegisterSubAsset(meshFilter.sharedMesh);

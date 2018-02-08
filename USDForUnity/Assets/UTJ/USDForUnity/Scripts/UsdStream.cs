@@ -347,22 +347,9 @@ namespace UTJ.USD
         }
 
 
-        void UsdApplyImportConfig(bool all)
+        void UsdApplyImportConfig()
         {
             usdi.usdiSetImportSettings(m_ctx, ref m_importSettings);
-            if(all)
-            {
-                foreach(var v in m_perObjectSettings)
-                {
-                    var s = usdi.usdiFindSchema(m_ctx, v.Key);
-                    if(s)
-                    {
-                        var tmp = v.Value;
-                        usdi.usdiPrimSetOverrideImportSettings(s, true);
-                        usdi.usdiPrimSetImportSettings(s, ref tmp);
-                    }
-                }
-            }
         }
 
         bool UsdApplyVarianceSelections()
@@ -411,7 +398,7 @@ namespace UTJ.USD
             {
                 usdi.usdiRebuildSchemaTree(m_ctx);
             }
-            UsdApplyImportConfig(true);
+            UsdApplyImportConfig();
 
             UsdConstructTrees();
 
@@ -429,7 +416,7 @@ namespace UTJ.USD
             if (!m_ctx) { return; }
 
             UsdApplyVarianceSelections();
-            UsdApplyImportConfig(true);
+            UsdApplyImportConfig();
             usdi.usdiRebuildSchemaTree(m_ctx);
 
             UsdConstructTrees();
@@ -498,8 +485,6 @@ namespace UTJ.USD
         // possibly called from non-main thread
         void UsdAsyncUpdate(double t)
         {
-            UsdApplyImportConfig(false);
-
             // skip if update is not needed
             if(m_requestForceUpdate)
             {

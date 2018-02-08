@@ -99,9 +99,7 @@ Mesh::Mesh(Context *ctx, Schema *parent, const UsdPrim& prim)
     if (!m_mesh) { usdiLogError("Mesh::Mesh(): m_mesh is invalid\n"); }
 
     m_attr_colors = findAttribute(usdiColorAttrName, AttributeType::Float4Array);
-    m_attr_uv = findAttribute(usdiUVAttrName, AttributeType::Float2Array);
-    if (!m_attr_uv) { m_attr_uv = findAttribute(usdiUVAttrName2, AttributeType::Float2Array); }
-    m_attr_tangents = findAttribute(usdiTangentAttrName, AttributeType::Float4Array);
+    m_attr_uv0 = findAttribute(usdiUVAttrName, AttributeType::Float2Array);
 
     // bone & weight attributes
     m_attr_bone_weights = findAttribute(usdiBoneWeightsAttrName, AttributeType::FloatArray);
@@ -135,11 +133,8 @@ const MeshSummary& Mesh::getSummary() const
             m_mesh.GetNormalsAttr().HasValue() ||
             settings.normal_calculation != NormalCalculationType::Never;
         m_summary.has_colors = m_attr_colors && m_attr_colors->hasValue();
-        m_summary.has_uvs = m_attr_uv && m_attr_uv->hasValue();
-        m_summary.has_tangents =
-            m_summary.has_normals && m_summary.has_uvs && (
-                (m_attr_tangents && m_attr_tangents->hasValue()) ||
-                settings.tangent_calculation != TangentCalculationType::Never);
+        m_summary.has_uvs = m_attr_uv0 && m_attr_uv0->hasValue();
+        m_summary.has_tangents = m_summary.has_normals && m_summary.has_uvs && settings.tangent_calculation != TangentCalculationType::Never;
         m_summary.has_velocities = m_mesh.GetVelocitiesAttr().HasValue();
 
         if (m_attr_bones && m_attr_bones->hasValue()) {
@@ -152,7 +147,7 @@ const MeshSummary& Mesh::getSummary() const
 
             // convert if settings.max_bone_weights is set
             if ((m_summary.max_bone_weights == 4 || m_summary.max_bone_weights == 8) &&
-                (settings.max_bone_weights ==4 || settings.max_bone_weights == 8))
+                (settings.max_bone_weights == 4 || settings.max_bone_weights == 8))
             {
                 m_summary.max_bone_weights = settings.max_bone_weights;
             }
@@ -182,13 +177,8 @@ void Mesh::updateSample(Time t_)
     auto t = UsdTimeCode(t_);
     const auto& conf = getImportSettings();
 
-    // swap front sample
-    if (!m_front_sample) {
-        m_front_sample = &m_sample[0];
-        m_front_submesh = &m_submeshes[0];
-    }
-    auto& sample = *m_front_sample;
-    auto& submeshes = *m_front_submesh;
+    auto& sample = m_sample;
+    auto& submeshes = m_submeshes;
 
     m_mesh.GetPointsAttr().Get(&sample.points, t);
     m_mesh.GetVelocitiesAttr().Get(&sample.velocities, t);
@@ -197,8 +187,8 @@ void Mesh::updateSample(Time t_)
     if (m_attr_colors) {
         m_attr_colors->getImmediate(&sample.colors, t_);
     }
-    if (m_attr_uv) {
-        m_attr_uv->getImmediate(&sample.uvs, t_);
+    if (m_attr_uv0) {
+        m_attr_uv0->getImmediate(&sample.uvs, t_);
     }
 
     // apply swap_handedness and scale
@@ -206,9 +196,9 @@ void Mesh::updateSample(Time t_)
         InvertX((float3*)sample.points.data(), sample.points.size());
         InvertX((float3*)sample.velocities.data(), sample.velocities.size());
     }
-    if (conf.scale != 1.0f) {
-        Scale((float3*)sample.points.data(), conf.scale, sample.points.size());
-        Scale((float3*)sample.velocities.data(), conf.scale, sample.velocities.size());
+    if (conf.scale_factor != 1.0f) {
+        Scale((float3*)sample.points.data(), conf.scale_factor, sample.points.size());
+        Scale((float3*)sample.velocities.data(), conf.scale_factor, sample.velocities.size());
     }
 
     // normals
@@ -232,31 +222,13 @@ void Mesh::updateSample(Time t_)
         }
     }
 
-    // tangents
-    bool gen_tangents = conf.tangent_calculation == NormalCalculationType::Always;
-    if (!gen_tangents) {
-        if (m_attr_tangents && m_attr_tangents->getImmediate(&sample.tangents, t_)) {
-            if (conf.swap_handedness) {
-                InvertX((float4*)sample.tangents.data(), sample.tangents.size());
-            }
-        }
-        else {
-            if (m_attr_uv && conf.tangent_calculation == TangentCalculationType::WhenMissing) {
-                gen_tangents = true;
-            }
-            else {
-                // nothing to do here
-            }
-        }
-    }
-
     // indices
     bool update_indices =
         m_num_indices_triangulated == 0 ||
         getSummary().topology_variance == TopologyVariance::Heterogenous ||
         m_update_flag.import_settings_updated || m_update_flag.variant_set_changed;
     bool copy_indices =
-        sample.indices_triangulated.size() != m_sample[0].indices_triangulated.size() ||
+        sample.indices_triangulated.size() != sample.indices_triangulated.size() ||
         m_update_flag_prev.variant_set_changed;
     if (update_indices) {
         CountIndices(sample.counts, sample.offsets, m_num_indices, m_num_indices_triangulated);
@@ -266,8 +238,8 @@ void Mesh::updateSample(Time t_)
         }
     }
     else if (copy_indices) {
-        sample.indices_triangulated = m_sample[0].indices_triangulated;
-        sample.offsets = m_sample[0].offsets;
+        sample.indices_triangulated = sample.indices_triangulated;
+        sample.offsets = sample.offsets;
     }
 
     // normals
@@ -278,6 +250,7 @@ void Mesh::updateSample(Time t_)
     }
 
     // tangents
+    bool gen_tangents = conf.tangent_calculation != TangentCalculationType::Never;
     if (gen_tangents) {
         sample.tangents.resize(sample.points.size());
         GenerateTangentsPoly(ToIArray(sample.tangents),
@@ -286,7 +259,7 @@ void Mesh::updateSample(Time t_)
     }
 
     // bone & weights
-    // * assume these are constant
+    // * assume these are constant *
     if (m_attr_bone_weights && m_attr_bone_indices && (sample.weights4.empty() || sample.weights8.empty())) {
         if (m_attr_max_bone_weights) {
             m_attr_max_bone_weights->getImmediate(&sample.max_bone_weights, t_);
@@ -442,10 +415,8 @@ bool Mesh::readSample(MeshData& dst, Time t, bool copy)
 {
     if (t != m_time_prev) { updateSample(t); }
 
-    if (!m_front_sample) { return false; }
-
-    const auto& sample = *m_front_sample;
-    const auto& submeshes = *m_front_submesh;
+    const auto& sample = m_sample;
+    const auto& submeshes = m_submeshes;
 
     dst.num_points = (uint)sample.points.size();
     dst.num_counts = (uint)sample.counts.size();
@@ -583,7 +554,7 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
     auto t = UsdTimeCode(t_);
     const auto& conf = getExportSettings();
 
-    MeshSample& sample = m_sample[0];
+    MeshSample& sample = m_sample;
 
 
     bool  ret = false;
@@ -659,18 +630,8 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
     if (src.uvs) {
         sample.uvs.assign((GfVec2f*)src.uvs, (GfVec2f*)src.uvs + src.num_points);
 
-        CreateAttributeIfNeeded(m_attr_uv, usdiUVAttrName, AttributeType::Float2Array);
-        m_attr_uv->setImmediate(&sample.uvs, t_);
-    }
-
-    if (src.tangents) {
-        sample.tangents.assign((GfVec4f*)src.tangents, (GfVec4f*)src.tangents + src.num_points);
-        if (conf.swap_handedness) {
-            InvertX((float4*)sample.tangents.data(), sample.tangents.size());
-        }
-
-        CreateAttributeIfNeeded(m_attr_tangents, usdiTangentAttrName, AttributeType::Float4Array);
-        m_attr_tangents->setImmediate(&sample.tangents, t_);
+        CreateAttributeIfNeeded(m_attr_uv0, usdiUVAttrName, AttributeType::Float2Array);
+        m_attr_uv0->setImmediate(&sample.uvs, t_);
     }
 
 
@@ -743,7 +704,6 @@ int Mesh::eachSample(const SampleCallback & cb)
         "velocities",
         usdiUVAttrName,
         usdiUVAttrName2,
-        usdiTangentAttrName,
         usdiColorAttrName,
         usdiBoneWeightsAttrName,
         usdiBoneIndicesAttrName,
@@ -777,14 +737,16 @@ int Mesh::eachSample(const SampleCallback & cb)
 
 void Mesh::assignRootBone(MeshData& dst, const char *v)
 {
-    MeshSample& sample = m_sample[0];
+    auto& sample = m_sample;
+
     sample.root_bone = TfToken(v);
     dst.root_bone = (char*)sample.root_bone.GetText();
 }
 
 void Mesh::assignBones(MeshData& dst, const char **v, int n)
 {
-    MeshSample& sample = m_sample[0];
+    auto& sample = m_sample;
+
     sample.bones.resize(n);
     sample.bones_.resize(n);
     for (int i = 0; i < n; ++i) {

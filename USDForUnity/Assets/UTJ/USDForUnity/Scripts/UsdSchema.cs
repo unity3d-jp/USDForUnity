@@ -21,8 +21,6 @@ namespace UTJ.USD
         protected usdi.VariantSets m_variantSets;
         protected usdi.AssetRef[] m_referencingAssets;
         [SerializeField] protected int[] m_variantSelection;
-        [SerializeField] bool m_overrideImportSettings;
-        [SerializeField] usdi.ImportSettings m_importSettings = usdi.ImportSettings.default_value;
         #endregion
 
 
@@ -53,16 +51,6 @@ namespace UTJ.USD
         public int[] variantSelections
         {
             get { return m_variantSelection; }
-        }
-        public bool overrideImportSettings
-        {
-            get { return m_overrideImportSettings; }
-            set { m_overrideImportSettings = value; }
-        }
-        public usdi.ImportSettings importSettings
-        {
-            get { return m_importSettings; }
-            set { m_importSettings = value; }
         }
         public string primPath
         {
@@ -130,31 +118,6 @@ namespace UTJ.USD
             }
         }
 
-        public void usdiSyncImportSettings()
-        {
-            m_overrideImportSettings = usdi.usdiPrimIsImportSettingsOverriden(m_schema);
-            if (m_overrideImportSettings)
-            {
-                usdi.usdiPrimGetImportSettings(m_schema, ref m_importSettings);
-            }
-        }
-
-        public void usdiApplyImportSettings()
-        {
-            if (!m_schema) return;
-
-            usdi.usdiPrimSetOverrideImportSettings(m_schema, m_overrideImportSettings);
-            if (m_overrideImportSettings)
-            {
-                usdi.usdiPrimSetImportSettings(m_schema, ref m_importSettings);
-                m_stream.UsdSetImportSettings(primPath, ref m_importSettings);
-            }
-            else
-            {
-                m_stream.UsdDeleteImportSettings(primPath);
-            }
-        }
-
         protected virtual UsdIComponent usdiSetupSchemaComponent()
         {
             return GetOrAddComponent<UsdComponent>();
@@ -168,7 +131,6 @@ namespace UTJ.USD
             m_master = m_stream.UsdFindSchema(usdi.usdiPrimGetMaster(m_schema));
 
             usdiSyncVarinatSets();
-            usdiSyncImportSettings();
             m_referencingAssets = usdi.usdiGetReferencingAssets(m_schema);
             if (m_goAssigned)
             {

@@ -17,7 +17,7 @@ namespace UTJ.USD
 
         usdi.Mesh m_mesh;
         usdi.MeshData m_meshData;
-        PinnedList<usdi.SubmeshData> m_submeshData = new PinnedList<usdi.SubmeshData>();
+        PinnedList<usdi.SplitData> m_submeshData = new PinnedList<usdi.SplitData>();
         usdi.MeshSummary m_meshSummary;
 
         bool m_allocateMeshDataRequired;
@@ -42,7 +42,7 @@ namespace UTJ.USD
             get { return m_meshData; }
             set { m_meshData = value; }
         }
-        public PinnedList<usdi.SubmeshData> submeshData
+        public PinnedList<usdi.SplitData> submeshData
         {
             get { return m_submeshData; }
         }

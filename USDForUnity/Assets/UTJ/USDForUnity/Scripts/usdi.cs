@@ -93,7 +93,6 @@ namespace UTJ.USD
         public enum TangentCalculationType
         {
             Never,
-            WhenMissing,
             Always,
         };
 
@@ -297,7 +296,7 @@ namespace UTJ.USD
             public static MeshSummary default_value { get { return default(MeshSummary); } }
         };
 
-        public struct SubmeshData
+        public struct SplitData
         {
             public IntPtr   points;
             public IntPtr   normals;
@@ -312,7 +311,7 @@ namespace UTJ.USD
             public Vector3  center;
             public Vector3  extents;
 
-            public static SubmeshData default_value { get { return default(SubmeshData); } }
+            public static SplitData default_value { get { return default(SplitData); } }
         };
 
         public struct MeshData
@@ -457,16 +456,6 @@ namespace UTJ.USD
         [DllImport ("usdi")] public static extern IntPtr        usdiPrimGetPath(Schema schema);
         [DllImport ("usdi")] public static extern IntPtr        usdiPrimGetName(Schema schema);
         [DllImport ("usdi")] public static extern IntPtr        usdiPrimGetUsdTypeName(Schema schema);
-
-        [DllImport ("usdi")] public static extern Bool          usdiPrimIsImportSettingsOverriden(Schema schema);
-        [DllImport ("usdi")] public static extern void          usdiPrimSetOverrideImportSettings(Schema schema, Bool v);
-        [DllImport ("usdi")] public static extern void          usdiPrimGetImportSettings(Schema schema, ref ImportSettings dst);
-        [DllImport ("usdi")] public static extern void          usdiPrimSetImportSettings(Schema schema, ref ImportSettings v);
-        [DllImport ("usdi")] public static extern Bool          usdiPrimIsExportSettingsOverriden(Schema schema);
-        [DllImport ("usdi")] public static extern void          usdiPrimSetOverrideExportSettings(Schema schema, Bool v);
-        [DllImport ("usdi")] public static extern void          usdiPrimGetExportSettings(Schema schema, ref ExportSettings dst);
-        [DllImport ("usdi")] public static extern void          usdiPrimSetExportSettings(Schema schema, ref ExportSettings v);
-
 
         [DllImport ("usdi")] public static extern Bool          usdiPrimIsEditable(Schema schema);
         [DllImport ("usdi")] public static extern Bool          usdiPrimIsInstance(Schema schema);

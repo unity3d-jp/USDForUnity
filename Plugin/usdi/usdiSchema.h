@@ -91,15 +91,8 @@ public:
     UpdateFlags     getUpdateFlagsPrev() const;
     virtual void    updateSample(Time t);
 
-    void                    setOverrideImportSettings(bool v);
-    bool                    isImportSettingsOverridden() const;
-    const ImportSettings&   getImportSettings() const;
-    void                    setImportSettings(const ImportSettings& conf);
-
-    void                    setOverrideExportSettings(bool v);
-    bool                    isExportSettingsOverridden() const;
-    const ExportSettings&   getExportSettings() const;
-    void                    setExportSettings(const ExportSettings& conf);
+    const ImportSettings& getImportSettings() const;
+    const ExportSettings& getExportSettings() const;
 
     void*           getUserData() const;
     void            setUserData(void *v);
@@ -193,8 +186,6 @@ protected:
 
     bool            m_isettings_override = false;
     ImportSettings  m_isettings;
-    bool            m_esettings_override = false;
-    ExportSettings  m_esettings;
 
     void            *m_userdata = nullptr;
 };

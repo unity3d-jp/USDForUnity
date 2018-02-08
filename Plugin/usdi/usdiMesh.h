@@ -87,11 +87,10 @@ private:
     typedef std::vector<SubmeshSample> SubmeshSamples;
 
     UsdGeomMesh         m_mesh;
-    MeshSample          m_sample[2], *m_front_sample = nullptr;
-    SubmeshSamples      m_submeshes[2], *m_front_submesh = nullptr;
+    MeshSample          m_sample;
+    SubmeshSamples      m_submeshes;
     Attribute           *m_attr_colors = nullptr;
-    Attribute           *m_attr_uv = nullptr;
-    Attribute           *m_attr_tangents = nullptr;
+    Attribute           *m_attr_uv0 = nullptr;
 
     // bone & weights attributes
     Attribute           *m_attr_bone_weights = nullptr;
