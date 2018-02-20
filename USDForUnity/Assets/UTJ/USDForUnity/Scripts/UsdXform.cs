@@ -8,22 +8,22 @@ namespace UTJ.USD
     public class UsdXform : UsdSchema
     {
         #region fields
-        [SerializeField] protected Transform m_trans;
+        [SerializeField] protected Transform transform;
 
         usdi.Xform m_xf;
-        usdi.XformData m_xfData = usdi.XformData.default_value;
+        usdi.XformData m_xfData = usdi.XformData.defaultValue;
         protected usdi.UpdateFlags m_updateFlags;
         #endregion
 
         #region properties
-        public usdi.Xform nativeXformPtr
+        public usdi.Xform usdXform
         {
             get { return m_xf; }
         }
         #endregion
 
         #region impl
-        protected override UsdIComponent usdiSetupSchemaComponent()
+        protected override UsdIComponent UsdSetupSchemaComponent()
         {
             return GetOrAddComponent<UsdXformComponent>();
         }
@@ -32,7 +32,7 @@ namespace UTJ.USD
         {
             base.UsdOnLoad();
             m_xf = usdi.usdiAsXform(m_schema);
-            m_trans = GetComponent<Transform>();
+            transform = GetComponent<Transform>();
         }
 
         public override void UsdOnUnload()
@@ -41,23 +41,23 @@ namespace UTJ.USD
             m_xf = default(usdi.Xform);
         }
 
-        public override void UsdAsyncUpdate(double time)
+        public override void UsdPrepareSample()
         {
             m_updateFlags = usdi.usdiPrimGetUpdateFlags(m_xf);
-            usdi.usdiXformReadSample(m_xf, ref m_xfData, time);
+            usdi.usdiXformReadSample(m_xf, ref m_xfData);
         }
 
-        public override void UsdUpdate(double time)
+        public override void UsdSyncDataEnd()
         {
-            base.UsdUpdate(time);
-            if(m_goAssigned)
+            base.UsdSyncDataEnd();
+            if(m_linkedGameObj != null)
             {
                 if (m_xfData.flags.updatedPosition)
-                    m_trans.localPosition = m_xfData.position;
+                    transform.localPosition = m_xfData.position;
                 if (m_xfData.flags.updatedRotation)
-                    m_trans.localRotation = m_xfData.rotation;
+                    transform.localRotation = m_xfData.rotation;
                 if (m_xfData.flags.updatedScale)
-                    m_trans.localScale = m_xfData.scale;
+                    transform.localScale = m_xfData.scale;
             }
         }
         #endregion

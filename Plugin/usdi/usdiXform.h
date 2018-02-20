@@ -15,7 +15,7 @@ public:
     void                updateSample(Time t) override;
 
     const XformSummary& getSummary() const;
-    bool                readSample(XformData& dst, Time t);
+    bool                readSample(XformData& dst);
     bool                writeSample(const XformData& src, Time t);
 
     using SampleCallback = std::function<void(const XformData& data, Time t)>;

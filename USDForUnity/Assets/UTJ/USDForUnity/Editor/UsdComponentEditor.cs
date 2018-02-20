@@ -45,7 +45,7 @@ namespace UTJ.USD
                     if (EditorGUI.EndChangeCheck())
                     {
                         Undo.RecordObject(component, "Changed Variant Set");
-                        schema.usdiSetVariantSelection(i, ivar);
+                        schema.UsdSetVariantSelection(i, ivar);
                         EditorUtility.SetDirty(component);
                     }
                 }

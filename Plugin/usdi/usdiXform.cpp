@@ -280,10 +280,8 @@ void Xform::updateSample(Time t_)
     sample.flags = (sample.flags & ~(int)XformData::Flags::UpdatedMask) | update_flags;
 }
 
-bool Xform::readSample(XformData& dst, Time t)
+bool Xform::readSample(XformData& dst)
 {
-    if (t != m_time_prev) { updateSample(t); }
-
     dst = m_sample;
     return true;
 }
@@ -355,7 +353,8 @@ int Xform::eachSample(const SampleCallback & cb)
 
         XformData data;
         for (const auto& t : times) {
-            readSample(data, t.first);
+            updateSample(t.first);
+            readSample(data);
             data.flags = t.second;;
             cb(data, t.first);
         }
@@ -378,7 +377,8 @@ int Xform::eachSample(const SampleCallback & cb)
 
         XformData data;
         for (const auto& t : times) {
-            readSample(data, t.first);
+            updateSample(t.first);
+            readSample(data);
             cb(data, t.first);
         }
         return (int)times.size();

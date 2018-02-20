@@ -86,10 +86,8 @@ void Points::updateSample(Time t_)
     }
 }
 
-bool Points::readSample(PointsData& dst, Time t)
+bool Points::readSample(PointsData& dst)
 {
-    if (t != m_time_prev) { updateSample(t); }
-
     if (!m_front_sample) { return false; }
     const auto& sample = *m_front_sample;
 
@@ -188,7 +186,8 @@ int Points::eachSample(const SampleCallback & cb)
 
     PointsData data;
     for (const auto& t : times) {
-        readSample(data, t.first);
+        updateSample(t.first);
+        readSample(data);
         cb(data, t.first);
     }
     return (int)times.size();

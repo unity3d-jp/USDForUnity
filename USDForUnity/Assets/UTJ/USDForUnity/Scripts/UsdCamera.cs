@@ -18,7 +18,7 @@ namespace UTJ.USD
         [SerializeField] Camera m_ucam;
 
         usdi.Camera m_camera;
-        usdi.CameraData m_cameraData = usdi.CameraData.default_value;
+        usdi.CameraData m_cameraData = usdi.CameraData.defaultValue;
         #endregion
 
 
@@ -36,7 +36,7 @@ namespace UTJ.USD
 
 
         #region impl
-        protected override UsdIComponent usdiSetupSchemaComponent()
+        protected override UsdIComponent UsdSetupSchemaComponent()
         {
             return GetOrAddComponent<UsdCameraComponent>();
         }
@@ -54,19 +54,17 @@ namespace UTJ.USD
             m_camera = default(usdi.Camera);
         }
 
-        public override void UsdAsyncUpdate(double time)
+        public override void UsdPrepareSample()
         {
-            base.UsdAsyncUpdate(time);
-            if (m_updateFlags.bits == 0) { return; }
-            usdi.usdiCameraReadSample(m_camera, ref m_cameraData, time);
+            base.UsdPrepareSample();
+            usdi.usdiCameraReadSample(m_camera, ref m_cameraData);
         }
 
-        public override void UsdUpdate(double time)
+        public override void UsdSyncDataEnd()
         {
-            if (m_updateFlags.bits == 0) { return; }
-            base.UsdUpdate(time);
+            base.UsdSyncDataEnd();
 
-            if (m_goAssigned)
+            if (m_linkedGameObj != null)
             {
                 m_ucam.nearClipPlane = m_cameraData.near_clipping_plane;
                 m_ucam.farClipPlane = m_cameraData.far_clipping_plane;

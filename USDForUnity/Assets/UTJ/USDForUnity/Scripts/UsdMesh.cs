@@ -1,68 +1,394 @@
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.Rendering;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 
 namespace UTJ.USD
 {
-
-    [Serializable]
     public class UsdMesh : UsdXform
     {
+        public class Submesh
+        {
+            public PinnedList<int> indices = new PinnedList<int>();
+            public bool update = true;
+        }
+
+        public class Split
+        {
+            public PinnedList<int> indices = new PinnedList<int>();
+            public PinnedList<Vector3> points = new PinnedList<Vector3>();
+            public PinnedList<Vector3> velocities = new PinnedList<Vector3>();
+            public PinnedList<Vector3> normals = new PinnedList<Vector3>();
+            public PinnedList<Vector4> tangents = new PinnedList<Vector4>();
+            public PinnedList<Vector2> uv0 = new PinnedList<Vector2>();
+            public PinnedList<Vector2> uv1 = new PinnedList<Vector2>();
+            public PinnedList<Color> colors = new PinnedList<Color>();
+
+            public PinnedList<BoneWeight> weights = new PinnedList<BoneWeight>();
+            public PinnedList<Matrix4x4> bindposes = new PinnedList<Matrix4x4>();
+            public Transform[] bones;
+            public Transform rootBone;
+
+            public Mesh mesh;
+            public GameObject host; // null if master nodes
+            public bool clear = true;
+            public bool active = true;
+
+            public Vector3 center;
+            public Vector3 size;
+            int nth;
+
+            #region impl
+            void usdiSetupBones(UsdMesh parent, ref usdi.MeshData meshData)
+            {
+                if (host == null)
+                    return;
+
+                var smr = host.GetComponent<SkinnedMeshRenderer>();
+                if (smr == null)
+                    return;
+
+                {
+                    var tmp = usdi.MeshData.defaultValue;
+                    bindposes.ResizeDiscard(parent.splitData[nth].boneCount);
+                    tmp.bindposes = bindposes;
+                    usdi.usdiMeshReadSample(parent.usdMesh, ref tmp);
+                }
+
+                if (nth > 0)
+                {
+                    bindposes = parent.submeshes[0].bindposes;
+                    rootBone = parent.submeshes[0].rootBone;
+                    bones = parent.submeshes[0].bones;
+                }
+                else
+                {
+                    var rootBoneName = usdi.S(meshData.rootBone);
+                    var boneNames = usdi.SA(meshData.bones);
+
+                    if (parent.isInstance)
+                    {
+                        // remap bone names
+
+                        var root = parent.nativeSchemaPtr;
+                        for (; ; )
+                        {
+                            root = usdi.usdiPrimGetParent(root);
+                            if (!usdi.usdiPrimGetMaster(root))
+                            {
+                                break;
+                            }
+                        }
+
+                        var r = usdi.usdiPrimFindChild(root, Path.GetFileName(rootBoneName), true);
+                        if (r)
+                        {
+                            rootBoneName = usdi.usdiPrimGetPathS(r);
+                        }
+
+                        for (int i = 0; i < boneNames.Length; ++i)
+                        {
+                            var c = usdi.usdiPrimFindChild(root, Path.GetFileName(boneNames[i]), true);
+                            if (c)
+                            {
+                                boneNames[i] = usdi.usdiPrimGetPathS(c);
+                            }
+                        }
+                    }
+
+                    bones = new Transform[boneNames.Length];
+                    for (int i = 0; i < boneNames.Length; ++i)
+                    {
+                        var schema = parent.stream.UsdFindSchema(boneNames[i]);
+                        if (schema == null)
+                        {
+                            Debug.LogError("bone not found: " + boneNames[i]);
+                            continue;
+                        }
+                        if (schema.gameObject == null)
+                        {
+                            Debug.LogError("bone don't have GameObject: " + boneNames[i]);
+                            continue;
+                        }
+                        bones[i] = schema.gameObject.GetComponent<Transform>();
+                    }
+
+                    if (meshData.rootBone != IntPtr.Zero)
+                    {
+                        var rb = parent.stream.UsdFindSchema(rootBoneName);
+                        rootBone = rb.gameObject.GetComponent<Transform>();
+                    }
+                    else
+                    {
+                        rootBone = bones[0]; // maybe incorrect
+                    }
+                }
+
+                smr.bones = bones;
+                smr.rootBone = rootBone;
+            }
+
+            Mesh usdiShareOrCreateMesh(UsdMesh parent)
+            {
+                var master = parent.master as UsdMesh;
+                if (master != null)
+                {
+                    return master.submeshes[nth].mesh;
+                }
+                else
+                {
+                    return new Mesh() { name = "<dyn>" };
+                }
+            }
+
+            public void usdiSetupMesh(UsdMesh parent)
+            {
+                if (mesh == null)
+                {
+                    mesh = new Mesh();
+#if UNITY_2017_3_OR_NEWER
+                    mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+#endif
+                    mesh.MarkDynamic();
+                }
+            }
+
+            public void usdiSetupComponents(UsdMesh parent)
+            {
+                if (nth == 0)
+                {
+                    host = parent.gameObject;
+                }
+                else
+                {
+                    string name = "Submesh[" + nth + "]";
+                    var ptrans = parent.GetComponent<Transform>();
+                    var child = ptrans.Find(name);
+                    if (child != null)
+                    {
+                        host = child.gameObject;
+                    }
+                    else
+                    {
+                        host = new GameObject(name);
+                        host.GetComponent<Transform>().SetParent(parent.GetComponent<Transform>(), false);
+                    }
+                }
+
+                var transform = host.GetComponent<Transform>();
+
+                var meshSummary = parent.meshSummary;
+                var meshData = parent.meshData;
+
+                if (meshSummary.boneCount > 0)
+                {
+                    // setup SkinnedMeshRenderer
+
+                    var renderer = usdi.GetOrAddComponent<SkinnedMeshRenderer>(parent.gameObject);
+                    usdiSetupBones(parent, ref meshData);
+
+                    if (renderer.sharedMesh != null && parent.master == null && renderer.sharedMesh.name.IndexOf("<dyn>") == 0)
+                    {
+                        mesh = renderer.sharedMesh;
+                    }
+                    else
+                    {
+                        mesh = usdiShareOrCreateMesh(parent);
+                        renderer.sharedMesh = mesh;
+                    }
+                    mesh.MarkDynamic();
+                }
+                else
+                {
+                    // setup MeshFilter and MeshRenderer
+
+                    var meshFilter = usdi.GetOrAddComponent<MeshFilter>(go);
+                    if (meshFilter.sharedMesh != null && parent.master == null && meshFilter.sharedMesh.name.IndexOf("<dyn>") == 0)
+                    {
+                        mesh = meshFilter.sharedMesh;
+                    }
+                    else
+                    {
+                        mesh = usdiShareOrCreateMesh(parent);
+                        meshFilter.sharedMesh = mesh;
+                    }
+                    mesh.MarkDynamic();
+
+                    renderer = usdi.GetOrAddComponent<MeshRenderer>(host, ref assignDefaultMaterial);
+                }
+            }
+
+
+            public void AllocateMeshData(ref usdi.MeshSummary summary, ref usdi.MeshData meshData)
+            {
+                {
+                    points.ResizeDiscard(meshData.vertexCount);
+                    meshData.points = points;
+                }
+                {
+                    normals.ResizeDiscard(meshData.vertexCount);
+                    meshData.normals = normals;
+                }
+                if (summary.hasColors)
+                {
+                    colors.ResizeDiscard(meshData.vertexCount);
+                    meshData.colors = colors;
+                }
+                if (summary.hasTangents)
+                {
+                    tangents.ResizeDiscard(meshData.vertexCount);
+                    meshData.tangents = tangents;
+                }
+                if (summary.hasUV0)
+                {
+                    uv0.ResizeDiscard(meshData.vertexCount);
+                    meshData.uv0 = uv0;
+                    if (summary.hasTangents)
+                    {
+                        tangents.ResizeDiscard(meshData.vertexCount);
+                        meshData.tangents = tangents;
+                    }
+                }
+                if (summary.boneCount > 0)
+                {
+                    weights.ResizeDiscard(meshData.vertexCount);
+                    meshData.weights = weights;
+                }
+                {
+                    indices.ResizeDiscard(meshData.indexCount);
+                    meshData.indices = indices;
+                }
+            }
+
+            public void usdiFreeMeshData()
+            {
+                points = null;
+                normals = null;
+                uv0 = null;
+                indices = null;
+            }
+
+            public void usdiUpdateBounds(ref usdi.MeshData data)
+            {
+                mesh.bounds = new Bounds(data.center, data.extents);
+            }
+
+            public void usdiSetActive(bool v)
+            {
+                if (transform != null)
+                {
+                    transform.gameObject.SetActive(v);
+                }
+            }
+
+
+            void usdiUpdateSkinningData()
+            {
+                mesh.boneWeights = weights.Array;
+                mesh.bindposes = bindposes.Array;
+            }
+
+            public void usdiUploadMeshData(bool topology, bool skinning)
+            {
+                if (topology)
+                    mesh.Clear();
+
+                mesh.SetVertices(points.List);
+                if (normals.Count > 0) { mesh.SetNormals(normals.List); }
+                if (colors.Count > 0) { mesh.SetColors(colors.List); }
+                if (uv0.Count > 0) { mesh.SetUVs(0, uv0.List); }
+                if (tangents.Count > 0) { mesh.SetTangents(tangents.List); }
+
+                if (topology)
+                    mesh.SetTriangles(indices.List, 0);
+
+                if (weights != null && skinning)
+                    usdiUpdateSkinningData();
+
+                mesh.UploadMeshData(false);
+            }
+            #endregion
+        }
+
+
+
         #region fields
-        [SerializeField] List<UsdSubmesh> m_submeshes = new List<UsdSubmesh>();
+        usdi.Mesh m_usdMesh;
+        usdi.MeshSummary m_summary;
+        usdi.MeshSampleSummary m_sampleSummary;
+        PinnedList<usdi.MeshSplitSummary> m_splitSummaries = new PinnedList<usdi.MeshSplitSummary>();
+        PinnedList<usdi.SubmeshSummary> m_submeshSummaries = new PinnedList<usdi.SubmeshSummary>();
+        PinnedList<usdi.MeshData> m_splitData = new PinnedList<usdi.MeshData>();
+        PinnedList<usdi.SubmeshData> m_submeshData = new PinnedList<usdi.SubmeshData>();
 
-        usdi.Mesh m_mesh;
-        usdi.MeshData m_meshData;
-        PinnedList<usdi.SplitData> m_submeshData = new PinnedList<usdi.SplitData>();
-        usdi.MeshSummary m_meshSummary;
-
-        bool m_allocateMeshDataRequired;
-        bool m_updateIndicesRequired;
-        bool m_updateVerticesRequired;
-        bool m_updateSkinningRequired;
-        double m_timeRead; // accessed from worker thread
+        List<Split> m_splits = new List<Split>();
+        List<Submesh> m_submeshes = new List<Submesh>();
+        bool m_freshSetup = false;
         #endregion
 
 
         #region properties
-        public usdi.Mesh nativeMeshPtr
+        public usdi.Mesh usdMesh
         {
-            get { return m_mesh; }
+            get { return m_usdMesh; }
         }
         public usdi.MeshSummary meshSummary
         {
-            get { return m_meshSummary; }
+            get { return m_summary; }
         }
-        public usdi.MeshData meshData
+        public PinnedList<usdi.MeshData> splitData
         {
-            get { return m_meshData; }
-            set { m_meshData = value; }
+            get { return m_splitData; }
         }
-        public PinnedList<usdi.SplitData> submeshData
+        public List<Split> submeshes
         {
-            get { return m_submeshData; }
-        }
-        public List<UsdSubmesh> submeshes
-        {
-            get { return m_submeshes; }
+            get { return m_splits; }
         }
         #endregion
 
 
         #region impl
-        UsdSubmesh usdiAddSubmesh()
+        void UpdateSplits(int numSplits)
         {
-            var sm = new UsdSubmesh();
-            sm.usdiOnLoad(this, m_submeshes.Count);
-            m_submeshes.Add(sm);
-            return sm;
+            Split split = null;
+
+            if (m_summary.topologyVariance == usdi.TopologyVariance.Heterogenous || numSplits > 1)
+            {
+                for (int i = 0; i < numSplits; ++i)
+                {
+                    if (i >= m_splits.Count)
+                        m_splits.Add(new Split());
+                    else
+                        m_splits[i].active = true;
+                }
+            }
+            else
+            {
+                if (m_splits.Count == 0)
+                {
+                    split = new Split
+                    {
+                        host = m_linkedGameObj,
+                    };
+                    m_splits.Add(split);
+                }
+                else
+                {
+                    m_splits[0].active = true;
+                }
+            }
+
+            for (int i = numSplits; i < m_splits.Count; ++i)
+                m_splits[i].active = false;
         }
 
-        protected override UsdIComponent usdiSetupSchemaComponent()
+
+        protected override UsdIComponent UsdSetupSchemaComponent()
         {
             return GetOrAddComponent<UsdMeshComponent>();
         }
@@ -71,12 +397,9 @@ namespace UTJ.USD
         {
             base.UsdOnLoad();
 
-            m_mesh = usdi.usdiAsMesh(m_schema);
-            usdi.usdiMeshGetSummary(m_mesh, ref m_meshSummary);
-            if(m_submeshes.Count == 0)
-            {
-                usdiAddSubmesh();
-            }
+            m_freshSetup = true;
+            m_usdMesh = usdi.usdiAsMesh(m_schema);
+            usdi.usdiMeshGetSummary(m_usdMesh, ref m_summary);
 
             if (isInstance)
             {
@@ -84,8 +407,7 @@ namespace UTJ.USD
             }
             else
             {
-                m_allocateMeshDataRequired = true;
-                if (m_meshSummary.boneCount > 0 && m_stream.importSettings.swapHandedness)
+                if (m_summary.boneCount > 0 && m_stream.importSettings.swapHandedness)
                 {
                     Debug.LogWarning("Swap Handedness import option is enabled. This may cause broken skinning animation.");
                 }
@@ -96,18 +418,11 @@ namespace UTJ.USD
         {
             base.UsdOnUnload();
 
-            int c = m_submeshes.Count;
-            for (int i = 0; i < c; ++i) { m_submeshes[i].usdiOnUnload(); }
+            int c = m_splits.Count;
+            for (int i = 0; i < c; ++i) { m_splits[i].usdiOnUnload(); }
 
-            m_meshData = usdi.MeshData.defaultValue;
-            m_submeshData = null;
-            m_meshSummary = usdi.MeshSummary.default_value;
-
-            m_allocateMeshDataRequired = false;
-            m_updateIndicesRequired = false;
-            m_updateVerticesRequired = false;
-            m_updateSkinningRequired = false;
-            m_timeRead = 0.0;
+            m_splitData.Clear();
+            m_summary = usdi.MeshSummary.defaultValue;
         }
 
 
@@ -115,185 +430,315 @@ namespace UTJ.USD
         void usdiAllocateMeshData(double t)
         {
             usdi.MeshData md = usdi.MeshData.defaultValue;
-            usdi.usdiMeshReadSample(m_mesh, ref md, t, true);
+            usdi.usdiMeshReadSample(m_usdMesh, ref md, t, true);
 
             m_meshData = md;
             if (m_meshData.submeshCount == 0)
             {
-                m_submeshes[0].usdiAllocateMeshData(ref m_meshSummary, ref m_meshData);
+                m_splits[0].AllocateMeshData(ref m_summary, ref m_meshData);
             }
             else
             {
-                m_submeshData.ResizeDiscard(m_meshData.submeshCount);
-                m_meshData.submeshes = m_submeshData;
-                usdi.usdiMeshReadSample(m_mesh, ref m_meshData, t, true);
+                m_splitData.ResizeDiscard(m_meshData.submeshCount);
+                m_meshData.submeshes = m_splitData;
+                usdi.usdiMeshReadSample(m_usdMesh, ref m_meshData, t, true);
 
-                while (m_submeshes.Count < m_meshData.submeshCount)
+                while (m_splits.Count < m_meshData.submeshCount)
                 {
                     usdiAddSubmesh();
                 }
                 for (int i = 0; i < m_meshData.submeshCount; ++i)
                 {
-                    m_submeshes[i].usdiAllocateMeshData(ref m_meshSummary, m_submeshData);
+                    m_splits[i].AllocateMeshData(ref m_summary, m_splitData);
                 }
             }
         }
 
         // async
-        public override void UsdAsyncUpdate(double time)
+        public override void UsdPrepareSample()
         {
-            base.UsdAsyncUpdate(time);
-            if (m_updateFlags.bits == 0 && !m_allocateMeshDataRequired && !m_updateIndicesRequired && !m_updateVerticesRequired) {
+            base.UsdPrepareSample();
+            if (m_updateFlags.bits == 0) {
                 return;
             }
             if(m_updateFlags.importConfigChanged || m_updateFlags.variantSetChanged)
             {
-                usdi.usdiMeshGetSummary(m_mesh, ref m_meshSummary);
+                usdi.usdiMeshGetSummary(m_usdMesh, ref m_summary);
             }
 
-            m_timeRead = time;
             if(isInstance)
             {
-                m_allocateMeshDataRequired = false;
-                m_updateIndicesRequired = false;
-                m_updateVerticesRequired = false;
-                m_updateSkinningRequired = false;
-
-                usdi.usdiMeshReadSample(m_mesh, ref m_meshData, m_timeRead, true);
-                while (m_submeshes.Count < m_meshData.submeshCount)
+                usdi.usdiMeshReadSample(m_usdMesh, ref m_meshData, time, true);
+                while (m_splits.Count < m_meshData.submeshCount)
                 {
                     usdiAddSubmesh();
                 }
             }
             else
             {
-                if (!m_allocateMeshDataRequired)
-                {
-                    m_allocateMeshDataRequired =
-                        m_meshSummary.topologyVariance == usdi.TopologyVariance.Heterogenous ||
-                        m_updateFlags.variantSetChanged;
-                }
-                if(!m_updateIndicesRequired)
-                {
-                    m_updateIndicesRequired =
-                        m_allocateMeshDataRequired ||
-                        m_meshSummary.topologyVariance == usdi.TopologyVariance.Heterogenous ||
-                        m_updateFlags.importConfigChanged;
-
-                }
-                if (!m_updateVerticesRequired)
-                {
-                    m_updateVerticesRequired =
-                        m_updateIndicesRequired ||
-                        m_meshSummary.topologyVariance != usdi.TopologyVariance.Constant;
-                }
-                if(!m_updateSkinningRequired)
-                {
-                    m_updateSkinningRequired = m_allocateMeshDataRequired || m_updateFlags.importConfigChanged;
-                }
             }
 
-            if (m_allocateMeshDataRequired)
-            {
-                usdiAllocateMeshData(m_timeRead);
-            }
+            usdiAllocateMeshData(m_timeRead);
 
             if (m_updateVerticesRequired)
             {
-                usdi.usdiMeshReadSample(m_mesh, ref m_meshData, m_timeRead, true);
+                usdi.usdiMeshReadSample(m_usdMesh, ref m_meshData, m_timeRead, true);
             }
         }
 
 
-        // sync
-        void usdiUploadMeshData(double t, bool topology, bool skinning)
-        {
-            int num_submeshes = m_meshData.submeshCount == 0 ? 1 : m_meshData.submeshCount;
-            for (int i = 0; i < num_submeshes; ++i)
-            {
-                m_submeshes[i].usdiUploadMeshData(topology, skinning);
-            }
-        }
 
         // sync
-        public override void UsdUpdate(double time)
+        public override void UsdSyncDataBegin()
         {
-            if (m_updateFlags.bits == 0 && !m_allocateMeshDataRequired && !m_updateVerticesRequired)
+            base.UsdSyncDataBegin();
+
+
+            usdi.usdiMeshGetSampleSummary(m_usdMesh, ref m_sampleSummary);
+            int splitCount = m_sampleSummary.splitCount;
+            int submeshCount = m_sampleSummary.submeshCount;
+
+            m_splitSummaries.ResizeDiscard(splitCount);
+            m_splitData.ResizeDiscard(splitCount);
+            m_submeshSummaries.ResizeDiscard(submeshCount);
+            m_submeshData.ResizeDiscard(submeshCount);
+
+            sample.GetSplitSummaries(m_splitSummaries);
+            sample.GetSubmeshSummaries(m_submeshSummaries);
+
+            UpdateSplits(m_sampleSummary.splitCount);
+
+
+            bool topologyChanged = m_sampleSummary.topologyChanged;
+
+            // setup buffers
+            var vertexData = default(aiPolyMeshData);
+            for (int spi = 0; spi < splitCount; ++spi)
             {
+                var split = m_splits[spi];
+
+                split.clear = topologyChanged;
+                split.active = true;
+
+                int vertexCount = m_splitSummaries[spi].vertexCount;
+
+                if (!m_summary.constantPoints || topologyChanged)
+                    split.points.ResizeDiscard(vertexCount);
+                else
+                    split.points.ResizeDiscard(0);
+                vertexData.positions = split.points;
+
+                if (m_summary.hasVelocities && (!m_summary.constantVelocities || topologyChanged))
+                    split.velocities.ResizeDiscard(vertexCount);
+                else
+                    split.velocities.ResizeDiscard(0);
+                vertexData.velocities = split.velocities;
+
+                if (m_summary.hasNormals && (!m_summary.constantNormals || topologyChanged))
+                    split.normals.ResizeDiscard(vertexCount);
+                else
+                    split.normals.ResizeDiscard(0);
+                vertexData.normals = split.normals;
+
+                if (m_summary.hasTangents && (!m_summary.constantTangents || topologyChanged))
+                    split.tangents.ResizeDiscard(vertexCount);
+                else
+                    split.tangents.ResizeDiscard(0);
+                vertexData.tangents = split.tangents;
+
+                if (m_summary.hasUV0 && (!m_summary.constantUV0 || topologyChanged))
+                    split.uv0.ResizeDiscard(vertexCount);
+                else
+                    split.uv0.ResizeDiscard(0);
+                vertexData.uv0 = split.uv0;
+
+                if (m_summary.hasUV1 && (!m_summary.constantUV1 || topologyChanged))
+                    split.uv1.ResizeDiscard(vertexCount);
+                else
+                    split.uv1.ResizeDiscard(0);
+                vertexData.uv1 = split.uv1;
+
+                if (m_summary.hasColors && (!m_summary.constantColors || topologyChanged))
+                    split.colors.ResizeDiscard(vertexCount);
+                else
+                    split.colors.ResizeDiscard(0);
+                vertexData.colors = split.colors;
+
+                m_splitData[spi] = vertexData;
+            }
+
+            {
+                if (m_submeshes.Count > submeshCount)
+                    m_submeshes.RemoveRange(submeshCount, m_submeshes.Count - submeshCount);
+                while (m_submeshes.Count < submeshCount)
+                    m_submeshes.Add(new Submesh());
+
+                var submeshData = default(usdi.SubmeshData);
+                for (int smi = 0; smi < submeshCount; ++smi)
+                {
+                    var submesh = m_submeshes[smi];
+                    m_submeshes[smi].update = true;
+                    submesh.indices.ResizeDiscard(m_submeshSummaries[smi].indexCount);
+                    submeshData.indices = submesh.indices;
+                    m_submeshData[smi] = submeshData;
+                }
+            }
+
+            // kick async copy
+            sample.FillVertexBuffer(m_splitData, m_submeshData);
+        }
+
+        public override void UsdSyncDataEnd()
+        {
+#if UNITY_EDITOR
+            for (int s = 0; s < m_splits.Count; ++s)
+            {
+                var split = m_splits[s];
+                var mf = split.host.GetComponent<MeshFilter>();
+                if (mf != null)
+                    mf.sharedMesh = split.mesh;
+            }
+#endif
+
+            if (!m_usdMesh.schema.isDataUpdated)
                 return;
-            }
-            base.UsdUpdate(time);
 
-            UsdSync();
+            // wait async copy complete
+            var sample = m_usdMesh.sample;
+            sample.Sync();
 
-            int num_submeshes = m_meshData.submeshCount == 0 ? 1 : m_meshData.submeshCount;
+            bool useSubObjects = (m_summary.topologyVariance == usdi.TopologyVariance.Heterogenous || m_sampleSummary.splitCount > 1);
 
-            if(m_goAssigned)
+            for (int s = 0; s < m_splits.Count; ++s)
             {
-                for (int i = 0; i < num_submeshes; ++i)
+                var split = m_splits[s];
+                if (split.active)
                 {
-                    m_submeshes[i].usdiSetupComponents(this);
-                }
-            }
-            else
-            {
-                for (int i = 0; i < num_submeshes; ++i)
-                {
-                    m_submeshes[i].usdiSetupMesh(this);
-                }
-            }
+                    // Feshly created splits may not have their host set yet
+                    if (split.host == null)
+                    {
+                        if (useSubObjects)
+                        {
+                            string name = abcTreeNode.linkedGameObj.name + "_split_" + s;
 
-            if (m_meshSummary.topologyVariance == usdi.TopologyVariance.Heterogenous)
-            {
-                // number of active submeshes may change over time if topology is dynamic.
-                int i = 1;
-                for (; i < num_submeshes; ++i)
-                {
-                    m_submeshes[i].usdiSetActive(true);
-                }
-                for (; i < m_submeshes.Count; ++i)
-                {
-                    m_submeshes[i].usdiSetActive(false);
-                }
-            }
+                            Transform trans = abcTreeNode.linkedGameObj.transform.Find(name);
 
-            if (m_updateVerticesRequired)
-            {
-                if(m_meshData.submeshCount == 0)
-                {
-                    m_submeshes[0].usdiUpdateBounds(ref m_meshData);
+                            if (trans == null)
+                            {
+                                GameObject go = new GameObject();
+                                go.name = name;
+
+                                trans = go.GetComponent<Transform>();
+                                trans.parent = abcTreeNode.linkedGameObj.transform;
+                                trans.localPosition = Vector3.zero;
+                                trans.localEulerAngles = Vector3.zero;
+                                trans.localScale = Vector3.one;
+                            }
+
+                            split.host = trans.gameObject;
+                        }
+                        else
+                        {
+                            split.host = abcTreeNode.linkedGameObj;
+                        }
+                    }
+
+                    // Feshly created splits may not have their mesh set yet
+                    if (split.mesh == null)
+                        split.mesh = AddMeshComponents(split.host);
+                    if (split.clear)
+                        split.mesh.Clear();
+
+                    if (split.points.Count > 0)
+                        split.mesh.SetVertices(split.points.List);
+                    if (split.normals.Count > 0)
+                        split.mesh.SetNormals(split.normals.List);
+                    if (split.tangents.Count > 0)
+                        split.mesh.SetTangents(split.tangents.List);
+                    if (split.uv0.Count > 0)
+                        split.mesh.SetUVs(0, split.uv0.List);
+                    if (split.uv1.Count > 0)
+                        split.mesh.SetUVs(1, split.uv1.List);
+                    if (split.velocities.Count > 0)
+                        split.mesh.SetUVs(3, split.velocities.List);
+                    if (split.colors.Count > 0)
+                        split.mesh.SetColors(split.colors.List);
+
+                    // update the bounds
+                    var data = m_splitData[s];
+                    split.mesh.bounds = new Bounds(data.center, data.extents);
+
+                    if (split.clear)
+                    {
+                        int submeshCount = m_splitSummaries[s].submeshCount;
+                        split.mesh.subMeshCount = submeshCount;
+                        MeshRenderer renderer = split.host.GetComponent<MeshRenderer>();
+                        Material[] currentMaterials = renderer.sharedMaterials;
+                        int nmat = currentMaterials.Length;
+                        if (nmat != submeshCount)
+                        {
+                            Material[] materials = new Material[submeshCount];
+                            int copyTo = (nmat < submeshCount ? nmat : submeshCount);
+                            for (int i = 0; i < copyTo; ++i)
+                            {
+                                materials[i] = currentMaterials[i];
+                            }
+                            renderer.sharedMaterials = materials;
+                        }
+                    }
+
+                    split.clear = false;
+                    split.host.SetActive(true);
                 }
                 else
                 {
-                    for (int i = 0; i < num_submeshes; ++i)
-                    {
-                        var tmp = m_submeshData[i];
-                        m_submeshes[i].usdiUpdateBounds(ref tmp);
-                        m_submeshData[i] = tmp;
-                    }
+                    split.host.SetActive(false);
                 }
             }
 
-            if (m_allocateMeshDataRequired)
+            for (int smi = 0; smi < m_sampleSummary.submeshCount; ++smi)
             {
-                //bool close = m_meshSummary.topology_variance == usdi.TopologyVariance.Constant;
-                usdiUploadMeshData(time, true, true);
+                var submesh = m_submeshes[smi];
+                if (submesh.update)
+                {
+                    var sum = m_submeshSummaries[smi];
+                    var split = m_splits[sum.splitIndex];
+                    split.mesh.SetTriangles(submesh.indices.List, sum.submeshIndex);
+                }
             }
-            else if(m_updateVerticesRequired)
-            {
-                usdiUploadMeshData(m_timeRead, m_updateIndicesRequired, m_updateSkinningRequired);
-            }
-
-            m_allocateMeshDataRequired = false;
-            m_updateIndicesRequired = false;
-            m_updateVerticesRequired = false;
-            m_updateSkinningRequired = false;
         }
 
-        public override void UsdSync()
+        Mesh AddMeshComponents(GameObject go)
         {
-        }
+            Mesh mesh = null;
+            MeshFilter meshFilter = go.GetComponent<MeshFilter>();
+            bool hasMesh = meshFilter != null && meshFilter.sharedMesh != null && meshFilter.sharedMesh.name.IndexOf("dyn: ") == 0;
 
+            if (!hasMesh)
+            {
+                mesh = new Mesh { name = "dyn: " + go.name };
+#if UNITY_2017_3_OR_NEWER
+                mesh.indexFormat = IndexFormat.UInt32;
+#endif
+                mesh.MarkDynamic();
+                if (meshFilter == null)
+                {
+                    meshFilter = go.AddComponent<MeshFilter>();
+                }
+                meshFilter.sharedMesh = mesh;
+
+                if (go.GetComponent<MeshRenderer>() == null)
+                    go.AddComponent<MeshRenderer>();
+            }
+            else
+            {
+                mesh = UnityEngine.Object.Instantiate(meshFilter.sharedMesh);
+                meshFilter.sharedMesh = mesh;
+                mesh.name = "dyn: " + go.name;
+            }
+
+            return mesh;
+        }
         #endregion
 
 

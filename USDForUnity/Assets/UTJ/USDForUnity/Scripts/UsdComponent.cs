@@ -25,7 +25,7 @@ namespace UTJ.USD
             var s = schema;
             if (s != null)
             {
-                s.usdiApplyVariantSets();
+                s.UsdApplyVariantSets();
             }
         }
 #endif
@@ -35,7 +35,7 @@ namespace UTJ.USD
             var s = schema;
             if (s != null)
             {
-                s.UsdSync();
+                s.UsdSyncDataEnd();
                 s.gameObject = null;
             }
         }

@@ -20,7 +20,7 @@ namespace UTJ.USD
     {
         [SerializeField] public UsdImportMode m_importMode = UsdImportMode.RetainUSD;
         [SerializeField] public bool m_supportRuntimeUSD = true;
-        [SerializeField] public usdi.ImportSettings m_importSettings = usdi.ImportSettings.default_value;
+        [SerializeField] public usdi.ImportSettings m_importSettings = usdi.ImportSettings.defaultValue;
         [SerializeField] public TimeUnit m_timeUnit = new TimeUnit();
         [SerializeField] public double m_time;
 

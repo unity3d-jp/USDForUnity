@@ -65,7 +65,7 @@ namespace UTJ.USD
         public class TransformCapturer : ComponentCapturer
         {
             Transform m_target;
-            usdi.XformData m_data = usdi.XformData.default_value;
+            usdi.XformData m_data = usdi.XformData.defaultValue;
             bool m_inherits = true;
             bool m_scale = true;
             bool m_captureEveryFrame = true;
@@ -140,7 +140,7 @@ namespace UTJ.USD
         public class CameraCapturer : TransformCapturer
         {
             Camera m_target;
-            usdi.CameraData m_data = usdi.CameraData.default_value;
+            usdi.CameraData m_data = usdi.CameraData.defaultValue;
             int m_count = 0;
 
             public CameraCapturer(UsdExporter exporter, ComponentCapturer parent, Camera target)
@@ -220,7 +220,7 @@ namespace UTJ.USD
         {
             data = usdi.MeshData.defaultValue;
             data.points = dst_buf.vertices;
-            data.pointCount = dst_buf.vertices.Count;
+            data.vertexCount = dst_buf.vertices.Count;
             data.indices = dst_buf.indices;
             data.indexCount = dst_buf.indices.Count;
             data.normals = dst_buf.normals;
@@ -913,8 +913,8 @@ namespace UTJ.USD
 
         void ApplyExportConfig()
         {
-            usdi.ExportSettings conf = usdi.ExportSettings.default_value;
-            conf.scale = m_scale;
+            usdi.ExportSettings conf = usdi.ExportSettings.defaultValue;
+            conf.scaleFactor = m_scale;
             conf.swapHandedness = m_swapHandedness;
             conf.swapFaces = m_swapFaces;
             usdi.usdiSetExportSettings(m_ctx, ref conf);

@@ -81,14 +81,6 @@ Mesh::Mesh(Context *ctx, Schema *parent, const UsdPrim& prim)
 
     m_attr_colors = findAttribute(usdiColorAttrName, AttributeType::Float4Array);
     m_attr_uv0 = findAttribute(usdiUVAttrName, AttributeType::Float2Array);
-
-    // bone & weight attributes
-    m_attr_bone_weights = findAttribute(usdiBoneWeightsAttrName, AttributeType::FloatArray);
-    m_attr_bone_indices = findAttribute(usdiBoneIndicesAttrName, AttributeType::IntArray);
-    m_attr_bindposes = findAttribute(usdiBindPosesAttrName, AttributeType::Float4x4Array);
-    m_attr_bones = findAttribute(usdiBonesAttrName, AttributeType::TokenArray);
-    m_attr_root_bone = findAttribute(usdiRootBoneAttrName, AttributeType::Token);
-    m_attr_max_bone_weights = findAttribute(usdiMaxBoneWeightAttrName, AttributeType::Int);
 }
 
 Mesh::Mesh(Context *ctx, Schema *parent, const char *name, const char *type)
@@ -114,25 +106,9 @@ const MeshSummary& Mesh::getSummary() const
             m_mesh.GetNormalsAttr().HasValue() ||
             settings.normal_calculation != NormalCalculationType::Never;
         m_summary.has_colors = m_attr_colors && m_attr_colors->hasValue();
-        m_summary.has_uvs = m_attr_uv0 && m_attr_uv0->hasValue();
-        m_summary.has_tangents = m_summary.has_normals && m_summary.has_uvs && settings.tangent_calculation != TangentCalculationType::Never;
+        m_summary.has_uv0 = m_attr_uv0 && m_attr_uv0->hasValue();
+        m_summary.has_tangents = m_summary.has_normals && m_summary.has_uv0 && settings.tangent_calculation != TangentCalculationType::Never;
         m_summary.has_velocities = m_mesh.GetVelocitiesAttr().HasValue();
-
-        if (m_attr_bones && m_attr_bones->hasValue()) {
-            VtArray<TfToken> bones;
-            m_attr_bones->getImmediate(&bones, usdiDefaultTime());
-            m_summary.num_bones = (uint)bones.size();
-        }
-        if (m_attr_max_bone_weights && m_attr_max_bone_weights->hasValue()) {
-            m_attr_max_bone_weights->getImmediate(&m_summary.max_bone_weights, usdiDefaultTime());
-
-            // convert if settings.max_bone_weights is set
-            if ((m_summary.max_bone_weights == 4 || m_summary.max_bone_weights == 8) &&
-                (settings.max_bone_weights == 4 || settings.max_bone_weights == 8))
-            {
-                m_summary.max_bone_weights = settings.max_bone_weights;
-            }
-        }
 
         if (m_mesh.GetPointsAttr().ValueMightBeTimeVarying()) {
             m_summary.topology_variance = TopologyVariance::Homogenous;
@@ -226,7 +202,7 @@ void Mesh::updateSample(Time t_)
     if (gen_normals) {
         sample.normals.resize(sample.points_sp.size());
         GenerateNormals(sample.normals.data(),
-            sample.points.data(), sample.indices_triangulated.data(), sample.normals.size(), sample.indices_triangulated.size() / 3);
+            sample.points.data(), sample.indices_triangulated.data(), (int)sample.normals.size(), (int)sample.indices_triangulated.size() / 3);
     }
 
     // tangents
@@ -238,93 +214,8 @@ void Mesh::updateSample(Time t_)
         //    ToIArray(sample.counts_sp), ToIArray(sample.offsets), ToIArray(sample.indices_sp));
     }
 
-    // bone & weights
-    // * assume these are constant *
-    if (m_attr_bone_weights && m_attr_bone_indices && (sample.weights4.empty() || sample.weights8.empty())) {
-        if (m_attr_max_bone_weights) {
-            m_attr_max_bone_weights->getImmediate(&sample.max_bone_weights, t_);
-            if (sample.max_bone_weights == 0) {
-                goto END_WEIGHTS;
-            }
-            else if (sample.max_bone_weights != 4 && sample.max_bone_weights != 8) {
-                usdiLogWarning("sample.max_bone_weights != 4 && sample.max_bone_weights != 8\n");
-                goto END_WEIGHTS;
-            }
-        }
-
-        m_attr_bone_weights->getImmediate(&sample.bone_weights, t_);
-        m_attr_bone_indices->getImmediate(&sample.bone_indices, t_);
-        if (sample.bone_weights.size() != sample.bone_indices.size()) {
-            usdiLogError("sample.bone_weights.size() != sample.bone_indices.size()\n");
-            goto END_WEIGHTS;
-        }
-
-        // weight array & index array -> weight4 array or weight8 array
-        if (sample.max_bone_weights == 4) {
-            const size_t nweights = 4;
-            const size_t npoints = sample.bone_weights.size() / nweights;
-            sample.weights4.resize(npoints);
-            for (size_t ip = 0; ip < npoints; ++ip) {
-                size_t ip4 = ip * nweights;
-                auto& w = sample.weights4[ip];
-                for (size_t iw = 0; iw < nweights; ++iw) {
-                    w.weight[iw] = sample.bone_weights[ip4 + iw];
-                    w.indices[iw] = sample.bone_indices[ip4 + iw];
-                }
-            }
-
-            if (conf.max_bone_weights == 8) {
-                sample.max_bone_weights = 8;
-                sample.weights8.resize(npoints);
-                for (size_t ip = 0; ip < npoints; ++ip) {
-                    assign(sample.weights8[ip], sample.weights4[ip]);
-                }
-            }
-        }
-        else if (sample.max_bone_weights == 8) {
-            const size_t nweights = 8;
-            const size_t npoints = sample.bone_weights.size() / nweights;
-            sample.weights8.resize(npoints);
-            for (size_t ip = 0; ip < npoints; ++ip) {
-                size_t ip8 = ip * nweights;
-                auto& w = sample.weights8[ip];
-                for (size_t iw = 0; iw < nweights; ++iw) {
-                    w.weight[iw] = sample.bone_weights[ip8 + iw];
-                    w.indices[iw] = sample.bone_indices[ip8 + iw];
-                }
-            }
-
-            if (conf.max_bone_weights == 4) {
-                sample.max_bone_weights = 4;
-                sample.weights4.resize(npoints);
-                for (size_t ip = 0; ip < npoints; ++ip) {
-                    assign(sample.weights4[ip], sample.weights8[ip]);
-                }
-            }
-        }
-
-    END_WEIGHTS:;
-    }
-    if (m_attr_bones && sample.bones.empty()) {
-        m_attr_bones->getImmediate(&sample.bones, t_);
-        sample.bones_.resize(sample.bones.size());
-        for (size_t i = 0; i < sample.bones.size(); ++i) {
-            sample.bones_[i] = sample.bones[i].GetText();
-        }
-        sample.bones_.push_back(nullptr);
-    }
-    if (m_attr_root_bone && sample.root_bone.IsEmpty()) {
-        m_attr_root_bone->getImmediate(&sample.root_bone, t_);
-    }
-    if (m_attr_bindposes && sample.bindposes.empty()) {
-        m_attr_bindposes->getImmediate(&sample.bindposes, t_);
-        if (conf.swap_handedness) {
-            // todo:
-        }
-    }
-
     // bounds
-    MinMax(sample.bounds_min, sample.bounds_max, (const float3*)sample.points_sp.cdata(), sample.points_sp.size());
+    MinMax(sample.bounds_min, sample.bounds_max, (const float3*)sample.points_sp.cdata(), (int)sample.points_sp.size());
     sample.center = (sample.bounds_min + sample.bounds_max) * 0.5f;
     sample.extents = (sample.bounds_max - sample.bounds_min) * 0.5f;
 
@@ -372,59 +263,38 @@ void Mesh::updateSample(Time t_)
 //    }
 }
 
-bool Mesh::readSample(MeshData& dst, Time t)
+bool Mesh::readSample(MeshData& dst)
 {
-    if (t != m_time_prev) { updateSample(t); }
-
     const auto& sample = m_sample;
 
-    dst.num_points = (uint)sample.points_sp.size();
-    dst.num_counts = (uint)sample.counts_sp.size();
-    dst.num_indices = m_num_indices_triangulated;
-    dst.num_submeshes = (uint)1;
+    dst.vertex_count = (uint)sample.points_sp.size();
+    dst.index_count = m_num_indices_triangulated;
     dst.center = sample.center;
     dst.extents = sample.extents;
 
-    dst.max_bone_weights = sample.max_bone_weights;
-    dst.bones = (char**)&sample.bones_[0];
-    dst.root_bone = (char*)sample.root_bone.GetText();
-    dst.num_bones = (int)sample.bones.size();
-
     if (dst.points && !sample.points_sp.empty()) {
-        memcpy(dst.points, sample.points_sp.cdata(), sizeof(float3) * dst.num_points);
+        memcpy(dst.points, sample.points_sp.cdata(), sizeof(float3) * dst.vertex_count);
     }
     if (dst.normals && !sample.normals_sp.empty()) {
-        memcpy(dst.normals, sample.normals_sp.cdata(), sizeof(float3) * dst.num_points);
+        memcpy(dst.normals, sample.normals_sp.cdata(), sizeof(float3) * dst.vertex_count);
     }
     if (dst.colors && !sample.colors_sp.empty()) {
-        memcpy(dst.colors, sample.colors_sp.cdata(), sizeof(float4) * dst.num_points);
+        memcpy(dst.colors, sample.colors_sp.cdata(), sizeof(float4) * dst.vertex_count);
     }
     if (dst.uv0 && !sample.uv0_sp.empty()) {
-        memcpy(dst.uv0, sample.uv0_sp.cdata(), sizeof(float2) * dst.num_points);
+        memcpy(dst.uv0, sample.uv0_sp.cdata(), sizeof(float2) * dst.vertex_count);
     }
     if (dst.tangents && !sample.tangents.empty()) {
-        memcpy(dst.tangents, sample.tangents.cdata(), sizeof(float4) * dst.num_points);
+        memcpy(dst.tangents, sample.tangents.cdata(), sizeof(float4) * dst.vertex_count);
     }
     if (dst.velocities && !sample.velocities_sp.empty()) {
-        memcpy(dst.velocities, sample.velocities_sp.cdata(), sizeof(float3) * dst.num_points);
-    }
-    if (dst.counts && !sample.counts_sp.empty()) {
-        memcpy(dst.counts, sample.counts_sp.cdata(), sizeof(int) * dst.num_counts);
+        memcpy(dst.velocities, sample.velocities_sp.cdata(), sizeof(float3) * dst.vertex_count);
     }
     if (dst.indices && !sample.indices_triangulated.empty()) {
         memcpy(dst.indices, sample.indices_triangulated.cdata(), sizeof(int) * m_num_indices_triangulated);
     }
 
-    if (dst.weights4 && !sample.weights4.empty() && sample.max_bone_weights == 4) {
-        memcpy(dst.weights4, sample.weights4.cdata(), sizeof(Weights4) * dst.num_points);
-    }
-    else if (dst.weights8 && !sample.weights8.empty() && sample.max_bone_weights == 8) {
-        memcpy(dst.weights8, sample.weights8.cdata(), sizeof(Weights8) * dst.num_points);
-    }
-    if (dst.bindposes && !sample.bindposes.empty()) {
-        memcpy(dst.bindposes, sample.bindposes.cdata(), sizeof(float4x4) * dst.num_bones);
-    }
-    return dst.num_points > 0;
+    return dst.vertex_count > 0;
 }
 
 #define CreateAttributeIfNeeded(VName, ...) if(!VName) { VName=createAttribute(__VA_ARGS__); }
@@ -439,7 +309,7 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
 
     bool  ret = false;
     if (src.points) {
-        sample.points_sp.assign((GfVec3f*)src.points, (GfVec3f*)src.points + src.num_points);
+        sample.points_sp.assign((GfVec3f*)src.points, (GfVec3f*)src.points + src.vertex_count);
         if (conf.swap_handedness) {
             SwapHandedness((float3*)sample.points_sp.data(), (int)sample.points_sp.size());
         }
@@ -450,7 +320,7 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
     }
 
     if (src.velocities) {
-        sample.points_sp.assign((GfVec3f*)src.velocities, (GfVec3f*)src.velocities + src.num_points);
+        sample.points_sp.assign((GfVec3f*)src.velocities, (GfVec3f*)src.velocities + src.vertex_count);
         if (conf.swap_handedness) {
             SwapHandedness((float3*)sample.velocities_sp.data(), (int)sample.velocities_sp.size());
         }
@@ -461,7 +331,7 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
     }
 
     if (src.normals) {
-        sample.normals_sp.assign((GfVec3f*)src.normals, (GfVec3f*)src.normals + src.num_points);
+        sample.normals_sp.assign((GfVec3f*)src.normals, (GfVec3f*)src.normals + src.vertex_count);
         if (conf.swap_handedness) {
             SwapHandedness((float3*)sample.normals_sp.data(), (int)sample.normals_sp.size());
         }
@@ -469,12 +339,12 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
     }
 
     if (src.indices) {
-        if (src.counts) {
-            sample.counts_sp.assign(src.counts, src.counts + src.num_counts);
+        if (src.faces) {
+            sample.counts_sp.assign(src.faces, src.faces + src.face_count);
         }
         else {
             // assume all faces are triangles
-            size_t ntriangles = src.num_indices / 3;
+            size_t ntriangles = src.index_count / 3;
             sample.counts_sp.assign(ntriangles, 3);
         }
 
@@ -490,84 +360,28 @@ bool Mesh::writeSample(const MeshData& src, Time t_)
                 }
             };
 
-            sample.indices_sp.resize(src.num_indices);
+            sample.indices_sp.resize(src.index_count);
             copy_with_swap(sample.indices_sp, src.indices, sample.counts_sp);
         }
         else {
-            sample.indices_sp.assign(src.indices, src.indices + src.num_indices);
+            sample.indices_sp.assign(src.indices, src.indices + src.index_count);
         }
         m_mesh.GetFaceVertexCountsAttr().Set(sample.counts_sp, t);
         m_mesh.GetFaceVertexIndicesAttr().Set(sample.indices_sp, t);
     }
 
     if (src.colors) {
-        sample.colors_sp.assign((GfVec4f*)src.colors, (GfVec4f*)src.colors + src.num_points);
+        sample.colors_sp.assign((GfVec4f*)src.colors, (GfVec4f*)src.colors + src.vertex_count);
 
         CreateAttributeIfNeeded(m_attr_colors, usdiColorAttrName, AttributeType::Float4Array);
         m_attr_colors->setImmediate(&sample.colors_sp, t_);
     }
 
     if (src.uv0) {
-        sample.uv0_sp.assign((GfVec2f*)src.uv0, (GfVec2f*)src.uv0 + src.num_points);
+        sample.uv0_sp.assign((GfVec2f*)src.uv0, (GfVec2f*)src.uv0 + src.vertex_count);
 
         CreateAttributeIfNeeded(m_attr_uv0, usdiUVAttrName, AttributeType::Float2Array);
         m_attr_uv0->setImmediate(&sample.uv0_sp, t_);
-    }
-
-
-    // bone & weight attributes
-
-    if ((src.weights4 || src.weights4) &&
-        (src.max_bone_weights == 4 || src.max_bone_weights == 8))
-    {
-        sample.max_bone_weights = src.max_bone_weights;
-        sample.bone_weights.resize(src.num_points * src.max_bone_weights);
-        sample.bone_indices.resize(src.num_points * src.max_bone_weights);
-        if (src.max_bone_weights == 4) {
-            for (uint pi = 0; pi < src.num_points; ++pi) {
-                int pix = pi * 4;
-                for (int i = 0; i < 4; ++i) {
-                    sample.bone_weights[pix + i] = src.weights4[pi].weight[i];
-                    sample.bone_indices[pix + i] = src.weights4[pi].indices[i];
-                }
-            }
-        }
-        else if (src.max_bone_weights == 8) {
-            for (uint pi = 0; pi < src.num_points; ++pi) {
-                int pix = pi * 8;
-                for (int i = 0; i < 8; ++i) {
-                    sample.bone_weights[pix + i] = src.weights8[pi].weight[i];
-                    sample.bone_indices[pix + i] = src.weights8[pi].indices[i];
-                }
-            }
-        }
-
-        CreateAttributeIfNeeded(m_attr_bone_weights, usdiBoneWeightsAttrName, AttributeType::FloatArray);
-        CreateAttributeIfNeeded(m_attr_bone_indices, usdiBoneIndicesAttrName, AttributeType::IntArray);
-        CreateAttributeIfNeeded(m_attr_max_bone_weights, usdiMaxBoneWeightAttrName, AttributeType::Int);
-        m_attr_bone_weights->setImmediate(&sample.bone_weights, t_);
-        m_attr_bone_indices->setImmediate(&sample.bone_indices, t_);
-        m_attr_max_bone_weights->setImmediate(&sample.max_bone_weights, t_);
-    }
-    if (src.bindposes) {
-        sample.bindposes.assign((GfMatrix4f*)src.bindposes, (GfMatrix4f*)src.bindposes + src.num_bones);
-        CreateAttributeIfNeeded(m_attr_bindposes, usdiBindPosesAttrName, AttributeType::Float4x4Array);
-        m_attr_bindposes->setImmediate(&sample.bindposes, t_);
-    }
-    if (src.bones) {
-        sample.bones.resize(src.num_bones);
-        for (uint bi = 0; bi < src.num_bones; ++bi) {
-            sample.bones[bi] = TfToken(src.bones[bi]);
-        }
-
-        CreateAttributeIfNeeded(m_attr_bones, usdiBonesAttrName, AttributeType::TokenArray);
-        m_attr_bones->setImmediate(&sample.bones, t_);
-    }
-    if (src.root_bone) {
-        sample.root_bone = TfToken(src.root_bone);
-
-        CreateAttributeIfNeeded(m_attr_root_bone, usdiRootBoneAttrName, AttributeType::Token);
-        m_attr_root_bone->setImmediate(&sample.root_bone, t_);
     }
 
     m_summary_needs_update = true;
@@ -585,12 +399,6 @@ int Mesh::eachSample(const SampleCallback & cb)
         usdiUVAttrName,
         usdiUVAttrName2,
         usdiColorAttrName,
-        usdiBoneWeightsAttrName,
-        usdiBoneIndicesAttrName,
-        usdiBindPosesAttrName,
-        usdiBonesAttrName,
-        usdiRootBoneAttrName,
-        usdiMaxBoneWeightAttrName,
     };
 
     std::map<Time, int> times;
@@ -607,36 +415,13 @@ int Mesh::eachSample(const SampleCallback & cb)
 
     MeshData data;
     for (const auto& t : times) {
-        readSample(data, t.first);
+        updateSample(t.first);
+        readSample(data);
         cb(data, t.first);
     }
     return (int)times.size();
 }
 
 #undef CreateAttributeIfNeeded
-
-void Mesh::assignRootBone(MeshData& dst, const char *v)
-{
-    auto& sample = m_sample;
-
-    sample.root_bone = TfToken(v);
-    dst.root_bone = (char*)sample.root_bone.GetText();
-}
-
-void Mesh::assignBones(MeshData& dst, const char **v, int n)
-{
-    auto& sample = m_sample;
-
-    sample.bones.resize(n);
-    sample.bones_.resize(n);
-    for (int i = 0; i < n; ++i) {
-        sample.bones[i] = TfToken(v[i]);
-        sample.bones_[i] = sample.bones[i].GetText();
-    }
-    sample.bones_.push_back(nullptr);
-    dst.bones = (char**)sample.bones_.data();
-    dst.num_bones = n;
-}
-
 
 } // namespace usdi

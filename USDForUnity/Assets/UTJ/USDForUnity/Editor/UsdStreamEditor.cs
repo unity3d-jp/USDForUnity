@@ -133,13 +133,6 @@ namespace UTJ.USD
             var t = target as UsdStream;
 
             EditorGUILayout.Space();
-            if (GUILayout.Button("Rebuild Tree"))
-            {
-                t.UsdReload();
-                EditorUtility.SetDirty(t);
-            }
-
-            EditorGUILayout.Space();
             if (GUILayout.Button("Detach USD Components"))
             {
                 t.UsdDetachUsdComponents();

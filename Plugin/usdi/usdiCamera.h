@@ -15,7 +15,7 @@ public:
     void                updateSample(Time t) override;
 
     const CameraSummary& getSummary() const;
-    bool                readSample(CameraData& dst, Time t);
+    bool                readSample(CameraData& dst);
     bool                writeSample(const CameraData& src, Time t);
 
     using SampleCallback = std::function<void(const CameraData& data, Time t)>;

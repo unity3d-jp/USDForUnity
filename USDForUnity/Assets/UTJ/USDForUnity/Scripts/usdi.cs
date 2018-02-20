@@ -103,6 +103,15 @@ namespace UTJ.USD
             Heterogenous, // both vertices and topologies are not constant
         };
 
+        public enum Topology
+        {
+            Points,
+            Lines,
+            Triangles,
+            Quads,
+        };
+
+
         public static double defaultTime
         {
             get { return Double.NaN; }
@@ -147,7 +156,7 @@ namespace UTJ.USD
             public Bool swapHandedness;
             public Bool swapFaces;
 
-            public static ImportSettings default_value
+            public static ImportSettings defaultValue
             {
                 get
                 {
@@ -175,18 +184,18 @@ namespace UTJ.USD
         [Serializable]
         public struct ExportSettings
         {
-            public float scale;
+            public float scaleFactor;
             public Bool swapHandedness;
             public Bool swapFaces;
             public Bool instanceableByDefault;
 
-            public static ExportSettings default_value
+            public static ExportSettings defaultValue
             {
                 get
                 {
                     return new ExportSettings
                     {
-                        scale = 1.0f,
+                        scaleFactor = 1.0f,
                         swapHandedness = true,
                         swapFaces = true,
                         instanceableByDefault = false,
@@ -229,7 +238,7 @@ namespace UTJ.USD
             public Vector3     scale;
             public Matrix4x4   transform;
 
-            public static XformData default_value
+            public static XformData defaultValue
             {
                 get
                 {
@@ -263,7 +272,7 @@ namespace UTJ.USD
             public float aperture;         // in mm. vertical one
 
 
-            public static CameraData default_value
+            public static CameraData defaultValue
             {
                 get
                 {
@@ -289,11 +298,25 @@ namespace UTJ.USD
             public int maxBoneWeights;
             public Bool hasVelocities;
             public Bool hasNormals;
-            public Bool hasColors;
-            public Bool hasUV0;
             public Bool hasTangents;
+            public Bool hasUV0;
+            public Bool hasUV1;
+            public Bool hasColors;
+            public Bool constantPoints;
+            public Bool constantVelocities;
+            public Bool constantNormals;
+            public Bool constantTangents;
+            public Bool constantUV0;
+            public Bool constantUV1;
+            public Bool constantColors;
 
-            public static MeshSummary default_value { get { return default(MeshSummary); } }
+            public static MeshSummary defaultValue
+            {
+                get
+                {
+                    return default(MeshSummary);
+                }
+            }
         };
 
         public struct MeshSampleSummary
@@ -315,24 +338,13 @@ namespace UTJ.USD
             public int indexOffset;
         }
 
-
-        public struct SplitData
+        public struct SubmeshSummary
         {
-            public IntPtr   points;
-            public IntPtr   normals;
-            public IntPtr   colors;
-            public IntPtr   uvs;
-            public IntPtr   tangents;
-            public IntPtr   velocities;
-            public IntPtr   indices; // always triangulated
-            public IntPtr   weights;
-            public int      num_points; // == num_indices
+            public int splitIndex;
+            public int submeshIndex;
+            public int indexCount;
+        }
 
-            public Vector3  center;
-            public Vector3  extents;
-
-            public static SplitData default_value { get { return default(SplitData); } }
-        };
 
         public struct SubmeshData
         {
@@ -341,32 +353,29 @@ namespace UTJ.USD
 
         public struct MeshData
         {
-            public IntPtr   points;
-            public IntPtr   velocities;
-            public IntPtr   normals;
-            public IntPtr   tangents;
-            public IntPtr   uv0;
-            public IntPtr   uv1;
-            public IntPtr   colors;
-            public IntPtr   counts;
-            public IntPtr   indices;
+            public IntPtr points;
+            public IntPtr velocities;
+            public IntPtr normals;
+            public IntPtr tangents;
+            public IntPtr uv0;
+            public IntPtr uv1;
+            public IntPtr colors;
+            public IntPtr indices;
+            public IntPtr faces;
 
-            public IntPtr   weights;
-            public IntPtr   bindposes;
-            public IntPtr   bones;
-            public IntPtr   rootBone;
-
-            public int      pointCount;
-            public int      faceCount;
-            public int      indexCount;
-            public int      boneCount;
-            public int      maxBoneWeights;
+            public int vertexCount;
+            public int indexCount;
+            public int faceCount;
 
             public Vector3  center;
             public Vector3  extents;
 
-            public IntPtr   submeshes; // pointer to array of SubmeshData
-            public int      submeshCount;
+            public IntPtr weights;
+            public IntPtr bindposes;
+            public IntPtr bones;
+            public IntPtr rootBone;
+            public int boneCount;
+            public int maxBoneWeights;
 
             public static MeshData defaultValue
             {
@@ -559,14 +568,14 @@ namespace UTJ.USD
 
         // Xform interface
         [DllImport ("usdi")] public static extern Xform     usdiAsXform(Schema schema);
-        [DllImport ("usdi")] public static extern Bool      usdiXformReadSample(Xform xf, ref XformData dst, double t);
+        [DllImport ("usdi")] public static extern Bool      usdiXformReadSample(Xform xf, ref XformData dst);
         [DllImport ("usdi")] public static extern Bool      usdiXformWriteSample(Xform xf, ref XformData src, double t);
         public delegate void usdiXformSampleCallback(ref XformData data, double t);
         [DllImport ("usdi")] public static extern int       usdiXformEachSample(Xform xf, usdiXformSampleCallback cb);
 
         // Camera interface
         [DllImport ("usdi")] public static extern Camera    usdiAsCamera(Schema schema);
-        [DllImport ("usdi")] public static extern Bool      usdiCameraReadSample(Camera cam, ref CameraData dst, double t);
+        [DllImport ("usdi")] public static extern Bool      usdiCameraReadSample(Camera cam, ref CameraData dst);
         [DllImport ("usdi")] public static extern Bool      usdiCameraWriteSample(Camera cam, ref CameraData src, double t);
         public delegate void usdiCameraSampleCallback(ref CameraData data, double t);
         [DllImport ("usdi")] public static extern int       usdiCameraEachSample(Camera cam, usdiCameraSampleCallback cb);
@@ -574,7 +583,8 @@ namespace UTJ.USD
         // Mesh interface
         [DllImport ("usdi")] public static extern Mesh      usdiAsMesh(Schema schema);
         [DllImport ("usdi")] public static extern void      usdiMeshGetSummary(Mesh mesh, ref MeshSummary dst);
-        [DllImport ("usdi")] public static extern Bool      usdiMeshReadSample(Mesh mesh, ref MeshData dst, double t, Bool copy);
+        [DllImport ("usdi")] public static extern void      usdiMeshGetSampleSummary(Mesh mesh, ref MeshSampleSummary dst);
+        [DllImport ("usdi")] public static extern Bool      usdiMeshReadSample(Mesh mesh, ref MeshData dst);
         [DllImport ("usdi")] public static extern Bool      usdiMeshWriteSample(Mesh mesh, ref MeshData src, double t);
         public delegate void usdiMeshSampleCallback(ref MeshData data, double t);
         [DllImport ("usdi")] public static extern int       usdiMeshEachSample(Mesh mesh, usdiMeshSampleCallback cb);
@@ -583,7 +593,7 @@ namespace UTJ.USD
         // Points interface
         [DllImport ("usdi")] public static extern Points    usdiAsPoints(Schema schema);
         [DllImport ("usdi")] public static extern void      usdiPointsGetSummary(Points points, ref PointsSummary dst);
-        [DllImport ("usdi")] public static extern Bool      usdiPointsReadSample(Points points, ref PointsData dst, double t, Bool copy);
+        [DllImport ("usdi")] public static extern Bool      usdiPointsReadSample(Points points, ref PointsData dst);
         [DllImport ("usdi")] public static extern Bool      usdiPointsWriteSample(Points points, ref PointsData src, double t);
         public delegate void usdiPointsSampleCallback(ref PointsData data, double t);
         [DllImport ("usdi")] public static extern int       usdiPointsEachSample(Points points, usdiPointsSampleCallback cb);
@@ -592,7 +602,7 @@ namespace UTJ.USD
         [DllImport ("usdi")] public static extern IntPtr    usdiAttrGetName(Attribute attr);
         [DllImport ("usdi")] public static extern IntPtr    usdiAttrGetTypeName(Attribute attr);
         [DllImport ("usdi")] public static extern void      usdiAttrGetSummary(Attribute attr, ref AttributeSummary dst);
-        [DllImport ("usdi")] public static extern Bool      usdiAttrReadSample(Attribute attr, ref AttributeData dst, double t, Bool copy);
+        [DllImport ("usdi")] public static extern Bool      usdiAttrReadSample(Attribute attr, ref AttributeData dst, double t);
         [DllImport ("usdi")] public static extern Bool      usdiAttrWriteSample(Attribute attr, ref AttributeData src, double t);
 
         [DllImport ("usdi")] public static extern IntPtr    usdiIndexStringArray(IntPtr v, int i);
@@ -621,7 +631,7 @@ namespace UTJ.USD
                 if(summary.type == AttributeType.Asset)
                 {
                     var data = new AttributeData();
-                    usdiAttrReadSample(attr, ref data, defaultTime, true);
+                    usdiAttrReadSample(attr, ref data, defaultTime);
                     ret.Add(new AssetRef
                     {
                         name = S(usdiAttrGetName(attr)),
@@ -631,11 +641,11 @@ namespace UTJ.USD
                 else if (summary.type == AttributeType.AssetArray)
                 {
                     var data = new AttributeData();
-                    usdiAttrReadSample(attr, ref data, defaultTime, true);
+                    usdiAttrReadSample(attr, ref data, defaultTime);
 
                     var tmp = new PinnedList<IntPtr>(data.num_elements);
                     data.data = tmp;
-                    usdiAttrReadSample(attr, ref data, defaultTime, true);
+                    usdiAttrReadSample(attr, ref data, defaultTime);
 
                     var e = new AssetRef();
                     e.name = S(usdiAttrGetName(attr));

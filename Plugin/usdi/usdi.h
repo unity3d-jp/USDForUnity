@@ -219,13 +219,21 @@ struct MeshSummary
 {
     Time start = 0.0, end = 0.0;
     TopologyVariance topology_variance = TopologyVariance::Constant;
-    uint num_bones = 0;
+    uint bone_count = 0;
     uint max_bone_weights = 0; // should be 0 or 4 or 8
     bool has_velocities = false;
     bool has_normals = false;
-    bool has_colors = false;
-    bool has_uvs = false;
     bool has_tangents = false;
+    bool has_uv0 = false;
+    bool has_uv1 = false;
+    bool has_colors = false;
+    bool constant_points = false;
+    bool constant_velocities = false;
+    bool constant_normals = false;
+    bool constant_tangents = false;
+    bool constant_uv0 = false;
+    bool constant_uv1 = false;
+    bool constant_colors = false;
 };
 
 struct MeshSampleSummary
@@ -257,25 +265,6 @@ struct Weights
 using Weights4 = Weights<4>;
 using Weights8 = Weights<8>;
 
-struct SubmeshData
-{
-    float3 *points = nullptr;
-    float3 *normals = nullptr;
-    float4 *colors = nullptr;
-    float2 *uvs = nullptr;
-    float4 *tangents = nullptr;
-    float3 *velocities = nullptr;
-    int    *indices = nullptr;
-    union {
-        Weights4 *weights4 = nullptr;
-        Weights8 *weights8;
-    };
-    uint num_points = 0; // num_points == num_indices in submeshes
-
-    float3 center = float3::zero();
-    float3 extents = float3::zero();
-};
-
 struct MeshData
 {
     float3 *points = nullptr;
@@ -285,28 +274,31 @@ struct MeshData
     float2 *uv0 = nullptr;
     float2 *uv1 = nullptr;
     float4 *colors = nullptr;
-    int    *counts = nullptr;
     int    *indices = nullptr;
+    int    *faces = nullptr;
+    uint   vertex_count = 0;
+    uint   index_count = 0;
+    uint   face_count = 0;
 
+    // bounds
+    float3 center = float3::zero();
+    float3 extents = float3::zero();
+
+    // bone & weights
     union {
         Weights4 *weights4 = nullptr;
         Weights8 *weights8;
     };
     float4x4 *bindposes = nullptr;
-    char    **bones = nullptr;
-    char    *root_bone = nullptr;
+    char     **bones = nullptr;
+    char     *root_bone = nullptr;
+    int      bone_count = 0;
+    int      max_bone_weights = 0;
+};
 
-    uint num_points = 0;
-    uint num_counts = 0;
-    uint num_indices = 0;
-    uint num_bones = 0;
-    uint max_bone_weights = 0; // must be 0 or 4 or 8
-
-    float3 center = float3::zero();
-    float3 extents = float3::zero();
-
-    SubmeshData *submeshes = nullptr;
-    uint    num_submeshes = 0;
+struct SubmeshData
+{
+    int *indices = nullptr;
 };
 
 
@@ -446,7 +438,7 @@ usdiAPI void             usdiPrimSetUserData(usdi::Schema *schema, void *data);
 // Xform interface
 usdiAPI usdi::Xform*     usdiAsXform(usdi::Schema *schema); // dynamic cast to Xform
 usdiAPI void             usdiXformGetSummary(usdi::Xform *xf, usdi::XformSummary *dst);
-usdiAPI bool             usdiXformReadSample(usdi::Xform *xf, usdi::XformData *dst, usdi::Time t);
+usdiAPI bool             usdiXformReadSample(usdi::Xform *xf, usdi::XformData *dst);
 usdiAPI bool             usdiXformWriteSample(usdi::Xform *xf, const usdi::XformData *src, usdi::Time t = usdiDefaultTime());
 using usdiXformSampleCallback = void (usdiSTDCall*)(const usdi::XformData *data, usdi::Time t);
 usdiAPI int              usdiXformEachSample(usdi::Xform *xf, usdiXformSampleCallback cb);
@@ -454,7 +446,7 @@ usdiAPI int              usdiXformEachSample(usdi::Xform *xf, usdiXformSampleCal
 // Camera interface
 usdiAPI usdi::Camera*    usdiAsCamera(usdi::Schema *schema); // dynamic cast to Camera
 usdiAPI void             usdiCameraGetSummary(usdi::Camera *cam, usdi::CameraSummary *dst);
-usdiAPI bool             usdiCameraReadSample(usdi::Camera *cam, usdi::CameraData *dst, usdi::Time t);
+usdiAPI bool             usdiCameraReadSample(usdi::Camera *cam, usdi::CameraData *dst);
 usdiAPI bool             usdiCameraWriteSample(usdi::Camera *cam, const usdi::CameraData *src, usdi::Time t = usdiDefaultTime());
 using usdiCameraSampleCallback = void (usdiSTDCall*)(const usdi::CameraData *data, usdi::Time t);
 usdiAPI int              usdiCameraEachSample(usdi::Camera *cam, usdiCameraSampleCallback cb);
@@ -462,7 +454,7 @@ usdiAPI int              usdiCameraEachSample(usdi::Camera *cam, usdiCameraSampl
 // Mesh interface
 usdiAPI usdi::Mesh*      usdiAsMesh(usdi::Schema *schema); // dynamic cast to Mesh
 usdiAPI void             usdiMeshGetSummary(usdi::Mesh *mesh, usdi::MeshSummary *dst);
-usdiAPI bool             usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t);
+usdiAPI bool             usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst);
 usdiAPI bool             usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t = usdiDefaultTime());
 using usdiMeshSampleCallback = void (usdiSTDCall*)(const usdi::MeshData *data, usdi::Time t);
 usdiAPI int              usdiMeshEachSample(usdi::Mesh *mesh, usdiMeshSampleCallback cb);
@@ -470,7 +462,7 @@ usdiAPI int              usdiMeshEachSample(usdi::Mesh *mesh, usdiMeshSampleCall
 // Points interface
 usdiAPI usdi::Points*    usdiAsPoints(usdi::Schema *schema); // dynamic cast to Points
 usdiAPI void             usdiPointsGetSummary(usdi::Points *points, usdi::PointsSummary *dst);
-usdiAPI bool             usdiPointsReadSample(usdi::Points *points, usdi::PointsData *dst, usdi::Time t);
+usdiAPI bool             usdiPointsReadSample(usdi::Points *points, usdi::PointsData *dst);
 usdiAPI bool             usdiPointsWriteSample(usdi::Points *points, const usdi::PointsData *src, usdi::Time t = usdiDefaultTime());
 using usdiPointsSampleCallback = void (usdiSTDCall*)(const usdi::PointsData *data, usdi::Time t);
 usdiAPI int              usdiPointsEachSample(usdi::Points *points, usdiPointsSampleCallback cb);

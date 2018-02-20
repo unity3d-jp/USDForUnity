@@ -61,12 +61,12 @@ void TestExportHighMesh(const char *filename, int frame_count)
 
             usdi::Time t = i;
             usdi::MeshData data;
-            data.counts = counts[i].data();
-            data.num_counts = counts[i].size();
+            data.faces = counts[i].data();
+            data.face_count = counts[i].size();
             data.indices = indices[i].data();
-            data.num_indices = indices[i].size();
+            data.index_count = indices[i].size();
             data.points = points[i].data();
-            data.num_points = points[i].size();
+            data.vertex_count = points[i].size();
             data.uv0 = uv[i].data();
             data.colors = colors[i].data();
             usdiMeshWriteSample(mesh, &data, t);

@@ -24,15 +24,5 @@ usdiAPI const char* usdiIndexStringArray(const char **v, int i)
     if (!v) { return ""; }
     return v[i];
 }
-usdiAPI void usdiMeshAssignRootBone(usdi::Mesh *mesh, usdi::MeshData *dst, const char *v)
-{
-    if (!mesh || !dst) { return; }
-    mesh->assignRootBone(*dst, v);
-}
-usdiAPI void usdiMeshAssignBones(usdi::Mesh *mesh, usdi::MeshData *dst, const char **v, int n)
-{
-    if (!mesh || !dst) { return; }
-    mesh->assignBones(*dst, v, n);
-}
 
 } // extern "C"

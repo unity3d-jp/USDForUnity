@@ -178,9 +178,9 @@ void TestExport(const char *filename)
             data.tangents = tangents;
             data.uv0 = uvs;
             data.indices = indices;
-            data.num_points = std::extent<decltype(points)>::value;
-            data.num_counts = std::extent<decltype(counts)>::value;
-            data.num_indices = std::extent<decltype(indices)>::value;
+            data.vertex_count = std::extent<decltype(points)>::value;
+            data.index_count = std::extent<decltype(indices)>::value;
+            data.face_count = std::extent<decltype(counts)>::value;
 
             for (int i = 0; i < 5; ++i) {
                 usdi::Time t = i;
@@ -208,11 +208,11 @@ void TestExport(const char *filename)
         usdi::MeshData data;
         data.points = vertices;
         data.uv0 = uv;
-        data.counts = counts;
+        data.faces = counts;
         data.indices = indices;
-        data.num_points = std::extent<decltype(vertices)>::value;
-        data.num_counts = std::extent<decltype(counts)>::value;
-        data.num_indices = std::extent<decltype(indices)>::value;
+        data.vertex_count = std::extent<decltype(vertices)>::value;
+        data.index_count = std::extent<decltype(indices)>::value;
+        data.face_count = std::extent<decltype(counts)>::value;
 
         for (int i = 0; i < 5; ++i) {
             usdi::Time t = i;

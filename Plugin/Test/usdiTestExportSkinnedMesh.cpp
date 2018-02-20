@@ -128,7 +128,7 @@ void TestExportSkinnedMesh(const char *filename, int cseg, int hseg)
         {
             usdi::Mesh *mesh = nullptr;
             usdi::MeshData data;
-            data.num_bones = 5;
+            data.bone_count = 5;
             data.max_bone_weights = 4;
             data.bones = (char**)bones;
             data.root_bone = (char*)bones[0];
@@ -136,10 +136,10 @@ void TestExportSkinnedMesh(const char *filename, int cseg, int hseg)
 
 
             Cylinder(cseg, hseg);
-            data.num_counts = counts.size();
-            data.num_indices = indices.size();
-            data.num_points = points.size();
-            data.counts = counts.data();
+            data.face_count = counts.size();
+            data.index_count = indices.size();
+            data.vertex_count = points.size();
+            data.faces = counts.data();
             data.indices = indices.data();
             data.points = points.data();
             data.uv0 = uv.data();
@@ -149,10 +149,10 @@ void TestExportSkinnedMesh(const char *filename, int cseg, int hseg)
             {
                 Sphere(0);
                 Expand();
-                data.num_counts = counts.size();
-                data.num_indices = indices2.size();
-                data.num_points = points2.size();
-                data.counts = counts.data();
+                data.face_count = counts.size();
+                data.index_count = indices2.size();
+                data.vertex_count = points2.size();
+                data.faces = counts.data();
                 data.indices = indices2.data();
                 data.points = points2.data();
                 data.uv0 = nullptr;

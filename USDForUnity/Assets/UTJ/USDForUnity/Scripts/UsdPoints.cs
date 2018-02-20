@@ -31,7 +31,7 @@ namespace UTJ.USD
 
 
         #region impl
-        protected override UsdIComponent usdiSetupSchemaComponent()
+        protected override UsdIComponent UsdSetupSchemaComponent()
         {
             return GetOrAddComponent<UsdPointsComponent>();
         }
@@ -56,13 +56,13 @@ namespace UTJ.USD
             m_rotData = default(usdi.AttributeData);
         }
 
-        public override void UsdAsyncUpdate(double time)
+        public override void UsdPrepareSample()
         {
-            base.UsdAsyncUpdate(time);
+            base.UsdPrepareSample();
             if (m_updateFlags.bits == 0) { return; }
 
             usdi.PointsData tmp = usdi.PointsData.defaultValue;
-            usdi.usdiPointsReadSample(m_usdPoints, ref tmp, time, true);
+            usdi.usdiPointsReadSample(m_usdPoints, ref tmp);
 
             // allocate points data
             if (m_pointsData.pointCount == tmp.pointCount)
@@ -81,35 +81,25 @@ namespace UTJ.USD
                     m_velocities.ResizeDiscard(m_pointsData.pointCount);
                     m_pointsData.velocities = m_velocities;
                 }
-                if (m_usdAttrRot)
-                {
-                    m_rotations.ResizeDiscard(m_pointsData.pointCount);
-                    m_rotData.data = m_rotations;
-                    m_rotData.num_elements = tmp.pointCount;
-                }
                 // todo: ids
             }
 
             // read points data
             if (m_pointsData.pointCount > 0)
             {
-                usdi.usdiPointsReadSample(m_usdPoints, ref m_pointsData, time, true);
-                if (m_usdAttrRot)
-                {
-                    usdi.usdiAttrReadSample(m_usdAttrRot, ref m_rotData, time, true);
-                }
+                usdi.usdiPointsReadSample(m_usdPoints, ref m_pointsData);
             }
         }
 
-        public override void UsdUpdate(double time)
+        public override void UsdSyncDataBegin()
         {
             if (m_updateFlags.bits == 0) { return; }
-            base.UsdUpdate(time);
+            base.UsdSyncDataBegin();
 
-            UsdSync();
+            UsdSyncDataEnd();
         }
 
-        public override void UsdSync()
+        public override void UsdSyncDataEnd()
         {
         }
         #endregion

@@ -8,7 +8,7 @@ namespace UTJ.USD
     public class UsdImportWindow : EditorWindow
     {
         public string m_path;
-        static usdi.ImportSettings s_importOptions = usdi.ImportSettings.default_value;
+        static usdi.ImportSettings s_importOptions = usdi.ImportSettings.defaultValue;
         static TimeUnit s_timeUnit = new TimeUnit();
         static double s_initialTime = 0.0;
         static bool s_forceSingleThread = false;

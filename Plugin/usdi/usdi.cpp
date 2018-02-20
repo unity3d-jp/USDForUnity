@@ -509,12 +509,12 @@ usdiAPI void usdiXformGetSummary(usdi::Xform *xf, usdi::XformSummary *dst)
     if (!xf || !dst) return;
     *dst = xf->getSummary();
 }
-usdiAPI bool usdiXformReadSample(usdi::Xform *xf, usdi::XformData *dst, usdi::Time t)
+usdiAPI bool usdiXformReadSample(usdi::Xform *xf, usdi::XformData *dst)
 {
     usdiTraceFunc();
     if (!xf || !dst) return false;
     usdiVTuneScope("usdiXformReadSample");
-    return xf->readSample(*dst, t);
+    return xf->readSample(*dst);
 }
 usdiAPI bool usdiXformWriteSample(usdi::Xform *xf, const usdi::XformData *src, usdi::Time t)
 {
@@ -546,12 +546,12 @@ usdiAPI void usdiCameraGetSummary(usdi::Camera *cam, usdi::CameraSummary *dst)
     if (!cam || !dst) return;
     *dst = cam->getSummary();
 }
-usdiAPI bool usdiCameraReadSample(usdi::Camera *cam, usdi::CameraData *dst, usdi::Time t)
+usdiAPI bool usdiCameraReadSample(usdi::Camera *cam, usdi::CameraData *dst)
 {
     usdiTraceFunc();
     if (!cam || !dst) return false;
     usdiVTuneScope("usdiCameraReadSample");
-    return cam->readSample(*dst, t);
+    return cam->readSample(*dst);
 }
 usdiAPI bool usdiCameraWriteSample(usdi::Camera *cam, const usdi::CameraData *src, usdi::Time t)
 {
@@ -586,12 +586,12 @@ usdiAPI void usdiMeshGetSummary(usdi::Mesh *mesh, usdi::MeshSummary *dst)
     *dst = mesh->getSummary();
 }
 
-usdiAPI bool usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst, usdi::Time t)
+usdiAPI bool usdiMeshReadSample(usdi::Mesh *mesh, usdi::MeshData *dst)
 {
     usdiTraceFunc();
     if (!mesh || !dst) return false;
     usdiVTuneScope("usdiMeshReadSample");
-    return mesh->readSample(*dst, t);
+    return mesh->readSample(*dst);
 }
 
 usdiAPI bool usdiMeshWriteSample(usdi::Mesh *mesh, const usdi::MeshData *src, usdi::Time t)
@@ -626,12 +626,12 @@ usdiAPI void usdiPointsGetSummary(usdi::Points *points, usdi::PointsSummary *dst
     *dst = points->getSummary();
 }
 
-usdiAPI bool usdiPointsReadSample(usdi::Points *points, usdi::PointsData *dst, usdi::Time t)
+usdiAPI bool usdiPointsReadSample(usdi::Points *points, usdi::PointsData *dst)
 {
     usdiTraceFunc();
     if (!points || !dst) return false;
     usdiVTuneScope("usdiPointsReadSample");
-    return points->readSample(*dst, t);
+    return points->readSample(*dst);
 }
 
 usdiAPI bool usdiPointsWriteSample(usdi::Points *points, const usdi::PointsData *src, usdi::Time t)

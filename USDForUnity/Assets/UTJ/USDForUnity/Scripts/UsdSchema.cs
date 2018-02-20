@@ -7,11 +7,10 @@ using UnityEditor;
 namespace UTJ.USD
 {
     [Serializable]
-    public class UsdSchema
+    public class UsdSchema : IDisposable
     {
         #region fields
-        protected GameObject m_go;
-        protected bool m_goAssigned = false;
+        protected GameObject m_linkedGameObj;
         protected string m_primPath;
         protected string m_primName;
         protected string m_primTypeName;
@@ -27,12 +26,8 @@ namespace UTJ.USD
         #region properties
         public GameObject gameObject
         {
-            get { return m_go; }
-            set
-            {
-                m_go = value;
-                m_goAssigned = m_go != null;
-            }
+            get { return m_linkedGameObj; }
+            set { m_linkedGameObj = value; }
         }
         public UsdStream stream
         {
@@ -92,13 +87,18 @@ namespace UTJ.USD
 
 
         #region impl
-        public virtual void usdiSetVariantSelection(int iset, int ival)
+        public void Dispose()
         {
-            m_variantSelection[iset] = ival;
-            usdiApplyVariantSets();
+            m_linkedGameObj = null;
         }
 
-        public void usdiSyncVarinatSets()
+        public virtual void UsdSetVariantSelection(int iset, int ival)
+        {
+            m_variantSelection[iset] = ival;
+            UsdApplyVariantSets();
+        }
+
+        public void UsdSyncVarinatSets()
         {
             m_variantSets = usdi.usdiPrimGetVariantSets(m_schema);
             m_variantSelection = new int[m_variantSets.Count];
@@ -107,7 +107,7 @@ namespace UTJ.USD
                 m_variantSelection[i] = usdi.usdiPrimGetVariantSelection(m_schema, i);
             }
         }
-        public void usdiApplyVariantSets()
+        public void UsdApplyVariantSets()
         {
             for (int si = 0; si < m_variantSelection.Length; ++si)
             {
@@ -118,7 +118,7 @@ namespace UTJ.USD
             }
         }
 
-        protected virtual UsdIComponent usdiSetupSchemaComponent()
+        protected virtual UsdIComponent UsdSetupSchemaComponent()
         {
             return GetOrAddComponent<UsdComponent>();
         }
@@ -130,48 +130,47 @@ namespace UTJ.USD
             m_primTypeName = usdi.usdiPrimGetUsdTypeNameS(m_schema);
             m_master = m_stream.UsdFindSchema(usdi.usdiPrimGetMaster(m_schema));
 
-            usdiSyncVarinatSets();
+            UsdSyncVarinatSets();
             m_referencingAssets = usdi.usdiGetReferencingAssets(m_schema);
-            if (m_goAssigned)
+            if (m_linkedGameObj != null)
             {
-                var c = usdiSetupSchemaComponent();
+                var c = UsdSetupSchemaComponent();
                 c.schema = this;
             }
         }
 
         public virtual void UsdOnUnload()
         {
-            UsdSync();
+            UsdSyncDataEnd();
             m_schema = default(usdi.Xform);
         }
 
-        public virtual void UsdAsyncUpdate(double time)
+        public virtual void UsdPrepareSample()
         {
         }
 
-        public virtual void UsdUpdate(double time)
+        public virtual void UsdSyncDataBegin()
         {
         }
 
-        // make sure all async operations are completed
-        public virtual void UsdSync()
+        public virtual void UsdSyncDataEnd()
         {
         }
 
 
         public T GetComponent<T>() where T : Component
         {
-            if(m_go == null) { return null; }
-            return m_go.GetComponent<T>();
+            if(m_linkedGameObj == null) { return null; }
+            return m_linkedGameObj.GetComponent<T>();
         }
 
         public T GetOrAddComponent<T>() where T : Component
         {
-            if (m_go == null) { return null; }
-            var c = m_go.GetComponent<T>();
+            if (m_linkedGameObj == null) { return null; }
+            var c = m_linkedGameObj.GetComponent<T>();
             if(c == null)
             {
-                c = m_go.AddComponent<T>();
+                c = m_linkedGameObj.AddComponent<T>();
             }
             return c;
         }

@@ -33,7 +33,6 @@ namespace UTJ.USD
         [SerializeField] public bool m_detailedLog = false;
         bool m_isCompiling = false;
 #endif
-        [SerializeField] public bool m_deferredUpdate = false;
 
         [HideInInspector][SerializeField] string[] m_variantSelections_keys;
         [HideInInspector][SerializeField] VariantSelection[] m_variantSelections_values;
@@ -75,11 +74,6 @@ namespace UTJ.USD
         {
             get { return m_timeUnit; }
             set { m_timeUnit = value; }
-        }
-        public bool deferredUpdate
-        {
-            get { return m_deferredUpdate; }
-            set { m_deferredUpdate = value; }
         }
 #if UNITY_EDITOR
         public bool forceSingleThread
@@ -404,30 +398,13 @@ namespace UTJ.USD
 
             // fill sample data with initial time
             m_requestForceUpdate = true;
-            UsdAsyncUpdate(m_time);
-            UsdUpdate(m_time);
+            UsdPrepareSample();
+            usdi.usdiUpdateAllSamples(m_ctx, m_time);
+            UsdSyncDataBegin();
+            UsdSyncDataEnd();
 
             UsdLog("UsdStream: loaded " + fullpath);
             return true;
-        }
-
-        public void UsdReload()
-        {
-            if (!m_ctx) { return; }
-
-            UsdApplyVarianceSelections();
-            UsdApplyImportConfig();
-            usdi.usdiRebuildSchemaTree(m_ctx);
-
-            UsdConstructTrees();
-
-            // fill sample data with initial time
-            m_requestForceUpdate = true;
-            UsdAsyncUpdate(m_time);
-            UsdUpdate(m_time);
-
-            var fullpath = m_path.GetFullPath();
-            UsdLog("usdiStream: reloaded " + fullpath);
         }
 
         public void UsdUnload()
@@ -483,43 +460,42 @@ namespace UTJ.USD
         }
 
         // possibly called from non-main thread
-        void UsdAsyncUpdate(double t)
+        void UsdPrepareSample()
         {
             // skip if update is not needed
             if(m_requestForceUpdate)
             {
                 usdi.usdiNotifyForceUpdate(m_ctx);
             }
-            else if (t == m_prevUpdateTime)
+            else if (m_time == m_prevUpdateTime)
             {
                 return;
             }
-
-            usdi.usdiUpdateAllSamples(m_ctx, t);
             int c = m_schemas.Count;
             for (int i = 0; i < c; ++i)
-            {
-                m_schemas[i].UsdAsyncUpdate(t);
-            }
+                m_schemas[i].UsdPrepareSample();
         }
 
-        void UsdUpdate(double t)
+        void UsdSyncDataBegin()
         {
-            if (!m_requestForceUpdate && t == m_prevUpdateTime) { return; }
+            if (!m_requestForceUpdate && m_time == m_prevUpdateTime) { return; }
             m_requestForceUpdate = false;
 
-            // update all elements
             int c = m_schemas.Count;
             for (int i = 0; i < c; ++i)
-                m_schemas[i].UsdUpdate(t);
-
-            m_prevUpdateTime = t;
+                m_schemas[i].UsdSyncDataBegin();
         }
 
-
-        void UsdKickAsyncUpdateTask()
+        void UsdSyncDataEnd()
         {
-            UsdAsyncUpdate(m_time);
+            if (!m_requestForceUpdate && m_time == m_prevUpdateTime) { return; }
+            m_requestForceUpdate = false;
+
+            int c = m_schemas.Count;
+            for (int i = 0; i < c; ++i)
+                m_schemas[i].UsdSyncDataEnd();
+
+            m_prevUpdateTime = m_time;
         }
 
 
@@ -545,10 +521,10 @@ namespace UTJ.USD
         {
             return UsdLoad(path);
         }
-#endregion
+        #endregion
 
 
-#region callbacks
+        #region callbacks
         void OnApplicationQuit()
         {
             usdi.FinalizePlugin();
@@ -590,70 +566,25 @@ namespace UTJ.USD
             UsdRequestForceUpdate();
         }
 #endif
-        public static bool GlobalLockout = false;
 
         void Update()
         {
-            if (GlobalLockout)
+            if(!m_ctx)
                 return;
 
-#if UNITY_EDITOR
-            if (EditorApplication.isCompiling && !m_isCompiling)
-            {
-                // on compile begin
-                m_isCompiling = true;
-                UsdUnload();
-            }
-            else if(!EditorApplication.isCompiling && m_isCompiling)
-            {
-                // on compile end
-                m_isCompiling = false;
-                usdi.InitializePluginPass2();
-                UsdLoad(m_path);
-            }
-#endif
-
-            if(!m_ctx) { return; }
-
-            if (m_requestReload)
-            {
-                UsdReload();
-                m_requestReload = false;
-            }
-
-            if (!m_deferredUpdate
-#if UNITY_EDITOR
-                || !EditorApplication.isPlaying
-#endif
-                )
-            {
-                UsdKickAsyncUpdateTask();
-            }
+            UsdPrepareSample();
+            usdi.usdiUpdateAllSamples(m_ctx, m_time);
         }
 
         void LateUpdate()
         {
-            if (!m_ctx) { return; }
+            if (!m_ctx)
+                return;
 
-            UsdUpdate(m_time);
-
-#if UNITY_EDITOR
-            if (EditorApplication.isPlaying)
-#endif
-            {
-                m_time += Time.deltaTime * m_timeUnit.scale;
-            }
-
-            if (m_deferredUpdate
-#if UNITY_EDITOR
-                && EditorApplication.isPlaying
-#endif
-                )
-            {
-                UsdKickAsyncUpdateTask();
-            }
+            UsdSyncDataBegin();
+            UsdSyncDataEnd();
         }
-#endregion
+        #endregion
     }
 
 }

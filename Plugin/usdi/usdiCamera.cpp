@@ -75,10 +75,8 @@ void Camera::updateSample(Time t_)
     }
 }
 
-bool Camera::readSample(CameraData& dst, Time t)
+bool Camera::readSample(CameraData& dst)
 {
-    if (t != m_time_prev) { updateSample(t); }
-
     dst = m_sample;
     return true;
 }
@@ -131,7 +129,8 @@ int Camera::eachSample(const SampleCallback & cb)
 
     CameraData data;
     for (const auto& t : times) {
-        readSample(data, t.first);
+        updateSample(t.first);
+        readSample(data);
         cb(data, t.first);
     }
     return (int)times.size();
