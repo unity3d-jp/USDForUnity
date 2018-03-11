@@ -17,7 +17,7 @@
                     }
                 }
             },
-            "LibraryPath": "../../MacOS/usdAbc.dylib",
+            "LibraryPath": "../../MacOS/libusd_ms.dylib",
             "Name": "usdAbc",
             "ResourcePath": "resources",
             "Root": "..",
