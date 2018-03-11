@@ -1,0 +1,32 @@
+fileFormatVersion: 2
+guid: 7521c5f7d8b68404d98d9b6374f43ba6
+timeCreated: 1520807902
+licenseType: Pro
+ScriptedImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: 489c9c2a8e48eb54c85b7cdb909e3afe, type: 3}
+  importMode: 1
+  supportRuntimeUSD: 1
+  importSettings:
+    interpolation: 1
+    normalCalculation: 1
+    tangentCalculation: 0
+    splitUnit: 2147483647
+    maxBoneWeights: 4
+    scaleFactor: 1
+    loadAllPayloads:
+      v: 1
+    triangulate:
+      v: 1
+    swapHandedness:
+      v: 0
+    swapFaces:
+      v: 0
+  timeUnit:
+    type: 0
+    scale: 30
+  time: 0
+  forceSingleThread: 0
+  deferredUpdate: 0
