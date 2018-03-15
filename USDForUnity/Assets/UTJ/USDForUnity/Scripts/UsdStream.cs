@@ -162,7 +162,7 @@ namespace UTJ.USD
         }
         public UsdSchema UsdFindSchema(usdi.Schema s)
         {
-            return UsdFindSchema(usdi.usdiPrimGetPathS(s));
+            return UsdFindSchema(s.GetPath());
         }
 
 
@@ -181,23 +181,23 @@ namespace UTJ.USD
             UsdSchema ret = null;
             if (ret == null)
             {
-                var s = usdi.usdiAsPoints(schema);
+                var s = schema.AsPoints();
                 if (s) ret = new UsdPoints();
             }
             if (ret == null)
             {
-                var s = usdi.usdiAsMesh(schema);
+                var s = schema.AsMesh();
                 if (s) ret = new UsdMesh();
             }
             if (ret == null)
             {
-                var s = usdi.usdiAsCamera(schema);
+                var s = schema.AsCamera();
                 if (s) ret = new UsdCamera();
             }
             if (ret == null)
             {
                 // Xform must be latter because some schemas are subclass of Xform
-                var s = usdi.usdiAsXform(schema);
+                var s = schema.AsXform();
                 if (s) ret = new UsdXform();
             }
             if (ret == null)
@@ -214,7 +214,7 @@ namespace UTJ.USD
             GameObject go = null;
 
             // find existing GameObject or create new one
-            var name = usdi.usdiPrimGetNameS(schema);
+            var name = schema.GetName();
             var child = parent.Find(name);
             if (child != null)
             {
@@ -248,10 +248,10 @@ namespace UTJ.USD
             }
 
             var trans = elem == null ? parent : elem.GetComponent<Transform>();
-            int num_children = usdi.usdiPrimGetNumChildren(schema);
+            int num_children = schema.GetNumChildren();
             for(int ci = 0; ci < num_children; ++ci)
             {
-                var child = usdi.usdiPrimGetChild(schema, ci);
+                var child = schema.GetChild(ci);
                 UsdConstructTree(trans, child, node_handler);
             }
         }
@@ -263,10 +263,10 @@ namespace UTJ.USD
             var elem = UsdCreateNode(schema);
             node_handler(elem);
 
-            int num_children = usdi.usdiPrimGetNumChildren(schema);
+            int num_children = schema.GetNumChildren();
             for (int ci = 0; ci < num_children; ++ci)
             {
-                var child = usdi.usdiPrimGetChild(schema, ci);
+                var child = schema.GetChild(ci);
                 UsdConstructMasterTree(child, node_handler);
             }
         }
@@ -293,10 +293,10 @@ namespace UTJ.USD
 
             // construct master tree
             {
-                var nmasters = usdi.usdiGetNumMasters(m_ctx);
+                var nmasters = m_ctx.GetNumMasters();
                 for (int i = 0; i < nmasters; ++i)
                 {
-                    UsdConstructMasterTree(usdi.usdiGetMaster(m_ctx, i),
+                    UsdConstructMasterTree(m_ctx.GetMaster(i),
                         (e) =>
                         {
                             e.UsdOnLoad();
@@ -308,11 +308,11 @@ namespace UTJ.USD
 
             // construct non-master tree along with corresponding GameObject
             {
-                var root = usdi.usdiGetRoot(m_ctx);
-                var nchildren = usdi.usdiPrimGetNumChildren(root);
+                var root = m_ctx.GetRoot();
+                var nchildren = root.GetNumChildren();
                 for (int i = 0; i < nchildren; ++i)
                 {
-                    UsdConstructTree(GetComponent<Transform>(), usdi.usdiPrimGetChild(root, i),
+                    UsdConstructTree(GetComponent<Transform>(), root.GetChild(i),
                         (e) =>
                         {
                             e.UsdOnLoad();
@@ -343,7 +343,7 @@ namespace UTJ.USD
 
         void UsdApplyImportConfig()
         {
-            usdi.usdiSetImportSettings(m_ctx, ref m_importSettings);
+            m_ctx.SetImportSettings(ref m_importSettings);
         }
 
         bool UsdApplyVarianceSelections()
@@ -351,12 +351,12 @@ namespace UTJ.USD
             bool applied = false;
             foreach(var kvp in m_variantSelections)
             {
-                var p = usdi.usdiFindSchema(m_ctx, kvp.Key);
+                var p = m_ctx.FindSchema(kvp.Key);
                 var selections = kvp.Value.selections;
                 int nvals = selections.Length;
                 for (int s = 0; s < nvals; ++s)
                 {
-                    if(usdi.usdiPrimSetVariantSelection(p, s, selections[s]))
+                    if(p.SetVariantSelection(s, selections[s]))
                     {
                         applied = true;
                     }
@@ -376,13 +376,12 @@ namespace UTJ.USD
 
             m_path = path;
             m_path.readOnly = true;
-            m_ctx = usdi.usdiCreateContext(GetInstanceID());
+            m_ctx = usdi.Context.Create(GetInstanceID());
 
             var fullpath = m_path.GetFullPath();
-            if (!usdi.usdiOpen(m_ctx, fullpath))
+            if (!m_ctx.Open(fullpath))
             {
-                usdi.usdiDestroyContext(m_ctx);
-                m_ctx = default(usdi.Context);
+                m_ctx.Destroy();
                 UsdLog("UsdStream: failed to load " + fullpath);
                 return false;
             }
@@ -390,7 +389,7 @@ namespace UTJ.USD
             // apply variant selections
             if(UsdApplyVarianceSelections())
             {
-                usdi.usdiRebuildSchemaTree(m_ctx);
+                m_ctx.RebuildSchemaTree();
             }
             UsdApplyImportConfig();
 
@@ -399,7 +398,7 @@ namespace UTJ.USD
             // fill sample data with initial time
             m_requestForceUpdate = true;
             UsdPrepareSample();
-            usdi.usdiUpdateAllSamples(m_ctx, m_time);
+            m_ctx.UpdateAllSamples(m_time);
             UsdSyncDataBegin();
             UsdSyncDataEnd();
 
@@ -416,21 +415,19 @@ namespace UTJ.USD
 
             m_schemas.Clear();
             m_schemaLUT.Clear();
-
-            usdi.usdiDestroyContext(m_ctx);
-            m_ctx = default(usdi.Context);
+            m_ctx.Destroy();
 
             UsdLog("UsdStream: unloaded " + m_path.GetFullPath());
         }
 
         public bool UsdSave()
         {
-            return usdi.usdiSave(m_ctx);
+            return m_ctx.Save();
         }
 
         public bool UsdSaveAs(string path)
         {
-            return usdi.usdiSaveAs(m_ctx, path);
+            return m_ctx.SaveAs(path);
         }
 
         public void UsdDetachUsdComponents()
@@ -465,7 +462,7 @@ namespace UTJ.USD
             // skip if update is not needed
             if(m_requestForceUpdate)
             {
-                usdi.usdiNotifyForceUpdate(m_ctx);
+                m_ctx.NotifyForceUpdate();
             }
             else if (m_time == m_prevUpdateTime)
             {
@@ -573,7 +570,7 @@ namespace UTJ.USD
                 return;
 
             UsdPrepareSample();
-            usdi.usdiUpdateAllSamples(m_ctx, m_time);
+            m_ctx.UpdateAllSamples(m_time);
         }
 
         void LateUpdate()

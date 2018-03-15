@@ -44,96 +44,7 @@ namespace UTJ.USD
             int nth;
 
             #region impl
-            void usdiSetupBones(UsdMesh parent, ref usdi.MeshData meshData)
-            {
-                if (host == null)
-                    return;
-
-                var smr = host.GetComponent<SkinnedMeshRenderer>();
-                if (smr == null)
-                    return;
-
-                {
-                    var tmp = usdi.MeshData.defaultValue;
-                    bindposes.ResizeDiscard(parent.splitData[nth].boneCount);
-                    tmp.bindposes = bindposes;
-                    usdi.usdiMeshReadSample(parent.usdMesh, ref tmp);
-                }
-
-                if (nth > 0)
-                {
-                    bindposes = parent.submeshes[0].bindposes;
-                    rootBone = parent.submeshes[0].rootBone;
-                    bones = parent.submeshes[0].bones;
-                }
-                else
-                {
-                    var rootBoneName = usdi.S(meshData.rootBone);
-                    var boneNames = usdi.SA(meshData.bones);
-
-                    if (parent.isInstance)
-                    {
-                        // remap bone names
-
-                        var root = parent.nativeSchemaPtr;
-                        for (; ; )
-                        {
-                            root = usdi.usdiPrimGetParent(root);
-                            if (!usdi.usdiPrimGetMaster(root))
-                            {
-                                break;
-                            }
-                        }
-
-                        var r = usdi.usdiPrimFindChild(root, Path.GetFileName(rootBoneName), true);
-                        if (r)
-                        {
-                            rootBoneName = usdi.usdiPrimGetPathS(r);
-                        }
-
-                        for (int i = 0; i < boneNames.Length; ++i)
-                        {
-                            var c = usdi.usdiPrimFindChild(root, Path.GetFileName(boneNames[i]), true);
-                            if (c)
-                            {
-                                boneNames[i] = usdi.usdiPrimGetPathS(c);
-                            }
-                        }
-                    }
-
-                    bones = new Transform[boneNames.Length];
-                    for (int i = 0; i < boneNames.Length; ++i)
-                    {
-                        var schema = parent.stream.UsdFindSchema(boneNames[i]);
-                        if (schema == null)
-                        {
-                            Debug.LogError("bone not found: " + boneNames[i]);
-                            continue;
-                        }
-                        if (schema.gameObject == null)
-                        {
-                            Debug.LogError("bone don't have GameObject: " + boneNames[i]);
-                            continue;
-                        }
-                        bones[i] = schema.gameObject.GetComponent<Transform>();
-                    }
-
-                    if (meshData.rootBone != IntPtr.Zero)
-                    {
-                        var rb = parent.stream.UsdFindSchema(rootBoneName);
-                        rootBone = rb.gameObject.GetComponent<Transform>();
-                    }
-                    else
-                    {
-                        rootBone = bones[0]; // maybe incorrect
-                    }
-                }
-
-                smr.bones = bones;
-                smr.rootBone = rootBone;
-            }
-
-            Mesh usdiShareOrCreateMesh(UsdMesh parent)
+            Mesh ShareOrCreateMesh(UsdMesh parent)
             {
                 var master = parent.master as UsdMesh;
                 if (master != null)
@@ -146,7 +57,7 @@ namespace UTJ.USD
                 }
             }
 
-            public void usdiSetupMesh(UsdMesh parent)
+            public void SetupMesh(UsdMesh parent)
             {
                 if (mesh == null)
                 {
@@ -158,7 +69,7 @@ namespace UTJ.USD
                 }
             }
 
-            public void usdiSetupComponents(UsdMesh parent)
+            public void SetupComponents(UsdMesh parent)
             {
                 if (nth == 0)
                 {
@@ -183,14 +94,11 @@ namespace UTJ.USD
                 var transform = host.GetComponent<Transform>();
 
                 var meshSummary = parent.meshSummary;
-                var meshData = parent.meshData;
-
                 if (meshSummary.boneCount > 0)
                 {
                     // setup SkinnedMeshRenderer
 
                     var renderer = usdi.GetOrAddComponent<SkinnedMeshRenderer>(parent.gameObject);
-                    usdiSetupBones(parent, ref meshData);
 
                     if (renderer.sharedMesh != null && parent.master == null && renderer.sharedMesh.name.IndexOf("<dyn>") == 0)
                     {
@@ -198,7 +106,7 @@ namespace UTJ.USD
                     }
                     else
                     {
-                        mesh = usdiShareOrCreateMesh(parent);
+                        mesh = ShareOrCreateMesh(parent);
                         renderer.sharedMesh = mesh;
                     }
                     mesh.MarkDynamic();
@@ -214,7 +122,7 @@ namespace UTJ.USD
                     }
                     else
                     {
-                        mesh = usdiShareOrCreateMesh(parent);
+                        mesh = ShareOrCreateMesh(parent);
                         meshFilter.sharedMesh = mesh;
                     }
                     mesh.MarkDynamic();
@@ -265,33 +173,6 @@ namespace UTJ.USD
                 }
             }
 
-            public void usdiFreeMeshData()
-            {
-                points = null;
-                normals = null;
-                uv0 = null;
-                indices = null;
-            }
-
-            public void usdiUpdateBounds(ref usdi.MeshData data)
-            {
-                mesh.bounds = new Bounds(data.center, data.extents);
-            }
-
-            public void usdiSetActive(bool v)
-            {
-                if (transform != null)
-                {
-                    transform.gameObject.SetActive(v);
-                }
-            }
-
-
-            void usdiUpdateSkinningData()
-            {
-                mesh.boneWeights = weights.Array;
-                mesh.bindposes = bindposes.Array;
-            }
 
             public void usdiUploadMeshData(bool topology, bool skinning)
             {
@@ -308,7 +189,10 @@ namespace UTJ.USD
                     mesh.SetTriangles(indices.List, 0);
 
                 if (weights != null && skinning)
-                    usdiUpdateSkinningData();
+                {
+                    mesh.boneWeights = weights.Array;
+                    mesh.bindposes = bindposes.Array;
+                }
 
                 mesh.UploadMeshData(false);
             }
@@ -512,7 +396,7 @@ namespace UTJ.USD
             bool topologyChanged = m_sampleSummary.topologyChanged;
 
             // setup buffers
-            var vertexData = default(aiPolyMeshData);
+            var vertexData = default(usdi.MeshData);
             for (int spi = 0; spi < splitCount; ++spi)
             {
                 var split = m_splits[spi];
@@ -526,7 +410,7 @@ namespace UTJ.USD
                     split.points.ResizeDiscard(vertexCount);
                 else
                     split.points.ResizeDiscard(0);
-                vertexData.positions = split.points;
+                vertexData.points = split.points;
 
                 if (m_summary.hasVelocities && (!m_summary.constantVelocities || topologyChanged))
                     split.velocities.ResizeDiscard(vertexCount);

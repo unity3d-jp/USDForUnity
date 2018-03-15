@@ -61,7 +61,7 @@ namespace UTJ.USD
         }
         public bool isEditable
         {
-            get { return usdi.usdiPrimIsEditable(m_schema); }
+            get { return m_schema.IsEditable(); }
         }
         public bool isInstance
         {
@@ -69,11 +69,11 @@ namespace UTJ.USD
         }
         public bool isMaster
         {
-            get { return usdi.usdiPrimIsMaster(m_schema); }
+            get { return m_schema.IsMaster(); }
         }
         public bool isInMaster
         {
-            get { return usdi.usdiPrimIsInMaster(m_schema); }
+            get { return m_schema.IsInMaster(); }
         }
         public UsdSchema master
         {
@@ -104,14 +104,14 @@ namespace UTJ.USD
             m_variantSelection = new int[m_variantSets.Count];
             for (int i = 0; i < m_variantSets.Count; ++i)
             {
-                m_variantSelection[i] = usdi.usdiPrimGetVariantSelection(m_schema, i);
+                m_variantSelection[i] = m_schema.GetVariantSelection(i);
             }
         }
         public void UsdApplyVariantSets()
         {
             for (int si = 0; si < m_variantSelection.Length; ++si)
             {
-                if (usdi.usdiPrimSetVariantSelection(m_schema, si, m_variantSelection[si]))
+                if (m_schema.SetVariantSelection(si, m_variantSelection[si]))
                 {
                     m_stream.UsdSetVariantSelection(m_primPath, m_variantSelection);
                 }
@@ -125,10 +125,10 @@ namespace UTJ.USD
 
         public virtual void UsdOnLoad()
         {
-            m_primPath = usdi.usdiPrimGetPathS(m_schema);
-            m_primName = usdi.usdiPrimGetNameS(m_schema);
-            m_primTypeName = usdi.usdiPrimGetUsdTypeNameS(m_schema);
-            m_master = m_stream.UsdFindSchema(usdi.usdiPrimGetMaster(m_schema));
+            m_primPath = m_schema.GetPath();
+            m_primName = m_schema.GetName();
+            m_primTypeName = m_schema.GetTypeName();
+            m_master = m_stream.UsdFindSchema(m_schema.GetMaster());
 
             UsdSyncVarinatSets();
             m_referencingAssets = usdi.usdiGetReferencingAssets(m_schema);

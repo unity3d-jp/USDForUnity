@@ -31,7 +31,7 @@ namespace UTJ.USD
         public override void UsdOnLoad()
         {
             base.UsdOnLoad();
-            m_xf = usdi.usdiAsXform(m_schema);
+            m_xf = m_schema.AsXform();
             transform = GetComponent<Transform>();
         }
 
@@ -43,8 +43,8 @@ namespace UTJ.USD
 
         public override void UsdPrepareSample()
         {
-            m_updateFlags = usdi.usdiPrimGetUpdateFlags(m_xf);
-            usdi.usdiXformReadSample(m_xf, ref m_xfData);
+            m_updateFlags = m_xf.schema.GetUpdateFlags();
+            m_xf.ReadSample(ref m_xfData);
         }
 
         public override void UsdSyncDataEnd()

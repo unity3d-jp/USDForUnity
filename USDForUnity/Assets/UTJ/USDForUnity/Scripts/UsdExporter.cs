@@ -33,7 +33,7 @@ namespace UTJ.USD
             public usdi.Context ctx { get { return m_exporter.m_ctx; } }
             public ComponentCapturer parent { get { return m_parent; } }
             public usdi.Schema usd { get { return m_usd; } }
-            public string primPath { get { return usdi.usdiPrimGetPathS(m_usd); } }
+            public string primPath { get { return m_usd.GetPath(); } }
             public abstract void Capture(double t); // called from main thread
             public abstract void Flush(double t); // called from worker thread
 
@@ -88,7 +88,7 @@ namespace UTJ.USD
                 m_target = target;
                 if (create_usd_node)
                 {
-                    m_usd = usdi.usdiCreateXform(ctx, parent.usd, CreateName(target));
+                    m_usd = ctx.CreateXform(parent.usd, CreateName(target));
                 }
 
                 if (m_target.gameObject.isStatic)
@@ -131,7 +131,7 @@ namespace UTJ.USD
                 if (m_captureEveryFrame || m_count == 0)
                 {
                     t = m_count == 0 ? usdi.defaultTime : t;
-                    usdi.usdiXformWriteSample(usdi.usdiAsXform(m_usd), ref m_data, t);
+                    m_usd.AsXform().WriteSample(ref m_data, t);
                     ++m_count;
                 }
             }
@@ -146,7 +146,7 @@ namespace UTJ.USD
             public CameraCapturer(UsdExporter exporter, ComponentCapturer parent, Camera target)
                 : base(exporter, parent, target.GetComponent<Transform>(), false)
             {
-                m_usd = usdi.usdiCreateCamera(ctx, parent.usd, CreateName(target));
+                m_usd = ctx.CreateCamera(parent.usd, CreateName(target));
                 m_target = target;
                 //target.GetComponent<usdiCameraExportConfig>();
             }
@@ -171,7 +171,7 @@ namespace UTJ.USD
                 if (m_target == null) { return; }
 
                 t = m_count == 0 ? usdi.defaultTime : t;
-                usdi.usdiCameraWriteSample(usdi.usdiAsCamera(m_usd), ref m_data, t);
+                m_usd.AsCamera().WriteSample(ref m_data, t);
                 ++m_count;
             }
         }
@@ -227,15 +227,16 @@ namespace UTJ.USD
             data.tangents = dst_buf.tangents;
             data.uv0 = dst_buf.uvs;
 
-            if (dst_buf.weights.Count > 0 && dst_buf.bones != null)
-            {
-                data.weights = dst_buf.weights;
-                data.bindposes = dst_buf.bindposes;
-                data.boneCount = dst_buf.bones.Length;
-                data.maxBoneWeights = 4;
-                usdi.usdiMeshAssignBones(usd, ref data, dst_buf.bones, dst_buf.bones.Length);
-                usdi.usdiMeshAssignRootBone(usd, ref data, dst_buf.rootBone);
-            }
+            // todo: skinning
+            //if (dst_buf.weights.Count > 0 && dst_buf.bones != null)
+            //{
+            //    data.weights = dst_buf.weights;
+            //    data.bindposes = dst_buf.bindposes;
+            //    data.boneCount = dst_buf.bones.Length;
+            //    data.maxBoneWeights = 4;
+            //    usd.AssignBones(ref data, dst_buf.bones, dst_buf.bones.Length);
+            //    usd.AssignRootBone(ref data, dst_buf.rootBone);
+            //}
         }
 
         public static void CaptureMesh(
@@ -304,7 +305,7 @@ namespace UTJ.USD
             public MeshCapturer(UsdExporter exporter, ComponentCapturer parent, MeshRenderer target)
                 : base(exporter, parent, target.GetComponent<Transform>(), false)
             {
-                m_usd = usdi.usdiCreateMesh(ctx, parent.usd, CreateName(target));
+                m_usd = ctx.CreateMesh(parent.usd, CreateName(target));
                 m_target = target;
                 m_buffer = new MeshBuffer();
 
@@ -340,7 +341,7 @@ namespace UTJ.USD
                         uvs      = m_captureUVs && (m_count == 0 || m_captureEveryFrameUV),
                         indices  = m_count == 0 || m_captureEveryFrameIndices,
                     };
-                    CaptureMesh(usdi.usdiAsMesh(m_usd), ref m_data, m_buffer, mesh, flags);
+                    CaptureMesh(m_usd.AsMesh(), ref m_data, m_buffer, mesh, flags);
                 }
             }
 
@@ -352,7 +353,7 @@ namespace UTJ.USD
                 if (m_captureEveryFrame || m_count == 0)
                 {
                     t = m_count == 0 ? usdi.defaultTime : t;
-                    usdi.usdiMeshWriteSample(usdi.usdiAsMesh(m_usd), ref m_data, t);
+                    m_usd.AsMesh().WriteSample(ref m_data, t);
                     ++m_count;
                 }
             }
@@ -381,7 +382,7 @@ namespace UTJ.USD
             public SkinnedMeshCapturer(UsdExporter exporter, ComponentCapturer parent, SkinnedMeshRenderer target)
                 : base(exporter, parent, target.GetComponent<Transform>(), false)
             {
-                m_usd = usdi.usdiCreateMesh(ctx, parent.usd, CreateName(target));
+                m_usd = ctx.CreateMesh(parent.usd, CreateName(target));
                 m_target = target;
                 m_buffer = new MeshBuffer();
 
@@ -451,7 +452,7 @@ namespace UTJ.USD
                         indices  = m_count == 0 || m_captureEveryFrameIndices,
                     };
 
-                    CaptureMesh(usdi.usdiAsMesh(m_usd), ref m_data, m_buffer, m_target, flags, captureBones);
+                    CaptureMesh(m_usd.AsMesh(), ref m_data, m_buffer, m_target, flags, captureBones);
                 }
             }
 
@@ -463,7 +464,7 @@ namespace UTJ.USD
                 if (m_captureEveryFrame || m_count == 0)
                 {
                     t = m_count == 0 ? usdi.defaultTime : t;
-                    usdi.usdiMeshWriteSample(usdi.usdiAsMesh(m_usd), ref m_data, t);
+                    m_usd.AsMesh().WriteSample(ref m_data, t);
                     ++m_count;
                 }
             }
@@ -486,7 +487,7 @@ namespace UTJ.USD
             public ParticleCapturer(UsdExporter exporter, ComponentCapturer parent, ParticleSystem target)
                 : base(exporter, parent, target.GetComponent<Transform>(), false)
             {
-                m_usd = usdi.usdiCreatePoints(ctx, parent.usd, CreateName(target));
+                m_usd = ctx.CreatePoints(parent.usd, CreateName(target));
                 m_target = target;
 
                 var config = target.GetComponent<UsdParticleExportSettings>();
@@ -496,7 +497,7 @@ namespace UTJ.USD
                 }
                 if (m_captureRotations)
                 {
-                    m_attr_rotatrions = usdi.usdiPrimCreateAttribute(m_usd, "rotations", usdi.AttributeType.Float4Array);
+                    m_attr_rotatrions = m_usd.CreateAttribute("rotations", usdi.AttributeType.Float4Array);
                 }
             }
 
@@ -545,11 +546,9 @@ namespace UTJ.USD
                 base.Flush(t);
                 if (m_target == null) { return; }
 
-                usdi.usdiPointsWriteSample(usdi.usdiAsPoints(m_usd), ref m_data, t);
+                m_usd.AsPoints().WriteSample(ref m_data, t);
                 if (m_captureRotations)
-                {
-                    usdi.usdiAttrWriteSample(m_attr_rotatrions, ref m_dataRot, t);
-                }
+                    m_attr_rotatrions.WriteSample(ref m_dataRot, t);
             }
         }
 
@@ -828,7 +827,7 @@ namespace UTJ.USD
 
         void ConstructCaptureTree()
         {
-            m_root = new RootCapturer(this, usdi.usdiGetRoot(m_ctx));
+            m_root = new RootCapturer(this, m_ctx.GetRoot());
             m_captureNodes = new Dictionary<Transform, CaptureNode>();
             m_rootNodes = new List<CaptureNode>();
 
@@ -917,7 +916,7 @@ namespace UTJ.USD
             conf.scaleFactor = m_scale;
             conf.swapHandedness = m_swapHandedness;
             conf.swapFaces = m_swapFaces;
-            usdi.usdiSetExportSettings(m_ctx, ref conf);
+            m_ctx.SetExportSettings(ref conf);
         }
 
 
@@ -930,12 +929,11 @@ namespace UTJ.USD
             }
 
             // create context and open archive
-            m_ctx = usdi.usdiCreateContext(GetInstanceID());
-            if (!usdi.usdiCreateStage(m_ctx, m_outputPath))
+            m_ctx = usdi.Context.Create(GetInstanceID());
+            if (!m_ctx.CreateStage(m_outputPath))
             {
                 Debug.LogError("UsdExporter: failed to create " + m_outputPath);
-                usdi.usdiDestroyContext(m_ctx);
-                m_ctx = default(usdi.Context);
+                m_ctx.Destroy();
                 return false;
             }
             ApplyExportConfig();
@@ -957,8 +955,7 @@ namespace UTJ.USD
 
             FlushUSD();
             m_capturers.Clear();
-            usdi.usdiDestroyContext(m_ctx); // flush archive
-            m_ctx = default(usdi.Context);
+            m_ctx.Destroy(); // flush archive
             m_recording = false;
             m_time = 0.0f;
             m_frameCount = 0;
@@ -977,7 +974,7 @@ namespace UTJ.USD
 
         void FlushUSD()
         {
-            usdi.usdiSave(m_ctx);
+            m_ctx.Save();
         }
 
 

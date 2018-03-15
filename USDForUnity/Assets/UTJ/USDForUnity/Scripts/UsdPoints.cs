@@ -40,9 +40,9 @@ namespace UTJ.USD
         {
             base.UsdOnLoad();
 
-            m_usdPoints = usdi.usdiAsPoints(m_schema);
-            usdi.usdiPointsGetSummary(m_usdPoints, ref m_summary);
-            m_usdAttrRot = usdi.usdiPrimFindAttribute(m_usdPoints, "rotations");
+            m_usdPoints = m_schema.AsPoints();
+            m_usdPoints.GetSummary(ref m_summary);
+            m_usdAttrRot = m_usdPoints.schema.FindAttribute("rotations");
         }
 
         public override void UsdOnUnload()
@@ -62,7 +62,7 @@ namespace UTJ.USD
             if (m_updateFlags.bits == 0) { return; }
 
             usdi.PointsData tmp = usdi.PointsData.defaultValue;
-            usdi.usdiPointsReadSample(m_usdPoints, ref tmp);
+            m_usdPoints.ReadSample(ref tmp);
 
             // allocate points data
             if (m_pointsData.pointCount == tmp.pointCount)
@@ -87,7 +87,7 @@ namespace UTJ.USD
             // read points data
             if (m_pointsData.pointCount > 0)
             {
-                usdi.usdiPointsReadSample(m_usdPoints, ref m_pointsData);
+                m_usdPoints.ReadSample(ref m_pointsData);
             }
         }
 

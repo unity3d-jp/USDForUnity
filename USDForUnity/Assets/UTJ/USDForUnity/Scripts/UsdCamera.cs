@@ -44,7 +44,7 @@ namespace UTJ.USD
         public override void UsdOnLoad()
         {
             base.UsdOnLoad();
-            m_camera = usdi.usdiAsCamera(m_schema);
+            m_camera = m_schema.AsCamera();
             m_ucam = GetOrAddComponent<Camera>();
         }
 
@@ -57,7 +57,7 @@ namespace UTJ.USD
         public override void UsdPrepareSample()
         {
             base.UsdPrepareSample();
-            usdi.usdiCameraReadSample(m_camera, ref m_cameraData);
+            m_camera.ReadSample(ref m_cameraData);
         }
 
         public override void UsdSyncDataEnd()
