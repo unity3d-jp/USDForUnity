@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "usdiInternal.h"
-#include "usdiContext.h"
 #include "usdiSchema.h"
+#include "usdiContext.h"
 #include "usdiAttribute.h"
 #include "usdiVectorConversion.h"
 

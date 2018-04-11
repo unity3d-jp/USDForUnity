@@ -16,7 +16,9 @@ option(USDI_ENABLE_TESTS "Build tests." ON)
 
 add_definitions(-DBUILD_OPTLEVEL_OPT -DBUILD_COMPONENT_SRC_PREFIX="pxr/")
 add_definitions(-DmuEnableHalf)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-deprecated -DTF_NO_GNU_EXT")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -std=c++11 -Wno-deprecated -DTF_NO_GNU_EXT")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
 
 
 
@@ -31,7 +33,6 @@ include_directories(
     ${USD_INCLUDE_DIR}
 )
 
-add_subdirectory(MeshUtils)
 add_subdirectory(usdiRT)
 add_subdirectory(usdi)
 add_subdirectory(Test)

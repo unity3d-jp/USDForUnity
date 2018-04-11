@@ -5,6 +5,9 @@
 #include <algorithm>
 #include <limits>
 #include "aiIntrusiveArray.h"
+#ifdef muEnableHalf
+    #include <OpenEXR/half.h>
+#endif // muEnableHalf
 
 #define muEpsilon 1e-4f
 

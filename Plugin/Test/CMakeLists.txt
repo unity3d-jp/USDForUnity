@@ -5,13 +5,13 @@ if(USDI_ENABLE_TESTS)
     list(REMOVE_ITEM sources ${main_cpp})
 
     add_executable(Test ${sources})
-    add_dependencies(Test usdi usdiRT MeshUtils)
-    target_link_libraries(Test usdi usdiRT MeshUtils)
+    add_dependencies(Test usdi usdiRT)
+    target_link_libraries(Test usdi usdiRT)
 
     add_executable(TestMain ${main_cpp})
     add_dependencies(TestMain Test)
     target_link_libraries(TestMain
-        usdiRT MeshUtils
+        usdiRT
         ${Boost_SYSTEM_LIBRARY_RELEASE}
         ${Boost_FILESYSTEM_LIBRARY_RELEASE}
         ${OPENEXR_Half_LIBRARY}
